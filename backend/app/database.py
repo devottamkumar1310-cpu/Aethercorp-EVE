@@ -17,6 +17,9 @@ logger = logging.getLogger("eve.database")
 
 # Setup connection options
 database_url = settings.DATABASE_URL
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
 engine_args = {}
 
 # SQLite specific tuning parameters
