@@ -45,3 +45,40 @@ AI COO Agent
 
 ### Phase 5
 Forecasting & Scenario Simulation
+
+
+## Project Structure
+
+```text
+aethercorp-eve/
+│
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── login/
+│   │   │   ├── signup/
+│   │   │   ├── onboarding/
+│   │   │   ├── dashboard/
+│   │   │   └── settings/
+│   │   │
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── lib/
+│   │
+│   └── public/
+│
+├── backend/
+│   ├── app/
+│   │   ├── routes/
+│   │   ├── models/
+│   │   ├── services/
+│   │   ├── schemas/
+│   │   └── core/
+│   │
+│   └── tests/
+│
+├── docs/
+│
+├── README.md
+└── .gitignore
+```
