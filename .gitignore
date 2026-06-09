@@ -1,0 +1,45 @@
+# Environment Variables
+.env
+.env.*
+.env.local
+.env.development.local
+.env.production.local
+
+# Next.js
+node_modules/
+.next/
+out/
+.vercel/
+
+# Python
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.pytest_cache/
+
+# Build
+dist/
+build/
