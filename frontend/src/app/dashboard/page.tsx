@@ -1,37 +1,62 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DashboardMetrics } from "@/types/dashboard";
+import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects } from "@/services/businessService";
+import { DashboardSummary, ActivityLog, Client, Project } from "@/types/business";
 import { ChatResponse } from "@/types/chat";
-import { fetchDashboardMetrics } from "@/services/dashboardService";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
 
-import { ExecutiveKPICards } from "@/components/dashboard/ExecutiveKPICards";
-import { InventoryHealthTable } from "@/components/dashboard/InventoryHealthTable";
-import { PricingRecommendationsTable } from "@/components/dashboard/PricingRecommendationsTable";
-import { ExecutiveSummaryCard } from "@/components/dashboard/ExecutiveSummaryCard";
-import { ExecutiveScenarioPlannerCard } from "@/components/dashboard/ExecutiveScenarioPlannerCard";
-import { CashFlowForecastCard } from "@/components/dashboard/CashFlowForecastCard";
-import { AgentActivityMonitor } from "@/components/dashboard/AgentActivityMonitor";
 import { CEOChatConsole } from "@/components/chat/CEOChatConsole";
+import { AgentActivityMonitor } from "@/components/dashboard/AgentActivityMonitor";
 
-import { InventoryRiskChart } from "@/components/charts/InventoryRiskChart";
-import { StockoutPredictionChart } from "@/components/charts/StockoutPredictionChart";
-import { ProfitImpactChart } from "@/components/charts/ProfitImpactChart";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Plus, Users, Briefcase, CheckSquare, DollarSign, Activity } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
+
+// Import Modals
+import { ClientModal } from "@/components/business/ClientModal";
+import { ProjectModal } from "@/components/business/ProjectModal";
+import { TaskModal } from "@/components/business/TaskModal";
+import { RevenueModal } from "@/components/business/RevenueModal";
+import { ExpenseModal } from "@/components/business/ExpenseModal";
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chatData, setChatData] = useState<ChatResponse | null>(null);
-
   const [profile, setProfile] = useState<any>(null);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string>("");
+
+  // Lists for dropdowns in modals
+  const [clientsList, setClientsList] = useState<Client[]>([]);
+  const [projectsList, setProjectsList] = useState<Project[]>([]);
+
+  // Modal States
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+
+  const loadDashboardData = async (token: string) => {
+    try {
+      const [sumData, logs, clients, projects] = await Promise.all([
+        fetchDashboardSummary(token),
+        fetchActivityLogs(token),
+        fetchClients(token),
+        fetchProjects(token)
+      ]);
+      setSummary(sumData);
+      setActivityLogs(logs.slice(0, 10));
+      setClientsList(clients);
+      setProjectsList(projects);
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     async function initializeDashboard() {
@@ -44,26 +69,17 @@ export default function DashboardPage() {
           return;
         }
 
-        // 1. Fetch Profile
+        setSessionToken(session.access_token);
+
         const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, {
           headers: { Authorization: `Bearer ${session.access_token}` }
         });
         
         if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setProfile(profileData);
-          
-          if (!profileData.organization_id) {
-            console.log("[Auth] User missing organization_id. Rendering empty state...");
-            setNeedsOnboarding(true);
-          }
-        } else {
-          throw new Error("Failed to authenticate profile");
+          setProfile(await profileRes.json());
         }
 
-        // 2. Fetch Metrics (only if workspace exists)
-        const data = await fetchDashboardMetrics(session.access_token);
-        setMetrics(data);
+        await loadDashboardData(session.access_token);
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to connect to backend");
@@ -73,6 +89,16 @@ export default function DashboardPage() {
     }
     initializeDashboard();
   }, []);
+
+  const handleModalSuccess = () => {
+    if (sessionToken) {
+      loadDashboardData(sessionToken);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Loading Operations Engine...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -86,13 +112,10 @@ export default function DashboardPage() {
         <div className="flex items-center gap-4 text-sm text-slate-500">
           <div className="flex flex-col items-end">
             <span className="font-semibold text-slate-800">
-              Welcome back, {profile?.full_name || "Founder"}
+              Welcome back, {profile?.full_name || "COO"}
             </span>
-            <span className="text-xs">Workspace: {profile?.organization_id ? "Active" : "No Workspace"}</span>
+            <span className="text-xs">Business Operations Engine</span>
           </div>
-          <a href="/dashboard/settings" className="px-3 py-1.5 bg-slate-100 rounded-md hover:bg-slate-200 transition-colors">
-            Settings
-          </a>
         </div>
       </header>
 
@@ -101,82 +124,152 @@ export default function DashboardPage() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Connection Error</AlertTitle>
-            <AlertDescription>
-              {error}. Ensure the Python backend is running on port 8000.
-            </AlertDescription>
+            <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {needsOnboarding ? (
-          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
-            <div className="h-20 w-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-2 shadow-sm border border-indigo-100">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+        {/* Global Quick CTAs */}
+        <div className="flex flex-wrap gap-3 items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span className="font-medium text-slate-700 mr-2">Create Actions:</span>
+          <button onClick={() => setIsClientModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-sm font-medium transition-colors border border-blue-200"><Plus size={16}/> New Client</button>
+          <button onClick={() => setIsProjectModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-md text-sm font-medium transition-colors border border-indigo-200"><Plus size={16}/> New Project</button>
+          <button onClick={() => setIsTaskModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded-md text-sm font-medium transition-colors border border-cyan-200"><Plus size={16}/> New Task</button>
+          <button onClick={() => setIsRevenueModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-md text-sm font-medium transition-colors border border-green-200"><Plus size={16}/> Add Revenue</button>
+          <button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-md text-sm font-medium transition-colors border border-red-200"><Plus size={16}/> Add Expense</button>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main Dashboard Area */}
+          <div className="flex-1 space-y-6">
+            
+            {/* Quick Navigation Links */}
+            <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+              <span className="font-medium text-slate-700 px-2 whitespace-nowrap">Manage Modules:</span>
+              <Link href="/dashboard/clients" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><Users size={16}/> Clients</Link>
+              <Link href="/dashboard/projects" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><Briefcase size={16}/> Projects</Link>
+              <Link href="/dashboard/tasks" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><CheckSquare size={16}/> Tasks</Link>
+              <Link href="/dashboard/finance" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><DollarSign size={16}/> Finances</Link>
+              <Link href="/dashboard/activity" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><Activity size={16}/> Activity Feed</Link>
             </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">No Workspace Found</h2>
-              <p className="text-slate-500 max-w-md mx-auto text-lg">
-                EVE requires a dedicated workspace to generate accurate business intelligence. Create one to get started.
-              </p>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <span className="text-sm font-medium text-slate-500">Total Clients</span>
+                <span className="text-3xl font-bold text-slate-800">{summary?.kpis?.clients || 0}</span>
+                <span className="text-xs text-green-600 font-medium mt-1">{summary?.kpis?.active_clients || 0} Active</span>
+              </div>
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <span className="text-sm font-medium text-slate-500">Total Projects</span>
+                <span className="text-3xl font-bold text-slate-800">{summary?.kpis?.projects || 0}</span>
+                <span className="text-xs text-blue-600 font-medium mt-1">{summary?.kpis?.active_projects || 0} Active</span>
+              </div>
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <span className="text-sm font-medium text-slate-500">Tasks Completion</span>
+                <span className="text-3xl font-bold text-slate-800">{summary?.kpis?.completed_tasks || 0} / {summary?.kpis?.tasks || 0}</span>
+                <span className="text-xs text-slate-500 font-medium mt-1">Pending vs Total</span>
+              </div>
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <span className="text-sm font-medium text-slate-500">Net Profit</span>
+                <span className="text-3xl font-bold text-slate-800">${(summary?.kpis?.profit || 0).toLocaleString()}</span>
+                <span className="text-xs text-slate-500 font-medium mt-1">Rev: ${(summary?.kpis?.revenue || 0).toLocaleString()}</span>
+              </div>
             </div>
-            <a href="/onboarding" className="mt-8 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg shadow-sm hover:bg-indigo-700 hover:shadow transition-all inline-flex items-center gap-2">
-              Create Workspace
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            </a>
-          </div>
-        ) : (
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 space-y-6">
-              <ExecutiveKPICards metrics={metrics} loading={loading} />
-              
-              <div className="grid lg:grid-cols-2 gap-6">
-                <ExecutiveScenarioPlannerCard actions={metrics?.top_3_actions} loading={loading} />
-                <div className="space-y-6">
-                  <ExecutiveSummaryCard 
-                    summary={chatData ? chatData.executive_summary : null} 
-                    loading={false} 
-                  />
-                  <CashFlowForecastCard forecast={metrics?.cash_flow_forecast} loading={loading} />
+
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Recent Clients */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-slate-700 flex justify-between items-center">
+                  Recent Clients
+                  <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Client</button>
+                </div>
+                <div className="p-0 overflow-x-auto flex-1">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-white border-b border-slate-100 text-slate-500">
+                      <tr><th className="px-4 py-2 font-medium">Company</th><th className="px-4 py-2 font-medium">Status</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {summary?.recent_clients?.map(c => (
+                        <tr key={c.id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 text-slate-800 font-medium">{c.company_name}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>{c.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                      {(!summary?.recent_clients || summary.recent_clients.length === 0) && (
+                        <tr><td colSpan={2} className="px-4 py-8 text-center text-slate-500">No clients found. Click Add Client.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
-              <Tabs defaultValue="inventory" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
-                  <TabsTrigger value="inventory">Inventory Intelligence</TabsTrigger>
-                  <TabsTrigger value="pricing">Pricing & Margin</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="inventory" className="space-y-6 mt-6">
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    <InventoryRiskChart metrics={metrics} />
-                    <StockoutPredictionChart metrics={metrics} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Stockout & Reorder Analysis</h3>
-                    <InventoryHealthTable metrics={metrics} loading={loading} />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="pricing" className="space-y-6 mt-6">
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    <ProfitImpactChart metrics={metrics} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Elasticity Recommendations</h3>
-                    <PricingRecommendationsTable metrics={metrics} loading={loading} />
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            <div className="w-full lg:w-[450px] space-y-6 flex flex-col">
-              <CEOChatConsole onChatResponse={setChatData} />
-              <div className="flex-1 min-h-[300px]">
-                <AgentActivityMonitor chatData={chatData} />
+              {/* Upcoming Deadlines */}
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-slate-700 flex justify-between items-center">
+                  Upcoming Deadlines
+                  <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Project</button>
+                </div>
+                <div className="p-0 overflow-x-auto flex-1">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-white border-b border-slate-100 text-slate-500">
+                      <tr><th className="px-4 py-2 font-medium">Project</th><th className="px-4 py-2 font-medium">Deadline</th></tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {summary?.upcoming_deadlines?.map(p => (
+                        <tr key={p.id} className="hover:bg-slate-50">
+                          <td className="px-4 py-3 text-slate-800 font-medium">{p.name}</td>
+                          <td className="px-4 py-3 text-red-600 font-medium">{p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A'}</td>
+                        </tr>
+                      ))}
+                      {(!summary?.upcoming_deadlines || summary.upcoming_deadlines.length === 0) && (
+                        <tr><td colSpan={2} className="px-4 py-8 text-center text-slate-500">No upcoming deadlines</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
+
+            {/* Activity Feed */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-slate-700 flex justify-between items-center">
+                <span>Recent System Activity</span>
+                <Link href="/dashboard/activity" className="text-xs text-blue-600 hover:underline">View All</Link>
+              </div>
+              <div className="p-4 space-y-4">
+                {activityLogs.map(log => (
+                  <div key={log.id} className="flex gap-3 text-sm">
+                    <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                    <div>
+                      <p className="text-slate-800"><span className="font-semibold">[{log.entity_type}]</span> {log.action}</p>
+                      <p className="text-slate-500 text-xs mt-0.5">{log.description} • {new Date(log.created_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+                {activityLogs.length === 0 && <div className="text-slate-500 text-center py-4">No recent activity</div>}
+              </div>
+            </div>
+
           </div>
-        )}
+
+          {/* CEO Chat Console & Monitor Panel */}
+          <div className="w-full lg:w-[450px] space-y-6 flex flex-col">
+            <CEOChatConsole onChatResponse={setChatData} />
+            <div className="flex-1 min-h-[300px]">
+              <AgentActivityMonitor chatData={chatData} />
+            </div>
+          </div>
+        </div>
       </main>
+
+      {/* Render Modals */}
+      <ClientModal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} token={sessionToken} onSuccess={handleModalSuccess} />
+      <ProjectModal isOpen={isProjectModalOpen} onClose={() => setIsProjectModalOpen(false)} token={sessionToken} clients={clientsList} onSuccess={handleModalSuccess} />
+      <TaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} token={sessionToken} projects={projectsList} onSuccess={handleModalSuccess} />
+      <RevenueModal isOpen={isRevenueModalOpen} onClose={() => setIsRevenueModalOpen(false)} token={sessionToken} projects={projectsList} onSuccess={handleModalSuccess} />
+      <ExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} token={sessionToken} onSuccess={handleModalSuccess} />
     </div>
   );
 }

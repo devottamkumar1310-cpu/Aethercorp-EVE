@@ -69,3 +69,25 @@ def get_dashboard(
         return metrics
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from app.services.dashboard_service import DashboardService
+
+@router.get("/kpis")
+def get_dashboard_kpis(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
+    return DashboardService.get_kpis(db)
+
+@router.get("/recent-clients")
+def get_dashboard_recent_clients(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
+    return DashboardService.get_recent_clients(db)
+
+@router.get("/recent-projects")
+def get_dashboard_recent_projects(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
+    return DashboardService.get_recent_projects(db)
+
+@router.get("/upcoming-deadlines")
+def get_dashboard_upcoming_deadlines(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
+    return DashboardService.get_upcoming_deadlines(db)
+
+@router.get("/summary")
+def get_dashboard_summary(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
+    return DashboardService.get_summary(db)
