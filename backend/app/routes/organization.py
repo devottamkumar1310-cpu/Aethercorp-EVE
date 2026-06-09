@@ -53,4 +53,4 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
         logger.error(f"Failed to create workspace: {e}", exc_info=e)
         raise HTTPException(status_code=500, detail="Failed to create workspace")
 
-    return {"status": "success", "organization_id": org.id, "slug": org.slug}
+    return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
