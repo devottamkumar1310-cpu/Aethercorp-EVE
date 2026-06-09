@@ -33,8 +33,8 @@ class GeminiService:
         self.client = None
         self.mock_mode = False
 
-        if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE" or not self.api_key.startswith("AIzaSy"):
-            logger.warning("GEMINI_API_KEY is not set, is a placeholder, or format is invalid. Running in MOCK MODE.")
+        if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE" or len(self.api_key) < 20:
+            logger.warning("GEMINI_API_KEY is not set or format is invalid. Running in MOCK MODE.")
             self.mock_mode = True
         else:
             try:

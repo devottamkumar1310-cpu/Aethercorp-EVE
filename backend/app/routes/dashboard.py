@@ -1,21 +1,37 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.models.organization import Membership
+from app.models.profile import Profile
 from app.services.analytics_service import AnalyticsService
 from app.services.simulation_engine import SimulationEngine
-from app.core.security import get_current_user_and_tenant
+from app.core.security import get_current_user
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 @router.get("")
 def get_dashboard(
     db: Session = Depends(get_db),
-    token_context: dict = Depends(get_current_user_and_tenant)
+    current_user: Profile = Depends(get_current_user)
 ):
     """
     Returns the overarching Business Intelligence dashboard metrics for the organization.
+    If the user does not belong to a workspace, returns an empty state payload.
     """
-    organization_id = token_context["organization_id"]
+    membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
+    if not membership:
+        return {
+            "inventory_risk_score": 0.0,
+            "dead_stock_items": [],
+            "stockout_predictions": [],
+            "reorder_recommendations": [],
+            "pricing_recommendations": [],
+            "estimated_profit_impact": 0.0,
+            "cash_flow_forecast": None,
+            "top_3_actions": []
+        }
+
+    organization_id = membership.organization_id
     try:
         metrics = AnalyticsService.get_dashboard_metrics(db, organization_id)
         
