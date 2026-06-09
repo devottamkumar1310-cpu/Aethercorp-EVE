@@ -20,10 +20,13 @@ import { ProjectModal } from "@/components/business/ProjectModal";
 import { TaskModal } from "@/components/business/TaskModal";
 import { RevenueModal } from "@/components/business/RevenueModal";
 import { ExpenseModal } from "@/components/business/ExpenseModal";
+import { IntelligencePanel } from "@/components/dashboard/IntelligencePanel";
+import { fetchTrends } from "@/services/intelligenceService";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [trends, setTrends] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chatData, setChatData] = useState<ChatResponse | null>(null);
@@ -43,16 +46,18 @@ export default function DashboardPage() {
 
   const loadDashboardData = async (token: string) => {
     try {
-      const [sumData, logs, clients, projects] = await Promise.all([
+      const [sumData, logs, clients, projects, trendData] = await Promise.all([
         fetchDashboardSummary(token),
         fetchActivityLogs(token),
         fetchClients(token),
-        fetchProjects(token)
+        fetchProjects(token),
+        fetchTrends(token)
       ]);
       setSummary(sumData);
       setActivityLogs(logs.slice(0, 10));
       setClientsList(clients);
       setProjectsList(projects);
+      setTrends(trendData);
     } catch (err: any) {
       console.error(err);
     }
@@ -141,6 +146,7 @@ export default function DashboardPage() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Dashboard Area */}
           <div className="flex-1 space-y-6">
+            <IntelligencePanel token={sessionToken} />
             
             {/* Quick Navigation Links */}
             <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
@@ -160,17 +166,17 @@ export default function DashboardPage() {
                 <span className="text-xs text-green-600 font-medium mt-1">{summary?.kpis?.active_clients || 0} Active</span>
               </div>
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <span className="text-sm font-medium text-slate-500">Total Projects</span>
+                <span className="text-sm font-medium text-slate-500 flex justify-between">Total Projects {trends?.task_trend === 'up' && <span className="text-green-500">↑</span>}{trends?.task_trend === 'down' && <span className="text-red-500">↓</span>}</span>
                 <span className="text-3xl font-bold text-slate-800">{summary?.kpis?.projects || 0}</span>
                 <span className="text-xs text-blue-600 font-medium mt-1">{summary?.kpis?.active_projects || 0} Active</span>
               </div>
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <span className="text-sm font-medium text-slate-500">Tasks Completion</span>
+                <span className="text-sm font-medium text-slate-500 flex justify-between">Tasks Completion {trends?.task_trend === 'up' && <span className="text-green-500">↑</span>}{trends?.task_trend === 'down' && <span className="text-red-500">↓</span>}</span>
                 <span className="text-3xl font-bold text-slate-800">{summary?.kpis?.completed_tasks || 0} / {summary?.kpis?.tasks || 0}</span>
                 <span className="text-xs text-slate-500 font-medium mt-1">Pending vs Total</span>
               </div>
               <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <span className="text-sm font-medium text-slate-500">Net Profit</span>
+                <span className="text-sm font-medium text-slate-500 flex justify-between">Net Profit {trends?.profit_trend === 'up' && <span className="text-green-500">↑</span>}{trends?.profit_trend === 'down' && <span className="text-red-500">↓</span>}</span>
                 <span className="text-3xl font-bold text-slate-800">${(summary?.kpis?.profit || 0).toLocaleString()}</span>
                 <span className="text-xs text-slate-500 font-medium mt-1">Rev: ${(summary?.kpis?.revenue || 0).toLocaleString()}</span>
               </div>
