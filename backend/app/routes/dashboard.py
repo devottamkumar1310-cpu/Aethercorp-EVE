@@ -1,0 +1,55 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.services.analytics_service import AnalyticsService
+from app.services.simulation_engine import SimulationEngine
+from app.core.security import get_current_user_and_tenant
+
+router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
+
+@router.get("")
+def get_dashboard(
+    db: Session = Depends(get_db),
+    token_context: dict = Depends(get_current_user_and_tenant)
+):
+    """
+    Returns the overarching Business Intelligence dashboard metrics for the organization.
+    """
+    organization_id = token_context["organization_id"]
+    try:
+        metrics = AnalyticsService.get_dashboard_metrics(db, organization_id)
+        
+        # Inject Cash Flow Forecast
+        cash_flow = SimulationEngine.simulate_cash_flow_forecast(30, organization_id, db)
+        metrics["cash_flow_forecast"] = cash_flow
+        
+        # Inject Top 3 Actions
+        top_actions = []
+        if metrics.get("reorder_recommendations"):
+            qty = sum(rec.get("recommended_reorder", 0) if isinstance(rec, dict) else rec for rec in metrics["reorder_recommendations"])
+            top_actions.append({
+                "action": f"Reorder {qty} units immediately",
+                "impact": "Prevent stockout revenue loss",
+                "confidence_score": 92
+            })
+        if metrics.get("pricing_recommendations"):
+            first_rec = metrics["pricing_recommendations"][0]
+            top_actions.append({
+                "action": f"Adjust {first_rec.get('sku')} price to ${first_rec.get('recommended_price')}",
+                "impact": f"Margin optimization",
+                "confidence_score": 88
+            })
+        if metrics.get("dead_stock_items"):
+            top_actions.append({
+                "action": f"Liquidate {len(metrics['dead_stock_items'])} dead stock SKUs",
+                "impact": "Free up warehouse capital",
+                "confidence_score": 95
+            })
+        if not top_actions:
+            top_actions = [{"action": "Maintain current operations", "impact": "Stable", "confidence_score": 99}]
+            
+        metrics["top_3_actions"] = top_actions[:3]
+        
+        return metrics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -1,0 +1,29 @@
+# ==============================================================================
+# PURPOSE: List of Python package dependencies for EVE (Enterprise Virtual Executive)
+# DATA FLOW: Read by pip during installation to set up the execution environment.
+# EXTENSION POINTS: Add packages here for external systems (e.g., Redis, Shopify API wrappers).
+# EDUCATIONAL COMMENTS:
+# - `fastapi` and `uvicorn` power our high-performance asynchronous API gateway.
+# - `pydantic-settings` is used for type-safe environment configuration management.
+# - `sqlalchemy` is our object-relational mapper for database connectivity.
+# - `pgvector` enables vector storage and semantic lookup queries inside PostgreSQL.
+# - `google-genai` is the official Google client to call Gemini models.
+# - `pandas` is utilized for low-overhead CSV loading and fashion intelligence arithmetic.
+# ==============================================================================
+
+fastapi>=0.111.0
+uvicorn>=0.30.1
+pydantic>=2.7.4
+pydantic-settings>=2.3.4
+sqlalchemy>=2.0.31
+psycopg2-binary>=2.9.9
+pgvector>=0.3.1
+google-genai>=0.1.1
+pandas>=2.2.2
+python-dotenv>=1.0.1
+python-multipart>=0.0.9
+passlib[bcrypt]>=1.7.4
+pyjwt>=2.8.0
+cryptography>=41.0.0
+pytest>=8.2.2
+httpx>=0.27.0
