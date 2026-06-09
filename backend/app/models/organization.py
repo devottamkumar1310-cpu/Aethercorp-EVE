@@ -1,0 +1,55 @@
+from sqlalchemy import DateTime
+import uuid
+# ==============================================================================
+# PURPOSE: Database models for Organization and Membership mapping (SaaS multi-tenancy).
+# DATA FLOW: DB queries retrieve tenant status and membership access controls.
+# EXTENSION POINTS: Add custom organization settings (e.g. tier, custom domains, branding).
+# ARCHITECTURAL DECISION:
+# - All major data models (Product, Supplier, Artifact, etc.) carry an `organization_id`
+#   to enforce strict logical multi-tenant isolation.
+# ==============================================================================
+
+import datetime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UUID
+from sqlalchemy.orm import relationship
+from app.database import Base
+
+
+class Organization(Base):
+    """
+    Represents a tenant organization (e.g. a D2C fashion brand).
+    """
+    __tablename__ = "organizations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String, nullable=False)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    # Relationships
+    memberships = relationship("Membership", back_populates="organization", cascade="all, delete-orphan")
+    products = relationship("Product", back_populates="organization", cascade="all, delete-orphan")
+    suppliers = relationship("Supplier", back_populates="organization", cascade="all, delete-orphan")
+    artifacts = relationship("Artifact", back_populates="organization", cascade="all, delete-orphan")
+    inventory_items = relationship("InventoryItem", back_populates="organization", cascade="all, delete-orphan")
+    sales_records = relationship("SalesRecord", back_populates="organization", cascade="all, delete-orphan")
+    sessions = relationship("ConversationSession", back_populates="organization", cascade="all, delete-orphan")
+    memories = relationship("MemoryEntry", back_populates="organization", cascade="all, delete-orphan")
+
+
+class Membership(Base):
+    """
+    Maps a User to an Organization with role permissions (e.g. admin, member, owner).
+    """
+    __tablename__ = "memberships"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id", ondelete="CASCADE"), nullable=False)
+    role = Column(String, default="member", nullable=False)  # owner, admin, member
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    organization = relationship("Organization", back_populates="memberships")
+    profile = relationship("Profile", back_populates="memberships")
