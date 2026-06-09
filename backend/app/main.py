@@ -82,10 +82,16 @@ app.add_middleware(
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity
 app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(organization.router)
+app.include_router(clients.router)
+app.include_router(projects.router)
+app.include_router(tasks.router)
+app.include_router(finance.router)
+app.include_router(analytics.router)
+app.include_router(activity.router)
 
 
 @app.get("/")
