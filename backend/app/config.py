@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "aethercorp-nexus-super-secret-key-replace-in-production"
     SUPABASE_JWT_SECRET: str = ""
     SUPABASE_URL: str = ""
+    FRONTEND_URL: str = "http://localhost:3000"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 

@@ -1,4 +1,4 @@
-# ==============================================================================
+# ==============================================================================CORSMiddleware
 # PURPOSE: FastAPI Application Bootstrap Entrypoint.
 # DATA FLOW: Initializes database -> sets up routes -> configures CORS -> runs Web server.
 # EXTENSION POINTS: Add global exception handlers, rate limiters, or mount websocket gateways.
@@ -67,7 +67,12 @@ app = FastAPI(
 # Configure CORS for Next.js frontend calls
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"], 
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        settings.FRONTEND_URL
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
