@@ -54,13 +54,8 @@ export default function DashboardPage() {
           setProfile(profileData);
           
           if (!profileData.organization_id) {
-            console.log("[Auth] User missing organization_id. Initiating redirect to /onboarding...");
+            console.log("[Auth] User missing organization_id. Rendering empty state...");
             setNeedsOnboarding(true);
-            setLoading(false);
-            setTimeout(() => {
-              window.location.href = "/onboarding";
-            }, 2000);
-            return;
           }
         } else {
           throw new Error("Failed to authenticate profile");
@@ -113,15 +108,20 @@ export default function DashboardPage() {
         )}
 
         {needsOnboarding ? (
-          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
-            <div className="h-16 w-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4 shadow-sm border border-indigo-200">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-6">
+            <div className="h-20 w-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-2 shadow-sm border border-indigo-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900">Workspace Setup Required</h2>
-            <p className="text-slate-500 max-w-md">
-              EVE requires a dedicated workspace to generate accurate business intelligence. Redirecting you to the onboarding flow...
-            </p>
-            <div className="mt-8 animate-pulse text-indigo-600 text-sm font-medium">Redirecting...</div>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-slate-900 tracking-tight">No Workspace Found</h2>
+              <p className="text-slate-500 max-w-md mx-auto text-lg">
+                EVE requires a dedicated workspace to generate accurate business intelligence. Create one to get started.
+              </p>
+            </div>
+            <a href="/onboarding" className="mt-8 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg shadow-sm hover:bg-indigo-700 hover:shadow transition-all inline-flex items-center gap-2">
+              Create Workspace
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6">
