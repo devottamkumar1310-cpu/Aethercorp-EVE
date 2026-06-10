@@ -12,12 +12,32 @@ router = APIRouter(prefix="/api/organization", tags=["organization"])
 class OnboardRequest(BaseModel):
     name: str
 
+@router.get("/workspaces")
+def get_workspaces(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
+    memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()
+    result = []
+    for m in memberships:
+        org = db.query(Organization).filter(Organization.id == m.organization_id).first()
+        if org:
+            result.append({
+                "id": str(org.id),
+                "name": org.name,
+                "slug": org.slug,
+                "role": m.role
+            })
+    return result
+
 @router.post("/onboard")
 def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
-    # Check if user already has a membership
-    existing_membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
+    # Check if user already has a workspace with this name (idempotency check)
+    existing_membership = db.query(Membership).join(Organization).filter(
+        Membership.user_id == current_user.id,
+        Organization.name == request.name
+    ).first()
+    
     if existing_membership:
-        raise HTTPException(status_code=400, detail="User already belongs to a workspace")
+        org = existing_membership.organization
+        return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
     # Generate slug from name
     slug = re.sub(r'[^a-z0-9]+', '-', request.name.lower()).strip('-')

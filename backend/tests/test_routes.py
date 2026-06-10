@@ -26,7 +26,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 # Setup schemas
 # Import all models to register them on Base
 from app.models.organization import Organization, Membership
-from app.models.user import User
+from app.models.profile import Profile
 from app.models.product import Product
 from app.models.supplier import Supplier
 from app.models.inventory import InventoryItem, SalesRecord
@@ -34,6 +34,24 @@ from app.models.memory import ConversationSession, ChatMessage, MemoryEntry
 from app.models.artifact import Artifact
 
 Base.metadata.create_all(bind=engine)
+
+import uuid
+from app.core.security import get_current_user_and_tenant, get_current_user, get_required_workspace_id
+
+# Seed test tenant data
+MOCK_USER_ID = uuid.uuid4()
+MOCK_ORG_ID = uuid.uuid4()
+
+db = TestingSessionLocal()
+mock_org = Organization(id=MOCK_ORG_ID, name="Test Org", slug="test-org")
+mock_user = Profile(id=MOCK_USER_ID, email="test@example.com", full_name="Test User", hashed_password="pw")
+mock_membership = Membership(user_id=MOCK_USER_ID, organization_id=MOCK_ORG_ID, role="admin")
+
+db.add(mock_org)
+db.add(mock_user)
+db.add(mock_membership)
+db.commit()
+db.close()
 
 
 def override_get_db():
@@ -44,8 +62,27 @@ def override_get_db():
         db.close()
 
 
-# Override database dependency injection in FastAPI
+def override_get_current_user_and_tenant():
+    return {"user_id": MOCK_USER_ID, "organization_id": MOCK_ORG_ID}
+
+
+def override_get_current_user():
+    db = TestingSessionLocal()
+    user = db.query(Profile).filter(Profile.id == MOCK_USER_ID).first()
+    db.close()
+    return user
+
+
+def override_get_required_workspace_id():
+    return MOCK_ORG_ID
+
+
+# Override dependencies in FastAPI
 app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
+app.dependency_overrides[get_current_user] = override_get_current_user
+app.dependency_overrides[get_required_workspace_id] = override_get_required_workspace_id
+
 client = TestClient(app)
 
 

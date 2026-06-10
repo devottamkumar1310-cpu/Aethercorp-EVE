@@ -21,7 +21,7 @@ class Supplier(Base):
     __tablename__ = "suppliers"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     name = Column(String, index=True, nullable=False)
     contact_email = Column(String, nullable=True)
     location = Column(String, nullable=True)       # e.g., China, Portugal, India, Turkey

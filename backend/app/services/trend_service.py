@@ -7,8 +7,10 @@ from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.services.business_health_service import get_health_score
 
-def calculate_trends(db: Session) -> dict:
-    snapshots = db.query(IntelligenceSnapshot).order_by(desc(IntelligenceSnapshot.created_at)).limit(2).all()
+import uuid
+
+def calculate_trends(db: Session, workspace_id: uuid.UUID) -> dict:
+    snapshots = db.query(IntelligenceSnapshot).filter(IntelligenceSnapshot.organization_id == workspace_id).order_by(desc(IntelligenceSnapshot.created_at)).limit(2).all()
     
     # We need 'current' and 'previous' to compare.
     # If we have 2 snapshots, we use them.
@@ -41,16 +43,16 @@ def calculate_trends(db: Session) -> dict:
         previous = snapshots[0]
         
         # Real-time metrics
-        revenue_sum = db.query(func.sum(Revenue.amount)).scalar() or 0.0
-        expense_sum = db.query(func.sum(Expense.amount)).scalar() or 0.0
+        revenue_sum = db.query(func.sum(Revenue.amount)).filter(Revenue.organization_id == workspace_id).scalar() or 0.0
+        expense_sum = db.query(func.sum(Expense.amount)).filter(Expense.organization_id == workspace_id).scalar() or 0.0
         profit = revenue_sum - expense_sum
         
-        total_tasks = db.query(Task).count()
-        completed_tasks = db.query(Task).filter(Task.status == "completed").count()
+        total_tasks = db.query(Task).filter(Task.organization_id == workspace_id).count()
+        completed_tasks = db.query(Task).filter(Task.organization_id == workspace_id, Task.status == "completed").count()
         curr_task_rate = completed_tasks / max(1, total_tasks)
         prev_task_rate = previous.completed_tasks / max(1, previous.total_tasks)
         
-        health_data = get_health_score(db)
+        health_data = get_health_score(db, workspace_id)
         
         return {
             "revenue_trend": get_trend(revenue_sum, previous.revenue),

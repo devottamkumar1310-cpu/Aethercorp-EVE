@@ -10,7 +10,7 @@ import { API_BASE_URL } from "@/lib/api";
 import { CEOChatConsole } from "@/components/chat/CEOChatConsole";
 import { AgentActivityMonitor } from "@/components/dashboard/AgentActivityMonitor";
 
-import { AlertCircle, Plus, Users, Briefcase, CheckSquare, DollarSign, Activity } from "lucide-react";
+import { AlertCircle, Plus, Users, Briefcase, CheckSquare, DollarSign, Activity, Sparkles, Package } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
@@ -84,7 +84,10 @@ export default function DashboardPage() {
           setProfile(await profileRes.json());
         }
 
-        await loadDashboardData(session.access_token);
+        const activeWorkspace = localStorage.getItem("active_workspace_id");
+        if (activeWorkspace) {
+          await loadDashboardData(session.access_token);
+        }
         setError(null);
       } catch (err: any) {
         setError(err.message || "Failed to connect to backend");
@@ -105,25 +108,70 @@ export default function DashboardPage() {
     return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Loading Operations Engine...</div>;
   }
 
+  const activeWorkspace = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
+
+  if (!activeWorkspace) {
+    return (
+      <main className="flex-1 p-6 max-w-2xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[70vh]">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden p-8 text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
+              <Sparkles size={32} />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Create a Workspace to Begin</h2>
+          <p className="text-slate-500 text-sm max-w-md mx-auto">
+            Welcome to Enterprise Virtual Executive. You need a workspace to track inventory, forecast demand, and manage clients.
+          </p>
+
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const name = (form.elements.namedItem("workspaceName") as HTMLInputElement).value;
+            if (!name.trim()) return;
+            try {
+              setLoading(true);
+              const response = await fetch(`${API_BASE_URL}/api/organization/onboard`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${sessionToken}`
+                },
+                body: JSON.stringify({ name })
+              });
+              if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detail || "Failed to create workspace");
+              }
+              const data = await response.json();
+              localStorage.setItem("active_workspace_id", data.organization_id);
+              window.location.reload();
+            } catch (err: any) {
+              alert(err.message);
+              setLoading(false);
+            }
+          }} className="max-w-md mx-auto space-y-4">
+            <input
+              type="text"
+              name="workspaceName"
+              required
+              placeholder="e.g. Acme Clothing"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+            />
+            <button
+              type="submit"
+              className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm animate-pulse-subtle"
+            >
+              Create Workspace & Continue
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4 shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-blue-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter">
-            EVE
-          </div>
-          <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Enterprise Virtual Executive</h1>
-        </div>
-        <div className="flex items-center gap-4 text-sm text-slate-500">
-          <div className="flex flex-col items-end">
-            <span className="font-semibold text-slate-800">
-              Welcome back, {profile?.full_name || "COO"}
-            </span>
-            <span className="text-xs">Business Operations Engine</span>
-          </div>
-        </div>
-      </header>
-
       <main className="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
         {error && (
           <Alert variant="destructive">
@@ -155,6 +203,7 @@ export default function DashboardPage() {
               <Link href="/dashboard/projects" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><Briefcase size={16}/> Projects</Link>
               <Link href="/dashboard/tasks" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><CheckSquare size={16}/> Tasks</Link>
               <Link href="/dashboard/finance" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><DollarSign size={16}/> Finances</Link>
+              <Link href="/dashboard/inventory" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><Package size={16}/> Inventory</Link>
               <Link href="/dashboard/activity" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-sm font-medium transition-colors text-slate-700 whitespace-nowrap"><Activity size={16}/> Activity Feed</Link>
             </div>
 

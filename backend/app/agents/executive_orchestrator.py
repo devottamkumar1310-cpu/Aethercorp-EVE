@@ -72,11 +72,11 @@ class ExecutiveOrchestrator(BaseAgent):
                 forecasting_result.update(output.get("result", {}))
 
         # Core Metrics
-        inventory_risk_score = inventory_result.get("inventory_risk_score", 50.0)
-        reorder_recommendations = inventory_result.get("reorder_recommendations", [])
+        inventory_risk_score = inventory_result.get("inventory_risk_score", inventory_result.get("average_risk_score", 50.0))
+        reorder_recommendations = inventory_result.get("reorder_recommendations", inventory_result.get("items_at_risk", []))
         dead_stock_alerts = inventory_result.get("dead_stock_items", [])
         
-        pricing_recommendations = pricing_result.get("pricing_recommendations", inventory_result.get("pricing_recommendations", []))
+        pricing_recommendations = pricing_result.get("pricing_recommendations", pricing_result.get("recommendations", inventory_result.get("pricing_recommendations", [])))
         estimated_profit_impact = pricing_result.get("estimated_profit_impact", inventory_result.get("estimated_profit_impact", 0.0))
 
         # Handle explicit scenario outputs if forecasting ran

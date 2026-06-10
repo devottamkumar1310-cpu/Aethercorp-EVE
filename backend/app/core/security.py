@@ -32,14 +32,18 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depends(se
         unverified_payload = jwt.decode(token, options={"verify_signature": False})
         logger.info(f"Unverified JWT Payload: {unverified_payload}")
         
+        # Get token header to check algorithm
+        header = jwt.get_unverified_header(token)
+        alg = header.get("alg")
+        
         # 1. Attempt JWKS Asymmetric Verification (for ES256/RS256)
-        if jwks_client:
+        if alg in ["RS256", "ES256"] and jwks_client:
             try:
                 signing_key = jwks_client.get_signing_key_from_jwt(token)
                 payload = jwt.decode(
                     token,
                     signing_key.key,
-                    algorithms=["RS256", "ES256", "HS256"],
+                    algorithms=["RS256", "ES256"],
                     audience="authenticated"
                 )
                 logger.info(f"JWT Validation Success (JWKS) for user: {payload.get('sub')}")
@@ -102,38 +106,127 @@ def get_current_user(
     # Auto-provision profile if it doesn't exist yet (synced from Supabase)
     profile = db.query(Profile).filter(Profile.id == user_id).first()
     if not profile:
-        logger.info(f"Auto-provisioning missing profile for user: {user_id}")
+        logger.info(f"Profile not found by ID. Checking by email.")
         email = payload.get("email", "")
-        # Get full name from user metadata if available
         user_metadata = payload.get("user_metadata", {})
         full_name = user_metadata.get("full_name", "")
-        
-        try:
-            profile = Profile(
-                id=user_id,
-                email=email,
-                full_name=full_name,
-                hashed_password="supabase-managed", # No longer needed but required by schema if not nullable
-                is_active=True
-            )
-            db.add(profile)
-            db.commit()
-            db.refresh(profile)
-            logger.info(f"Profile provisioned successfully: {user_id}")
-        except Exception as e:
-            db.rollback()
-            logger.error(f"Failed to auto-provision profile: {e}", exc_info=e)
-            raise HTTPException(status_code=500, detail="Database error during provisioning")
+
+        # Check if profile with email exists
+        if email:
+            existing_profile = db.query(Profile).filter(Profile.email == email).first()
+            if existing_profile:
+                old_id = existing_profile.id
+                logger.info(f"Migrating profile ID from {old_id} to {user_id} for email {email}")
+                try:
+                    from sqlalchemy import text
+                    from app.models.organization import Membership
+                    from app.models.task import Task
+                    from app.models.activity_log import ActivityLog
+
+                    # 1. Re-point foreign keys BEFORE changing the profile PK
+                    db.query(Membership).filter(Membership.user_id == old_id).update({Membership.user_id: user_id})
+                    db.query(Task).filter(Task.assigned_to == old_id).update({Task.assigned_to: user_id})
+                    db.query(ActivityLog).filter(ActivityLog.user_id == old_id).update({ActivityLog.user_id: user_id})
+
+                    # 2. Update profile primary key in-place via raw SQL
+                    #    (SQLAlchemy ORM does not allow PK mutation)
+                    db.execute(
+                        text("UPDATE profiles SET id = :new_id WHERE id = :old_id"),
+                        {"new_id": user_id, "old_id": old_id}
+                    )
+
+                    # 3. Update full_name if it was empty
+                    if not existing_profile.full_name and full_name:
+                        db.execute(
+                            text("UPDATE profiles SET full_name = :name WHERE id = :uid"),
+                            {"name": full_name, "uid": user_id}
+                        )
+
+                    db.commit()
+
+                    # 4. Expire ORM cache and reload the migrated profile
+                    db.expire_all()
+                    profile = db.query(Profile).filter(Profile.id == user_id).first()
+                    logger.info("Profile ID migration completed successfully.")
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"Failed to migrate profile ID: {e}", exc_info=e)
+                    raise HTTPException(status_code=500, detail="Profile sync error")
+            else:
+                logger.info(f"Auto-provisioning missing profile for user: {user_id}")
+                try:
+                    profile = Profile(
+                        id=user_id,
+                        email=email,
+                        full_name=full_name,
+                        hashed_password="supabase-managed", # No longer needed but required by schema if not nullable
+                        is_active=True
+                    )
+                    db.add(profile)
+                    db.commit()
+                    db.refresh(profile)
+                    logger.info(f"Profile provisioned successfully: {user_id}")
+                except Exception as e:
+                    db.rollback()
+                    logger.error(f"Failed to auto-provision profile: {e}", exc_info=e)
+                    raise HTTPException(status_code=500, detail="Database error during provisioning")
+        else:
+            raise HTTPException(status_code=400, detail="Email claim missing from token")
             
     return profile
 
+
+from fastapi import Header
+from typing import Optional
 from app.models.organization import Membership
 
-def get_current_user_and_tenant(
+def get_active_workspace_id(
+    x_workspace_id: Optional[str] = Header(None),
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
-):
-    membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
+) -> Optional[uuid.UUID]:
+    """
+    Extracts and validates the active workspace from the X-Workspace-Id header.
+    If header is missing, falls back to the user's first membership.
+    If no workspaces exist, returns None.
+    """
+    if not x_workspace_id:
+        membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
+        return membership.organization_id if membership else None
+        
+    try:
+        workspace_uuid = uuid.UUID(x_workspace_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid workspace ID format")
+        
+    # Strict membership verification
+    membership = db.query(Membership).filter(
+        Membership.user_id == current_user.id,
+        Membership.organization_id == workspace_uuid
+    ).first()
+    
     if not membership:
-        raise HTTPException(status_code=403, detail="No workspace found")
-    return {"user_id": current_user.id, "organization_id": membership.organization_id}
+        raise HTTPException(status_code=403, detail="Not a member of this workspace")
+        
+    return workspace_uuid
+
+
+def get_required_workspace_id(
+    workspace_id: Optional[uuid.UUID] = Depends(get_active_workspace_id)
+) -> uuid.UUID:
+    """
+    Validates that a workspace is active and returns its ID. Raises 400 if missing.
+    """
+    if not workspace_id:
+        raise HTTPException(status_code=400, detail="Active workspace is required for this operation")
+    return workspace_id
+
+
+def get_current_user_and_tenant(
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    current_user: Profile = Depends(get_current_user)
+):
+    """
+    Backwards compatible dependency returning standard tenant context.
+    """
+    return {"user_id": current_user.id, "organization_id": workspace_id}
