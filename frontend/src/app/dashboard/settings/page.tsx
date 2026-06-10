@@ -54,24 +54,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-4 shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push('/dashboard')}>
-          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter">
-            EVE
-          </div>
-          <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Settings</h1>
-        </div>
-        <button 
-          onClick={handleLogout}
-          className="flex items-center text-sm font-medium text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-md transition-colors"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
-        </button>
-      </header>
-
-      <main className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-8 mt-4">
+    <main className="p-6 max-w-4xl mx-auto w-full space-y-8">
         
         {/* Profile Section */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -141,7 +124,6 @@ export default function SettingsPage() {
           </div>
         </div>
 
-      </main>
-    </div>
+    </main>
   );
 }

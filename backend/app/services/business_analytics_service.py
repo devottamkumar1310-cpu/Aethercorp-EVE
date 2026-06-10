@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.models.client import Client
@@ -7,26 +8,26 @@ from app.models.finance import Revenue, Expense
 
 class BusinessAnalyticsService:
     @staticmethod
-    def get_overview(db: Session) -> dict:
+    def get_overview(db: Session, organization_id: uuid.UUID) -> dict:
         """
         Aggregates KPIs for the Business Operations Engine.
         Designed to be easily extensible for future metrics.
         """
         # Client Metrics
-        total_clients = db.query(Client).count()
-        active_clients = db.query(Client).filter(Client.status == "active").count()
+        total_clients = db.query(Client).filter(Client.organization_id == organization_id).count()
+        active_clients = db.query(Client).filter(Client.organization_id == organization_id, Client.status == "active").count()
         
         # Project Metrics
-        total_projects = db.query(Project).count()
-        active_projects = db.query(Project).filter(Project.status == "active").count()
+        total_projects = db.query(Project).filter(Project.organization_id == organization_id).count()
+        active_projects = db.query(Project).filter(Project.organization_id == organization_id, Project.status == "active").count()
         
         # Task Metrics
-        total_tasks = db.query(Task).count()
-        completed_tasks = db.query(Task).filter(Task.status == "completed").count()
+        total_tasks = db.query(Task).filter(Task.organization_id == organization_id).count()
+        completed_tasks = db.query(Task).filter(Task.organization_id == organization_id, Task.status == "completed").count()
         
         # Financial Metrics
-        total_revenue = db.query(func.sum(Revenue.amount)).scalar() or 0.0
-        total_expenses = db.query(func.sum(Expense.amount)).scalar() or 0.0
+        total_revenue = db.query(func.sum(Revenue.amount)).filter(Revenue.organization_id == organization_id).scalar() or 0.0
+        total_expenses = db.query(func.sum(Expense.amount)).filter(Expense.organization_id == organization_id).scalar() or 0.0
         net_profit = total_revenue - total_expenses
         
         return {

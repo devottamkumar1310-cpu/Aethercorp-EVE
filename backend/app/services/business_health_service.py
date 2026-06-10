@@ -5,19 +5,21 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
 
-def get_health_score(db: Session) -> dict:
+import uuid
+
+def get_health_score(db: Session, workspace_id: uuid.UUID) -> dict:
     # 1. Gather foundational metrics
-    total_clients = db.query(Client).count()
-    active_clients = db.query(Client).filter(Client.status == "active").count()
+    total_clients = db.query(Client).filter(Client.organization_id == workspace_id).count()
+    active_clients = db.query(Client).filter(Client.organization_id == workspace_id, Client.status == "active").count()
     
-    total_projects = db.query(Project).count()
-    active_projects = db.query(Project).filter(Project.status == "active").count()
+    total_projects = db.query(Project).filter(Project.organization_id == workspace_id).count()
+    active_projects = db.query(Project).filter(Project.organization_id == workspace_id, Project.status == "active").count()
     
-    total_tasks = db.query(Task).count()
-    completed_tasks = db.query(Task).filter(Task.status == "completed").count()
+    total_tasks = db.query(Task).filter(Task.organization_id == workspace_id).count()
+    completed_tasks = db.query(Task).filter(Task.organization_id == workspace_id, Task.status == "completed").count()
     
-    revenue_sum = db.query(func.sum(Revenue.amount)).scalar() or 0.0
-    expense_sum = db.query(func.sum(Expense.amount)).scalar() or 0.0
+    revenue_sum = db.query(func.sum(Revenue.amount)).filter(Revenue.organization_id == workspace_id).scalar() or 0.0
+    expense_sum = db.query(func.sum(Expense.amount)).filter(Expense.organization_id == workspace_id).scalar() or 0.0
     profit = revenue_sum - expense_sum
 
     # 2. Base Calculations

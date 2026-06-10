@@ -22,7 +22,7 @@ class Artifact(Base):
     __tablename__ = "artifacts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     artifact_type = Column(String, index=True, nullable=False) # e.g. inventory_report, pricing_report, executive_report
     title = Column(String, nullable=False)
     structured_content = Column(JSON, nullable=False) # JSON structure corresponding to report type

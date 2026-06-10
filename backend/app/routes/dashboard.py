@@ -1,25 +1,26 @@
+import uuid
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.organization import Membership
 from app.models.profile import Profile
 from app.services.analytics_service import AnalyticsService
 from app.services.simulation_engine import SimulationEngine
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_active_workspace_id, get_required_workspace_id
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
 @router.get("")
 def get_dashboard(
     db: Session = Depends(get_db),
-    current_user: Profile = Depends(get_current_user)
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: Optional[uuid.UUID] = Depends(get_active_workspace_id)
 ):
     """
     Returns the overarching Business Intelligence dashboard metrics for the organization.
     If the user does not belong to a workspace, returns an empty state payload.
     """
-    membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
-    if not membership:
+    if not workspace_id:
         return {
             "inventory_risk_score": 0.0,
             "dead_stock_items": [],
@@ -31,12 +32,11 @@ def get_dashboard(
             "top_3_actions": []
         }
 
-    organization_id = membership.organization_id
     try:
-        metrics = AnalyticsService.get_dashboard_metrics(db, organization_id)
+        metrics = AnalyticsService.get_dashboard_metrics(db, workspace_id)
         
         # Inject Cash Flow Forecast
-        cash_flow = SimulationEngine.simulate_cash_flow_forecast(30, organization_id, db)
+        cash_flow = SimulationEngine.simulate_cash_flow_forecast(30, workspace_id, db)
         metrics["cash_flow_forecast"] = cash_flow
         
         # Inject Top 3 Actions
@@ -52,7 +52,7 @@ def get_dashboard(
             first_rec = metrics["pricing_recommendations"][0]
             top_actions.append({
                 "action": f"Adjust {first_rec.get('sku')} price to ${first_rec.get('recommended_price')}",
-                "impact": f"Margin optimization",
+                "impact": "Margin optimization",
                 "confidence_score": 88
             })
         if metrics.get("dead_stock_items"):
@@ -73,21 +73,41 @@ def get_dashboard(
 from app.services.dashboard_service import DashboardService
 
 @router.get("/kpis")
-def get_dashboard_kpis(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
-    return DashboardService.get_kpis(db)
+def get_dashboard_kpis(
+    db: Session = Depends(get_db), 
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    return DashboardService.get_kpis(db, workspace_id)
 
 @router.get("/recent-clients")
-def get_dashboard_recent_clients(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
-    return DashboardService.get_recent_clients(db)
+def get_dashboard_recent_clients(
+    db: Session = Depends(get_db), 
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    return DashboardService.get_recent_clients(db, workspace_id)
 
 @router.get("/recent-projects")
-def get_dashboard_recent_projects(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
-    return DashboardService.get_recent_projects(db)
+def get_dashboard_recent_projects(
+    db: Session = Depends(get_db), 
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    return DashboardService.get_recent_projects(db, workspace_id)
 
 @router.get("/upcoming-deadlines")
-def get_dashboard_upcoming_deadlines(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
-    return DashboardService.get_upcoming_deadlines(db)
+def get_dashboard_upcoming_deadlines(
+    db: Session = Depends(get_db), 
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    return DashboardService.get_upcoming_deadlines(db, workspace_id)
 
 @router.get("/summary")
-def get_dashboard_summary(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user)):
-    return DashboardService.get_summary(db)
+def get_dashboard_summary(
+    db: Session = Depends(get_db), 
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    return DashboardService.get_summary(db, workspace_id)

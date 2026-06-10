@@ -6,18 +6,20 @@ from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.services.business_health_service import get_health_score
 
-def generate_summary(db: Session) -> dict:
-    health = get_health_score(db)
+import uuid
+
+def generate_summary(db: Session, workspace_id: uuid.UUID) -> dict:
+    health = get_health_score(db, workspace_id)
     
-    active_clients = db.query(Client).filter(Client.status == "active").count()
-    active_projects = db.query(Project).filter(Project.status == "active").count()
+    active_clients = db.query(Client).filter(Client.organization_id == workspace_id, Client.status == "active").count()
+    active_projects = db.query(Project).filter(Project.organization_id == workspace_id, Project.status == "active").count()
     
-    revenue_sum = db.query(func.sum(Revenue.amount)).scalar() or 0.0
-    expense_sum = db.query(func.sum(Expense.amount)).scalar() or 0.0
+    revenue_sum = db.query(func.sum(Revenue.amount)).filter(Revenue.organization_id == workspace_id).scalar() or 0.0
+    expense_sum = db.query(func.sum(Expense.amount)).filter(Expense.organization_id == workspace_id).scalar() or 0.0
     profit = revenue_sum - expense_sum
     
-    total_tasks = db.query(Task).count()
-    completed_tasks = db.query(Task).filter(Task.status == "completed").count()
+    total_tasks = db.query(Task).filter(Task.organization_id == workspace_id).count()
+    completed_tasks = db.query(Task).filter(Task.organization_id == workspace_id, Task.status == "completed").count()
 
     sentences = []
     

@@ -8,6 +8,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True, index=True)
     title = Column(String, nullable=False)
     description = Column(String, nullable=True)
     project_id = Column(UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), index=True, nullable=False)
@@ -21,5 +22,6 @@ class Task(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     # Relationships
+    organization = relationship("Organization", back_populates="tasks")
     project = relationship("Project", back_populates="tasks")
     assignee = relationship("Profile")

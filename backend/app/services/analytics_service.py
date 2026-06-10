@@ -12,7 +12,7 @@ import logging
 import datetime
 from typing import Dict, Any, List
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.dependency_container import container
 
@@ -87,7 +87,7 @@ class AnalyticsService:
         logger.info(f"Running inventory health analysis for Org: {organization_id}...")
         
         # 1. Fetch products and current inventory
-        items = db.query(InventoryItem).join(Product, InventoryItem.product_id == Product.id)\
+        items = db.query(InventoryItem).options(joinedload(InventoryItem.product))\
                   .filter(InventoryItem.organization_id == organization_id).all()
                   
         velocities = cls.calculate_sales_velocities(db, organization_id)
@@ -98,6 +98,14 @@ class AnalyticsService:
         dead_stock_count = 0
         total_risk_score = 0.0
         total_reorder_cost = 0.0
+        
+        # Fetch sales quantities for Sell Through Calculations (past 30 days) in bulk
+        thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
+        thirty_day_sales = db.query(SalesRecord.product_id, func.sum(SalesRecord.quantity))\
+                             .filter(SalesRecord.organization_id == organization_id)\
+                             .filter(SalesRecord.date >= thirty_days_ago)\
+                             .group_by(SalesRecord.product_id).all()
+        sales_qty_map = {row[0]: int(row[1]) for row in thirty_day_sales if row[1] is not None}
         
         # 2. Iterate products to calculate metrics
         for item in items:
@@ -122,11 +130,8 @@ class AnalyticsService:
             item.safety_stock = metrics["safety_stock"]
             item.reorder_point = metrics["reorder_point"]
             
-            # Fetch sales quantities for Sell Through Calculations (past 30 days)
-            thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
-            units_sold = db.query(func.sum(SalesRecord.quantity))\
-                           .filter(SalesRecord.product_id == product.id)\
-                           .filter(SalesRecord.date >= thirty_days_ago).scalar() or 0
+            # Get cached sales quantity
+            units_sold = sales_qty_map.get(product.id, 0)
                            
             str_rate = calculate_sell_through_rate(units_sold, item.stock_on_hand)
             is_dead = detect_dead_stock(item.stock_on_hand, avg_daily_sales)
@@ -186,9 +191,23 @@ class AnalyticsService:
         """
         logger.info(f"Running pricing adjustments analysis for Org: {organization_id}...")
         
-        items = db.query(InventoryItem).join(Product, InventoryItem.product_id == Product.id)\
+        items = db.query(InventoryItem).options(joinedload(InventoryItem.product))\
                   .filter(InventoryItem.organization_id == organization_id).all()
                   
+        # Bulk fetch average unit prices
+        avg_prices = db.query(SalesRecord.product_id, func.avg(SalesRecord.unit_price))\
+                       .filter(SalesRecord.organization_id == organization_id)\
+                       .group_by(SalesRecord.product_id).all()
+        avg_price_map = {row[0]: float(row[1]) for row in avg_prices if row[1] is not None}
+
+        # Bulk fetch sales quantities for past 30 days
+        thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
+        thirty_day_sales = db.query(SalesRecord.product_id, func.sum(SalesRecord.quantity))\
+                             .filter(SalesRecord.organization_id == organization_id)\
+                             .filter(SalesRecord.date >= thirty_days_ago)\
+                             .group_by(SalesRecord.product_id).all()
+        sales_qty_map = {row[0]: int(row[1]) for row in thirty_day_sales if row[1] is not None}
+        
         recommendations = []
         total_profit_impact = 0.0
         total_revenue_impact = 0.0
@@ -198,10 +217,8 @@ class AnalyticsService:
         for item in items:
             product = item.product
             
-            # Fetch active price from sales logs (average price sold)
-            avg_price_row = db.query(func.avg(SalesRecord.unit_price))\
-                              .filter(SalesRecord.product_id == product.id).first()
-            current_price = float(avg_price_row[0]) if avg_price_row and avg_price_row[0] else 50.0
+            # Use cached average price
+            current_price = avg_price_map.get(product.id, 50.0)
             
             # Define margin: (price - cost) / price
             unit_cost = product.unit_cost
@@ -256,11 +273,8 @@ class AnalyticsService:
             else:
                 rec_margin = 0.0
 
-            # Calculate Projected Impact (Quantity sold last 30 days)
-            thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
-            units_sold = db.query(func.sum(SalesRecord.quantity))\
-                           .filter(SalesRecord.product_id == product.id)\
-                           .filter(SalesRecord.date >= thirty_days_ago).scalar() or 0
+            # Get cached sales quantity
+            units_sold = sales_qty_map.get(product.id, 0)
             
             # Quantity change = - Price Change % * Elasticity Coefficient
             qty_change_pct = -price_change_pct * elasticity
@@ -317,11 +331,25 @@ class AnalyticsService:
         """
         logger.info(f"Generating dashboard metrics for Org: {organization_id}...")
         
-        items = db.query(InventoryItem).join(Product, InventoryItem.product_id == Product.id)\
+        items = db.query(InventoryItem).options(joinedload(InventoryItem.product))\
                   .filter(InventoryItem.organization_id == organization_id).all()
                   
         velocities = cls.calculate_sales_velocities(db, organization_id)
         
+        # Bulk fetch average unit prices
+        avg_prices = db.query(SalesRecord.product_id, func.avg(SalesRecord.unit_price))\
+                       .filter(SalesRecord.organization_id == organization_id)\
+                       .group_by(SalesRecord.product_id).all()
+        avg_price_map = {row[0]: float(row[1]) for row in avg_prices if row[1] is not None}
+
+        # Bulk fetch sales quantities for past 30 days
+        thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
+        thirty_day_sales = db.query(SalesRecord.product_id, func.sum(SalesRecord.quantity))\
+                             .filter(SalesRecord.organization_id == organization_id)\
+                             .filter(SalesRecord.date >= thirty_days_ago)\
+                             .group_by(SalesRecord.product_id).all()
+        sales_qty_map = {row[0]: int(row[1]) for row in thirty_day_sales if row[1] is not None}
+
         dead_stock_items = []
         stockout_predictions = []
         reorder_recommendations = []
@@ -361,11 +389,8 @@ class AnalyticsService:
                 
             total_risk_score += reorder_metrics["stockout_risk_score"]
             
-            # Pricing & Margin
-            # Fetch active price from sales logs (average price sold)
-            avg_price_row = db.query(func.avg(SalesRecord.unit_price))\
-                              .filter(SalesRecord.product_id == product.id).first()
-            current_price = float(avg_price_row[0]) if avg_price_row and avg_price_row[0] else 50.0
+            # Use cached current price
+            current_price = avg_price_map.get(product.id, 50.0)
             
             margin_data = calculate_margin(current_price, product.unit_cost)
             
@@ -394,11 +419,8 @@ class AnalyticsService:
                 "reason": reason
             })
             
-            # Profit impact estimate
-            thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
-            units_sold = db.query(func.sum(SalesRecord.quantity))\
-                           .filter(SalesRecord.product_id == product.id)\
-                           .filter(SalesRecord.date >= thirty_days_ago).scalar() or 0
+            # Get cached sales quantity
+            units_sold = sales_qty_map.get(product.id, 0)
             
             impact = estimate_profit_impact(
                 current_price=current_price,

@@ -1,3 +1,4 @@
+import uuid
 import logging
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,6 +11,8 @@ from app.core.event_bus import event_bus, Event
 from app.orchestration.planner import Planner
 from app.orchestration.orchestrator import Orchestrator
 from app.agents.executive_orchestrator import ExecutiveOrchestrator
+from app.core.security import get_current_user, get_required_workspace_id
+from app.models.profile import Profile
 
 # Import specialized agents to trigger registration
 from app.agents.market.market_agent import MarketAgent
@@ -38,7 +41,12 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
+async def chat_endpoint(
+    request: ChatRequest, 
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
     """
     Temporary endpoint for Phase 2 end-to-end verification.
     """
@@ -62,7 +70,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
 
         # 3. Use Planner to parse request into Task Graph
         planner = Planner()
-        graph = await planner.create_plan(request.message, organization_id=1)
+        graph = await planner.create_plan(request.message, organization_id=workspace_id)
 
         # 4. Use Orchestrator to execute the graph
         orchestrator = Orchestrator(db=db)
@@ -70,7 +78,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
 
         # 5. Compile Executive Report using ExecutiveOrchestrator
         ceo = ExecutiveOrchestrator(db=db)
-        executive_summary = await ceo.compile_report(context.results, organization_id=1)
+        executive_summary = await ceo.compile_report(context.results, organization_id=workspace_id)
 
         # Determine executed agents
         executed_agents = []

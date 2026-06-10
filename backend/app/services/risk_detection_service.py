@@ -6,12 +6,14 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
 
-def detect_risks(db: Session) -> dict:
+import uuid
+
+def detect_risks(db: Session, workspace_id: uuid.UUID) -> dict:
     risks = []
     
     # 1. Negative Profit
-    revenue_sum = db.query(func.sum(Revenue.amount)).scalar() or 0.0
-    expense_sum = db.query(func.sum(Expense.amount)).scalar() or 0.0
+    revenue_sum = db.query(func.sum(Revenue.amount)).filter(Revenue.organization_id == workspace_id).scalar() or 0.0
+    expense_sum = db.query(func.sum(Expense.amount)).filter(Expense.organization_id == workspace_id).scalar() or 0.0
     profit = revenue_sum - expense_sum
     
     if profit < 0:
@@ -31,9 +33,9 @@ def detect_risks(db: Session) -> dict:
             })
             
     # 2. Overdue Projects
-    # We compare deadline against current date. Note: deadline is a date string or DateTime
     now = datetime.now()
     overdue_projects = db.query(Project).filter(
+        Project.organization_id == workspace_id,
         Project.status == "active",
         Project.deadline != None,
         Project.deadline < now.strftime("%Y-%m-%d")
@@ -48,6 +50,7 @@ def detect_risks(db: Session) -> dict:
         
     # 3. Overdue Tasks
     overdue_tasks = db.query(Task).filter(
+        Task.organization_id == workspace_id,
         Task.status != "completed",
         Task.due_date != None,
         Task.due_date < now.strftime("%Y-%m-%d")
@@ -61,8 +64,8 @@ def detect_risks(db: Session) -> dict:
         })
         
     # 4. Low Completion Rate
-    total_tasks = db.query(Task).count()
-    completed_tasks = db.query(Task).filter(Task.status == "completed").count()
+    total_tasks = db.query(Task).filter(Task.organization_id == workspace_id).count()
+    completed_tasks = db.query(Task).filter(Task.organization_id == workspace_id, Task.status == "completed").count()
     if total_tasks > 0 and (completed_tasks / total_tasks) < 0.5:
         risks.append({
             "severity": "low",
@@ -71,7 +74,7 @@ def detect_risks(db: Session) -> dict:
         })
         
     # 5. Inactive Clients
-    inactive_clients = db.query(Client).filter(Client.status == "inactive").count()
+    inactive_clients = db.query(Client).filter(Client.organization_id == workspace_id, Client.status == "inactive").count()
     if inactive_clients > 0:
         risks.append({
             "severity": "low",

@@ -5,13 +5,15 @@ from datetime import datetime
 from app.models.task import Task
 from app.models.project import Project
 
-def generate_actions(db: Session) -> dict:
+import uuid
+
+def generate_actions(db: Session, workspace_id: uuid.UUID) -> dict:
     actions = []
     
-    risks_data = detect_risks(db)
+    risks_data = detect_risks(db, workspace_id)
     risks = risks_data.get("risks", [])
     
-    opportunities_data = detect_opportunities(db)
+    opportunities_data = detect_opportunities(db, workspace_id)
     opportunities = opportunities_data.get("opportunities", [])
     
     now_str = datetime.now().strftime("%Y-%m-%d")
@@ -23,12 +25,21 @@ def generate_actions(db: Session) -> dict:
         elif risk["title"] == "High Expense Ratio":
             actions.append({"priority": "medium", "action": "Audit current software and contractor expenses."})
         elif risk["title"] == "Overdue Projects":
-            # Let's get specific project names if possible, but for simplicity:
-            overdue_projects = db.query(Project).filter(Project.status == "active", Project.deadline != None, Project.deadline < now_str).all()
+            overdue_projects = db.query(Project).filter(
+                Project.organization_id == workspace_id,
+                Project.status == "active",
+                Project.deadline != None,
+                Project.deadline < now_str
+            ).all()
             for p in overdue_projects:
                 actions.append({"priority": "high", "action": f"Review overdue project: {p.name}."})
         elif risk["title"] == "Overdue Tasks":
-            overdue_tasks = db.query(Task).filter(Task.status != "completed", Task.due_date != None, Task.due_date < now_str).count()
+            overdue_tasks = db.query(Task).filter(
+                Task.organization_id == workspace_id,
+                Task.status != "completed",
+                Task.due_date != None,
+                Task.due_date < now_str
+            ).count()
             actions.append({"priority": "medium", "action": f"Follow up on {overdue_tasks} overdue tasks."})
         elif risk["title"] == "Low Task Velocity":
             actions.append({"priority": "medium", "action": "Hold a team sync to unblock pending tasks."})

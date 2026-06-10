@@ -36,6 +36,13 @@ class Organization(Base):
     sales_records = relationship("SalesRecord", back_populates="organization", cascade="all, delete-orphan")
     sessions = relationship("ConversationSession", back_populates="organization", cascade="all, delete-orphan")
     memories = relationship("MemoryEntry", back_populates="organization", cascade="all, delete-orphan")
+    clients = relationship("Client", back_populates="organization", cascade="all, delete-orphan")
+    projects = relationship("Project", back_populates="organization", cascade="all, delete-orphan")
+    tasks = relationship("Task", back_populates="organization", cascade="all, delete-orphan")
+    revenues = relationship("Revenue", back_populates="organization", cascade="all, delete-orphan")
+    expenses = relationship("Expense", back_populates="organization", cascade="all, delete-orphan")
+    activity_logs = relationship("ActivityLog", back_populates="organization", cascade="all, delete-orphan")
+    intelligence_snapshots = relationship("IntelligenceSnapshot", back_populates="organization", cascade="all, delete-orphan")
 
 
 class Membership(Base):

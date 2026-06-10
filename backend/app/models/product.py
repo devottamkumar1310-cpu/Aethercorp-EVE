@@ -23,7 +23,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)
+    organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     sku = Column(String, index=True, nullable=False)
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)  # e.g., Tops, Bottoms, Dresses, Outerwear
