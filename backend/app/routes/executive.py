@@ -32,6 +32,8 @@ from app.services.opportunity_service import detect_opportunities
 import logging
 logger = logging.getLogger("eve.routes.executive")
 
+from app.core.rate_limiter import rate_limit
+
 router = APIRouter(prefix="/api/executive", tags=["Executive"])
 
 @router.post("/chat", response_model=ExecutiveChatResponse)
@@ -39,7 +41,8 @@ async def chat(
     body: ExecutiveChatRequest,
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _: None = Depends(rate_limit(requests=15, window_seconds=60))
 ):
     orchestrator = AgentOrchestrator()
     try:
@@ -66,7 +69,8 @@ async def chat(
 async def daily_brief(
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _: None = Depends(rate_limit(requests=5, window_seconds=60))
 ):
     finance_agent = FinanceAgent()
     operations_agent = OperationsAgent()

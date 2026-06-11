@@ -153,6 +153,31 @@ export default function InventoryDashboardPage() {
     }
   };
 
+  const downloadTemplate = (type: "inventory" | "sales" | "costs") => {
+    let headers = "";
+    let filename = "";
+    if (type === "inventory") {
+      headers = "sku,name,category,stock_on_hand,lead_time_days\nSKU-TEST-001,Premium Top,Tops,80,10\nSKU-TEST-002,Cozy Hoodie,Tops,10,14\n";
+      filename = "inventory_template.csv";
+    } else if (type === "costs") {
+      headers = "sku,unit_cost,selling_price,supplier_name\nSKU-TEST-001,15.50,45.00,GarmentFactory\nSKU-TEST-002,22.00,TexSuppliers\n";
+      filename = "costs_template.csv";
+    } else if (type === "sales") {
+      headers = "sku,date,quantity,unit_price,revenue\nSKU-TEST-001,2026-06-01,2,45.00,90.00\nSKU-TEST-002,2026-06-02,1,68.00,68.00\n";
+      filename = "sales_template.csv";
+    }
+
+    const blob = new Blob([headers], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const categories = useMemo(() => {
     const cats = new Set((data?.product_metrics || []).map((p) => p.category));
     return ["All", ...Array.from(cats).sort()];
@@ -270,7 +295,16 @@ export default function InventoryDashboardPage() {
           <div key={type} className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm ${borderClass} transition-colors`}>
             <div className={`h-8 w-8 ${colorClass} rounded-lg flex items-center justify-center mb-2`}>{icon}</div>
             <h3 className="font-semibold text-slate-900 text-sm">{label}</h3>
-            <p className="text-xs text-slate-400 mt-1 mb-3">{desc}</p>
+            <div className="flex items-center justify-between mt-1 mb-3 text-[10px]">
+              <span className="text-slate-400 truncate max-w-[70%]">{desc}</span>
+              <button
+                type="button"
+                onClick={() => downloadTemplate(type)}
+                className="text-indigo-600 hover:text-indigo-800 font-semibold hover:underline cursor-pointer outline-none flex-shrink-0"
+              >
+                Download Template
+              </button>
+            </div>
             <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/50 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer transition-all">
               {uploading
                 ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-600" />

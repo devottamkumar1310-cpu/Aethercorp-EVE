@@ -154,3 +154,8 @@ async function uploadCSVFile(url: string, token: string, file: File) {
 export const uploadInventoryCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/inventory', token, file);
 export const uploadSalesCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/sales', token, file);
 export const uploadCostsCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/costs', token, file);
+
+export const submitFeedbackAPI = (
+  token: string,
+  data: { rating: number; category: string; description: string; page_url?: string }
+) => apiCall('/api/feedback/', 'POST', token, data);

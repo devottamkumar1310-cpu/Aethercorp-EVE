@@ -32,10 +32,9 @@ class GeminiService:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or settings.GEMINI_API_KEY
         self.client = None
-        self.mock_mode = False
-
-        # Force mock mode due to daily request limits (RESOURCE_EXHAUSTED) in testing context
-        self.mock_mode = True
+        
+        # Use settings configuration, fallback to True if API key is not present
+        self.mock_mode = settings.GEMINI_MOCK_MODE or not self.api_key
         self._rate_limit_lock = None
         self._last_call_time = 0.0
 
@@ -158,6 +157,11 @@ class GeminiService:
 
                 # Parse JSON string from text back to Pydantic object
                 if response.text:
+                    prompt_tokens = response.usage_metadata.prompt_token_count if response.usage_metadata else 0
+                    completion_tokens = response.usage_metadata.candidates_token_count if response.usage_metadata else 0
+                    cost = (prompt_tokens * 0.000000075) + (completion_tokens * 0.00000030)
+                    from app.core.telemetry import record_tokens
+                    record_tokens(prompt_tokens, completion_tokens, cost)
                     return response_schema.model_validate_json(response.text)
                 raise ValueError("Received empty response text.")
 
@@ -300,6 +304,8 @@ class GeminiService:
             )
             
             cost = (prompt_tokens * 0.000000075) + (completion_tokens * 0.00000030)
+            from app.core.telemetry import record_tokens
+            record_tokens(prompt_tokens, completion_tokens, cost)
             latency = time.time() - start_time
             
             return AgentResponseSchema(
@@ -327,6 +333,8 @@ class GeminiService:
         Dynamically constructs dummy dict matching Pydantic class signatures for offline development.
         Supports high-quality scenario-specific mocks for benchmarks.
         """
+        from app.core.telemetry import record_tokens
+        record_tokens(80, 30, (80 * 0.000000075) + (30 * 0.00000030))
         schema_name = response_schema.__name__
         p_lower = prompt.lower()
 
@@ -479,6 +487,8 @@ class GeminiService:
         """
         Generates simulated high-quality agent outputs for local testing when no API key exists.
         """
+        from app.core.telemetry import record_tokens
+        record_tokens(100, 150, (100 * 0.000000075) + (150 * 0.00000030))
         logger.debug(f"Simulating mock agent execution for role: '{agent_role}'")
         await asyncio.sleep(0.5)
         
