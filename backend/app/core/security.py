@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import uuid
+import threading
 
 from app.database import get_db
 from app.models.profile import Profile
@@ -13,6 +14,8 @@ security = HTTPBearer()
 import logging
 
 logger = logging.getLogger("eve.security")
+
+_migration_lock = threading.Lock()
 
 # Initialize JWKS Client if URL is provided
 jwks_client = None
@@ -104,74 +107,114 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Invalid user ID format")
         
     # Auto-provision profile if it doesn't exist yet (synced from Supabase)
-    profile = db.query(Profile).filter(Profile.id == user_id).first()
-    if not profile:
-        logger.info(f"Profile not found by ID. Checking by email.")
-        email = payload.get("email", "")
-        user_metadata = payload.get("user_metadata", {})
-        full_name = user_metadata.get("full_name", "")
+    with _migration_lock:
+        profile = db.query(Profile).filter(Profile.id == user_id).first()
+        if not profile:
+            logger.info(f"Profile not found by ID. Checking by email under migration lock.")
+            email = payload.get("email", "")
+            user_metadata = payload.get("user_metadata", {})
+            full_name = user_metadata.get("full_name", "")
 
-        # Check if profile with email exists
-        if email:
-            existing_profile = db.query(Profile).filter(Profile.email == email).first()
-            if existing_profile:
-                old_id = existing_profile.id
-                logger.info(f"Migrating profile ID from {old_id} to {user_id} for email {email}")
+            # Check if profile with email exists
+            if email:
                 try:
-                    from sqlalchemy import text
-                    from app.models.organization import Membership
-                    from app.models.task import Task
-                    from app.models.activity_log import ActivityLog
+                    # Lock row if supported to prevent concurrent migration attempts
+                    existing_profile = db.query(Profile).filter(Profile.email == email).with_for_update().first()
+                except Exception:
+                    existing_profile = db.query(Profile).filter(Profile.email == email).first()
 
-                    # 1. Re-point foreign keys BEFORE changing the profile PK
-                    db.query(Membership).filter(Membership.user_id == old_id).update({Membership.user_id: user_id})
-                    db.query(Task).filter(Task.assigned_to == old_id).update({Task.assigned_to: user_id})
-                    db.query(ActivityLog).filter(ActivityLog.user_id == old_id).update({ActivityLog.user_id: user_id})
-
-                    # 2. Update profile primary key in-place via raw SQL
-                    #    (SQLAlchemy ORM does not allow PK mutation)
-                    db.execute(
-                        text("UPDATE profiles SET id = :new_id WHERE id = :old_id"),
-                        {"new_id": user_id, "old_id": old_id}
-                    )
-
-                    # 3. Update full_name if it was empty
-                    if not existing_profile.full_name and full_name:
-                        db.execute(
-                            text("UPDATE profiles SET full_name = :name WHERE id = :uid"),
-                            {"name": full_name, "uid": user_id}
-                        )
-
-                    db.commit()
-
-                    # 4. Expire ORM cache and reload the migrated profile
-                    db.expire_all()
+                if existing_profile:
+                    old_id = existing_profile.id
+                    
+                    # Check if another concurrent request already migrated it
                     profile = db.query(Profile).filter(Profile.id == user_id).first()
-                    logger.info("Profile ID migration completed successfully.")
-                except Exception as e:
-                    db.rollback()
-                    logger.error(f"Failed to migrate profile ID: {e}", exc_info=e)
-                    raise HTTPException(status_code=500, detail="Profile sync error")
+                    if profile:
+                        logger.info("Profile already migrated by concurrent request.")
+                        return profile
+                    
+                    if old_id == user_id:
+                        return existing_profile
+
+                    logger.info(f"Migrating profile ID from {old_id} to {user_id} for email {email}")
+                    try:
+                        from sqlalchemy import text
+                        from app.models.organization import Membership
+                        from app.models.task import Task
+                        from app.models.activity_log import ActivityLog
+                        from sqlalchemy.exc import IntegrityError
+
+                        # 1. Update the email of the old profile temporarily to free up the unique constraint
+                        temp_email = f"migrated_{old_id}_{email}"
+                        existing_profile.email = temp_email
+                        db.flush()
+
+                        # 2. Create the new profile record with the Supabase UUID
+                        new_profile = Profile(
+                            id=user_id,
+                            email=email,
+                            hashed_password=existing_profile.hashed_password,
+                            full_name=full_name or existing_profile.full_name,
+                            avatar_url=existing_profile.avatar_url,
+                            is_active=existing_profile.is_active,
+                            created_at=existing_profile.created_at
+                        )
+                        db.add(new_profile)
+                        db.flush()
+
+                        # 3. Re-point foreign keys
+                        db.query(Membership).filter(Membership.user_id == old_id).update({Membership.user_id: user_id})
+                        db.query(Task).filter(Task.assigned_to == old_id).update({Task.assigned_to: user_id})
+                        db.query(ActivityLog).filter(ActivityLog.user_id == old_id).update({ActivityLog.user_id: user_id})
+                        db.flush()
+
+                        # 4. Delete the old profile
+                        db.delete(existing_profile)
+                        db.commit()
+
+                        # 5. Expire ORM cache and reload the migrated profile
+                        db.expire_all()
+                        profile = db.query(Profile).filter(Profile.id == user_id).first()
+                        logger.info("Profile ID migration completed successfully.")
+                    except Exception as e:
+                        db.rollback()
+                        logger.error(f"Failed to migrate profile ID: {e}", exc_info=e)
+                        # Check if another thread completed it while we failed
+                        profile = db.query(Profile).filter(Profile.id == user_id).first()
+                        if profile:
+                            logger.info("Profile was successfully migrated by concurrent request despite error.")
+                            return profile
+                        raise HTTPException(status_code=500, detail="Profile sync error")
+                else:
+                    logger.info(f"Auto-provisioning missing profile for user: {user_id}")
+                    try:
+                        # Double check if another thread provisioned it concurrently
+                        profile = db.query(Profile).filter(Profile.id == user_id).first()
+                        if profile:
+                            logger.info("Profile already provisioned by concurrent request.")
+                            return profile
+
+                        profile = Profile(
+                            id=user_id,
+                            email=email,
+                            full_name=full_name,
+                            hashed_password="supabase-managed", # No longer needed but required by schema if not nullable
+                            is_active=True
+                        )
+                        db.add(profile)
+                        db.commit()
+                        db.refresh(profile)
+                        logger.info(f"Profile provisioned successfully: {user_id}")
+                    except Exception as e:
+                        db.rollback()
+                        # Check again if it was created concurrently
+                        profile = db.query(Profile).filter(Profile.id == user_id).first()
+                        if profile:
+                            logger.info("Profile was successfully provisioned concurrently despite error.")
+                            return profile
+                        logger.error(f"Failed to auto-provision profile: {e}", exc_info=e)
+                        raise HTTPException(status_code=500, detail="Database error during provisioning")
             else:
-                logger.info(f"Auto-provisioning missing profile for user: {user_id}")
-                try:
-                    profile = Profile(
-                        id=user_id,
-                        email=email,
-                        full_name=full_name,
-                        hashed_password="supabase-managed", # No longer needed but required by schema if not nullable
-                        is_active=True
-                    )
-                    db.add(profile)
-                    db.commit()
-                    db.refresh(profile)
-                    logger.info(f"Profile provisioned successfully: {user_id}")
-                except Exception as e:
-                    db.rollback()
-                    logger.error(f"Failed to auto-provision profile: {e}", exc_info=e)
-                    raise HTTPException(status_code=500, detail="Database error during provisioning")
-        else:
-            raise HTTPException(status_code=400, detail="Email claim missing from token")
+                raise HTTPException(status_code=400, detail="Email claim missing from token")
             
     return profile
 

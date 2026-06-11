@@ -18,3 +18,11 @@ def get_my_profile(current_user: Profile = Depends(get_current_user), db: Sessio
         "organization_id": membership.organization_id if membership else None,
         "role": membership.role if membership else None
     }
+
+@router.post("/sync")
+def sync_profile(current_user: Profile = Depends(get_current_user)):
+    return {
+        "status": "synced",
+        "id": current_user.id,
+        "email": current_user.email
+    }

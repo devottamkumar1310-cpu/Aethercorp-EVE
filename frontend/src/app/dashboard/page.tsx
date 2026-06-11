@@ -30,7 +30,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chatData, setChatData] = useState<ChatResponse | null>(null);
-  const [profile, setProfile] = useState<any>(null);
   const [sessionToken, setSessionToken] = useState<string>("");
 
   // Lists for dropdowns in modals
@@ -75,14 +74,6 @@ export default function DashboardPage() {
         }
 
         setSessionToken(session.access_token);
-
-        const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, {
-          headers: { Authorization: `Bearer ${session.access_token}` }
-        });
-        
-        if (profileRes.ok) {
-          setProfile(await profileRes.json());
-        }
 
         const activeWorkspace = localStorage.getItem("active_workspace_id");
         if (activeWorkspace) {
@@ -311,7 +302,7 @@ export default function DashboardPage() {
 
           {/* CEO Chat Console & Monitor Panel */}
           <div className="w-full lg:w-[450px] space-y-6 flex flex-col">
-            <CEOChatConsole onChatResponse={setChatData} />
+            <CEOChatConsole onChatResponse={setChatData} token={sessionToken} />
             <div className="flex-1 min-h-[300px]">
               <AgentActivityMonitor chatData={chatData} />
             </div>
