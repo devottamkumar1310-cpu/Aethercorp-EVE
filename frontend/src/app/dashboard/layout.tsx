@@ -103,10 +103,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (wsRes.ok) {
         const wsData = await wsRes.json();
         setWorkspaces(wsData);
-        if (wsData.length === 0) {
-          router.push("/onboarding");
-          return;
-        }
         const storedId = localStorage.getItem("active_workspace_id");
         if (storedId && wsData.some((w: Workspace) => w.id === storedId)) {
           setActiveWorkspaceId(storedId);
@@ -255,25 +251,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href, (item as any).exact);
+                  const isItemDisabled = !activeWorkspaceId && item.href !== "/dashboard/settings";
                   return (
                     <a
                       key={item.href}
-                      href={item.href}
-                      onClick={() => setSidebarOpen(false)}
+                      href={isItemDisabled ? "#" : item.href}
+                      onClick={(e) => {
+                        if (isItemDisabled) {
+                          e.preventDefault();
+                          return;
+                        }
+                        setSidebarOpen(false);
+                      }}
                       title={isSidebarCollapsed ? item.label : undefined}
                       className={`flex items-center rounded-lg text-sm font-medium transition-all group relative ${
                         isSidebarCollapsed ? "justify-center p-2.5 mx-1" : "gap-3 px-3 py-2"
                       } ${
-                        active
+                        isItemDisabled
+                          ? "opacity-45 cursor-not-allowed text-slate-600"
+                          : active
                           ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
                           : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
                       } ${
-                        (item as any).isAI && !active
+                        (item as any).isAI && !active && !isItemDisabled
                           ? "hover:bg-indigo-900/30 hover:text-indigo-300"
                           : ""
                       }`}
                     >
-                      <Icon size={15} className={active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
+                      <Icon size={15} className={active && !isItemDisabled ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
                       {!isSidebarCollapsed && <span className="animate-fade-in">{item.label}</span>}
                       {!isSidebarCollapsed && (item as any).isAI && (
                         <span className="ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide">NEW</span>
@@ -403,7 +408,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto">
-          {children}
+          {!activeWorkspaceId && pathname !== "/dashboard/settings" ? (
+            <div className="flex-1 p-6 max-w-2xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[70vh]">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden p-8 text-center space-y-6">
+                <div className="flex justify-center">
+                  <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center animate-bounce-slow">
+                    <Sparkles size={32} />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Welcome to EVE</h2>
+                <p className="text-slate-500 text-sm max-w-md mx-auto">
+                  Create your first workspace to begin tracking business operations and using executive intelligence features.
+                </p>
+
+                <form onSubmit={handleCreateWorkspace} className="max-w-md mx-auto space-y-4">
+                  {createError && (
+                    <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 text-left">
+                      {createError}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    required
+                    value={newWorkspaceName}
+                    onChange={(e) => setNewWorkspaceName(e.target.value)}
+                    placeholder="e.g. Acme Clothing"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={createLoading || !newWorkspaceName.trim()}
+                    className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm disabled:opacity-50"
+                  >
+                    {createLoading ? "Creating..." : "Create Workspace"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
 

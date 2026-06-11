@@ -99,63 +99,7 @@ export default function DashboardPage() {
   const activeWorkspace = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
 
   if (!activeWorkspace) {
-    return (
-      <main className="flex-1 p-6 max-w-2xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[70vh]">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden p-8 text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
-              <Sparkles size={32} />
-            </div>
-          </div>
-          <h2 className="text-2xl font-bold text-slate-900">Create a Workspace to Begin</h2>
-          <p className="text-slate-500 text-sm max-w-md mx-auto">
-            Welcome to Enterprise Virtual Executive. You need a workspace to track inventory, forecast demand, and manage clients.
-          </p>
-
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            const form = e.currentTarget;
-            const name = (form.elements.namedItem("workspaceName") as HTMLInputElement).value;
-            if (!name.trim()) return;
-            try {
-              setLoading(true);
-              const response = await fetch(`${API_BASE_URL}/api/organization/onboard`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${sessionToken}`
-                },
-                body: JSON.stringify({ name })
-              });
-              if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || "Failed to create workspace");
-              }
-              const data = await response.json();
-              localStorage.setItem("active_workspace_id", data.organization_id);
-              window.location.reload();
-            } catch (err: any) {
-              alert(err.message);
-              setLoading(false);
-            }
-          }} className="max-w-md mx-auto space-y-4">
-            <input
-              type="text"
-              name="workspaceName"
-              required
-              placeholder="e.g. Acme Clothing"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
-            />
-            <button
-              type="submit"
-              className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm animate-pulse-subtle"
-            >
-              Create Workspace & Continue
-            </button>
-          </form>
-        </div>
-      </main>
-    );
+    return null;
   }
 
   return (
