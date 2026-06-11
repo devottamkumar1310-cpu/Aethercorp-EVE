@@ -102,18 +102,45 @@ class ExecutiveBoard:
                 if not any([run_finance, run_operations, run_inventory, run_client, run_growth]):
                     run_finance = run_operations = run_inventory = run_client = run_growth = True
 
+        # 1.5 Pre-fetch common database indicators once to optimize parallel execution query latencies
+        from app.services.business_analytics_service import BusinessAnalyticsService
+        from app.services.trend_service import calculate_trends
+        from app.services.ai.memory_service import get_memory_context
+        from app.services.business_health_service import get_health_score
+        from app.services.risk_detection_service import detect_risks
+        from app.services.opportunity_service import detect_opportunities
+
+        overview = BusinessAnalyticsService.get_overview(db, org_id)
+        trends = calculate_trends(db, org_id)
+        goals = get_memory_context(db, org_id)
+        health = get_health_score(db, org_id)
+        risks = detect_risks(db, org_id)
+        opportunities = detect_opportunities(db, org_id)
+
         # 2. Parallel Sub-Agent Execution
         tasks = {}
         if run_finance:
-            tasks["finance"] = self.finance_agent.analyze(db, org_id, question)
+            tasks["finance"] = self.finance_agent.analyze(
+                db=db, org_id=org_id, question=question,
+                overview=overview, trends=trends, goals=goals
+            )
         if run_operations:
-            tasks["operations"] = self.operations_agent.analyze(db, org_id, question)
+            tasks["operations"] = self.operations_agent.analyze(
+                db=db, org_id=org_id, question=question,
+                overview=overview, trends=trends, risks=risks,
+                opportunities=opportunities, goals=goals
+            )
         if run_inventory:
             tasks["inventory"] = self.inventory_agent.analyze(db, org_id, question)
         if run_client:
-            tasks["client"] = self.client_agent.analyze(db, org_id, question)
+            tasks["client"] = self.client_agent.analyze(
+                db=db, org_id=org_id, question=question, overview=overview
+            )
         if run_growth:
-            tasks["growth"] = self.growth_agent.analyze(db, org_id, question)
+            tasks["growth"] = self.growth_agent.analyze(
+                db=db, org_id=org_id, question=question,
+                overview=overview, trends=trends, opportunities=opportunities
+            )
 
         # Run in parallel using asyncio.gather wrapped with timing
         results = {}
@@ -138,7 +165,9 @@ class ExecutiveBoard:
                 operations_result=results.get("operations"),
                 inventory_result=results.get("inventory"),
                 client_result=results.get("client"),
-                growth_result=results.get("growth")
+                growth_result=results.get("growth"),
+                health=health,
+                goals=goals
             )
             synth_latency = int((time.time() - start_synth) * 1000)
             record_agent_metric("coo_synthesis", "success", synth_latency)

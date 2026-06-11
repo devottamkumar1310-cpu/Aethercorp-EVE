@@ -7,6 +7,8 @@ import { API_BASE_URL } from "@/lib/api";
 import {
   Building2,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   LogOut,
   Sparkles,
@@ -64,8 +66,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [createError, setCreateError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebar_collapsed");
+      if (saved === "true") {
+        setIsSidebarCollapsed(true);
+      }
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    const next = !isSidebarCollapsed;
+    setIsSidebarCollapsed(next);
+    localStorage.setItem("sidebar_collapsed", String(next));
+  };
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -183,22 +201,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-transform duration-200 ${
+        className={`fixed top-0 left-0 h-full bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-all duration-200 ${
+          isSidebarCollapsed ? "w-16" : "w-64"
+        } ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Sidebar Brand */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-slate-800">
+        <div className={`flex items-center border-b border-slate-800 transition-all ${
+          isSidebarCollapsed ? "px-3 py-5 justify-center" : "gap-3 px-5 py-5"
+        }`}>
           <div
             onClick={() => router.push("/dashboard")}
             className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
           >
             EVE
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="font-bold text-slate-100 text-xs tracking-tight leading-none">EVE PORTAL</span>
-            <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
-          </div>
+          {!isSidebarCollapsed && (
+            <div className="flex flex-col min-w-0 animate-fade-in">
+              <span className="font-bold text-slate-100 text-xs tracking-tight leading-none">EVE PORTAL</span>
+              <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
+            </div>
+          )}
+          
+          <button
+            onClick={toggleSidebar}
+            className="ml-auto p-1 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors hidden md:block"
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+          </button>
+
           <button
             onClick={() => setSidebarOpen(false)}
             className="ml-auto text-slate-600 hover:text-slate-400 md:hidden"
@@ -208,12 +241,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
           {navItems.map((group) => (
             <div key={group.label}>
-              <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-2">
-                {group.label}
-              </p>
+              {!isSidebarCollapsed ? (
+                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-2">
+                  {group.label}
+                </p>
+              ) : (
+                <div className="h-px bg-slate-800 my-4" />
+              )}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -223,7 +260,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={item.href}
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all group relative ${
+                      title={isSidebarCollapsed ? item.label : undefined}
+                      className={`flex items-center rounded-lg text-sm font-medium transition-all group relative ${
+                        isSidebarCollapsed ? "justify-center p-2.5 mx-1" : "gap-3 px-3 py-2"
+                      } ${
                         active
                           ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
                           : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
@@ -234,8 +274,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       }`}
                     >
                       <Icon size={15} className={active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
-                      <span>{item.label}</span>
-                      {(item as any).isAI && (
+                      {!isSidebarCollapsed && <span className="animate-fade-in">{item.label}</span>}
+                      {!isSidebarCollapsed && (item as any).isAI && (
                         <span className="ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide">NEW</span>
                       )}
                     </a>
@@ -248,24 +288,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Sidebar Footer: Active Workspace */}
         <div className="px-4 py-4 border-t border-slate-800 space-y-2">
-          <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-slate-800/60">
+          <div 
+            className={`flex items-center rounded-lg bg-slate-800/60 transition-all ${
+              isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-2 py-2"
+            }`}
+            title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
+          >
             <Building2 size={14} className="text-indigo-400 flex-shrink-0" />
-            <span className="text-xs text-slate-300 font-medium truncate">
-              {activeWorkspace?.name || "No workspace"}
-            </span>
+            {!isSidebarCollapsed && (
+              <span className="text-xs text-slate-300 font-medium truncate animate-fade-in">
+                {activeWorkspace?.name || "No workspace"}
+              </span>
+            )}
           </div>
           <button
             onClick={() => setIsFeedbackOpen(true)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-all border border-slate-800 hover:border-slate-700 bg-slate-900/40"
+            title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
+            className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-all border border-slate-800 hover:border-slate-700 bg-slate-900/40 ${
+              isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-3 py-2"
+            }`}
           >
             <MessageSquare size={13} className="text-indigo-400" />
-            <span>Give Beta Feedback</span>
+            {!isSidebarCollapsed && <span className="animate-fade-in">Give Beta Feedback</span>}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col md:ml-64">
+      <div className={`flex-1 flex flex-col transition-all duration-200 ${
+        isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
+      }`}>
         {/* Top Header */}
         <header className="sticky top-0 z-20 w-full bg-slate-900 border-b border-slate-800 text-white">
           <div className="px-4 py-3 flex items-center justify-between">
