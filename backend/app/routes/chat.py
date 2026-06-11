@@ -48,7 +48,8 @@ async def chat_endpoint(
     workspace_id: uuid.UUID = Depends(get_required_workspace_id)
 ):
     """
-    Temporary endpoint for Phase 2 end-to-end verification.
+    [DEPRECATED] Phase 2 inventory-focused verification endpoint.
+    Use POST /executive/chat for production AI COO interactions (Phase 3.1+).
     """
     logger.info(f"Received verification chat request: '{request.message}'")
 

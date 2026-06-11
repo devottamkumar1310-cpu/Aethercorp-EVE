@@ -18,12 +18,14 @@ class Settings(BaseSettings):
     Loads from environment directly, with fallback to .env files.
     """
     ENV: str = "development"
+    ENVIRONMENT: str = "development"
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/eve"
     GEMINI_API_KEY: str = ""
     SECRET_KEY: str = "aethercorp-nexus-super-secret-key-replace-in-production"
     SUPABASE_JWT_SECRET: str = ""
     SUPABASE_URL: str = ""
     FRONTEND_URL: str = "http://localhost:3000"
+    CLOUD_RUN_SERVICE_URL: Optional[str] = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 

@@ -4,9 +4,11 @@ from app.models.client import Client
 from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
+from app.core.cache import cached
 
 import uuid
 
+@cached(ttl=30)
 def get_health_score(db: Session, workspace_id: uuid.UUID) -> dict:
     # 1. Gather foundational metrics
     total_clients = db.query(Client).filter(Client.organization_id == workspace_id).count()

@@ -10,6 +10,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.rate_limiter import rate_limit  # noqa: F401  # available for route-level Depends()
 
 from app.config import settings
 from app.database import init_db
@@ -78,11 +79,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register routes
+# Security headers middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Injects standard security headers into every HTTP response."""
+    async def dispatch(self, request: StarletteRequest, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive
 app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(organization.router)
@@ -93,6 +111,7 @@ app.include_router(finance.router)
 app.include_router(analytics.router)
 app.include_router(activity.router)
 app.include_router(intelligence.router)
+app.include_router(executive.router)
 
 
 @app.get("/")

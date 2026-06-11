@@ -1,10 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
-import { Building2, ChevronDown, Plus, LogOut, User, Sparkles, AlertCircle, X } from "lucide-react";
+import {
+  Building2,
+  ChevronDown,
+  Plus,
+  LogOut,
+  Sparkles,
+  AlertCircle,
+  X,
+  LayoutDashboard,
+  Users,
+  Briefcase,
+  CheckSquare,
+  DollarSign,
+  Package,
+  Activity,
+  Settings,
+  Menu,
+  Brain,
+} from "lucide-react";
 
 interface Workspace {
   id: string;
@@ -13,11 +31,25 @@ interface Workspace {
   role: string;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const navItems = [
+  { label: "MAIN", items: [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    { href: "/dashboard/clients", label: "Clients", icon: Users },
+    { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
+    { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
+    { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
+    { href: "/dashboard/inventory", label: "Inventory", icon: Package },
+    { href: "/dashboard/activity", label: "Activity", icon: Activity },
+  ]},
+  { label: "INTELLIGENCE", items: [
+    { href: "/dashboard/eve", label: "AI COO", icon: Brain, isAI: true },
+  ]},
+  { label: "ACCOUNT", items: [
+    { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  ]},
+];
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -28,45 +60,36 @@ export default function DashboardLayout({
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isActive = (href: string, exact?: boolean) => {
+    if (exact) return pathname === href;
+    return pathname.startsWith(href);
+  };
 
   const loadWorkspacesAndProfile = async (token: string) => {
     try {
-      // Fetch profile
       const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        setProfile(profileData);
-      }
+      if (profileRes.ok) setProfile(await profileRes.json());
 
-      // Fetch workspaces
       const wsRes = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (wsRes.ok) {
         const wsData = await wsRes.json();
         setWorkspaces(wsData);
-
-        // Initialize active workspace
         const storedId = localStorage.getItem("active_workspace_id");
-        if (storedId) {
-          // Verify it exists in user's memberships
-          const exists = wsData.some((w: Workspace) => w.id === storedId);
-          if (exists) {
-            setActiveWorkspaceId(storedId);
-          } else if (wsData.length > 0) {
-            localStorage.setItem("active_workspace_id", wsData[0].id);
-            setActiveWorkspaceId(wsData[0].id);
-          } else {
-            localStorage.removeItem("active_workspace_id");
-            setActiveWorkspaceId(null);
-          }
+        if (storedId && wsData.some((w: Workspace) => w.id === storedId)) {
+          setActiveWorkspaceId(storedId);
         } else if (wsData.length > 0) {
           localStorage.setItem("active_workspace_id", wsData[0].id);
           setActiveWorkspaceId(wsData[0].id);
         } else {
+          localStorage.removeItem("active_workspace_id");
           setActiveWorkspaceId(null);
         }
       }
@@ -79,12 +102,7 @@ export default function DashboardLayout({
     async function init() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-
+      if (!session) { router.push("/login"); return; }
       setSessionToken(session.access_token);
       await loadWorkspacesAndProfile(session.access_token);
       setLoading(false);
@@ -102,25 +120,18 @@ export default function DashboardLayout({
   const handleCreateWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newWorkspaceName.trim()) return;
-
     setCreateLoading(true);
     setCreateError(null);
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/organization/onboard`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionToken}`
-        },
-        body: JSON.stringify({ name: newWorkspaceName })
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify({ name: newWorkspaceName }),
       });
-
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData.detail || "Failed to create workspace");
       }
-
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
       setIsCreateModalOpen(false);
@@ -144,154 +155,204 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-slate-300 font-sans">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl animate-pulse shadow-lg shadow-indigo-500/20">
-            E
-          </div>
-          <span className="text-sm font-medium tracking-wide text-slate-400">Loading Operations Workspace...</span>
+          <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl animate-pulse shadow-lg shadow-indigo-500/20">E</div>
+          <span className="text-sm font-medium text-slate-400">Loading Operations Workspace...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Premium Navigation Header */}
-      <header className="sticky top-0 z-40 w-full bg-slate-900 border-b border-slate-800 text-white shadow-md">
-        <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
-          
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3">
-            <div 
-              onClick={() => router.push("/dashboard")}
-              className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-lg tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/10"
-            >
-              EVE
-            </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="font-bold text-slate-100 tracking-tight text-sm leading-none">EVE OPERATIONAL PORTAL</span>
-              <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
-            </div>
+    <div className="min-h-screen bg-slate-50 flex font-sans">
+      {/* Mobile Backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-transform duration-200 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        {/* Sidebar Brand */}
+        <div className="flex items-center gap-3 px-5 py-5 border-b border-slate-800">
+          <div
+            onClick={() => router.push("/dashboard")}
+            className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
+          >
+            EVE
           </div>
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-slate-100 text-xs tracking-tight leading-none">EVE PORTAL</span>
+            <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="ml-auto text-slate-600 hover:text-slate-400 md:hidden"
+          >
+            <X size={16} />
+          </button>
+        </div>
 
-          {/* Workspace Switcher & User Profile */}
-          <div className="flex items-center gap-4">
-            
-            {/* Workspace Selector Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-200 transition-all focus:outline-none"
-              >
-                <Building2 size={16} className="text-indigo-400" />
-                <span className="max-w-[150px] truncate">
-                  {activeWorkspace ? activeWorkspace.name : "Select Workspace"}
-                </span>
-                <ChevronDown size={14} className="text-slate-400" />
-              </button>
-
-              {isDropdownOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40 cursor-default" 
-                    onClick={() => setIsDropdownOpen(false)}
-                  />
-                  <div className="absolute right-0 mt-2 w-64 bg-slate-850 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-slate-700">
-                    <div className="p-3 bg-slate-900/60">
-                      <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">My Workspaces</span>
-                    </div>
-                    <div className="py-1 max-h-60 overflow-y-auto bg-slate-800">
-                      {workspaces.map((ws) => (
-                        <button
-                          key={ws.id}
-                          onClick={() => handleSwitchWorkspace(ws.id)}
-                          className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-slate-750 transition-colors ${
-                            ws.id === activeWorkspaceId
-                              ? "text-indigo-400 font-bold bg-slate-750/50"
-                              : "text-slate-300"
-                          }`}
-                        >
-                          <span className="truncate">{ws.name}</span>
-                          {ws.id === activeWorkspaceId && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                          )}
-                        </button>
-                      ))}
-                      {workspaces.length === 0 && (
-                        <div className="px-4 py-3 text-sm text-slate-500 italic">
-                          No active workspaces
-                        </div>
+        {/* Nav Items */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+          {navItems.map((group) => (
+            <div key={group.label}>
+              <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-2">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href, (item as any).exact);
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all group relative ${
+                        active
+                          ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                      } ${
+                        (item as any).isAI && !active
+                          ? "hover:bg-indigo-900/30 hover:text-indigo-300"
+                          : ""
+                      }`}
+                    >
+                      <Icon size={15} className={active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
+                      <span>{item.label}</span>
+                      {(item as any).isAI && (
+                        <span className="ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide">NEW</span>
                       )}
-                    </div>
-                    <div className="p-2 bg-slate-900/40">
-                      <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          setIsCreateModalOpen(true);
-                        }}
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all shadow-sm"
-                      >
-                        <Plus size={14} />
-                        Create Workspace
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Divider */}
-            <div className="h-6 w-[1px] bg-slate-800 hidden sm:block" />
-
-            {/* Profile Dropdown */}
-            <div className="flex items-center gap-3">
-              <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-semibold text-slate-200 leading-none">
-                  {profile?.full_name || "Guest User"}
-                </span>
-                <span className="text-[10px] text-slate-400 mt-0.5">
-                  {profile?.email || ""}
-                </span>
+                    </a>
+                  );
+                })}
               </div>
-              
-              {/* Logout button */}
+            </div>
+          ))}
+        </nav>
+
+        {/* Sidebar Footer: Active Workspace */}
+        <div className="px-4 py-4 border-t border-slate-800">
+          <div className="flex items-center gap-2 px-2 py-2 rounded-lg bg-slate-800/60">
+            <Building2 size={14} className="text-indigo-400 flex-shrink-0" />
+            <span className="text-xs text-slate-300 font-medium truncate">
+              {activeWorkspace?.name || "No workspace"}
+            </span>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col md:ml-64">
+        {/* Top Header */}
+        <header className="sticky top-0 z-20 w-full bg-slate-900 border-b border-slate-800 text-white">
+          <div className="px-4 py-3 flex items-center justify-between">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              <Menu size={18} />
+            </button>
+
+            {/* Spacer for desktop */}
+            <div className="hidden md:block" />
+
+            {/* Right: Workspace Switcher + User */}
+            <div className="flex items-center gap-3">
+              {/* Workspace Selector */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-200 transition-all"
+                >
+                  <Building2 size={14} className="text-indigo-400" />
+                  <span className="max-w-[140px] truncate">{activeWorkspace?.name || "Select Workspace"}</span>
+                  <ChevronDown size={12} className="text-slate-400" />
+                </button>
+
+                {isDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-60 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                      <div className="p-3 border-b border-slate-700">
+                        <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">My Workspaces</span>
+                      </div>
+                      <div className="py-1 max-h-48 overflow-y-auto">
+                        {workspaces.map((ws) => (
+                          <button
+                            key={ws.id}
+                            onClick={() => handleSwitchWorkspace(ws.id)}
+                            className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-slate-700 transition-colors ${
+                              ws.id === activeWorkspaceId ? "text-indigo-400 font-bold" : "text-slate-300"
+                            }`}
+                          >
+                            <span className="truncate">{ws.name}</span>
+                            {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />}
+                          </button>
+                        ))}
+                        {workspaces.length === 0 && (
+                          <div className="px-4 py-3 text-sm text-slate-500 italic">No active workspaces</div>
+                        )}
+                      </div>
+                      <div className="p-2 border-t border-slate-700">
+                        <button
+                          onClick={() => { setIsDropdownOpen(false); setIsCreateModalOpen(true); }}
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all"
+                        >
+                          <Plus size={12} /> Create Workspace
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="h-5 w-px bg-slate-700" />
+
+              {/* Profile */}
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-xs font-semibold text-slate-200 leading-none">{profile?.full_name || "Guest"}</span>
+                <span className="text-[10px] text-slate-500 mt-0.5">{profile?.email || ""}</span>
+              </div>
+
               <button
                 onClick={handleLogout}
                 className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
                 title="Sign Out"
               >
-                <LogOut size={18} />
+                <LogOut size={16} />
               </button>
             </div>
-
           </div>
+        </header>
 
-        </div>
-      </header>
-
-      {/* Main Page Layout Wrapper */}
-      <div className="flex-1 w-full">
-        {children}
+        {/* Page Content */}
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
       </div>
 
       {/* Create Workspace Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-950 flex items-center gap-2">
-                <Building2 className="text-indigo-600" size={20} />
-                Create New Workspace
+                <Building2 className="text-indigo-600" size={20} /> Create New Workspace
               </h3>
-              <button 
-                onClick={() => setIsCreateModalOpen(false)}
-                className="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-              >
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
                 <X size={18} />
               </button>
             </div>
-            
             <form onSubmit={handleCreateWorkspace} className="p-6 space-y-4">
               {createError && (
                 <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200 flex items-start gap-2">
@@ -299,11 +360,8 @@ export default function DashboardLayout({
                   <span>{createError}</span>
                 </div>
               )}
-
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                  Workspace / Brand Name
-                </label>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Workspace / Brand Name</label>
                 <input
                   type="text"
                   required
@@ -313,20 +371,11 @@ export default function DashboardLayout({
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
                 />
               </div>
-
               <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-semibold transition-colors"
-                >
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-semibold">
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={createLoading || !newWorkspaceName.trim()}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all disabled:opacity-50"
-                >
+                <button type="submit" disabled={createLoading || !newWorkspaceName.trim()} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
                   {createLoading ? "Creating..." : "Create Workspace"}
                 </button>
               </div>

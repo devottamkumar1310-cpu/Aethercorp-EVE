@@ -52,33 +52,30 @@ Forecasting & Scenario Simulation
 ```text
 aethercorp-eve/
 │
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── login/
-│   │   │   ├── signup/
-│   │   │   ├── onboarding/
-│   │   │   ├── dashboard/
-│   │   │   └── settings/
-│   │   │
-│   │   ├── components/
-│   │   ├── services/
-│   │   └── lib/
-│   │
-│   └── public/
-│
-├── backend/
-│   ├── app/
-│   │   ├── routes/
-│   │   ├── models/
-│   │   ├── services/
-│   │   ├── schemas/
-│   │   └── core/
-│   │
-│   └── tests/
-│
-├── docs/
-│
+├── frontend/         # Next.js web interface
+├── backend/          # FastAPI backend services
+├── docs/             # Documentation
 ├── README.md
 └── .gitignore
 ```
+
+## Setup & Local Development
+
+### 1. Backend Setup
+Navigate to the `backend` directory, install Python dependencies, configure `.env` values, and run the service using `app.main:app`:
+```bash
+cd backend
+pip install -r requirements.txt
+# Copy .env.production and configure local values as .env
+uvicorn app.main:app --reload
+```
+The API Swagger documentation will load at: `http://127.0.0.1:8000/docs`
+
+### 2. Frontend Setup
+Navigate to the `frontend` directory, install packages, and boot the Next.js development server:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open `http://localhost:3000` to interact with the EVE AI COO portal.

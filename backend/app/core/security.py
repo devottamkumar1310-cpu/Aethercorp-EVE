@@ -33,7 +33,7 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depends(se
     try:
         # Debug: Print unverified token to see what claims are present
         unverified_payload = jwt.decode(token, options={"verify_signature": False})
-        logger.info(f"Unverified JWT Payload: {unverified_payload}")
+        logger.debug(f"Unverified JWT Payload: {unverified_payload}")
         
         # Get token header to check algorithm
         header = jwt.get_unverified_header(token)
@@ -84,12 +84,9 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depends(se
         )
     except Exception as e:
         logger.warning(f"JWT Validation Failed: {type(e).__name__} - {str(e)}")
-        # Provide exact error details to the frontend to diagnose the issue
-        import traceback
-        tb = traceback.format_exc()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"JWT Error ({type(e).__name__}): {str(e)}",
+            detail="Authentication failed. Please sign in again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 

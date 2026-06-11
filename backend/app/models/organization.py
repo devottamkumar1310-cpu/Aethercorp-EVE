@@ -43,6 +43,9 @@ class Organization(Base):
     expenses = relationship("Expense", back_populates="organization", cascade="all, delete-orphan")
     activity_logs = relationship("ActivityLog", back_populates="organization", cascade="all, delete-orphan")
     intelligence_snapshots = relationship("IntelligenceSnapshot", back_populates="organization", cascade="all, delete-orphan")
+    business_goals = relationship("BusinessGoal", back_populates="organization", cascade="all, delete-orphan")
+    executive_conversations = relationship("ExecutiveConversation", back_populates="organization", cascade="all, delete-orphan")
+    ai_recommendations = relationship("AIRecommendation", back_populates="organization", cascade="all, delete-orphan")
 
 
 class Membership(Base):

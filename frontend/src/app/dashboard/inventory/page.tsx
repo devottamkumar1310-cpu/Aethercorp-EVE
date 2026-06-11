@@ -1,28 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { 
-  fetchInventoryDashboard, 
-  uploadInventoryCSVAPI, 
-  uploadSalesCSVAPI, 
-  uploadCostsCSVAPI 
+import {
+  fetchInventoryDashboard,
+  uploadInventoryCSVAPI,
+  uploadSalesCSVAPI,
+  uploadCostsCSVAPI,
 } from "@/services/businessService";
-import { 
-  Package, 
-  DollarSign, 
-  AlertTriangle, 
-  Upload, 
-  CheckCircle, 
-  Loader2, 
-  TrendingUp, 
+import {
+  Package,
+  DollarSign,
+  AlertTriangle,
+  Upload,
+  Loader2,
+  TrendingUp,
   TrendingDown,
   Layers,
-  ArrowLeft
+  ArrowLeft,
+  Plus,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { AddProductModal } from "@/components/inventory/AddProductModal";
+import { API_BASE_URL } from "@/lib/api";
 
 interface ProductMetric {
   sku: string;
@@ -45,23 +51,64 @@ interface InventoryDashboardData {
   product_metrics: ProductMetric[];
 }
 
+interface AlertData {
+  low_stock: Array<{
+    sku: string;
+    name: string;
+    category: string;
+    stock_on_hand: number;
+    reorder_point: number;
+    shortage: number;
+  }>;
+  dead_stock: Array<{
+    sku: string;
+    name: string;
+    category: string;
+    stock_on_hand: number;
+    estimated_value: number;
+  }>;
+  low_stock_count: number;
+  dead_stock_count: number;
+}
+
+type SortField = "stock_on_hand" | "qty_sold" | "revenue" | "margin_percent" | "profit";
+type SortDir = "asc" | "desc";
+type TabId = "all" | "reorder" | "dead";
+
 export default function InventoryDashboardPage() {
   const [data, setData] = useState<InventoryDashboardData | null>(null);
+  const [alerts, setAlerts] = useState<AlertData | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string>("");
-  const router = useRouter();
-
-  // Upload States
   const [uploadingInventory, setUploadingInventory] = useState(false);
   const [uploadingSales, setUploadingSales] = useState(false);
   const [uploadingCosts, setUploadingCosts] = useState(false);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [sortField, setSortField] = useState<SortField>("revenue");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [activeTab, setActiveTab] = useState<TabId>("all");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const router = useRouter();
 
   const loadData = async (token: string) => {
     try {
-      const dbData = await fetchInventoryDashboard(token);
+      const activeWorkspace = localStorage.getItem("active_workspace_id");
+      const [dbData, alertRes] = await Promise.all([
+        fetchInventoryDashboard(token),
+        fetch(`${API_BASE_URL}/api/inventory/alerts`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Workspace-Id": activeWorkspace || "",
+          },
+        }),
+      ]);
       setData(dbData);
+      if (alertRes.ok) {
+        const alertData = await alertRes.json();
+        setAlerts(alertData);
+      }
     } catch (err: any) {
-      console.error(err);
       toast.error(err.message || "Failed to load inventory metrics.");
     }
   };
@@ -70,20 +117,10 @@ export default function InventoryDashboardPage() {
     async function init() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.push("/login");
-        return;
-      }
-
+      if (!session) { router.push("/login"); return; }
       setSessionToken(session.access_token);
-      
       const activeWorkspace = localStorage.getItem("active_workspace_id");
-      if (activeWorkspace) {
-        await loadData(session.access_token);
-      } else {
-        toast.error("Please select or create a workspace first.");
-      }
+      if (activeWorkspace) await loadData(session.access_token);
       setLoading(false);
     }
     init();
@@ -95,30 +132,16 @@ export default function InventoryDashboardPage() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Verify CSV extension
-    if (!file.name.endsWith(".csv")) {
-      toast.error("Only CSV files are supported.");
-      return;
-    }
-
+    if (!file.name.endsWith(".csv")) { toast.error("Only CSV files are supported."); return; }
     const toastId = toast.loading(`Uploading ${type} CSV...`);
-
     if (type === "inventory") setUploadingInventory(true);
     if (type === "sales") setUploadingSales(true);
     if (type === "costs") setUploadingCosts(true);
-
     try {
-      if (type === "inventory") {
-        await uploadInventoryCSVAPI(sessionToken, file);
-      } else if (type === "sales") {
-        await uploadSalesCSVAPI(sessionToken, file);
-      } else if (type === "costs") {
-        await uploadCostsCSVAPI(sessionToken, file);
-      }
-
-      toast.success(`${type.toUpperCase()} file processed successfully!`, { id: toastId });
-      // Reload page data
+      if (type === "inventory") await uploadInventoryCSVAPI(sessionToken, file);
+      else if (type === "sales") await uploadSalesCSVAPI(sessionToken, file);
+      else if (type === "costs") await uploadCostsCSVAPI(sessionToken, file);
+      toast.success(`${type.toUpperCase()} file processed!`, { id: toastId });
       await loadData(sessionToken);
     } catch (err: any) {
       toast.error(err.message || `Failed to process ${type} CSV.`, { id: toastId });
@@ -126,19 +149,50 @@ export default function InventoryDashboardPage() {
       if (type === "inventory") setUploadingInventory(false);
       if (type === "sales") setUploadingSales(false);
       if (type === "costs") setUploadingCosts(false);
-      
-      // Reset input element value to allow uploading same file again if needed
       e.target.value = "";
     }
+  };
+
+  const categories = useMemo(() => {
+    const cats = new Set((data?.product_metrics || []).map((p) => p.category));
+    return ["All", ...Array.from(cats).sort()];
+  }, [data]);
+
+  const filteredAndSorted = useMemo(() => {
+    let products = data?.product_metrics || [];
+    if (search) {
+      const q = search.toLowerCase();
+      products = products.filter(
+        (p) => p.sku.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+      );
+    }
+    if (categoryFilter !== "All") {
+      products = products.filter((p) => p.category === categoryFilter);
+    }
+    return [...products].sort((a, b) => {
+      const dir = sortDir === "desc" ? -1 : 1;
+      return (a[sortField] - b[sortField]) * dir;
+    });
+  }, [data, search, categoryFilter, sortField, sortDir]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    else { setSortField(field); setSortDir("desc"); }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ChevronDown size={12} className="text-slate-400 opacity-40" />;
+    return sortDir === "desc"
+      ? <ChevronDown size={12} className="text-indigo-500" />
+      : <ChevronUp size={12} className="text-indigo-500" />;
   };
 
   const activeWorkspace = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
 
   if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center text-slate-500 font-medium bg-slate-50">
-        <Loader2 className="animate-spin mr-2 h-5 w-5 text-indigo-600" />
-        Loading Inventory Intelligence...
+      <div className="min-h-[70vh] flex items-center justify-center text-slate-500 font-medium">
+        <Loader2 className="animate-spin mr-2 h-5 w-5 text-indigo-600" /> Loading Inventory Intelligence...
       </div>
     );
   }
@@ -150,305 +204,456 @@ export default function InventoryDashboardPage() {
           <AlertTriangle size={24} />
         </div>
         <h2 className="text-xl font-bold text-slate-900">No Active Workspace</h2>
-        <p className="text-slate-500 text-sm">
-          Please select or create a workspace using the header dropdown before configuring your inventory.
-        </p>
+        <p className="text-slate-500 text-sm">Please select or create a workspace first.</p>
       </div>
     );
   }
 
+  const tabs: { id: TabId; label: string; count?: number }[] = [
+    { id: "all", label: "All Products", count: data?.product_metrics?.length },
+    { id: "reorder", label: "Reorder Alerts", count: alerts?.low_stock_count },
+    { id: "dead", label: "Dead Stock", count: alerts?.dead_stock_count },
+  ];
+
   return (
-    <main className="p-6 max-w-[1600px] mx-auto w-full space-y-8">
-      {/* Page Header */}
+    <main className="p-6 max-w-[1600px] mx-auto w-full space-y-6">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <Link href="/dashboard" className="hover:text-indigo-600 transition-colors flex items-center gap-1">
-              <ArrowLeft size={14} /> Back to Hub
+              <ArrowLeft size={14} /> Dashboard
             </Link>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Inventory & Demand Intelligence</h1>
-          <p className="text-slate-500 text-sm">
-            Import catalogs, monitor cost structures, and track product profitability and sell-through.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Inventory Intelligence</h1>
+          <p className="text-slate-500 text-sm">Monitor stock levels, profitability, and demand performance.</p>
         </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-all shadow-sm"
+        >
+          <Plus size={16} /> Add Product
+        </button>
       </div>
 
       {/* CSV Import Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Upload Inventory Catalog */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-200 transition-colors">
-          <div>
-            <div className="h-9 w-9 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-3">
-              <Layers size={20} />
-            </div>
-            <h3 className="font-semibold text-slate-900 text-sm">1. Import Inventory Stock</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-4 leading-relaxed">
-              Upload current warehouse counts and lead times. Required columns: <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[10px]">sku</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[10px]">name</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-mono text-[10px]">quantity</code>.
-            </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          {
+            type: "inventory" as const,
+            label: "1. Import Inventory Stock",
+            icon: <Layers size={18} />,
+            colorClass: "bg-indigo-50 text-indigo-600",
+            borderClass: "hover:border-indigo-200",
+            uploading: uploadingInventory,
+            desc: "Required: sku, name, quantity",
+          },
+          {
+            type: "costs" as const,
+            label: "2. Import Product Costs",
+            icon: <DollarSign size={18} />,
+            colorClass: "bg-green-50 text-green-600",
+            borderClass: "hover:border-green-200",
+            uploading: uploadingCosts,
+            desc: "Required: sku, cost, price",
+          },
+          {
+            type: "sales" as const,
+            label: "3. Import Sales Records",
+            icon: <TrendingUp size={18} />,
+            colorClass: "bg-blue-50 text-blue-600",
+            borderClass: "hover:border-blue-200",
+            uploading: uploadingSales,
+            desc: "Required: sku, date, quantity, price",
+          },
+        ].map(({ type, label, icon, colorClass, borderClass, uploading, desc }) => (
+          <div key={type} className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm ${borderClass} transition-colors`}>
+            <div className={`h-8 w-8 ${colorClass} rounded-lg flex items-center justify-center mb-2`}>{icon}</div>
+            <h3 className="font-semibold text-slate-900 text-sm">{label}</h3>
+            <p className="text-xs text-slate-400 mt-1 mb-3">{desc}</p>
+            <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/50 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer transition-all">
+              {uploading
+                ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-600" />
+                : <Upload size={12} className="text-slate-400" />}
+              <span>{uploading ? "Processing..." : `Choose ${type} CSV`}</span>
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => handleFileUpload(e, type)}
+              />
+            </label>
           </div>
-          <label className="relative flex items-center justify-center gap-2 w-full py-2 px-3 border border-dashed border-slate-300 hover:border-indigo-400 bg-slate-50/50 hover:bg-indigo-50/10 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer transition-all">
-            {uploadingInventory ? (
-              <Loader2 className="animate-spin h-4 w-4 text-indigo-600" />
-            ) : (
-              <Upload size={14} className="text-slate-400" />
-            )}
-            <span>{uploadingInventory ? "Processing..." : "Choose Inventory CSV"}</span>
-            <input 
-              type="file" 
-              accept=".csv" 
-              className="hidden" 
-              disabled={uploadingInventory}
-              onChange={(e) => handleFileUpload(e, "inventory")} 
-            />
-          </label>
-        </div>
-
-        {/* Upload Costs */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-green-200 transition-colors">
-          <div>
-            <div className="h-9 w-9 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-3">
-              <DollarSign size={20} />
-            </div>
-            <h3 className="font-semibold text-slate-900 text-sm">2. Import Product Costs (COGS)</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-4 leading-relaxed">
-              Configure cost structure. Required columns: <code className="bg-slate-100 px-1 py-0.5 rounded text-green-650 font-mono text-[10px]">sku</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-green-650 font-mono text-[10px]">cost</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-green-650 font-mono text-[10px]">price</code> (optional), <code className="bg-slate-100 px-1 py-0.5 rounded text-green-650 font-mono text-[10px]">supplier</code>.
-            </p>
-          </div>
-          <label className="relative flex items-center justify-center gap-2 w-full py-2 px-3 border border-dashed border-slate-300 hover:border-green-400 bg-slate-50/50 hover:bg-green-50/10 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer transition-all">
-            {uploadingCosts ? (
-              <Loader2 className="animate-spin h-4 w-4 text-green-600" />
-            ) : (
-              <Upload size={14} className="text-slate-400" />
-            )}
-            <span>{uploadingCosts ? "Processing..." : "Choose Costs CSV"}</span>
-            <input 
-              type="file" 
-              accept=".csv" 
-              className="hidden" 
-              disabled={uploadingCosts}
-              onChange={(e) => handleFileUpload(e, "costs")} 
-            />
-          </label>
-        </div>
-
-        {/* Upload Sales */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-blue-200 transition-colors">
-          <div>
-            <div className="h-9 w-9 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3">
-              <TrendingUp size={20} />
-            </div>
-            <h3 className="font-semibold text-slate-900 text-sm">3. Import Daily Sales Records</h3>
-            <p className="text-xs text-slate-500 mt-1 mb-4 leading-relaxed">
-              Log historical sales. Required columns: <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-mono text-[10px]">sku</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-mono text-[10px]">date</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-mono text-[10px]">quantity</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-blue-600 font-mono text-[10px]">price</code>.
-            </p>
-          </div>
-          <label className="relative flex items-center justify-center gap-2 w-full py-2 px-3 border border-dashed border-slate-300 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/10 rounded-lg text-xs font-semibold text-slate-700 cursor-pointer transition-all">
-            {uploadingSales ? (
-              <Loader2 className="animate-spin h-4 w-4 text-blue-600" />
-            ) : (
-              <Upload size={14} className="text-slate-400" />
-            )}
-            <span>{uploadingSales ? "Processing..." : "Choose Sales CSV"}</span>
-            <input 
-              type="file" 
-              accept=".csv" 
-              className="hidden" 
-              disabled={uploadingSales}
-              onChange={(e) => handleFileUpload(e, "sales")} 
-            />
-          </label>
-        </div>
-
+        ))}
       </div>
 
-      {/* KPI Stats Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* KPI: Value */}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Inventory Value (COGS)</span>
-            <div className="text-3xl font-extrabold text-slate-900">
-              ${(data?.total_inventory_value || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-            </div>
-            <p className="text-[10px] text-slate-400">Value of stock currently held in warehouse</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Inventory Value (COGS)</p>
+            <p className="text-3xl font-extrabold text-slate-900 mt-1">
+              ${(data?.total_inventory_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
           </div>
           <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
-            <DollarSign size={24} />
+            <DollarSign size={22} />
           </div>
         </div>
-
-        {/* KPI: Count */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Units Stocked</span>
-            <div className="text-3xl font-extrabold text-slate-900">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Units Stocked</p>
+            <p className="text-3xl font-extrabold text-slate-900 mt-1">
               {(data?.total_items_count || 0).toLocaleString()}
-            </div>
-            <p className="text-[10px] text-slate-400">Sum of quantities across all SKUs</p>
+            </p>
           </div>
           <div className="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
-            <Package size={24} />
+            <Package size={22} />
           </div>
         </div>
-
-        {/* KPI: Low Stock */}
         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock Alert SKUs</span>
-            <div className="text-3xl font-extrabold text-slate-950 flex items-center gap-2">
-              {(data?.low_stock_count || 0).toLocaleString()}
-              {data?.low_stock_count && data.low_stock_count > 0 ? (
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 animate-pulse">Needs Reorder</span>
-              ) : null}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock SKUs</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-3xl font-extrabold text-slate-900">{alerts?.low_stock_count || 0}</p>
+              {(alerts?.low_stock_count || 0) > 0 && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 animate-pulse">
+                  Reorder
+                </span>
+              )}
             </div>
-            <p className="text-[10px] text-slate-400">Units currently below reorder thresholds</p>
           </div>
-          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${data?.low_stock_count && data.low_stock_count > 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-50 text-slate-400'}`}>
-            <AlertTriangle size={24} />
+          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-50 text-amber-600" : "bg-slate-50 text-slate-400"}`}>
+            <AlertTriangle size={22} />
           </div>
         </div>
-
       </div>
 
-      {/* Best & Worst Sellers Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+      {/* Best & Worst Sellers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Best Sellers */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-slate-700 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-emerald-700 text-sm">
-              <TrendingUp size={16} /> Best Performing Products
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-emerald-700 text-sm font-semibold">
+              <TrendingUp size={15} /> Best Sellers
             </span>
-            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">By Units Sold</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
-          <div className="p-0 overflow-x-auto flex-1">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-white border-b border-slate-150 text-slate-500 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-4 py-2">SKU</th>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2 text-right">Units Sold</th>
-                  <th className="px-4 py-2 text-right">Revenue</th>
+          <table className="w-full text-sm">
+            <thead className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase font-semibold">
+              <tr>
+                <th className="px-4 py-2 text-left">SKU</th>
+                <th className="px-4 py-2 text-left">Name</th>
+                <th className="px-4 py-2 text-right">Sold</th>
+                <th className="px-4 py-2 text-right">Revenue</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {data?.best_sellers?.map((p) => (
+                <tr key={p.sku} className="hover:bg-slate-50/50">
+                  <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku}</td>
+                  <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                  <td className="px-4 py-2.5 text-right font-bold text-slate-900">{p.qty_sold.toLocaleString()}</td>
+                  <td className="px-4 py-2.5 text-right font-medium text-emerald-600">${p.revenue.toLocaleString()}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {data?.best_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.sku}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
-                    <td className="px-4 py-3 text-right font-bold text-slate-900">{p.qty_sold.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-right font-medium text-emerald-600">${p.revenue.toLocaleString()}</td>
-                  </tr>
-                ))}
-                {(!data?.best_sellers || data.best_sellers.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No sales transactions logged.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              ))}
+              {!data?.best_sellers?.length && (
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No sales data yet.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         {/* Worst Sellers */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-slate-700 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-red-700 text-sm">
-              <TrendingDown size={16} /> Lowest Performing Products
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-red-700 text-sm font-semibold">
+              <TrendingDown size={15} /> Lowest Sellers
             </span>
-            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">By Units Sold</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
-          <div className="p-0 overflow-x-auto flex-1">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-white border-b border-slate-150 text-slate-500 text-xs uppercase font-semibold">
-                <tr>
-                  <th className="px-4 py-2">SKU</th>
-                  <th className="px-4 py-2">Name</th>
-                  <th className="px-4 py-2 text-right">Units Sold</th>
-                  <th className="px-4 py-2 text-right">Stock Level</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {data?.worst_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.sku}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-700">{p.qty_sold}</td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-900">{p.stock_on_hand.toLocaleString()}</td>
-                  </tr>
-                ))}
-                {(!data?.worst_sellers || data.worst_sellers.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No products found in catalog.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Complete Product Metrics Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="bg-slate-50 px-4 py-3.5 border-b border-slate-200 font-bold text-slate-800 text-sm">
-          Complete Inventory Profitability Ledger
-        </div>
-        <div className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50/30 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+          <table className="w-full text-sm">
+            <thead className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase font-semibold">
               <tr>
-                <th className="px-5 py-3">SKU</th>
-                <th className="px-5 py-3">Product Name</th>
-                <th className="px-5 py-3">Category</th>
-                <th className="px-5 py-3 text-right">Stock</th>
-                <th className="px-5 py-3 text-right">Cost</th>
-                <th className="px-5 py-3 text-right">Qty Sold</th>
-                <th className="px-5 py-3 text-right">Revenue</th>
-                <th className="px-5 py-3 text-right">Profit</th>
-                <th className="px-5 py-3 text-right">Margin</th>
+                <th className="px-4 py-2 text-left">SKU</th>
+                <th className="px-4 py-2 text-left">Name</th>
+                <th className="px-4 py-2 text-right">Sold</th>
+                <th className="px-4 py-2 text-right">Stock</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-150 text-slate-700">
-              {data?.product_metrics?.map((p) => (
-                <tr key={p.sku} className="hover:bg-slate-55/30 transition-colors">
-                  <td className="px-5 py-3.5 font-mono text-xs text-slate-500">{p.sku}</td>
-                  <td className="px-5 py-3.5 font-semibold text-slate-900">{p.name}</td>
-                  <td className="px-5 py-3.5">
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
-                      {p.category}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right font-bold text-slate-800">{p.stock_on_hand.toLocaleString()}</td>
-                  <td className="px-5 py-3.5 text-right text-slate-600">${p.unit_cost.toFixed(2)}</td>
-                  <td className="px-5 py-3.5 text-right font-semibold text-slate-600">{p.qty_sold.toLocaleString()}</td>
-                  <td className="px-5 py-3.5 text-right font-bold text-slate-900">${p.revenue.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                  <td className="px-5 py-3.5 text-right font-bold text-emerald-600">${p.profit.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                  <td className="px-5 py-3.5 text-right font-medium">
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                      p.margin_percent >= 50 ? 'bg-emerald-50 text-emerald-700' :
-                      p.margin_percent >= 25 ? 'bg-blue-50 text-blue-700' :
-                      p.margin_percent > 0 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'
-                    }`}>
-                      {p.margin_percent.toFixed(1)}%
-                    </span>
-                  </td>
+            <tbody className="divide-y divide-slate-100">
+              {data?.worst_sellers?.map((p) => (
+                <tr key={p.sku} className="hover:bg-slate-50/50">
+                  <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku}</td>
+                  <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                  <td className="px-4 py-2.5 text-right font-semibold text-slate-700">{p.qty_sold}</td>
+                  <td className="px-4 py-2.5 text-right font-medium text-slate-900">{p.stock_on_hand.toLocaleString()}</td>
                 </tr>
               ))}
-              {(!data?.product_metrics || data.product_metrics.length === 0) && (
-                <tr>
-                  <td colSpan={9} className="px-5 py-12 text-center text-slate-500 italic">
-                    No items in inventory. Please upload inventory, cost, and sales CSV files to calculate metrics.
-                  </td>
-                </tr>
+              {!data?.worst_sellers?.length && (
+                <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No products yet.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Tabbed Product Table */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Tab Bar + Search */}
+        <div className="border-b border-slate-200 px-4 pt-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+            {/* Tabs */}
+            <div className="flex gap-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
+                    activeTab === tab.id
+                      ? "border-indigo-500 text-indigo-700 bg-indigo-50/50"
+                      : "border-transparent text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {tab.label}
+                  {tab.count !== undefined && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      activeTab === tab.id
+                        ? "bg-indigo-100 text-indigo-700"
+                        : tab.id === "reorder" && (tab.count || 0) > 0
+                        ? "bg-amber-100 text-amber-700"
+                        : tab.id === "dead" && (tab.count || 0) > 0
+                        ? "bg-red-100 text-red-700"
+                        : "bg-slate-100 text-slate-500"
+                    }`}>
+                      {tab.count ?? 0}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Search & Filter (only for All tab) */}
+            {activeTab === "all" && (
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search SKU or name..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-indigo-400 w-48"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Filter size={13} className="text-slate-400 flex-shrink-0" />
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="pl-2 pr-6 py-1.5 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:border-indigo-400"
+                  >
+                    {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tab: All Products */}
+        {activeTab === "all" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th className="px-5 py-3 text-left">SKU</th>
+                  <th className="px-5 py-3 text-left">Product</th>
+                  <th className="px-5 py-3 text-left">Category</th>
+                  <th
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 select-none"
+                    onClick={() => toggleSort("stock_on_hand")}
+                  >
+                    <span className="flex items-center justify-end gap-1">Stock <SortIcon field="stock_on_hand" /></span>
+                  </th>
+                  <th className="px-5 py-3 text-right">Cost</th>
+                  <th
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 select-none"
+                    onClick={() => toggleSort("qty_sold")}
+                  >
+                    <span className="flex items-center justify-end gap-1">Sold <SortIcon field="qty_sold" /></span>
+                  </th>
+                  <th
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 select-none"
+                    onClick={() => toggleSort("revenue")}
+                  >
+                    <span className="flex items-center justify-end gap-1">Revenue <SortIcon field="revenue" /></span>
+                  </th>
+                  <th
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 select-none"
+                    onClick={() => toggleSort("profit")}
+                  >
+                    <span className="flex items-center justify-end gap-1">Profit <SortIcon field="profit" /></span>
+                  </th>
+                  <th
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 select-none"
+                    onClick={() => toggleSort("margin_percent")}
+                  >
+                    <span className="flex items-center justify-end gap-1">Margin <SortIcon field="margin_percent" /></span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredAndSorted.map((p) => (
+                  <tr key={p.sku} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="px-5 py-3 font-mono text-xs text-slate-500">{p.sku}</td>
+                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
+                    <td className="px-5 py-3">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
+                        {p.category}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-slate-800">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right text-slate-500">${p.unit_cost.toFixed(2)}</td>
+                    <td className="px-5 py-3 text-right text-slate-600">{p.qty_sold.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-slate-900">
+                      ${p.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-emerald-600">
+                      ${p.profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2 justify-end">
+                        <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${
+                              p.margin_percent >= 50 ? "bg-emerald-500"
+                              : p.margin_percent >= 25 ? "bg-blue-500"
+                              : p.margin_percent > 0 ? "bg-amber-500"
+                              : "bg-red-500"
+                            }`}
+                            style={{ width: `${Math.min(100, Math.max(0, p.margin_percent))}%` }}
+                          />
+                        </div>
+                        <span className={`text-xs font-bold ${
+                          p.margin_percent >= 50 ? "text-emerald-700"
+                          : p.margin_percent >= 25 ? "text-blue-700"
+                          : p.margin_percent > 0 ? "text-amber-700"
+                          : "text-red-700"
+                        }`}>
+                          {p.margin_percent.toFixed(1)}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredAndSorted.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-5 py-12 text-center text-slate-400 italic">
+                      No products match your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Tab: Reorder Alerts */}
+        {activeTab === "reorder" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-amber-50 border-b border-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th className="px-5 py-3 text-left">SKU</th>
+                  <th className="px-5 py-3 text-left">Product</th>
+                  <th className="px-5 py-3 text-left">Category</th>
+                  <th className="px-5 py-3 text-right">On Hand</th>
+                  <th className="px-5 py-3 text-right">Reorder Point</th>
+                  <th className="px-5 py-3 text-right">Shortage</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-amber-50">
+                {alerts?.low_stock?.map((p) => (
+                  <tr key={p.sku} className="hover:bg-amber-50/40 transition-colors">
+                    <td className="px-5 py-3 font-mono text-xs text-slate-500">{p.sku}</td>
+                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
+                    <td className="px-5 py-3">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
+                        {p.category}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-amber-700">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right text-slate-600">{p.reorder_point.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                        <AlertTriangle size={10} /> -{p.shortage}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {!alerts?.low_stock?.length && (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-12 text-center text-slate-400 italic">
+                      No reorder alerts. All stock levels are healthy. ✓
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Tab: Dead Stock */}
+        {activeTab === "dead" && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-red-50 border-b border-red-100 text-red-800 text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th className="px-5 py-3 text-left">SKU</th>
+                  <th className="px-5 py-3 text-left">Product</th>
+                  <th className="px-5 py-3 text-left">Category</th>
+                  <th className="px-5 py-3 text-right">Stock On Hand</th>
+                  <th className="px-5 py-3 text-right">Estimated Value</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-red-50">
+                {alerts?.dead_stock?.map((p) => (
+                  <tr key={p.sku} className="hover:bg-red-50/40 transition-colors">
+                    <td className="px-5 py-3 font-mono text-xs text-slate-500">{p.sku}</td>
+                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
+                    <td className="px-5 py-3">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
+                        {p.category}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3 text-right font-bold text-red-700">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-semibold text-slate-700">
+                      ${p.estimated_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
+                {!alerts?.dead_stock?.length && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-12 text-center text-slate-400 italic">
+                      No dead stock detected. All products have recent sales activity. ✓
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add Product Modal */}
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        token={sessionToken}
+        onSuccess={() => loadData(sessionToken)}
+      />
     </main>
   );
 }
