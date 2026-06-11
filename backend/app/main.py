@@ -32,6 +32,7 @@ import app.memory.short_term
 import app.memory.long_term
 import app.memory.memory_manager
 import app.knowledge.knowledge_manager
+# pyrefly: ignore [missing-import]
 import app.artifacts.artifact_manager
 
 logger = logging.getLogger("eve.main")
