@@ -12,5 +12,6 @@ from .task import Task
 from .finance import Revenue, Expense
 from .activity_log import ActivityLog
 from .intelligence_snapshot import IntelligenceSnapshot
+from .feedback import FeedbackSubmission
 
 # This ensures all models are imported and registered with SQLAlchemy's Base.metadata

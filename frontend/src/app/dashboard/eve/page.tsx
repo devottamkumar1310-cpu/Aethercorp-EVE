@@ -21,6 +21,7 @@ import {
 } from "@/types/executive";
 import { DailyBriefModal } from "@/components/executive/DailyBriefModal";
 import { MemoryManagerPanel } from "@/components/executive/MemoryManagerPanel";
+import { RecommendationHistoryPanel } from "@/components/executive/RecommendationHistoryPanel";
 
 import { 
   Brain, 
@@ -111,6 +112,7 @@ export default function EVECoocommandCenter() {
   // Modals & Panels open states
   const [isDailyBriefOpen, setIsDailyBriefOpen] = useState(false);
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
+  const [isRecommendationsOpen, setIsRecommendationsOpen] = useState(false);
 
   // Business metrics & data states
   const [healthScore, setHealthScore] = useState<number>(0);
@@ -303,15 +305,15 @@ export default function EVECoocommandCenter() {
           </div>
 
           {/* Daily Brief & Goal CTAs */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => setIsDailyBriefOpen(true)}
               className="p-3 bg-indigo-600 hover:bg-indigo-500 transition-all border border-indigo-500/20 rounded-xl flex flex-col justify-between text-left group shadow-lg"
             >
               <BookOpen className="w-5 h-5 text-indigo-200 mb-3 group-hover:scale-105 transition-transform" />
               <div>
-                <span className="block text-xs font-semibold text-white">Daily Brief</span>
-                <span className="text-[10px] text-indigo-200 mt-0.5">Synthesize today</span>
+                <span className="block text-[11px] font-semibold text-white leading-tight">Daily Brief</span>
+                <span className="text-[9px] text-indigo-200 mt-0.5">Synthesize today</span>
               </div>
             </button>
 
@@ -321,8 +323,19 @@ export default function EVECoocommandCenter() {
             >
               <Target className="w-5 h-5 text-slate-400 mb-3 group-hover:scale-105 transition-transform" />
               <div>
-                <span className="block text-xs font-semibold text-slate-200">Memory Drawer</span>
-                <span className="text-[10px] text-slate-400 mt-0.5">Set business goals</span>
+                <span className="block text-[11px] font-semibold text-slate-200 leading-tight">Goals Memory</span>
+                <span className="text-[9px] text-slate-400 mt-0.5">Set business goals</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setIsRecommendationsOpen(true)}
+              className="p-3 bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800 rounded-xl flex flex-col justify-between text-left group shadow-lg"
+            >
+              <Sparkles className="w-5 h-5 text-slate-400 mb-3 group-hover:scale-105 transition-transform" />
+              <div>
+                <span className="block text-[11px] font-semibold text-slate-200 leading-tight">AI Insights</span>
+                <span className="text-[9px] text-slate-400 mt-0.5">Recommendation history</span>
               </div>
             </button>
           </div>
@@ -548,6 +561,48 @@ export default function EVECoocommandCenter() {
                                   </div>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {/* Telemetry metadata */}
+                          {msg.agent_data?.telemetry && (
+                            <div className="mt-4 pt-3 border-t border-slate-850 space-y-2">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Execution Telemetry</span>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-slate-400">
+                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                  <span className="block text-slate-500">Total Latency</span>
+                                  <span className="font-semibold text-indigo-400">{msg.agent_data.telemetry.latency_ms} ms</span>
+                                </div>
+                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                  <span className="block text-slate-500">Token Cost</span>
+                                  <span className="font-semibold text-emerald-400">${msg.agent_data.telemetry.estimated_cost?.toFixed(6) || "0.000000"}</span>
+                                </div>
+                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                  <span className="block text-slate-500">Prompt Tokens</span>
+                                  <span className="font-semibold text-slate-300">{msg.agent_data.telemetry.prompt_tokens}</span>
+                                </div>
+                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                  <span className="block text-slate-500">Completion Tokens</span>
+                                  <span className="font-semibold text-slate-300">{msg.agent_data.telemetry.completion_tokens}</span>
+                                </div>
+                              </div>
+                              {/* Agent execution details */}
+                              {msg.agent_data.telemetry.agents && Object.keys(msg.agent_data.telemetry.agents).length > 0 && (
+                                <div className="p-2 bg-slate-950/40 border border-slate-800 rounded-lg text-[9px] text-slate-500 space-y-1">
+                                  <span className="font-semibold text-slate-400 block mb-1">Agent Pipeline Breakdown:</span>
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                                    {Object.entries(msg.agent_data.telemetry.agents).map(([agentName, data]: [string, any]) => (
+                                      <div key={agentName} className="flex items-center gap-1.5">
+                                        <span className="capitalize text-slate-400 font-medium">{agentName}:</span>
+                                        <span className="text-slate-300">{data.latency_ms}ms</span>
+                                        <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                          {data.status}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </>
@@ -863,6 +918,13 @@ export default function EVECoocommandCenter() {
             hydrateDashboard(sessionToken);
           }
         }} 
+        token={sessionToken} 
+      />
+
+      {/* Render recommendation history drawer */}
+      <RecommendationHistoryPanel 
+        isOpen={isRecommendationsOpen} 
+        onClose={() => setIsRecommendationsOpen(false)} 
         token={sessionToken} 
       />
     </div>

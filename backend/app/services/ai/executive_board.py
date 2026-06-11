@@ -47,8 +47,25 @@ class ExecutiveBoard:
         run_client = True
         run_growth = True
 
+        import time
+        from app.core.telemetry import record_agent_metric
+
+        # Helper wrapper to measure sub-agent execution time and record telemetry
+        async def timed_agent_run(agent_name, coro):
+            start = time.time()
+            try:
+                res = await coro
+                latency_ms = int((time.time() - start) * 1000)
+                record_agent_metric(agent_name, "success", latency_ms)
+                return res
+            except Exception as e:
+                latency_ms = int((time.time() - start) * 1000)
+                record_agent_metric(agent_name, "failed", latency_ms, str(e))
+                raise e
+
         # 1. Intent Routing Classifier
         if mode == "smart":
+            start_route = time.time()
             try:
                 system_instruction = "Identify which specialized sub-agents to invoke based on the user question."
                 prompt = f"User question: {question}"
@@ -66,7 +83,12 @@ class ExecutiveBoard:
                 # If nothing selected, run COO synthesis with all
                 if not any([run_finance, run_operations, run_inventory, run_client, run_growth]):
                     run_finance = run_operations = run_inventory = run_client = run_growth = True
+                
+                route_latency = int((time.time() - start_route) * 1000)
+                record_agent_metric("router", "success", route_latency)
             except Exception as e:
+                route_latency = int((time.time() - start_route) * 1000)
+                record_agent_metric("router", "failed", route_latency, str(e))
                 logger.warning(f"LLM routing classification failed: {e}. Defaulting to keyword heuristics.")
                 # Fallback to keyword heuristics
                 q_lower = question.lower()
@@ -93,11 +115,11 @@ class ExecutiveBoard:
         if run_growth:
             tasks["growth"] = self.growth_agent.analyze(db, org_id, question)
 
-        # Run in parallel using asyncio.gather
+        # Run in parallel using asyncio.gather wrapped with timing
         results = {}
         if tasks:
             keys = list(tasks.keys())
-            coros = list(tasks.values())
+            coros = [timed_agent_run(key, tasks[key]) for key in keys]
             completed_results = await asyncio.gather(*coros, return_exceptions=True)
             for key, val in zip(keys, completed_results):
                 if isinstance(val, Exception):
@@ -106,16 +128,24 @@ class ExecutiveBoard:
                     results[key] = val
 
         # 3. COO Synthesis
-        synthesis = await self.coo_agent.analyze(
-            db=db,
-            org_id=org_id,
-            question=question,
-            finance_result=results.get("finance"),
-            operations_result=results.get("operations"),
-            inventory_result=results.get("inventory"),
-            client_result=results.get("client"),
-            growth_result=results.get("growth")
-        )
+        start_synth = time.time()
+        try:
+            synthesis = await self.coo_agent.analyze(
+                db=db,
+                org_id=org_id,
+                question=question,
+                finance_result=results.get("finance"),
+                operations_result=results.get("operations"),
+                inventory_result=results.get("inventory"),
+                client_result=results.get("client"),
+                growth_result=results.get("growth")
+            )
+            synth_latency = int((time.time() - start_synth) * 1000)
+            record_agent_metric("coo_synthesis", "success", synth_latency)
+        except Exception as e:
+            synth_latency = int((time.time() - start_synth) * 1000)
+            record_agent_metric("coo_synthesis", "failed", synth_latency, str(e))
+            raise e
         
         # Populate findings, recommendations, and confidence scores per sub-agent
         findings_by_agent = {}

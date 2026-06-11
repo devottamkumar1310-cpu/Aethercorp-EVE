@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/eve"
     GEMINI_API_KEY: str = ""
+    GEMINI_MOCK_MODE: bool = True
     SECRET_KEY: str = "aethercorp-nexus-super-secret-key-replace-in-production"
     SUPABASE_JWT_SECRET: str = ""
     SUPABASE_URL: str = ""

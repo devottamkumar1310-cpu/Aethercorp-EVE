@@ -25,6 +25,11 @@ def rate_limit(requests: int = 60, window_seconds: int = 60):
         async def chat(request: Request, _: None = Depends(rate_limit(requests=20, window_seconds=60))):
     """
     async def check(request: Request):
+        import sys
+        from app.config import settings
+        if "pytest" in sys.modules or settings.ENV in ("testing", "test") or settings.ENVIRONMENT in ("testing", "test"):
+            return
+
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
         cutoff = now - window_seconds

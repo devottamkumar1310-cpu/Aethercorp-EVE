@@ -21,11 +21,16 @@ class AgentOrchestrator:
         user_id: Optional[uuid.UUID] = None
     ) -> ExecutiveMessage:
         import datetime
+        import time
         import logging
         from fastapi import HTTPException
+        from app.core.telemetry import init_telemetry, get_telemetry, clear_telemetry
         logger = logging.getLogger("eve.services.ai.agent_orchestrator")
 
+        telemetry_token = init_telemetry()
+        start_time = time.time()
         coo_result = None
+        
         try:
             # Delegate to multi-agent ExecutiveBoard execution
             coo_result = await self.board.run_board(
@@ -76,44 +81,61 @@ class AgentOrchestrator:
                     detail=detail_msg
                 )
 
-        # 4. Resolve or create ExecutiveConversation
-        if conversation_id:
-            conversation = db.query(ExecutiveConversation).filter(
-                ExecutiveConversation.organization_id == org_id,
-                ExecutiveConversation.id == conversation_id
-            ).first()
-            if not conversation:
+        try:
+            # 4. Resolve or create ExecutiveConversation
+            if conversation_id:
+                conversation = db.query(ExecutiveConversation).filter(
+                    ExecutiveConversation.organization_id == org_id,
+                    ExecutiveConversation.id == conversation_id
+                ).first()
+                if not conversation:
+                    conversation = ExecutiveConversation(
+                        organization_id=org_id,
+                        title=question[:50] or "Executive Consultation"
+                    )
+                    db.add(conversation)
+                    db.flush()
+            else:
                 conversation = ExecutiveConversation(
                     organization_id=org_id,
                     title=question[:50] or "Executive Consultation"
                 )
                 db.add(conversation)
                 db.flush()
-        else:
-            conversation = ExecutiveConversation(
-                organization_id=org_id,
-                title=question[:50] or "Executive Consultation"
-            )
-            db.add(conversation)
-            db.flush()
 
-        # 5. Persist messages history
-        user_message = ExecutiveMessage(
-            conversation_id=conversation.id,
-            role="user",
-            content=question
-        )
-        db.add(user_message)
-        
-        assistant_message = ExecutiveMessage(
-            conversation_id=conversation.id,
-            role="assistant",
-            content=coo_result.summary,
-            agent_data=coo_result.model_dump()
-        )
-        db.add(assistant_message)
-        
-        db.commit()
-        db.refresh(assistant_message)
-        
-        return assistant_message
+            # 5. Persist messages history
+            user_message = ExecutiveMessage(
+                conversation_id=conversation.id,
+                role="user",
+                content=question
+            )
+            db.add(user_message)
+            
+            # Compile telemetry details
+            latency_ms = int((time.time() - start_time) * 1000)
+            telemetry = get_telemetry()
+            
+            agent_data = coo_result.model_dump()
+            agent_data["telemetry"] = {
+                "prompt_tokens": telemetry.get("prompt_tokens", 0),
+                "completion_tokens": telemetry.get("completion_tokens", 0),
+                "total_tokens": telemetry.get("prompt_tokens", 0) + telemetry.get("completion_tokens", 0),
+                "estimated_cost": round(telemetry.get("token_cost", 0.0), 6),
+                "latency_ms": latency_ms,
+                "agents": telemetry.get("agents", {})
+            }
+            
+            assistant_message = ExecutiveMessage(
+                conversation_id=conversation.id,
+                role="assistant",
+                content=coo_result.summary,
+                agent_data=agent_data
+            )
+            db.add(assistant_message)
+            
+            db.commit()
+            db.refresh(assistant_message)
+            
+            return assistant_message
+        finally:
+            clear_telemetry(telemetry_token)

@@ -23,6 +23,7 @@ from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
 from app.core.security import get_current_user_and_tenant
 from app.services.importer_service import ImporterService
+from app.core.rate_limiter import rate_limit
 
 logger = logging.getLogger("eve.routes.inventory")
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
@@ -35,7 +36,8 @@ MAX_CSV_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB hard limit for uploaded CSV files
 def upload_inventory_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    token_context: dict = Depends(get_current_user_and_tenant)
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _: None = Depends(rate_limit(requests=10, window_seconds=60))
 ):
     """
     Uploads and parses inventory.csv.
@@ -69,7 +71,8 @@ def upload_inventory_csv(
 def upload_sales_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    token_context: dict = Depends(get_current_user_and_tenant)
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _: None = Depends(rate_limit(requests=10, window_seconds=60))
 ):
     """
     Uploads and parses sales.csv.
@@ -103,7 +106,8 @@ def upload_sales_csv(
 def upload_product_costs_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    token_context: dict = Depends(get_current_user_and_tenant)
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _: None = Depends(rate_limit(requests=10, window_seconds=60))
 ):
     """
     Uploads and parses product_cost.csv / costs.csv.

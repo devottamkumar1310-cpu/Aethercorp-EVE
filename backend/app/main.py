@@ -8,7 +8,7 @@
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.rate_limiter import rate_limit  # noqa: F401  # available for route-level Depends()
 
@@ -73,9 +73,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         settings.FRONTEND_URL
     ],
-    allow_origin_regex=r".*",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -97,10 +96,27 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+
+# Global exception handler to prevent leaking internal stack traces / details
+from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # If it's already an HTTPException, let it bubble up to be handled by FastAPI's default handlers
+    if isinstance(exc, HTTPException):
+        raise exc
+    logger.error(f"[GLOBAL UNHANDLED EXCEPTION] path={request.url.path} error={exc}", exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An unexpected error occurred."}
+    )
+
+
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback
 app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(organization.router)
@@ -112,7 +128,11 @@ app.include_router(analytics.router)
 app.include_router(activity.router)
 app.include_router(intelligence.router)
 app.include_router(executive.router)
+app.include_router(feedback.router)
 
+
+from sqlalchemy.orm import Session
+from app.database import get_db
 
 @app.get("/")
 def read_root():
@@ -122,6 +142,29 @@ def read_root():
     return {
         "status": "operational",
         "service": "EVE API Gateway",
-        "environment": settings.ENV,
-        "database": "connected"
+        "environment": settings.ENV
     }
+
+@app.get("/healthz")
+def health_check(db: Session = Depends(get_db)):
+    """
+    Database-verified operational health check.
+    """
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        return {
+            "status": "operational",
+            "database": "connected",
+            "service": "EVE API Gateway"
+        }
+    except Exception as e:
+        logger.error(f"Health check database query failure: {e}")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "database": "disconnected",
+                "detail": "Failed to connect to the database"
+            }
+        )

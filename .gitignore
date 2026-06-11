@@ -1,27 +1,26 @@
-<<<<<<< HEAD
 # ==============================================================================
 # AETHERCORP EVE - GLOBAL GITIGNORE
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
 # 1. Environment Variables & Secrets
-# ------------------------------------------------------------------------------
 .env
-.env.*
-!.env.example
-*.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+*.env
+!.env.example
 
-# ------------------------------------------------------------------------------
 # 2. Python & Backend
-# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 
 # Environments
 venv/
@@ -30,62 +29,27 @@ env/
 .env_python/
 ENV/
 
-# pytest
-.pytest_cache/
-.coverage
-coverage.xml
-
 # Databases
-=======
-# Environment Variables
-.env
-.env.*
-.env.local
-.env.development.local
-.env.production.local
-
-# Next.js
-node_modules/
-.next/
-out/
-.vercel/
-
-# Python
-venv/
-.venv/
-env/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Database
->>>>>>> 73ab2546183e1d0f51a32a3778a066c285136804
 *.db
 *.sqlite
 *.sqlite3
+test_temp.db
+eve_mvp.db
+eve_audit_benchmarks.db
 
-<<<<<<< HEAD
-# ------------------------------------------------------------------------------
 # 3. Next.js, Node & Frontend
-# ------------------------------------------------------------------------------
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-# Next.js build output
 .next/
 out/
 build/
-
-# Vercel
+dist/
 .vercel/
 
-# ------------------------------------------------------------------------------
 # 4. OS & IDE Specific
-# ------------------------------------------------------------------------------
 .DS_Store
 .DS_Store?
 ._*
@@ -99,23 +63,4 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
-=======
-# Logs
 *.log
-
-# IDE
-.vscode/
-.idea/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Testing
-coverage/
-.pytest_cache/
-
-# Build
-dist/
-build/
->>>>>>> 73ab2546183e1d0f51a32a3778a066c285136804

@@ -77,6 +77,39 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleSkip = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        router.push("/login");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/organization/onboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ name: "My Workspace" })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to create workspace");
+      }
+
+      router.push("/dashboard");
+    } catch (e: any) {
+      setError(e.message);
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
@@ -124,10 +157,11 @@ export default function OnboardingPage() {
               </button>
               <button
                 type="button"
-                onClick={() => router.push("/dashboard")}
-                className="w-full flex justify-center items-center py-2.5 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
+                disabled={loading}
+                onClick={handleSkip}
+                className="w-full flex justify-center items-center py-2.5 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50"
               >
-                Skip for Now
+                {loading ? "Creating default..." : "Skip for Now"}
               </button>
             </div>
           </form>
