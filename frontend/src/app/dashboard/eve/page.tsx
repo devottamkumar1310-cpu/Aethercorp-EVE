@@ -108,6 +108,18 @@ export default function EVECoocommandCenter() {
   const [conversationId, setConversationId] = useState<string | undefined>(undefined);
   const [chatMode, setChatMode] = useState<"smart" | "full">("smart");
   const [inputMessage, setInputMessage] = useState("");
+  const [showTelemetry, setShowTelemetry] = useState(false);
+
+  // Resizable panel widths (percentages)
+  const [leftWidth, setLeftWidth] = useState(22);
+  const [chatWidth, setChatWidth] = useState(43);
+
+  // Loading stage tracker
+  const [loadingStage, setLoadingStage] = useState(0);
+
+  // Responsive layout state
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [leftActiveTab, setLeftActiveTab] = useState<"risks" | "opportunities">("risks");
 
   // Modals & Panels open states
   const [isDailyBriefOpen, setIsDailyBriefOpen] = useState(false);
@@ -121,6 +133,16 @@ export default function EVECoocommandCenter() {
   const [risks, setRisks] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [goals, setGoals] = useState<BusinessGoalResponse[]>([]);
+
+  // Track if desktop viewport size is active
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1280);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Chat message state
   const [messages, setMessages] = useState<MessageResponse[]>([
@@ -137,6 +159,60 @@ export default function EVECoocommandCenter() {
 
   // Scroll ref for chat window
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Draggable panel resizers mouse event listeners
+  const handleLeftMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = leftWidth;
+    const doDrag = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaPercent = (deltaX / window.innerWidth) * 100;
+      const newWidth = Math.max(18, Math.min(30, startWidth + deltaPercent));
+      setLeftWidth(newWidth);
+    };
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
+  };
+
+  const handleChatMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = chatWidth;
+    const doDrag = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaPercent = (deltaX / window.innerWidth) * 100;
+      const newWidth = Math.max(30, Math.min(55, startWidth + deltaPercent));
+      if (100 - leftWidth - newWidth >= 20) {
+        setChatWidth(newWidth);
+      }
+    };
+    const stopDrag = () => {
+      document.removeEventListener("mousemove", doDrag);
+      document.removeEventListener("mouseup", stopDrag);
+    };
+    document.addEventListener("mousemove", doDrag);
+    document.addEventListener("mouseup", stopDrag);
+  };
+
+  // Loading stage timer triggers
+  useEffect(() => {
+    if (!chatLoading) {
+      setLoadingStage(0);
+      return;
+    }
+    setLoadingStage(1);
+    const t1 = setTimeout(() => setLoadingStage(2), 1200);
+    const t2 = setTimeout(() => setLoadingStage(3), 2800);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [chatLoading]);
 
   // Quick prompt chips
   const promptChips = [
@@ -253,157 +329,210 @@ export default function EVECoocommandCenter() {
   }
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-[calc(100vh-64px)] font-sans">
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 p-6">
-        
-        {/* Left Column - System Health & Alerts */}
-        <div className="xl:col-span-3 space-y-6 flex flex-col">
-          {/* Health Score Box */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl" />
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-              <Brain size={14} className="text-indigo-400" /> Executive Dashboard
-            </h3>
+    <div className="bg-slate-950 text-slate-100 min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-y-auto xl:overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans">
+      
+      {/* Left Column - System Health & Alerts */}
+      <div 
+        className="w-full xl:h-full xl:overflow-y-auto pr-1 flex flex-col gap-4 scrollbar-thin flex-shrink-0"
+        style={isDesktop ? { width: `${leftWidth}%` } : undefined}
+      >
+        {/* Health Score Box */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg relative overflow-hidden flex-shrink-0">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl" />
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Brain size={14} className="text-indigo-400" /> Executive Dashboard
+          </h3>
 
-            <div className="flex items-center gap-4">
-              <div className={`w-16 h-16 rounded-xl flex flex-col items-center justify-center border font-bold text-2xl ${
-                healthScore >= 80 
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                  : healthScore >= 60 
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+          <div className="flex items-center gap-4">
+            <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center border font-bold text-xl ${
+              healthScore >= 80 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                : healthScore >= 60 
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+            }`}>
+              {healthScore}
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-slate-200">Business Health Status</div>
+              <div className={`text-[11px] mt-0.5 font-medium ${
+                healthScore >= 80 ? 'text-emerald-400' : healthScore >= 60 ? 'text-amber-400' : 'text-rose-400'
               }`}>
-                {healthScore}
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-slate-200">Business Health Status</div>
-                <div className={`text-xs mt-0.5 font-medium ${
-                  healthScore >= 80 ? 'text-emerald-400' : healthScore >= 60 ? 'text-amber-400' : 'text-rose-400'
-                }`}>
-                  {healthStatus}
-                </div>
+                {healthStatus}
               </div>
             </div>
-
-            {/* Health Trend indicators */}
-            {healthTrends && (
-              <div className="mt-4 pt-4 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-1 text-slate-400">
-                  <span>Profitability:</span>
-                  <span className={healthTrends.profit_trend === 'up' ? 'text-emerald-400' : 'text-rose-400'}>
-                    {healthTrends.profit_trend === 'up' ? '↑' : '↓'}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-slate-400">
-                  <span>Task Velocity:</span>
-                  <span className={healthTrends.task_trend === 'up' ? 'text-emerald-400' : 'text-rose-400'}>
-                    {healthTrends.task_trend === 'up' ? '↑' : '↓'}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Daily Brief & Goal CTAs */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => setIsDailyBriefOpen(true)}
-              className="p-3 bg-indigo-600 hover:bg-indigo-500 transition-all border border-indigo-500/20 rounded-xl flex flex-col justify-between text-left group shadow-lg"
-            >
-              <BookOpen className="w-5 h-5 text-indigo-200 mb-3 group-hover:scale-105 transition-transform" />
-              <div>
-                <span className="block text-[11px] font-semibold text-white leading-tight">Daily Brief</span>
-                <span className="text-[9px] text-indigo-200 mt-0.5">Synthesize today</span>
+          {/* Health Trend indicators */}
+          {healthTrends && (
+            <div className="mt-3 pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[10px]">
+              <div className="flex items-center gap-1 text-slate-400">
+                <span className="text-slate-400">Profitability:</span>
+                <span className={healthTrends.profit_trend === 'up' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                  {healthTrends.profit_trend === 'up' ? '↑' : '↓'}
+                </span>
               </div>
-            </button>
-
-            <button
-              onClick={() => setIsMemoryOpen(true)}
-              className="p-3 bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800 rounded-xl flex flex-col justify-between text-left group shadow-lg"
-            >
-              <Target className="w-5 h-5 text-slate-400 mb-3 group-hover:scale-105 transition-transform" />
-              <div>
-                <span className="block text-[11px] font-semibold text-slate-200 leading-tight">Goals Memory</span>
-                <span className="text-[9px] text-slate-400 mt-0.5">Set business goals</span>
+              <div className="flex items-center gap-1 text-slate-400">
+                <span className="text-slate-400">Task Velocity:</span>
+                <span className={healthTrends.task_trend === 'up' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                  {healthTrends.task_trend === 'up' ? '↑' : '↓'}
+                </span>
               </div>
-            </button>
-
-            <button
-              onClick={() => setIsRecommendationsOpen(true)}
-              className="p-3 bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800 rounded-xl flex flex-col justify-between text-left group shadow-lg"
-            >
-              <Sparkles className="w-5 h-5 text-slate-400 mb-3 group-hover:scale-105 transition-transform" />
-              <div>
-                <span className="block text-[11px] font-semibold text-slate-200 leading-tight">AI Insights</span>
-                <span className="text-[9px] text-slate-400 mt-0.5">Recommendation history</span>
-              </div>
-            </button>
-          </div>
-
-          {/* Risks & Opportunities Alerts panel */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex-1 flex flex-col overflow-hidden">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-              <ShieldAlert size={14} className="text-rose-400" /> Active System Risks
-            </h3>
-
-            <div className="space-y-3 overflow-y-auto flex-1 pr-1">
-              {risks.map((risk, idx) => (
-                <div key={idx} className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 text-rose-400 font-semibold uppercase tracking-wider text-[10px]">
-                    <AlertTriangle size={12} /> {risk.category || "Inventory Alert"}
-                  </div>
-                  <p className="text-slate-300 leading-relaxed font-normal">{risk.description}</p>
-                </div>
-              ))}
-              {risks.length === 0 && (
-                <p className="text-xs text-slate-500 italic text-center py-4">No active risks detected.</p>
-              )}
             </div>
-
-            <div className="h-px bg-slate-800/80 my-4" />
-
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-              <Lightbulb size={14} className="text-emerald-400" /> Strategic Opportunities
-            </h3>
-
-            <div className="space-y-3 overflow-y-auto flex-1 pr-1">
-              {opportunities.map((opp, idx) => (
-                <div key={idx} className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 text-emerald-400 font-semibold uppercase tracking-wider text-[10px]">
-                    <TrendingUp size={12} /> {opp.category || "Growth"}
-                  </div>
-                  <p className="text-slate-300 leading-relaxed font-normal">{opp.description}</p>
-                </div>
-              ))}
-              {opportunities.length === 0 && (
-                <p className="text-xs text-slate-500 italic text-center py-4">No immediate growth opportunities detected.</p>
-              )}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Middle Column - Multi-Turn EVE Command Center Chat */}
-        <div className="xl:col-span-5 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl h-[calc(100vh-120px)] overflow-hidden shadow-2xl relative">
-          
-          {/* Conversational Header */}
-          <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center justify-between z-10">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/30">
-                <Brain size={18} />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                  EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Active</span>
-                </h2>
-                <p className="text-[10px] text-slate-400">Queries route automatically to COO, Finance & Operations agents</p>
-              </div>
+        {/* Daily Brief & Goal CTAs */}
+        <div className="grid grid-cols-3 gap-2 flex-shrink-0">
+          <button
+            onClick={() => setIsDailyBriefOpen(true)}
+            className="p-2.5 bg-indigo-600 hover:bg-indigo-500 transition-all border border-indigo-500/20 rounded-xl flex flex-col justify-between text-left group shadow-lg cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4 text-indigo-200 mb-2 group-hover:scale-105 transition-transform" />
+            <div>
+              <span className="block text-[10px] font-semibold text-white leading-tight">Daily Brief</span>
+              <span className="text-[8px] text-indigo-200 mt-0.5">Synthesize today</span>
             </div>
+          </button>
+
+          <button
+            onClick={() => setIsMemoryOpen(true)}
+            className="p-2.5 bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800 rounded-xl flex flex-col justify-between text-left group shadow-lg cursor-pointer"
+          >
+            <Target className="w-4 h-4 text-slate-400 mb-2 group-hover:scale-105 transition-transform" />
+            <div>
+              <span className="block text-[10px] font-semibold text-slate-200 leading-tight">Goals Memory</span>
+              <span className="text-[8px] text-slate-400 mt-0.5 font-normal">Set goals</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setIsRecommendationsOpen(true)}
+            className="p-2.5 bg-slate-900 hover:bg-slate-800 transition-all border border-slate-800 rounded-xl flex flex-col justify-between text-left group shadow-lg cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-slate-400 mb-2 group-hover:scale-105 transition-transform" />
+            <div>
+              <span className="block text-[10px] font-semibold text-slate-200 leading-tight">AI Insights</span>
+              <span className="text-[8px] text-slate-400 mt-0.5 font-normal">Rec history</span>
+            </div>
+          </button>
+        </div>
+
+        {/* Risks & Opportunities Alerts panel (Tabbed for spacing optimization) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg flex-1 flex flex-col overflow-hidden min-h-[260px] xl:min-h-0">
+          
+          <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 mb-3 flex-shrink-0">
+            <button
+              onClick={() => setLeftActiveTab("risks")}
+              className={`flex-1 text-[10px] font-bold py-1.5 rounded transition-all flex items-center justify-center gap-1.5 ${
+                leftActiveTab === "risks" 
+                  ? "bg-slate-800 text-slate-100 shadow-sm" 
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <ShieldAlert size={11} className="text-rose-450" />
+              <span>Risks ({risks.length})</span>
+            </button>
+            <button
+              onClick={() => setLeftActiveTab("opportunities")}
+              className={`flex-1 text-[10px] font-bold py-1.5 rounded transition-all flex items-center justify-center gap-1.5 ${
+                leftActiveTab === "opportunities" 
+                  ? "bg-slate-800 text-slate-100 shadow-sm" 
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Lightbulb size={11} className="text-emerald-450" />
+              <span>Opportunities ({opportunities.length})</span>
+            </button>
+          </div>
+
+          <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 scrollbar-thin">
+            {leftActiveTab === "risks" ? (
+              <>
+                {risks.map((risk, idx) => (
+                  <div key={idx} className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl text-[11px] space-y-1">
+                    <div className="flex items-center gap-1.5 text-rose-400 font-semibold uppercase tracking-wider text-[9px]">
+                      <AlertTriangle size={10} /> {risk.category || "Inventory Alert"}
+                    </div>
+                    <p className="text-slate-300 leading-relaxed font-normal">{risk.description}</p>
+                  </div>
+                ))}
+                {risks.length === 0 && (
+                  <p className="text-xs text-slate-500 italic text-center py-8">No active risks detected.</p>
+                )}
+              </>
+            ) : (
+              <>
+                {opportunities.map((opp, idx) => (
+                  <div key={idx} className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-[11px] space-y-1">
+                    <div className="flex items-center gap-1.5 text-emerald-400 font-semibold uppercase tracking-wider text-[9px]">
+                      <TrendingUp size={10} /> {opp.category || "Growth"}
+                    </div>
+                    <p className="text-slate-300 leading-relaxed font-normal">{opp.description}</p>
+                  </div>
+                ))}
+                {opportunities.length === 0 && (
+                  <p className="text-xs text-slate-550 italic text-center py-8">No growth opportunities detected.</p>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Draggable Divider 1 */}
+      {isDesktop && (
+        <div 
+          onMouseDown={handleLeftMouseDown}
+          className="group w-1.5 hover:bg-indigo-600/40 active:bg-indigo-500/80 cursor-col-resize self-stretch transition-all duration-150 z-20 flex-shrink-0 flex items-center justify-center"
+          title="Drag to resize panels"
+        >
+          <div className="w-[2px] h-8 bg-slate-800 group-hover:bg-indigo-400/80 rounded transition-all" />
+        </div>
+      )}
+
+      {/* Middle Column - Multi-Turn EVE Command Center Chat */}
+      <div 
+        className="w-full xl:h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex-shrink-0"
+        style={isDesktop ? { width: `${chatWidth}%` } : undefined}
+      >
+        
+        {/* Conversational Header */}
+        <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center justify-between z-10 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/30">
+              <Brain size={18} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+                EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Active</span>
+              </h2>
+              <p className="text-[10px] text-slate-400">Queries route automatically to COO, Finance & Operations agents</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Advanced Telemetry Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowTelemetry(!showTelemetry)}
+              className={`text-[10px] font-bold px-2 py-1.5 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
+                showTelemetry 
+                  ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
+                  : "bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700"
+              }`}
+              title="Toggle Advanced Telemetry"
+            >
+              <Database size={10} />
+              <span>Telemetry: {showTelemetry ? "ON" : "OFF"}</span>
+            </button>
 
             {/* Mode Selector */}
             <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
               <button
+                type="button"
                 onClick={() => setChatMode("smart")}
-                className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
                   chatMode === "smart" 
                     ? "bg-indigo-600 text-white shadow-md" 
                     : "text-slate-400 hover:text-slate-200"
@@ -413,23 +542,26 @@ export default function EVECoocommandCenter() {
                 Smart
               </button>
               <button
+                type="button"
                 onClick={() => setChatMode("full")}
-                className={`text-[10px] font-bold px-2 py-1 rounded transition-all ${
+                className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
                   chatMode === "full" 
                     ? "bg-indigo-600 text-white shadow-md" 
                     : "text-slate-400 hover:text-slate-200"
                 }`}
                 title="Deep sub-agent aggregation"
               >
-                Full Analysis
+                Full
               </button>
             </div>
           </div>
+        </div>
 
           {/* Conversation history area */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950/20 scrollbar-thin">
             {messages.map((msg) => {
               const isAssistant = msg.role === "assistant";
+              const agentData = msg.agent_data as any;
               return (
                 <div
                   key={msg.id}
@@ -450,17 +582,17 @@ export default function EVECoocommandCenter() {
                     {isAssistant && msg.id !== "welcome-msg" && (
                       <div className="flex flex-wrap gap-1.5 items-center mb-1">
                         <span className="text-[9px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
-                          {msg.agent_data?.agent || "COO Lead"}
+                          {agentData?.agent || "COO Lead"}
                         </span>
-                        {msg.agent_data?.confidence_scores ? (
-                          Object.entries(msg.agent_data.confidence_scores).map(([name, score]: [string, any]) => (
+                        {agentData?.confidence_scores ? (
+                          Object.entries(agentData.confidence_scores).map(([name, score]: [string, any]) => (
                             <span key={name} className="text-[8px] font-bold bg-slate-800 text-slate-400 border border-slate-700/60 px-1.5 py-0.2 rounded-md uppercase tracking-wide">
                               {name.replace(" Agent", "").replace(" Intelligence Agent", "")}: {Math.round(score * 100)}%
                             </span>
                           ))
-                        ) : msg.agent_data?.confidence !== undefined ? (
+                        ) : agentData?.confidence !== undefined ? (
                           <span className="text-[8px] font-bold bg-slate-800 text-slate-400 border border-slate-700/60 px-1.5 py-0.2 rounded-md uppercase tracking-wide">
-                            Confidence: {Math.round(msg.agent_data.confidence * 100)}%
+                            Confidence: {Math.round(agentData.confidence * 100)}%
                           </span>
                         ) : null}
                       </div>
@@ -476,11 +608,11 @@ export default function EVECoocommandCenter() {
                           {renderMarkdown(msg.content)}
                           
                           {/* findings by agent */}
-                          {msg.agent_data?.findings_by_agent && Object.keys(msg.agent_data.findings_by_agent).length > 0 && (
+                          {agentData?.findings_by_agent && Object.keys(agentData.findings_by_agent).length > 0 && (
                             <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-2">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Agent Findings</span>
                               <div className="space-y-2">
-                                {Object.entries(msg.agent_data.findings_by_agent).map(([agentName, list]: [string, any]) => (
+                                {Object.entries(agentData.findings_by_agent).map(([agentName, list]: [string, any]) => (
                                   <div key={agentName} className="text-xs">
                                     <span className="font-semibold text-indigo-300 block mb-0.5">{agentName}:</span>
                                     <ul className="list-disc pl-4 space-y-0.5 text-slate-300">
@@ -495,11 +627,11 @@ export default function EVECoocommandCenter() {
                           )}
 
                           {/* legacy findings */}
-                          {!msg.agent_data?.findings_by_agent && msg.agent_data?.findings && msg.agent_data.findings.length > 0 && (
+                          {!agentData?.findings_by_agent && agentData?.findings && agentData.findings.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-1">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Findings</span>
                               <ul className="list-disc pl-4 space-y-0.5 text-xs text-slate-300">
-                                {msg.agent_data.findings.map((item: string, idx: number) => (
+                                {agentData.findings.map((item: string, idx: number) => (
                                   <li key={idx} className="leading-relaxed">{item}</li>
                                 ))}
                               </ul>
@@ -507,11 +639,11 @@ export default function EVECoocommandCenter() {
                           )}
 
                           {/* Priorities */}
-                          {msg.agent_data?.priorities && msg.agent_data.priorities.length > 0 && (
+                          {agentData?.priorities && agentData.priorities.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-2">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Strategic Priorities</span>
                               <div className="grid grid-cols-1 gap-2">
-                                {msg.agent_data.priorities.map((pri: any, idx: number) => (
+                                {agentData.priorities.map((pri: any, idx: number) => (
                                   <div key={idx} className="p-3 bg-indigo-950/20 border border-indigo-500/10 rounded-xl space-y-1">
                                     <span className="text-xs font-semibold text-indigo-300 block">Priority {idx + 1}: {pri.title}</span>
                                     <p className="text-[11px] text-slate-300 leading-relaxed font-normal">{pri.description}</p>
@@ -522,19 +654,19 @@ export default function EVECoocommandCenter() {
                           )}
 
                           {/* Expected Business Impact */}
-                          {msg.agent_data?.expected_impact && (
+                          {agentData?.expected_impact && (
                             <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-xs space-y-0.5">
                               <span className="font-semibold text-emerald-400 block text-[10px] uppercase tracking-wider">Expected Business Impact</span>
-                              <p className="text-slate-300 font-normal leading-relaxed">{msg.agent_data.expected_impact}</p>
+                              <p className="text-slate-300 font-normal leading-relaxed">{agentData.expected_impact}</p>
                             </div>
                           )}
 
                           {/* Recommendations by agent */}
-                          {msg.agent_data?.recommendations_by_agent && Object.keys(msg.agent_data.recommendations_by_agent).length > 0 && (
+                          {agentData?.recommendations_by_agent && Object.keys(agentData.recommendations_by_agent).length > 0 && (
                             <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-2">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Recommendations by Agent</span>
                               <div className="space-y-2">
-                                {Object.entries(msg.agent_data.recommendations_by_agent).map(([agentName, list]: [string, any]) => (
+                                {Object.entries(agentData.recommendations_by_agent).map(([agentName, list]: [string, any]) => (
                                   <div key={agentName} className="text-xs space-y-1">
                                     <span className="font-semibold text-indigo-300 block">{agentName}:</span>
                                     <div className="grid grid-cols-1 gap-1.5 pl-2">
@@ -551,11 +683,11 @@ export default function EVECoocommandCenter() {
                           )}
 
                           {/* legacy recommendations */}
-                          {!msg.agent_data?.recommendations_by_agent && msg.agent_data?.recommendations && msg.agent_data.recommendations.length > 0 && (
+                          {!agentData?.recommendations_by_agent && agentData?.recommendations && agentData.recommendations.length > 0 && (
                             <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-1.5">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Recommendations</span>
                               <div className="grid grid-cols-1 gap-1.5">
-                                {msg.agent_data.recommendations.map((item: string, idx: number) => (
+                                {agentData.recommendations.map((item: string, idx: number) => (
                                   <div key={idx} className="p-2 bg-slate-950 border border-slate-800/50 rounded-lg text-xs text-slate-300">
                                     {item}
                                   </div>
@@ -565,52 +697,68 @@ export default function EVECoocommandCenter() {
                           )}
 
                           {/* Telemetry metadata */}
-                          {msg.agent_data?.telemetry && (
-                            <div className="mt-4 pt-3 border-t border-slate-850 space-y-2">
-                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Execution Telemetry</span>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-slate-400">
-                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                  <span className="block text-slate-500">Total Latency</span>
-                                  <span className="font-semibold text-indigo-400">{msg.agent_data.telemetry.latency_ms} ms</span>
-                                </div>
-                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                  <span className="block text-slate-500">Token Cost</span>
-                                  <span className="font-semibold text-emerald-400">${msg.agent_data.telemetry.estimated_cost?.toFixed(6) || "0.000000"}</span>
-                                </div>
-                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                  <span className="block text-slate-500">Prompt Tokens</span>
-                                  <span className="font-semibold text-slate-300">{msg.agent_data.telemetry.prompt_tokens}</span>
-                                </div>
-                                <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                  <span className="block text-slate-500">Completion Tokens</span>
-                                  <span className="font-semibold text-slate-300">{msg.agent_data.telemetry.completion_tokens}</span>
-                                </div>
-                              </div>
-                              {/* Agent execution details */}
-                              {msg.agent_data.telemetry.agents && Object.keys(msg.agent_data.telemetry.agents).length > 0 && (
-                                <div className="p-2 bg-slate-950/40 border border-slate-800 rounded-lg text-[9px] text-slate-500 space-y-1">
-                                  <span className="font-semibold text-slate-400 block mb-1">Agent Pipeline Breakdown:</span>
-                                  <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                    {Object.entries(msg.agent_data.telemetry.agents).map(([agentName, data]: [string, any]) => (
-                                      <div key={agentName} className="flex items-center gap-1.5">
-                                        <span className="capitalize text-slate-400 font-medium">{agentName}:</span>
-                                        <span className="text-slate-300">{data.latency_ms}ms</span>
-                                        <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                                          {data.status}
-                                        </span>
-                                      </div>
-                                    ))}
+                          {agentData?.telemetry && (
+                            showTelemetry ? (
+                              <div className="mt-4 pt-3 border-t border-slate-850 space-y-2">
+                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Execution Telemetry</span>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-slate-400">
+                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                    <span className="block text-slate-500">Total Latency</span>
+                                    <span className="font-semibold text-indigo-400">{agentData.telemetry.latency_ms} ms</span>
+                                  </div>
+                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                    <span className="block text-slate-500">Token Cost</span>
+                                    <span className="font-semibold text-emerald-400">${agentData.telemetry.estimated_cost?.toFixed(6) || "0.000000"}</span>
+                                  </div>
+                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                    <span className="block text-slate-500">Prompt Tokens</span>
+                                    <span className="font-semibold text-slate-300">{agentData.telemetry.prompt_tokens}</span>
+                                  </div>
+                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
+                                    <span className="block text-slate-500">Completion Tokens</span>
+                                    <span className="font-semibold text-slate-300">{agentData.telemetry.completion_tokens}</span>
                                   </div>
                                 </div>
-                              )}
-                            </div>
+                                {/* Agent execution details */}
+                                {agentData.telemetry.agents && Object.keys(agentData.telemetry.agents).length > 0 && (
+                                  <div className="p-2 bg-slate-950/40 border border-slate-800 rounded-lg text-[9px] text-slate-500 space-y-1">
+                                    <span className="font-semibold text-slate-400 block mb-1">Agent Pipeline Breakdown:</span>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                                      {Object.entries(agentData.telemetry.agents).map(([agentName, data]: [string, any]) => (
+                                        <div key={agentName} className="flex items-center gap-1.5">
+                                          <span className="capitalize text-slate-400 font-medium">{agentName}:</span>
+                                          <span className="text-slate-300">{data.latency_ms}ms</span>
+                                          <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                            {data.status}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mt-3 pt-2 border-t border-slate-800/40 flex items-center justify-between text-[10px] text-slate-450">
+                                <div className="flex items-center gap-1.5 text-emerald-400/90 font-medium">
+                                  <span className="text-emerald-400 font-bold">✓</span>
+                                  <span>Processed in {((agentData.telemetry.latency_ms || 0) / 1000).toFixed(2)}s</span>
+                                </div>
+                                <button 
+                                  type="button"
+                                  onClick={() => setShowTelemetry(true)}
+                                  className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer"
+                                >
+                                  View Telemetry
+                                </button>
+                              </div>
+                            )
                           )}
                         </>
                       ) : (
                         msg.content
                       )}
                     </div>
-
+ 
                     <span className="text-[9px] text-slate-500 block px-1">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -618,49 +766,88 @@ export default function EVECoocommandCenter() {
                 </div>
               );
             })}
-
+ 
             {chatLoading && (
-              <div className="flex gap-3 max-w-[80%] mr-auto">
+              <div className="flex gap-3 max-w-[80%] mr-auto animate-fade-in">
                 <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white border border-indigo-500/20 flex items-center justify-center flex-shrink-0 animate-pulse">
                   <Brain size={14} />
                 </div>
                 <div className="space-y-1.5 flex-1">
                   <div className="flex gap-1 items-center mb-1">
                     <span className="text-[9px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.2 rounded-full animate-pulse">
-                      EVE COO Routing...
+                      EVE COO Executing...
                     </span>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800/80 rounded-2xl px-4 py-3 text-sm flex flex-col gap-2">
-                    <div className="flex items-center gap-2 text-slate-400 font-medium text-xs">
+                  <div className="bg-slate-900 border border-slate-800/80 rounded-2xl px-4 py-3 text-xs flex flex-col gap-3 shadow-lg w-full max-w-[340px]">
+                    <div className="flex items-center gap-2 text-slate-350 font-semibold text-[11px] border-b border-slate-800 pb-2 mb-0.5">
                       <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
-                      <span>EVE is weighing supply chain and pricing margins...</span>
+                      <span>EVE Analysis Pipeline running...</span>
                     </div>
-                    {/* Tiny animated skeletons */}
-                    <div className="h-2 bg-slate-800 rounded w-5/6 animate-pulse" />
-                    <div className="h-2 bg-slate-800 rounded w-3/4 animate-pulse" />
+                    <div className="space-y-2">
+                      {/* Step 1: Routing */}
+                      <div className="flex items-center gap-2 text-[11px]">
+                        {loadingStage > 1 ? (
+                          <span className="text-emerald-400 font-bold">✓</span>
+                        ) : loadingStage === 1 ? (
+                          <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
+                        ) : (
+                          <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
+                        )}
+                        <span className={loadingStage > 1 ? "text-slate-400" : loadingStage === 1 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
+                          Intent routing classifier
+                        </span>
+                      </div>
+
+                      {/* Step 2: Sub-agents */}
+                      <div className="flex items-center gap-2 text-[11px]">
+                        {loadingStage > 2 ? (
+                          <span className="text-emerald-400 font-bold">✓</span>
+                        ) : loadingStage === 2 ? (
+                          <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
+                        ) : (
+                          <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
+                        )}
+                        <span className={loadingStage > 2 ? "text-slate-400" : loadingStage === 2 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
+                          Spawn sub-agent queries
+                        </span>
+                      </div>
+
+                      {/* Step 3: Synthesis */}
+                      <div className="flex items-center gap-2 text-[11px]">
+                        {loadingStage === 3 ? (
+                          <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
+                        ) : (
+                          <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
+                        )}
+                        <span className={loadingStage === 3 ? "text-indigo-400 font-semibold animate-pulse" : "text-slate-600"}>
+                          Synthesize recommendations
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
             <div ref={chatEndRef} />
           </div>
-
+ 
           {/* Quick chip selector & Input Form footer */}
-          <div className="p-4 bg-slate-900 border-t border-slate-800 space-y-3">
+          <div className="p-4 bg-slate-900 border-t border-slate-800 space-y-3 flex-shrink-0">
             {/* Quick action chips */}
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               {promptChips.map((chip, idx) => (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => handleSendChat(chip)}
                   disabled={chatLoading}
-                  className="px-3 py-1 bg-slate-950/80 border border-slate-800 hover:border-slate-700 disabled:opacity-50 text-slate-400 hover:text-slate-200 rounded-full text-xs transition-colors whitespace-nowrap"
+                  className="px-3 py-1 bg-slate-950/80 border border-slate-800 hover:border-slate-700 disabled:opacity-50 text-slate-400 hover:text-slate-200 rounded-full text-xs transition-colors whitespace-nowrap cursor-pointer"
                 >
                   {chip}
                 </button>
               ))}
             </div>
-
+ 
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -679,18 +866,32 @@ export default function EVECoocommandCenter() {
               <button
                 type="submit"
                 disabled={chatLoading || !inputMessage.trim()}
-                className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-slate-500 text-white rounded-xl transition-all shadow-lg flex items-center justify-center flex-shrink-0"
+                className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-slate-500 text-white rounded-xl transition-all shadow-lg flex items-center justify-center flex-shrink-0 cursor-pointer"
               >
                 <Send size={16} />
               </button>
             </form>
           </div>
         </div>
-
+ 
+        {/* Draggable Divider 2 */}
+        {isDesktop && (
+          <div 
+            onMouseDown={handleChatMouseDown}
+            className="group w-1.5 hover:bg-indigo-600/40 active:bg-indigo-500/80 cursor-col-resize self-stretch transition-all duration-150 z-20 flex-shrink-0 flex items-center justify-center"
+            title="Drag to resize panels"
+          >
+            <div className="w-[2px] h-8 bg-slate-800 group-hover:bg-indigo-400/80 rounded transition-all" />
+          </div>
+        )}
+ 
         {/* Right Column - Deep Sub-Agent Reasoning & Confidence metrics */}
-        <div className="xl:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl h-[calc(100vh-120px)] flex flex-col overflow-hidden shadow-2xl">
+        <div 
+          className="w-full xl:h-full bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl flex-shrink-0"
+          style={isDesktop ? { width: `${100 - leftWidth - chatWidth}%` } : undefined}
+        >
           
-          <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center gap-2">
+          <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center gap-2 flex-shrink-0">
             <Compass className="w-5 h-5 text-indigo-400" />
             <div>
               <h2 className="text-sm font-bold text-slate-100">Deep Agent Reasoning</h2>
@@ -898,8 +1099,6 @@ export default function EVECoocommandCenter() {
             )}
           </div>
         </div>
-
-      </div>
 
       {/* Render Daily Brief Modal */}
       <DailyBriefModal 

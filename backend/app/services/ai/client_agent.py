@@ -1,3 +1,4 @@
+from typing import Optional, Dict, List, Any
 import uuid
 from sqlalchemy.orm import Session
 from app.models.client import Client
@@ -10,7 +11,13 @@ class ClientAgent:
     def __init__(self, gemini_service=None):
         self.gemini_service = gemini_service or container.get("gemini_service")
 
-    async def analyze(self, db: Session, org_id: uuid.UUID, question: str = "") -> AgentAnalysisResult:
+    async def analyze(
+        self,
+        db: Session,
+        org_id: uuid.UUID,
+        question: str = "",
+        overview: Optional[Dict[str, Any]] = None
+    ) -> AgentAnalysisResult:
         # Query client lists and statuses from the database
         clients = db.query(Client).filter(Client.organization_id == org_id).all()
         
@@ -23,7 +30,8 @@ class ClientAgent:
                 "phone": c.phone
             })
             
-        overview = BusinessAnalyticsService.get_overview(db, org_id)
+        if overview is None:
+            overview = BusinessAnalyticsService.get_overview(db, org_id)
         
         prompt = f"""
         User Question/Goal: {question or "Analyze client status, churn risks, and retention opportunities."}

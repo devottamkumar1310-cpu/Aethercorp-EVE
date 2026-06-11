@@ -182,8 +182,8 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
                               <TrendingUp size={10} className="text-cyan-400" /> Data Indicators
                             </span>
                             <ul className="list-disc list-inside text-xs text-slate-400 mt-1 pl-1 space-y-0.5">
-                              {item.data_used.map((data, idx) => (
-                                <li key={idx} className="truncate">{data}</li>
+                              {item.data_used.map((data: any, idx: number) => (
+                                <li key={idx} className="truncate">{String(data)}</li>
                               ))}
                             </ul>
                           </div>

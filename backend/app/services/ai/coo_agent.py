@@ -20,11 +20,15 @@ class COOAgent:
         operations_result: Optional[AgentAnalysisResult] = None,
         inventory_result: Optional[AgentAnalysisResult] = None,
         client_result: Optional[AgentAnalysisResult] = None,
-        growth_result: Optional[AgentAnalysisResult] = None
+        growth_result: Optional[AgentAnalysisResult] = None,
+        health: Optional[dict] = None,
+        goals: Optional[list] = None
     ) -> ExecutiveSynthesisResult:
-        # Retrieve overall health score and goals
-        health = get_health_score(db, org_id)
-        goals = get_memory_context(db, org_id)
+        # Retrieve overall health score and goals if not passed as cached params
+        if health is None:
+            health = get_health_score(db, org_id)
+        if goals is None:
+            goals = get_memory_context(db, org_id)
         
         context_block = build_context_block(
             health=health,

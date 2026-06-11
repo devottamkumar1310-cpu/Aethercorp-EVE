@@ -1,3 +1,4 @@
+from typing import Optional, Dict, List, Any
 import uuid
 from sqlalchemy.orm import Session
 from app.services.business_analytics_service import BusinessAnalyticsService
@@ -11,11 +12,22 @@ class GrowthAgent:
     def __init__(self, gemini_service=None):
         self.gemini_service = gemini_service or container.get("gemini_service")
 
-    async def analyze(self, db: Session, org_id: uuid.UUID, question: str = "") -> AgentAnalysisResult:
+    async def analyze(
+        self,
+        db: Session,
+        org_id: uuid.UUID,
+        question: str = "",
+        overview: Optional[Dict[str, Any]] = None,
+        trends: Optional[Dict[str, Any]] = None,
+        opportunities: Optional[Dict[str, Any]] = None
+    ) -> AgentAnalysisResult:
         # Load trend analysis and strategic opportunities
-        overview = BusinessAnalyticsService.get_overview(db, org_id)
-        trends = calculate_trends(db, org_id)
-        opportunities = detect_opportunities(db, org_id)
+        if overview is None:
+            overview = BusinessAnalyticsService.get_overview(db, org_id)
+        if trends is None:
+            trends = calculate_trends(db, org_id)
+        if opportunities is None:
+            opportunities = detect_opportunities(db, org_id)
         
         prompt = f"""
         User Question/Goal: {question or "Identify strategic revenue expansion paths, margins, and growth bottlenecks."}
