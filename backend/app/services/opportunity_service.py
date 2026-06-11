@@ -6,9 +6,11 @@ from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.models.intelligence_snapshot import IntelligenceSnapshot
 from sqlalchemy import desc
+from app.core.cache import cached
 
 import uuid
 
+@cached(ttl=30)
 def detect_opportunities(db: Session, workspace_id: uuid.UUID) -> dict:
     opportunities = []
     

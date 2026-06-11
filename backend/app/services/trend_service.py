@@ -6,9 +6,11 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.services.business_health_service import get_health_score
+from app.core.cache import cached
 
 import uuid
 
+@cached(ttl=30)
 def calculate_trends(db: Session, workspace_id: uuid.UUID) -> dict:
     snapshots = db.query(IntelligenceSnapshot).filter(IntelligenceSnapshot.organization_id == workspace_id).order_by(desc(IntelligenceSnapshot.created_at)).limit(2).all()
     

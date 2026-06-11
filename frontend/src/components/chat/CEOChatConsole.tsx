@@ -8,21 +8,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Bot, User, Loader2, Send } from "lucide-react";
 
 interface Props {
-  onChatResponse: (response: ChatResponse) => void;
+  onChatResponse: (data: ChatResponse | null) => void;
   token: string;
 }
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
 export function CEOChatConsole({ onChatResponse, token }: Props) {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hello Founder. How can I help optimize your business today?" }
-  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
+    { role: "assistant", content: "Hello! I am EVE, your Enterprise Virtual Executive. How can I help you today?" }
+  ]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -34,15 +29,16 @@ export function CEOChatConsole({ onChatResponse, token }: Props) {
 
     try {
       const response = await sendChatMessage(userMessage, token);
-      onChatResponse(response);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: response.executive_summary }
       ]);
+      onChatResponse(response);
     } catch (error) {
+      console.error("Chat error:", error);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error communicating with the agent network." }
+        { role: "assistant", content: "Sorry, I encountered an error while processing your request." }
       ]);
     } finally {
       setLoading(false);
@@ -50,35 +46,41 @@ export function CEOChatConsole({ onChatResponse, token }: Props) {
   };
 
   return (
-    <Card className="h-[500px] flex flex-col shadow-sm">
-      <CardHeader className="pb-3 border-b bg-muted/20">
-        <CardTitle className="text-lg flex items-center">
-          <Bot className="h-5 w-5 mr-2 text-primary" />
-          CEO Agent Console
+    <Card className="h-[500px] flex flex-col">
+      <CardHeader className="pb-3 border-b">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Bot className="h-4 w-4 text-primary" />
+          EVE Chat Console
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 p-0 overflow-hidden">
-        <ScrollArea className="h-full p-4">
+      <CardContent className="flex-1 overflow-hidden p-4">
+        <ScrollArea className="h-full pr-4">
           <div className="space-y-4">
-            {messages.map((msg, idx) => (
+            {messages.map((msg, index) => (
               <div
-                key={idx}
+                key={index}
                 className={`flex gap-3 text-sm ${
-                  msg.role === "assistant" ? "flex-row" : "flex-row-reverse"
+                  msg.role === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
               >
                 <div
                   className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-                    msg.role === "assistant" ? "bg-primary text-primary-foreground" : "bg-muted"
+                    msg.role === "user"
+                      ? "bg-slate-200 text-slate-800"
+                      : "bg-primary text-primary-foreground"
                   }`}
                 >
-                  {msg.role === "assistant" ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                  {msg.role === "user" ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4" />
+                  )}
                 </div>
                 <div
                   className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                    msg.role === "assistant"
-                      ? "bg-muted text-foreground"
-                      : "bg-primary text-primary-foreground"
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground"
                   }`}
                 >
                   {msg.content}

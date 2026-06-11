@@ -45,7 +45,8 @@ try:
     
     # 2. Parse and log host and username safely
     parsed_url = make_url(database_url)
-    logger.info(f"[DB CONFIG] Parsed Host: {parsed_url.host}")
+    host_info = parsed_url.host if parsed_url.host else "Unix Socket/Local"
+    logger.info(f"[DB CONFIG] Parsed Host: {host_info}")
     logger.info(f"[DB CONFIG] Parsed Username: {parsed_url.username}")
     
     engine = create_engine(database_url, **engine_args)
@@ -87,6 +88,9 @@ def init_db():
         from app.models.memory import ConversationSession, ChatMessage, MemoryEntry
         from app.models.artifact import Artifact
         from app.models.future import Forecast, Recommendation, Report
+        from app.models.executive_memory import BusinessGoal
+        from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
+        from app.models.ai_recommendation import AIRecommendation
         
         # Check if pgvector is supported by the connection before building schemas
         if "postgresql" in engine.url.drivername:
