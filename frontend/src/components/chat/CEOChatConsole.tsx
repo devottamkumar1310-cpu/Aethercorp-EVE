@@ -9,6 +9,7 @@ import { Bot, User, Loader2, Send } from "lucide-react";
 
 interface Props {
   onChatResponse: (response: ChatResponse) => void;
+  token: string;
 }
 
 interface Message {
@@ -16,7 +17,7 @@ interface Message {
   content: string;
 }
 
-export function CEOChatConsole({ onChatResponse }: Props) {
+export function CEOChatConsole({ onChatResponse, token }: Props) {
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: "Hello Founder. How can I help optimize your business today?" }
   ]);
@@ -32,7 +33,7 @@ export function CEOChatConsole({ onChatResponse }: Props) {
     setLoading(true);
 
     try {
-      const response = await sendChatMessage(userMessage);
+      const response = await sendChatMessage(userMessage, token);
       onChatResponse(response);
       setMessages((prev) => [
         ...prev,
