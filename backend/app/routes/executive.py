@@ -67,8 +67,6 @@ async def chat(
         if is_founder and message_data.agent_data:
             filtered_data = message_data.agent_data.copy()
             filtered_data.pop("confidence_scores", None)
-            filtered_data.pop("confidence_category", None)
-            filtered_data.pop("risk_classification", None)
             filtered_data.pop("detected_conflicts", None)
             filtered_data.pop("trade_off_analysis", None)
             filtered_data.pop("findings_by_agent", None)

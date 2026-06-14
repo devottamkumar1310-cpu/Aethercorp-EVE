@@ -409,3 +409,36 @@ def test_scenario_chat_interactions():
         db_session.delete(client_model_rec)
         db_session.commit()
         db_session.close()
+
+
+def test_generic_query_429_fallback():
+    """
+    Regression test: Verify that confidence metadata (confidence_category and risk_classification)
+    is preserved in agent_data during a 429 fallback scenario for generic/non-scenario queries.
+    """
+    headers = {"X-Workspace-Id": str(MOCK_ORG_ID)}
+    
+    from app.core.dependency_container import container
+    gemini_service = container.get("gemini_service")
+    original_generate_structured = gemini_service.generate_structured_response
+    original_mock_mode = gemini_service.mock_mode
+
+    async def mock_raise_429(*args, **kwargs):
+        raise Exception("429 Quota Exceeded")
+
+    gemini_service.generate_structured_response = mock_raise_429
+    gemini_service.mock_mode = False
+
+    try:
+        response = client.post("/api/executive/chat", json={"question": "What is my general business health?"}, headers=headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert "message" in data
+        agent_data = data["message"]["agent_data"]
+        
+        # Verify confidence category and risk classification are present in agent_data
+        assert "confidence_category" in agent_data
+        assert "risk_classification" in agent_data
+    finally:
+        gemini_service.generate_structured_response = original_generate_structured
+        gemini_service.mock_mode = original_mock_mode

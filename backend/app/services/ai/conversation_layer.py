@@ -41,7 +41,7 @@ INTENT_PATTERNS = {
         re.IGNORECASE
     ),
     "Thanks": re.compile(
-        r"\b(thanks|thank you|ty|appreciate it|grateful|awesome thanks|cheers)\b",
+        r"\b(thanks|thank you|ty|thx|appreciate it|grateful|awesome thanks|cheers)\b",
         re.IGNORECASE
     ),
     "Goodbye": re.compile(
@@ -92,7 +92,7 @@ class ConversationLayer:
 
         static_keywords = {
             "Greeting": ["hi", "hello", "hey", "namaste", "morning", "afternoon", "evening", "gday", "hola", "yo"],
-            "Thanks": ["thanks", "thank", "ty", "appreciate", "grateful", "cheers"],
+            "Thanks": ["thanks", "thank", "ty", "thx", "appreciate", "grateful", "cheers"],
             "Goodbye": ["bye", "goodbye", "exit", "quit", "farewell", "cya"]
         }
 
