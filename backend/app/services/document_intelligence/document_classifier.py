@@ -1,0 +1,135 @@
+import logging
+import pandas as pd
+import io
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+from app.core.dependency_container import container
+from google.genai import types
+
+logger = logging.getLogger("eve.services.document_classifier")
+
+class DocumentClassificationResult(BaseModel):
+    document_type: str = Field(..., description="Type of the document. Must be: 'Sales Invoice', 'Purchase Invoice', 'Purchase Order', 'Receipt', 'Inventory Report', 'Sales Report', 'Unknown'")
+    confidence: float = Field(..., description="Confidence score from 0.0 to 1.0")
+    explanation: str = Field(..., description="Explanation for the classification decision")
+
+class DocumentClassifier:
+    @staticmethod
+    async def classify_document(
+        db: Session,
+        file_content: bytes,
+        filename: str,
+        mime_type: str
+    ) -> DocumentClassificationResult:
+        """
+        Classifies an uploaded document automatically using Gemini multi-modal input
+        or local parsing helpers.
+        """
+        gemini_service = container.get("gemini_service")
+        
+        # 1. Check if we should execute Mock Mode
+        if gemini_service.mock_mode:
+            logger.info(f"Running Document Classifier in MOCK mode for: {filename}")
+            return DocumentClassifier._mock_classification(filename)
+
+        try:
+            # 2. Prepare content for Gemini
+            contents = []
+            
+            # If CSV or XLSX, parse to text representation to optimize context
+            if mime_type == "text/csv" or filename.lower().endswith(".csv"):
+                try:
+                    text_content = file_content.decode("utf-8", errors="ignore")
+                    # Limit size of text passed to Gemini to prevent token overload
+                    contents.append(f"Here is the text representation of the CSV file:\n{text_content[:8000]}")
+                except Exception as e:
+                    logger.warning(f"Failed to decode CSV bytes as text: {e}")
+            elif mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" or filename.lower().endswith(".xlsx"):
+                try:
+                    df = pd.read_excel(io.BytesIO(file_content))
+                    csv_text = df.to_csv(index=False)
+                    contents.append(f"Here is the CSV representation of the Excel spreadsheet:\n{csv_text[:8000]}")
+                except Exception as e:
+                    logger.warning(f"Failed to parse Excel file bytes: {e}")
+            else:
+                # PDF or Image input passed directly as binary Part to GenAI
+                part = types.Part.from_bytes(
+                    data=file_content,
+                    mime_type=mime_type
+                )
+                contents.append(part)
+
+            prompt = (
+                "Analyze this business document and classify it into one of the following categories:\n"
+                "1. Sales Invoice\n"
+                "2. Purchase Invoice\n"
+                "3. Purchase Order\n"
+                "4. Receipt\n"
+                "5. Inventory Report\n"
+                "6. Sales Report\n"
+                "7. Unknown\n\n"
+                "Ensure you determine the correct type based on headers, text content, formatting, or transaction logs. "
+                "Provide a confidence score and a clear explanation."
+            )
+            contents.append(prompt)
+
+            # Query Gemini
+            res: DocumentClassificationResult = await gemini_service.generate_structured_response(
+                prompt=prompt,
+                response_schema=DocumentClassificationResult,
+                system_instruction="You are an expert document classifier. Categorize business documents with high accuracy.",
+                agent_name="document_classifier"
+            )
+            return res
+
+        except Exception as e:
+            logger.error(f"Failed to classify document using Gemini API: {e}", exc_info=True)
+            # Fallback to local heuristic classifier on failure
+            return DocumentClassifier._mock_classification(filename)
+
+    @staticmethod
+    def _mock_classification(filename: str) -> DocumentClassificationResult:
+        fn_lower = filename.lower()
+        if "sales_report" in fn_lower or "salesreport" in fn_lower or "sales_records" in fn_lower:
+            return DocumentClassificationResult(
+                document_type="Sales Report",
+                confidence=0.99,
+                explanation="Mock Classifier: Document classified as 'Sales Report' based on filename pattern match."
+            )
+        elif "inventory_report" in fn_lower or "inventoryreport" in fn_lower or "stock" in fn_lower:
+            return DocumentClassificationResult(
+                document_type="Inventory Report",
+                confidence=0.99,
+                explanation="Mock Classifier: Document classified as 'Inventory Report' based on filename pattern match."
+            )
+        elif "purchase_order" in fn_lower or "purchaseorder" in fn_lower or "po" in fn_lower:
+            return DocumentClassificationResult(
+                document_type="Purchase Order",
+                confidence=0.99,
+                explanation="Mock Classifier: Document classified as 'Purchase Order' based on filename pattern match."
+            )
+        elif "purchase_invoice" in fn_lower or "supplier_invoice" in fn_lower:
+            return DocumentClassificationResult(
+                document_type="Purchase Invoice",
+                confidence=0.99,
+                explanation="Mock Classifier: Document classified as 'Purchase Invoice' based on filename pattern match."
+            )
+        elif "sales_invoice" in fn_lower or "customer_invoice" in fn_lower or "invoice" in fn_lower:
+            # Default invoice to Sales Invoice if not specified
+            return DocumentClassificationResult(
+                document_type="Sales Invoice",
+                confidence=0.95,
+                explanation="Mock Classifier: Document classified as 'Sales Invoice' based on filename pattern match."
+            )
+        elif "receipt" in fn_lower or "bill" in fn_lower or "expense" in fn_lower:
+            return DocumentClassificationResult(
+                document_type="Receipt",
+                confidence=0.98,
+                explanation="Mock Classifier: Document classified as 'Receipt' based on filename pattern match."
+            )
+        else:
+            return DocumentClassificationResult(
+                document_type="Unknown",
+                confidence=0.20,
+                explanation="Mock Classifier: Unable to match filename pattern to any known category."
+            )
