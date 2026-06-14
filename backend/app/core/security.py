@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.profile import Profile
 from app.config import settings
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 import logging
 
@@ -28,7 +28,13 @@ if settings.SUPABASE_URL:
     except ImportError:
         logger.warning("cryptography or PyJWKClient not available")
 
-def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def verify_supabase_token(credentials: HTTPAuthorizationCredentials | None = Depends(security)):
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication credentials were not provided.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     token = credentials.credentials
     try:
         # Debug: Print unverified token to see what claims are present

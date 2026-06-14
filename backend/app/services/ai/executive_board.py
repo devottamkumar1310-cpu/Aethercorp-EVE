@@ -1,6 +1,7 @@
 import uuid
 import asyncio
 import logging
+import re
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -12,6 +13,8 @@ from app.services.ai.inventory_agent import InventoryAgent
 from app.services.ai.client_agent import ClientAgent
 from app.services.ai.growth_agent import GrowthAgent
 from app.services.ai.coo_agent import COOAgent
+from app.services.ai.forecasting_agent import ForecastingAgent
+from app.orchestration.validator import ExecutiveGovernanceValidator
 
 logger = logging.getLogger("eve.services.ai.executive_board")
 
@@ -21,6 +24,7 @@ class AgentSelection(BaseModel):
     run_inventory: bool = Field(description="Set to true if question relates to inventory, stock on hand, reorders, aging inventory, or overstock.")
     run_client: bool = Field(description="Set to true if question relates to client retention, customer risk, churn, or inactive clients.")
     run_growth: bool = Field(description="Set to true if question relates to growth opportunities, revenue growth, campaigns, or investment.")
+    run_forecasting: bool = Field(description="Set to true if question relates to scenario simulation, sales increase/decline forecasts, price changes, or capital gaps.")
     reasoning: str = Field(description="Short reason for the selection")
 
 class ExecutiveBoard:
@@ -31,6 +35,7 @@ class ExecutiveBoard:
         self.inventory_agent = InventoryAgent(self.gemini_service)
         self.client_agent = ClientAgent(self.gemini_service)
         self.growth_agent = GrowthAgent(self.gemini_service)
+        self.forecasting_agent = ForecastingAgent(self.gemini_service)
         self.coo_agent = COOAgent(self.gemini_service)
 
     async def run_board(
@@ -39,7 +44,8 @@ class ExecutiveBoard:
         org_id: uuid.UUID,
         question: str,
         mode: str = "smart",
-        user_id: Optional[uuid.UUID] = None
+        user_id: Optional[uuid.UUID] = None,
+        conversation_history: Optional[List[dict]] = None
     ) -> ExecutiveSynthesisResult:
         run_finance = True
         run_operations = True
@@ -64,6 +70,7 @@ class ExecutiveBoard:
                 raise e
 
         # 1. Intent Routing Classifier
+        run_forecasting = False
         if mode == "smart":
             start_route = time.time()
             try:
@@ -72,17 +79,19 @@ class ExecutiveBoard:
                 selection: AgentSelection = await self.gemini_service.generate_structured_response(
                     prompt=prompt,
                     response_schema=AgentSelection,
-                    system_instruction=system_instruction
+                    system_instruction=system_instruction,
+                    agent_name="router"
                 )
                 run_finance = selection.run_finance
                 run_operations = selection.run_operations
                 run_inventory = selection.run_inventory
                 run_client = selection.run_client
                 run_growth = selection.run_growth
+                run_forecasting = selection.run_forecasting
                 
                 # If nothing selected, run COO synthesis with all
-                if not any([run_finance, run_operations, run_inventory, run_client, run_growth]):
-                    run_finance = run_operations = run_inventory = run_client = run_growth = True
+                if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
+                    run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
                 
                 route_latency = int((time.time() - start_route) * 1000)
                 record_agent_metric("router", "success", route_latency)
@@ -97,10 +106,11 @@ class ExecutiveBoard:
                 run_client = any(k in q_lower for k in ["client", "customer", "retention", "churn", "inactive"])
                 run_growth = any(k in q_lower for k in ["growth", "opportunity", "opportunities", "expand"])
                 run_operations = any(k in q_lower for k in ["projects", "tasks", "operations", "velocity", "delay", "capacity", "bottleneck", "deadline"])
+                run_forecasting = any(k in q_lower for k in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"])
                 
                 # If keyword fallback is empty, run all
-                if not any([run_finance, run_operations, run_inventory, run_client, run_growth]):
-                    run_finance = run_operations = run_inventory = run_client = run_growth = True
+                if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
+                    run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
 
         # 1.5 Pre-fetch common database indicators once to optimize parallel execution query latencies
         from app.services.business_analytics_service import BusinessAnalyticsService
@@ -116,6 +126,47 @@ class ExecutiveBoard:
         health = get_health_score(db, org_id)
         risks = detect_risks(db, org_id)
         opportunities = detect_opportunities(db, org_id)
+        
+        # --- GOVERNANCE: DATA SUFFICIENCY & EMPTY STATE CHECK ---
+        data_state, sufficiency_msg, available_domains = ExecutiveGovernanceValidator.validate_data_sufficiency(overview, question)
+        if data_state == "NO_DATA":
+            logger.warning(f"Data sufficiency validation failed for org {org_id}: {sufficiency_msg}")
+            return ExecutiveSynthesisResult(
+                agent="EVE COO",
+                summary=sufficiency_msg,
+                priorities=[],
+                expected_impact="System requires data ingestion before executive reasoning can be unlocked.",
+                findings_by_agent={"EVE COO": ["No business data detected across all domains."]},
+                recommendations_by_agent={"EVE COO": ["Please complete onboarding: Connect data sources, upload CSVs, or create your first project."]},
+                confidence_scores={"Overall": 1.0},
+                confidence_category="Low Confidence",
+                risk_classification="Low Risk",
+                detected_conflicts=[]
+            )
+        elif data_state == "DATA_INSUFFICIENT":
+            logger.warning(f"Query data sufficiency validation failed for org {org_id}: {sufficiency_msg}")
+            return ExecutiveSynthesisResult(
+                agent="EVE COO",
+                summary=sufficiency_msg,
+                priorities=[],
+                expected_impact="System requires additional data uploads before this specific query can be answered.",
+                findings_by_agent={"EVE COO": [sufficiency_msg]},
+                recommendations_by_agent={"EVE COO": ["Please upload the relevant data (e.g. CSV import) or connect a data source to enable this analysis."]},
+                confidence_scores={"Overall": 0.0},
+                confidence_category="Low Confidence",
+                risk_classification="Low Risk",
+                detected_conflicts=[]
+            )
+        elif data_state == "PARTIAL_DATA":
+            logger.info(f"Partial data state for org {org_id}: {sufficiency_msg}")
+            # Dynamically restrict sub-agents based on available data domains to prevent hallucination
+            run_finance = run_finance and available_domains.get("finance", False)
+            run_growth = run_growth and available_domains.get("growth", False)
+            run_operations = run_operations and available_domains.get("operations", False)
+            run_client = run_client and available_domains.get("client", False)
+            run_inventory = run_inventory and available_domains.get("inventory", False)
+            run_forecasting = run_forecasting and (available_domains.get("finance", False) or available_domains.get("inventory", False))
+        # --------------------------------------------------------
 
         # 2. Parallel Sub-Agent Execution
         tasks = {}
@@ -141,6 +192,8 @@ class ExecutiveBoard:
                 db=db, org_id=org_id, question=question,
                 overview=overview, trends=trends, opportunities=opportunities
             )
+        if run_forecasting:
+            tasks["forecasting"] = self.forecasting_agent.analyze(db, org_id, question)
 
         # Run in parallel using asyncio.gather wrapped with timing
         results = {}
@@ -166,8 +219,10 @@ class ExecutiveBoard:
                 inventory_result=results.get("inventory"),
                 client_result=results.get("client"),
                 growth_result=results.get("growth"),
+                forecasting_result=results.get("forecasting"),
                 health=health,
-                goals=goals
+                goals=goals,
+                conversation_history=conversation_history
             )
             synth_latency = int((time.time() - start_synth) * 1000)
             record_agent_metric("coo_synthesis", "success", synth_latency)
@@ -193,6 +248,179 @@ class ExecutiveBoard:
         avg_confidence = sum(confidence_scores.values()) / max(1, len(confidence_scores))
         confidence_scores["Overall"] = round(synthesis.confidence_scores.get("Overall") or avg_confidence, 2)
         synthesis.confidence_scores = confidence_scores
+        
+        # --- GOVERNANCE: AUDIT AND CLASSIFY ---
+        # Determine Confidence Category
+        synthesis.confidence_category = ExecutiveGovernanceValidator.govern_confidence(confidence_scores["Overall"])
+        
+        # Determine Risk Classification
+        synthesis.risk_classification = ExecutiveGovernanceValidator.classify_risk(synthesis.priorities)
+        
+        # Enforce Risk-Confidence Threshold Alignment check
+        is_aligned, alignment_err = ExecutiveGovernanceValidator.validate_risk_confidence_alignment(
+            confidence_scores["Overall"],
+            synthesis.risk_classification
+        )
+        if not is_aligned:
+            logger.warning(f"Risk-Confidence alignment failed: {alignment_err}")
+            return ExecutiveSynthesisResult(
+                agent="EVE COO",
+                summary=alignment_err,
+                priorities=[],
+                expected_impact="Recommendation blocked due to insufficient supporting evidence relative to risk level.",
+                findings_by_agent={"EVE COO": [alignment_err]},
+                recommendations_by_agent={"EVE COO": ["Acquire stronger evidence / upload complete datasets to validate this recommendation."]},
+                confidence_scores=confidence_scores,
+                confidence_category=synthesis.confidence_category,
+                risk_classification=synthesis.risk_classification,
+                detected_conflicts=[]
+            )
+
+        # Detect Conflicts and Trade-Off Analysis
+        synthesis.detected_conflicts, synthesis.trade_off_analysis = ExecutiveGovernanceValidator.detect_conflicts(findings_by_agent, recommendations_by_agent)
+        
+        # Detect Hallucinations (e.g. referencing revenue when none exists)
+        is_hallucination_free, violations = ExecutiveGovernanceValidator.detect_hallucinations(synthesis, overview, trends)
+        if not is_hallucination_free:
+            logger.warning(f"Hallucination detected in synthesis for org {org_id}: {violations}")
+            return ExecutiveSynthesisResult(
+                agent="EVE COO",
+                summary=f"Hallucination detected. Claims could not be verified against database records: {'; '.join(violations)}",
+                priorities=[],
+                expected_impact="Recommendation blocked due to unverified claims.",
+                findings_by_agent={"EVE COO": violations},
+                recommendations_by_agent={"EVE COO": ["Please ensure recommendations strictly map to verified ground-truth data."]},
+                confidence_scores=confidence_scores,
+                confidence_category=synthesis.confidence_category,
+                risk_classification=synthesis.risk_classification,
+                detected_conflicts=[]
+            )
+
+        # Enforce Low-Confidence Safeguard Labels
+        if synthesis.confidence_category == "Low Confidence":
+            synthesis.summary = f"[LOW CONFIDENCE WARNING: This recommendation is based on highly variable or incomplete data.]\n\n{synthesis.summary}"
+            
+        # Enforce High-Risk Safeguard Labels
+        if synthesis.risk_classification in ["High Risk", "Strategic Risk"] and confidence_scores["Overall"] < 0.85:
+            synthesis.summary += f"\n\n[EVE COO WARNING]: This high-risk/strategic recommendation is backed by lower-than-required confidence data. Proceed with caution."
+
+        # Compile evidence used
+        synthesis.evidence_used = {
+            "metrics": {
+                "revenue": overview.get("revenue", 0.0),
+                "expenses": overview.get("expenses", 0.0),
+                "profit": overview.get("profit", 0.0),
+                "clients": overview.get("clients", 0),
+                "projects": overview.get("projects", 0),
+                "tasks": overview.get("tasks", 0),
+                "inventory_count": overview.get("inventory", 0)
+            },
+            "trends": trends,
+            "risks": [r.get("title", r["description"]) if isinstance(r, dict) else str(r) for r in risks.get("risks", [])],
+            "opportunities": [o.get("title", o["description"]) if isinstance(o, dict) else str(o) for o in opportunities.get("opportunities", [])],
+            "goals": [g.description if hasattr(g, 'description') else (g.get('description', '') if isinstance(g, dict) else str(g)) for g in goals]
+        }
+
+        # Populate participating agents
+        synthesis.agent_contributors = list(results.keys()) + ["coo"]
+
+        # Enforce deterministic priorities (Top 3 Actions) in Python
+        priorities = []
+        
+        # If forecasting ran, create scenario-specific actions
+        if "forecasting" in results:
+            forecast_data = results["forecasting"]
+            q_low = question.lower()
+            if "price" in q_low:
+                priorities.append(StrategicPriority(
+                    title="Execute Price Increase",
+                    description="Implement the recommended 10% price optimization on selected outerwears to maximize unit margins."
+                ))
+                priorities.append(StrategicPriority(
+                    title="Monitor Volume Variance",
+                    description="Set up automatic alerts to track daily unit sales velocity and detect potential high-elasticity demand drops."
+                ))
+            elif "sales" in q_low or "demand" in q_low:
+                if "decline" in q_low or "drop" in q_low or "fall" in q_low:
+                    priorities.append(StrategicPriority(
+                        title="Inventory Markdown Campaign",
+                        description="Launch a 20% markdown clearance on dead clothing inventory to mitigate the forecasted demand decline."
+                    ))
+                    priorities.append(StrategicPriority(
+                        title="Reduce Supplier Orders",
+                        description="Temporarily freeze or adjust safety stock reorder thresholds to prevent additional dead stock accumulation."
+                    ))
+                else:
+                    priorities.append(StrategicPriority(
+                        title="Secure Additional Working Capital",
+                        description="Allocate capital to support the required safety stock increases for the forecasted demand growth."
+                    ))
+                    priorities.append(StrategicPriority(
+                        title="Advance Lead Time Orders",
+                        description="Trigger supplier orders early for high-velocity SKUs to prevent stockout delays."
+                    ))
+            elif "expand" in q_low or "expansion" in q_low or "increase inventory" in q_low:
+                priorities.append(StrategicPriority(
+                    title="Warehouse Capacity Allocation",
+                    description="Onboard the new expansion units and adjust physical layout to accommodate the additional safety stock."
+                ))
+                priorities.append(StrategicPriority(
+                    title="Liquidation Campaign",
+                    description="Run promotions for low-velocity dead stock lines to free up physical space."
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Capital Buffer Optimization",
+                    description="Maintain a cash reserve to cover the projected 30-day working capital and reorder requirements."
+                ))
+                priorities.append(StrategicPriority(
+                    title="Supplier Reorder Audit",
+                    description="Review supplier lead times and adjust reorder points accordingly."
+                ))
+        
+        # Fallback to standard domain-driven actions if priorities are empty
+        if not priorities:
+            from app.services.analytics_service import AnalyticsService
+            try:
+                metrics = AnalyticsService.get_dashboard_metrics(db, org_id)
+                if metrics.get("reorder_recommendations"):
+                    priorities.append(StrategicPriority(
+                        title="Safety Stock Replenishment",
+                        description="Trigger safety stock reorder workflows for ROP-violated SKUs immediately."
+                    ))
+                if metrics.get("pricing_recommendations"):
+                    priorities.append(StrategicPriority(
+                        title="Retail Pricing Adjustments",
+                        description="Optimize pricing structures for negative-margin apparel categories."
+                    ))
+            except Exception:
+                pass
+                
+        # Fill to 3 priorities
+        if len(priorities) < 3:
+            priorities.append(StrategicPriority(
+                title="Expense Containment",
+                description="Perform a weekly audit of vendor contracts and non-essential licensing to reduce recurring costs."
+            ))
+        if len(priorities) < 3:
+            priorities.append(StrategicPriority(
+                title="Client Retention Strategy",
+                description="Convert month-to-month contracts to annual commitments using loyalty incentives."
+            ))
+            
+        synthesis.priorities = priorities[:3]
+
+        # Track governance decisions log
+        synthesis.governance_decisions = {
+            "data_sufficiency": data_state,
+            "hallucination_free": is_hallucination_free,
+            "hallucination_violations": violations,
+            "confidence_level": confidence_scores["Overall"],
+            "confidence_category": synthesis.confidence_category,
+            "risk_level": synthesis.risk_classification,
+            "conflicts_resolved": len(synthesis.detected_conflicts) > 0
+        }
+        # --------------------------------------
 
         return synthesis
 
@@ -209,14 +437,48 @@ class ExecutiveBoard:
         from app.services.business_analytics_service import BusinessAnalyticsService
         from app.models.inventory import InventoryItem
         from app.models.product import Product
+        from app.orchestration.validator import ExecutiveGovernanceValidator
         
         q_lower = question.lower()
         
+        overview = BusinessAnalyticsService.get_overview(db, org_id)
+        
+        # --- GOVERNANCE: DATA SUFFICIENCY & EMPTY STATE CHECK ---
+        data_state, sufficiency_msg, available_domains = ExecutiveGovernanceValidator.validate_data_sufficiency(overview, question)
+        if data_state == "NO_DATA":
+            logger.warning(f"Fallback data sufficiency validation failed for org {org_id}: {sufficiency_msg}")
+            return ExecutiveSynthesisResult(
+                agent="EVE COO",
+                summary=sufficiency_msg,
+                priorities=[],
+                expected_impact="System requires data ingestion before executive reasoning can be unlocked.",
+                findings_by_agent={"EVE COO": ["No business data detected across all domains."]},
+                recommendations_by_agent={"EVE COO": ["Please complete onboarding: Connect data sources, upload CSVs, or create your first project."]},
+                confidence_scores={"Overall": 1.0},
+                confidence_category="Low Confidence",
+                risk_classification="Low Risk",
+                detected_conflicts=[]
+            )
+        elif data_state == "DATA_INSUFFICIENT":
+            logger.warning(f"Fallback query data sufficiency validation failed for org {org_id}: {sufficiency_msg}")
+            return ExecutiveSynthesisResult(
+                agent="EVE COO",
+                summary=sufficiency_msg,
+                priorities=[],
+                expected_impact="System requires additional data uploads before this specific query can be answered.",
+                findings_by_agent={"EVE COO": [sufficiency_msg]},
+                recommendations_by_agent={"EVE COO": ["Please upload the relevant data (e.g. CSV import) or connect a data source to enable this analysis."]},
+                confidence_scores={"Overall": 0.0},
+                confidence_category="Low Confidence",
+                risk_classification="Low Risk",
+                detected_conflicts=[]
+            )
+        # --------------------------------------------------------
+
         health = get_health_score(db, org_id)
         risks_data = detect_risks(db, org_id)
         opps_data = detect_opportunities(db, org_id)
         trends = calculate_trends(db, org_id)
-        overview = BusinessAnalyticsService.get_overview(db, org_id)
         
         score = health.get("score", 50.0)
         status = health.get("status", "warning")
@@ -225,7 +487,79 @@ class ExecutiveBoard:
         opportunities = [o.get("title", o["description"]) if isinstance(o, dict) else str(o) for o in opps_data.get("opportunities", [])]
         
         # Classification & Content Generation
-        if any(kw in q_lower for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
+        if any(kw in q_lower for kw in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"]):
+            from app.services.simulation_engine import SimulationEngine
+            scenario_type = "cash_flow_forecast"
+            parameter_val = 30.0
+            
+            if "price" in q_lower:
+                match = re.search(r'(\d+)', q_lower)
+                parameter_val = float(match.group(1)) if match else 10.0
+                sim_data = SimulationEngine.simulate_price_change(parameter_val, org_id, db)
+                scenario_name = "Price Increase"
+                scenario_type = "price_change"
+            elif "sales" in q_lower or "demand" in q_lower:
+                match = re.search(r'(\d+)', q_lower)
+                parameter_val = float(match.group(1)) if match else 20.0
+                if "drop" in q_lower or "fall" in q_lower or "decline" in q_lower or "down" in q_lower or "decrease" in q_lower or "falls" in q_lower or "drops" in q_lower:
+                    sim_data = SimulationEngine.simulate_demand_decline(parameter_val, org_id, db)
+                    scenario_name = "Demand Decline"
+                    scenario_type = "demand_decline"
+                else:
+                    sim_data = SimulationEngine.simulate_demand_growth(parameter_val, org_id, db)
+                    scenario_name = "Demand Growth"
+                    scenario_type = "demand_growth"
+            elif "expand" in q_lower or "expansion" in q_lower or "increase inventory" in q_lower or "order" in q_lower:
+                match = re.search(r'(\d+)', q_lower)
+                parameter_val = float(match.group(1)) if match else 1000.0
+                sim_data = SimulationEngine.simulate_inventory_expansion(int(parameter_val), org_id, db)
+                scenario_name = "Inventory Expansion"
+                scenario_type = "inventory_expansion"
+            else:
+                match = re.search(r'(\d+)', q_lower)
+                parameter_val = float(match.group(1)) if match else 30.0
+                sim_data = SimulationEngine.simulate_cash_flow_forecast(int(parameter_val), org_id, db)
+                scenario_name = "Cash Flow Forecast"
+                scenario_type = "cash_flow_forecast"
+                
+            summary = (
+                f"EVE AI Board (Forecasting Fallback): Executed deterministic '{scenario_name}' simulation with parameter {parameter_val}. "
+                f"Expected Profit Impact: ${sim_data.get('expected_profit_change', 0.0):,.2f}, required capital: ${sim_data.get('required_capital', 0.0):,.2f}, "
+                f"available capital: ${sim_data.get('available_capital', 0.0):,.2f}, capital gap: ${sim_data.get('capital_gap', 0.0):,.2f}."
+            )
+            
+            priorities = []
+            if "price" in q_lower:
+                priorities.append(StrategicPriority(title="Execute Price Increase", description="Implement the recommended 10% price optimization on selected outerwears to maximize unit margins."))
+                priorities.append(StrategicPriority(title="Monitor Volume Variance", description="Set up automatic alerts to track daily unit sales velocity and detect potential high-elasticity demand drops."))
+            elif "sales" in q_lower or "demand" in q_lower:
+                if "decline" in q_lower or "drop" in q_lower or "fall" in q_lower:
+                    priorities.append(StrategicPriority(title="Inventory Markdown Campaign", description="Launch a 20% markdown clearance on dead clothing inventory to mitigate the forecasted demand decline."))
+                    priorities.append(StrategicPriority(title="Reduce Supplier Orders", description="Temporarily freeze or adjust safety stock reorder thresholds to prevent additional dead stock accumulation."))
+                else:
+                    priorities.append(StrategicPriority(title="Secure Additional Working Capital", description="Allocate capital to support the required safety stock increases for the forecasted demand growth."))
+                    priorities.append(StrategicPriority(title="Advance Lead Time Orders", description="Trigger supplier orders early for high-velocity SKUs to prevent stockout delays."))
+            elif "expand" in q_lower or "expansion" in q_lower or "increase inventory" in q_lower or "order" in q_lower:
+                priorities.append(StrategicPriority(title="Warehouse Capacity Allocation", description="Onboard the new expansion units and adjust physical layout to accommodate the additional safety stock."))
+                priorities.append(StrategicPriority(title="Liquidation Campaign", description="Run promotions for low-velocity dead stock lines to free up physical space."))
+            else:
+                priorities.append(StrategicPriority(title="Capital Buffer Optimization", description="Maintain a cash reserve to cover the projected 30-day working capital and reorder requirements."))
+                priorities.append(StrategicPriority(title="Supplier Reorder Audit", description="Review supplier lead times and adjust reorder points accordingly."))
+                
+            if len(priorities) < 3:
+                priorities.append(StrategicPriority(title="Expense Containment", description="Perform a weekly audit of vendor contracts and non-essential licensing to reduce recurring costs."))
+            if len(priorities) < 3:
+                priorities.append(StrategicPriority(title="Client Retention Strategy", description="Convert month-to-month contracts to annual commitments using loyalty incentives."))
+                
+            expected_impact = f"Deterministic simulation indicates capital requirements are ${sim_data.get('required_capital', 0.0):,.2f} with a gap of ${sim_data.get('capital_gap', 0.0):,.2f}."
+            findings_by_agent = {"Forecasting Agent": [f"Profit Impact: ${sim_data.get('expected_profit_change', 0.0):,.2f}", f"Capital Gap: ${sim_data.get('capital_gap', 0.0):,.2f}"]}
+            recommendations_by_agent = {"Forecasting Agent": [p.description for p in priorities]}
+            
+            from app.services.confidence_engine import ConfidenceEngine
+            confidence = ConfidenceEngine.calculate_deterministic_confidence(scenario_type, db, org_id)
+            confidence_scores = {"Overall": confidence, "Forecasting Agent": confidence}
+            
+        elif any(kw in q_lower for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
             revenue = overview.get("revenue", 0.0)
             expenses = overview.get("expenses", 0.0)
             profit = overview.get("profit", 0.0)
@@ -329,7 +663,7 @@ class ExecutiveBoard:
             recommendations_by_agent = {"COO Agent": ["Address project bottlenecks", "Prioritize overdue deadlines"]}
             confidence_scores = {"Overall": 0.86}
 
-        return ExecutiveSynthesisResult(
+        fallback_res = ExecutiveSynthesisResult(
             agent="COO Lead",
             summary=summary,
             priorities=priorities,
@@ -338,3 +672,33 @@ class ExecutiveBoard:
             recommendations_by_agent=recommendations_by_agent,
             confidence_scores=confidence_scores
         )
+        
+        fallback_res.confidence_category = ExecutiveGovernanceValidator.govern_confidence(confidence_scores["Overall"])
+        fallback_res.risk_classification = ExecutiveGovernanceValidator.classify_risk(priorities)
+        fallback_res.detected_conflicts, fallback_res.trade_off_analysis = ExecutiveGovernanceValidator.detect_conflicts(findings_by_agent, recommendations_by_agent)
+        fallback_res.evidence_used = {
+            "metrics": {
+                "revenue": overview.get("revenue", 0.0),
+                "expenses": overview.get("expenses", 0.0),
+                "profit": overview.get("profit", 0.0),
+                "clients": overview.get("clients", 0),
+                "projects": overview.get("projects", 0),
+                "tasks": overview.get("tasks", 0),
+                "inventory_count": overview.get("inventory", 0)
+            },
+            "trends": trends,
+            "risks": risks,
+            "opportunities": opportunities,
+            "goals": []
+        }
+        fallback_res.agent_contributors = ["coo"]
+        fallback_res.governance_decisions = {
+            "data_sufficiency": data_state,
+            "hallucination_free": True,
+            "hallucination_violations": [],
+            "confidence_level": confidence_scores["Overall"],
+            "confidence_category": fallback_res.confidence_category,
+            "risk_level": fallback_res.risk_classification,
+            "conflicts_resolved": len(fallback_res.detected_conflicts) > 0
+        }
+        return fallback_res

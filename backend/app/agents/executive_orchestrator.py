@@ -56,78 +56,139 @@ class ExecutiveOrchestrator(BaseAgent):
         """
         logger.info(f"CEO Agent compiling final executive report for organization {organization_id}...")
         
-        inventory_result = {}
+        pricing_failed = False
+        inventory_failed = False
+
         pricing_result = {}
-        analytics_result = {}
-        forecasting_result = {}
+        inventory_result = {}
 
         for node_id, output in task_graph_outputs.items():
-            if "inventory" in node_id or output.get("agent_role") == "inventory":
-                inventory_result.update(output.get("result", {}))
-            elif "pricing" in node_id or output.get("agent_role") == "pricing":
-                pricing_result.update(output.get("result", {}))
-            elif "analytics" in node_id or output.get("agent_role") == "analytics":
-                analytics_result.update(output.get("result", {}))
-            elif "forecasting" in node_id or output.get("agent_role") == "forecasting":
-                forecasting_result.update(output.get("result", {}))
+            if "pricing" in node_id or (isinstance(output, dict) and output.get("agent_role") == "pricing"):
+                if isinstance(output, dict) and output.get("status") == "failed":
+                    pricing_failed = True
+                else:
+                    pricing_result.update(output.get("result", {}) if isinstance(output, dict) and "result" in output else (output if isinstance(output, dict) else {}))
+            elif "inventory" in node_id or (isinstance(output, dict) and output.get("agent_role") == "inventory"):
+                if isinstance(output, dict) and output.get("status") == "failed":
+                    inventory_failed = True
+                else:
+                    inventory_result.update(output.get("result", {}) if isinstance(output, dict) and "result" in output else (output if isinstance(output, dict) else {}))
 
-        # Core Metrics
-        inventory_risk_score = inventory_result.get("inventory_risk_score", inventory_result.get("average_risk_score", 50.0))
-        reorder_recommendations = inventory_result.get("reorder_recommendations", inventory_result.get("items_at_risk", []))
-        dead_stock_alerts = inventory_result.get("dead_stock_items", [])
-        
-        pricing_recommendations = pricing_result.get("pricing_recommendations", pricing_result.get("recommendations", inventory_result.get("pricing_recommendations", [])))
-        estimated_profit_impact = pricing_result.get("estimated_profit_impact", inventory_result.get("estimated_profit_impact", 0.0))
+        from app.services.analytics_service import AnalyticsService
+        try:
+            metrics = AnalyticsService.get_dashboard_metrics(self.db, organization_id)
+        except Exception as err:
+            logger.error(f"Failed to fetch aligned metrics from AnalyticsService: {err}")
+            metrics = {}
+
+        # Core Metrics alignment and failure recovery
+        if inventory_failed:
+            inventory_risk_score = 50.0
+            reorder_recommendations = []
+            dead_stock_alerts = []
+            inventory_summary_text = "Inventory analysis unavailable."
+        else:
+            inventory_risk_score = metrics.get("inventory_risk_score", inventory_result.get("inventory_risk_score", inventory_result.get("average_risk_score", 50.0)))
+            reorder_recommendations = metrics.get("reorder_recommendations", inventory_result.get("reorder_recommendations", inventory_result.get("items_at_risk", [])))
+            dead_stock_alerts = metrics.get("dead_stock_items", inventory_result.get("dead_stock_items", []))
+            inventory_summary_text = f"Replenish {len(reorder_recommendations)} critical SKUs immediately to prevent stockouts."
+
+        if pricing_failed:
+            pricing_recommendations = []
+            estimated_profit_impact = 0.0
+            pricing_summary_text = "Pricing analysis unavailable."
+        else:
+            pricing_recommendations = metrics.get("pricing_recommendations", pricing_result.get("pricing_recommendations", pricing_result.get("recommendations", [])))
+            estimated_profit_impact = metrics.get("estimated_profit_impact", pricing_result.get("estimated_profit_impact", 0.0))
+            pricing_summary_text = f"Implement {len(pricing_recommendations)} pricing suggestions to boost margin, yielding a projected profit impact of ${estimated_profit_impact:,.2f}."
 
         # Handle explicit scenario outputs if forecasting ran
         scenario_output = None
-        if forecasting_result.get("scenario"):
-            scenario_output = forecasting_result
+        for node_id, output in task_graph_outputs.items():
+            if "forecasting" in node_id or (isinstance(output, dict) and output.get("agent_role") == "forecasting"):
+                if isinstance(output, dict) and output.get("status") != "failed":
+                    scenario_output = output
 
         # Generate Top 3 Actions
         top_actions = []
-        if reorder_recommendations:
+        if not inventory_failed and reorder_recommendations:
             qty = sum(rec.get("recommended_reorder", 0) if isinstance(rec, dict) else rec for rec in reorder_recommendations)
             top_actions.append({
                 "action": f"Reorder {qty} units immediately",
+                "why": "Safety stock levels are violated. Replenish immediately to prevent stockouts and revenue loss.",
+                "explanation": "Safety stock levels are violated. Replenish immediately to prevent stockouts and revenue loss.",
+                "expected_impact": "Prevent stockout revenue loss",
                 "impact": "Prevent stockout revenue loss",
+                "confidence": 92,
                 "confidence_score": 92
             })
-        if pricing_recommendations:
-            # Get the top pricing recommendation by impact
+        if not pricing_failed and pricing_recommendations:
+            first_rec = pricing_recommendations[0]
             top_actions.append({
-                "action": f"Increase {pricing_recommendations[0].get('sku', 'items')} price by {pricing_recommendations[0].get('price_change_percentage', 10.0)}%",
-                "impact": f"Boost margin by {pricing_recommendations[0].get('recommended_margin', 0) - pricing_recommendations[0].get('current_margin', 0):.1f}%",
+                "action": f"Adjust {first_rec.get('sku')} price to ${first_rec.get('recommended_price')}",
+                "why": f"Optimize listing price for {first_rec.get('sku')} based on price elasticity analysis to capture maximum profit margin.",
+                "explanation": f"Optimize listing price for {first_rec.get('sku')} based on price elasticity analysis to capture maximum profit margin.",
+                "expected_impact": "Margin optimization",
+                "impact": "Margin optimization",
+                "confidence": 88,
                 "confidence_score": 88
             })
-        if dead_stock_alerts:
+        if not inventory_failed and dead_stock_alerts:
             top_actions.append({
                 "action": f"Liquidate {len(dead_stock_alerts)} dead stock SKUs",
+                "why": "Free up locked working capital and reduce carrying costs by discounting slow-moving or dead apparel stock.",
+                "explanation": "Free up locked working capital and reduce carrying costs by discounting slow-moving or dead apparel stock.",
+                "expected_impact": "Free up warehouse capital",
                 "impact": "Free up warehouse capital",
+                "confidence": 95,
                 "confidence_score": 95
             })
             
         # Fallback if no actions
         if not top_actions:
-            top_actions = [{"action": "Maintain current operations", "impact": "Stable", "confidence_score": 99}]
+            top_actions = [{
+                "action": "Maintain current operations", 
+                "why": "All inventory, margins, and sales metrics are within safe operating thresholds.",
+                "explanation": "All inventory, margins, and sales metrics are within safe operating thresholds.",
+                "expected_impact": "Stable", 
+                "impact": "Stable", 
+                "confidence": 99,
+                "confidence_score": 99
+            }]
             
         # Limit to Top 3
         top_actions = top_actions[:3]
 
+        # Strategic recommendation summary construction
+        if scenario_output:
+            res_dict = scenario_output.get("result", {}) if isinstance(scenario_output, dict) else getattr(scenario_output, "result", {})
+            explanation = res_dict.get("explanation", "")
+            if explanation:
+                strategic_rec = explanation
+            else:
+                strategic_rec = f"Scenario simulation calculated successfully: {res_dict.get('scenario')}."
+        elif pricing_failed and inventory_failed:
+            strategic_rec = "Inventory and Pricing analyses are currently unavailable due to sub-agent errors."
+        elif pricing_failed:
+            strategic_rec = f"{inventory_summary_text} Pricing analysis unavailable."
+        elif inventory_failed:
+            strategic_rec = f"Inventory analysis unavailable. {pricing_summary_text}"
+        else:
+            strategic_rec = (
+                f"Actions required: {inventory_summary_text} "
+                f"{pricing_summary_text}"
+            )
+
         # Structure executive report JSON
         executive_summary = {
+            "top_3_actions": top_actions,
             "inventory_risk_score": inventory_risk_score,
             "total_reorder_recommendations": len(reorder_recommendations),
             "total_dead_stock_items": len(dead_stock_alerts),
             "total_pricing_adjustments": len(pricing_recommendations),
             "estimated_profit_impact": estimated_profit_impact,
             "scenario_simulation": scenario_output,
-            "top_3_actions": top_actions,
-            "strategic_recommendation": (
-                f"Actions required: Replenish {len(reorder_recommendations)} critical SKUs immediately "
-                f"to prevent stockouts. Implement {len(pricing_recommendations)} pricing suggestions to "
-                f"boost margin, yielding a projected profit impact of ${estimated_profit_impact:,.2f}."
-            ),
+            "strategic_recommendation": strategic_rec,
             "agent_telemetry": {
                 "nodes_executed": list(task_graph_outputs.keys())
             }

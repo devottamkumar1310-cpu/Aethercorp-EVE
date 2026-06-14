@@ -1,12 +1,13 @@
 import uuid
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+# pyrefly: ignore [missing-import]
+from pydantic import BaseModel, Field
 
 class ClientBase(BaseModel):
-    company_name: str
+    company_name: str = Field(..., min_length=1, description="Company name is required")
     contact_person: Optional[str] = None
-    email: Optional[str] = None
+    email: Optional[str] = Field(None, pattern=r"^[^@]+@[^@]+\.[^@]+$", description="Must be a valid email format")
     phone: Optional[str] = None
     industry: Optional[str] = None
     status: Optional[str] = "lead"

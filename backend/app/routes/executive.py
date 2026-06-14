@@ -1,5 +1,5 @@
 import uuid
-from typing import List
+from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -44,6 +44,7 @@ async def chat(
     workspace_id: uuid.UUID = Depends(get_required_workspace_id),
     _: None = Depends(rate_limit(requests=15, window_seconds=60))
 ):
+    from app.config import settings
     orchestrator = AgentOrchestrator()
     try:
         message = await orchestrator.orchestrate(
@@ -52,12 +53,34 @@ async def chat(
             question=body.question,
             mode=body.mode or "smart",
             conversation_id=body.conversation_id,
-            user_id=current_user.id
+            user_id=current_user.id,
+            language=body.language,
+            developer_mode=body.developer_mode
         )
+        
+        # Check if we should enforce founder mode filtering
+        is_founder = settings.FOUNDER_MODE
+        if body.developer_mode is not None:
+            is_founder = not body.developer_mode
+            
+        message_data = MessageResponse.model_validate(message)
+        if is_founder and message_data.agent_data:
+            filtered_data = message_data.agent_data.copy()
+            filtered_data.pop("confidence_scores", None)
+            filtered_data.pop("confidence_category", None)
+            filtered_data.pop("risk_classification", None)
+            filtered_data.pop("detected_conflicts", None)
+            filtered_data.pop("trade_off_analysis", None)
+            filtered_data.pop("findings_by_agent", None)
+            filtered_data.pop("recommendations_by_agent", None)
+            filtered_data.pop("governance_decisions", None)
+            filtered_data.pop("telemetry", None)
+            message_data.agent_data = filtered_data
+            
         return ExecutiveChatResponse(
             conversation_id=message.conversation_id,
             title=message.conversation.title,
-            message=MessageResponse.model_validate(message)
+            message=message_data
         )
     except HTTPException as he:
         raise he
@@ -210,3 +233,27 @@ def get_recommendations(
     workspace_id: uuid.UUID = Depends(get_required_workspace_id)
 ):
     return get_recent_recommendations(db, workspace_id, limit)
+
+@router.get("/scenarios", response_model=List[Dict[str, Any]])
+def get_scenarios(
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    """
+    Returns the list of previously executed forecast and simulation scenarios.
+    """
+    from app.models.future import Forecast
+    forecasts = db.query(Forecast).filter(Forecast.organization_id == workspace_id).order_by(Forecast.created_at.desc()).all()
+    
+    from typing import Dict, Any
+    results = []
+    for f in forecasts:
+        results.append({
+            "id": str(f.id),
+            "created_at": f.created_at.isoformat(),
+            "scenario_type": f.metrics.get("scenario_type"),
+            "parameter": f.metrics.get("parameter"),
+            "results": f.metrics.get("results")
+        })
+    return results

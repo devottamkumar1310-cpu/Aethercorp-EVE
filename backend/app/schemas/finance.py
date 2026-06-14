@@ -1,10 +1,10 @@
 import uuid
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class RevenueBase(BaseModel):
-    amount: float
+    amount: float = Field(..., ge=0.0, description="Revenue amount cannot be negative")
     description: Optional[str] = None
     date: Optional[datetime] = None
 
@@ -21,8 +21,8 @@ class RevenueResponse(RevenueBase):
         from_attributes = True
 
 class ExpenseBase(BaseModel):
-    amount: float
-    category: str
+    amount: float = Field(..., ge=0.0, description="Expense amount cannot be negative")
+    category: str = Field(..., min_length=1, description="Category is required")
     description: Optional[str] = None
     date: Optional[datetime] = None
 

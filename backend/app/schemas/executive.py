@@ -14,6 +14,13 @@ class StrategicPriority(BaseModel):
     title: str = Field(description="The priority title")
     description: str = Field(description="Action plan or detail for this priority")
 
+class ExecutiveRecommendation(BaseModel):
+    recommendation: str
+    confidence: float
+    evidence: List[str]
+    assumptions: List[str]
+    expected_impact: str
+
 class ExecutiveSynthesisResult(BaseModel):
     agent: str = Field(default="COO Lead", description="The name of the agent synthesizing the results")
     summary: str = Field(description="Final synthesized COO executive recommendation")
@@ -22,6 +29,14 @@ class ExecutiveSynthesisResult(BaseModel):
     findings_by_agent: Dict[str, List[str]] = Field(default_factory=dict, description="Segmented findings from sub-agents")
     recommendations_by_agent: Dict[str, List[str]] = Field(default_factory=dict, description="Segmented recommendations from sub-agents")
     confidence_scores: Dict[str, float] = Field(default_factory=dict, description="Confidence scores by agent including 'Overall'")
+    confidence_category: Optional[str] = Field(default="High Confidence", description="EVE Governance confidence classification")
+    risk_classification: Optional[str] = Field(default="Low Risk", description="Priorities strategic risk classification")
+    detected_conflicts: Optional[List[str]] = Field(default_factory=list, description="List of detected conflicts across sub-agents")
+    trade_off_analysis: Optional[str] = Field(default=None, description="Trade-off recommendations for resolved conflicts")
+    evidence_used: Optional[Dict[str, Any]] = Field(default_factory=dict, description="KPIs and context evidence references used")
+    agent_contributors: Optional[List[str]] = Field(default_factory=list, description="List of agents who contributed to the analysis")
+    governance_decisions: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Audited governance validation logs")
+    recommendation_details: Optional[ExecutiveRecommendation] = None
 
 class GeminiExecutiveSynthesisResult(BaseModel):
     agent: str = Field(default="COO Lead", description="The name of the agent synthesizing the results")
@@ -34,6 +49,8 @@ class ExecutiveChatRequest(BaseModel):
     question: str
     conversation_id: Optional[UUID] = None
     mode: Optional[str] = "smart"  # "full" or "smart"
+    language: Optional[str] = "en"  # "en" or "hi"
+    developer_mode: Optional[bool] = None
 
 class MessageResponse(BaseModel):
     id: UUID
