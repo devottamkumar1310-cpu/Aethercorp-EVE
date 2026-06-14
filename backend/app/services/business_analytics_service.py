@@ -5,6 +5,7 @@ from app.models.client import Client
 from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
+from app.models.inventory import InventoryItem
 
 class BusinessAnalyticsService:
     @staticmethod
@@ -30,6 +31,9 @@ class BusinessAnalyticsService:
         total_expenses = db.query(func.sum(Expense.amount)).filter(Expense.organization_id == organization_id).scalar() or 0.0
         net_profit = total_revenue - total_expenses
         
+        # Inventory Metrics
+        total_inventory = db.query(InventoryItem).filter(InventoryItem.organization_id == organization_id).count()
+        
         return {
             "clients": total_clients,
             "active_clients": active_clients,
@@ -39,5 +43,6 @@ class BusinessAnalyticsService:
             "completed_tasks": completed_tasks,
             "revenue": total_revenue,
             "expenses": total_expenses,
-            "profit": net_profit
+            "profit": net_profit,
+            "inventory": total_inventory
         }

@@ -1,10 +1,10 @@
 import uuid
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class TaskBase(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, description="Title is required")
     description: Optional[str] = None
     priority: Optional[str] = "medium"
     status: Optional[str] = "todo"

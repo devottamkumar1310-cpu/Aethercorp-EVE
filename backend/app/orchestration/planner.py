@@ -39,25 +39,31 @@ class Planner:
         
         # Natural Language Scenario Parsing
         import re
-        if "increase prices" in normalized_goal:
-            match = re.search(r'increase prices by (\d+)', normalized_goal)
-            val = float(match.group(1)) if match else 10.0
-            return self._build_forecasting_recipe(organization_id, "price_change", val)
-            
-        elif "demand grows" in normalized_goal or "sales increase" in normalized_goal:
+        if "price" in normalized_goal or "pricing" in normalized_goal:
+            if "increase" in normalized_goal or "change" in normalized_goal or "raise" in normalized_goal or "up" in normalized_goal:
+                match = re.search(r'(\d+)', normalized_goal)
+                val = float(match.group(1)) if match else 10.0
+                return self._build_forecasting_recipe(organization_id, "price_change", val)
+                
+        if "sales" in normalized_goal or "demand" in normalized_goal:
+            if "increase" in normalized_goal or "grow" in normalized_goal or "up" in normalized_goal or "grows" in normalized_goal:
+                match = re.search(r'(\d+)', normalized_goal)
+                val = float(match.group(1)) if match else 20.0
+                return self._build_forecasting_recipe(organization_id, "demand_growth", val)
+            elif "drop" in normalized_goal or "fall" in normalized_goal or "decline" in normalized_goal or "down" in normalized_goal or "decrease" in normalized_goal or "falls" in normalized_goal or "drops" in normalized_goal:
+                match = re.search(r'(\d+)', normalized_goal)
+                val = float(match.group(1)) if match else 30.0
+                return self._build_forecasting_recipe(organization_id, "demand_decline", val)
+                
+        if "expand" in normalized_goal or "expansion" in normalized_goal or "increase inventory" in normalized_goal or "order" in normalized_goal:
             match = re.search(r'(\d+)', normalized_goal)
-            val = float(match.group(1)) if match else 20.0
-            return self._build_forecasting_recipe(organization_id, "demand_growth", val)
-            
-        elif "demand falls" in normalized_goal or "demand drops" in normalized_goal:
-            match = re.search(r'(\d+)', normalized_goal)
-            val = float(match.group(1)) if match else 20.0
-            return self._build_forecasting_recipe(organization_id, "demand_decline", val)
-            
-        elif "order" in normalized_goal and "more units" in normalized_goal:
-            match = re.search(r'order (\d+)', normalized_goal)
             val = float(match.group(1)) if match else 1000.0
             return self._build_forecasting_recipe(organization_id, "inventory_expansion", val)
+            
+        if "cash" in normalized_goal or "flow" in normalized_goal:
+            match = re.search(r'(\d+)', normalized_goal)
+            val = float(match.group(1)) if match else 30.0
+            return self._build_forecasting_recipe(organization_id, "cash_flow_forecast", val)
             
         elif "cash will i need" in normalized_goal or "cash do i need" in normalized_goal:
             return self._build_forecasting_recipe(organization_id, "cash_flow_forecast", 30.0)

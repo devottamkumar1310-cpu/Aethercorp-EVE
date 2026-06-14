@@ -81,6 +81,14 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
         
     opportunity_factors = data.get("recommendations_by_agent") or data.get("recommendations") or data.get("opportunity_factors") or []
     
+    # Inject Explainability & Governance Context
+    if "confidence_category" in data:
+        data_used["confidence_category"] = data["confidence_category"]
+    if "risk_classification" in data:
+        data_used["risk_classification"] = data["risk_classification"]
+    if "detected_conflicts" in data and data["detected_conflicts"]:
+        data_used["detected_conflicts"] = data["detected_conflicts"]
+    
     confidence_level = 1.0
     if "confidence_scores" in data and isinstance(data["confidence_scores"], dict):
         confidence_level = data["confidence_scores"].get("Overall", 1.0)
@@ -95,7 +103,9 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
         data_used=data_used,
         risk_factors=risk_factors,
         opportunity_factors=opportunity_factors,
-        confidence_level=confidence_level
+        confidence_level=confidence_level,
+        expected_outcome=data.get("expected_outcome") or reasoning or "Improve business operations.",
+        actual_outcome=data.get("actual_outcome")
     )
     db.add(rec)
     db.commit()

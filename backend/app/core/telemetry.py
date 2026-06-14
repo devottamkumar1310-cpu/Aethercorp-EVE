@@ -15,13 +15,20 @@ def init_telemetry():
     token = telemetry_context.set(data)
     return token
 
-def record_tokens(prompt: int, completion: int, cost: float):
+def record_tokens(prompt: int, completion: int, cost: float, agent_name: str = None):
     """Records token usage and cost in the current telemetry context if active."""
     ctx = telemetry_context.get()
     if ctx is not None:
         ctx["prompt_tokens"] += prompt
         ctx["completion_tokens"] += completion
         ctx["token_cost"] += cost
+        if agent_name:
+            if agent_name not in ctx["agents"]:
+                ctx["agents"][agent_name] = {"status": "success", "latency_ms": 0}
+            agent_ctx = ctx["agents"][agent_name]
+            agent_ctx["prompt_tokens"] = agent_ctx.get("prompt_tokens", 0) + prompt
+            agent_ctx["completion_tokens"] = agent_ctx.get("completion_tokens", 0) + completion
+            agent_ctx["cost"] = agent_ctx.get("cost", 0.0) + cost
 
 def record_agent_metric(agent_name: str, status: str, latency_ms: int, error: str = None):
     """Records execution status and latency for an agent."""

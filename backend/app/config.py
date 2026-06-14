@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     CLOUD_RUN_SERVICE_URL: Optional[str] = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    FOUNDER_MODE: bool = True
 
     # Pydantic Configuration
     model_config = SettingsConfigDict(

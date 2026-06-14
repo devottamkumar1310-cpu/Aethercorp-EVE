@@ -89,6 +89,18 @@ export default function InventoryDashboardPage() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [showImportSummary, setShowImportSummary] = useState(false);
+  const [importSummary, setImportSummary] = useState<{
+    status: "success" | "error";
+    type: "inventory" | "sales" | "costs";
+    total_rows: number;
+    valid_rows: number;
+    invalid_rows: number;
+    duplicate_rows: number;
+    processed_count?: number;
+    missing_columns: string[];
+    errors: Array<{ row: number; column: string; value: any; message: string }>;
+  } | null>(null);
   const router = useRouter();
 
   const loadData = async (token: string) => {
@@ -138,13 +150,28 @@ export default function InventoryDashboardPage() {
     if (type === "sales") setUploadingSales(true);
     if (type === "costs") setUploadingCosts(true);
     try {
-      if (type === "inventory") await uploadInventoryCSVAPI(sessionToken, file);
-      else if (type === "sales") await uploadSalesCSVAPI(sessionToken, file);
-      else if (type === "costs") await uploadCostsCSVAPI(sessionToken, file);
+      let result;
+      if (type === "inventory") result = await uploadInventoryCSVAPI(sessionToken, file);
+      else if (type === "sales") result = await uploadSalesCSVAPI(sessionToken, file);
+      else if (type === "costs") result = await uploadCostsCSVAPI(sessionToken, file);
+      
       toast.success(`${type.toUpperCase()} file processed!`, { id: toastId });
+      setImportSummary({ ...result, type });
+      setShowImportSummary(true);
       await loadData(sessionToken);
     } catch (err: any) {
-      toast.error(err.message || `Failed to process ${type} CSV.`, { id: toastId });
+      let parsedSummary = null;
+      try {
+        parsedSummary = JSON.parse(err.message);
+      } catch {}
+      
+      if (parsedSummary && parsedSummary.status === "error") {
+        setImportSummary({ ...parsedSummary, type });
+        setShowImportSummary(true);
+        toast.dismiss(toastId);
+      } else {
+        toast.error(err.message || `Failed to process ${type} CSV.`, { id: toastId });
+      }
     } finally {
       if (type === "inventory") setUploadingInventory(false);
       if (type === "sales") setUploadingSales(false);
@@ -680,6 +707,134 @@ export default function InventoryDashboardPage() {
           </div>
         )}
       </div>
+
+      {/* CSV Import Validation Summary Modal */}
+      {showImportSummary && importSummary && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className={`px-6 py-4 border-b flex items-center justify-between ${
+              importSummary.status === "success" ? "bg-emerald-50/50 border-emerald-100" : "bg-rose-50/50 border-rose-100"
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <div className={`p-2 rounded-lg ${
+                  importSummary.status === "success" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+                }`}>
+                  <Layers size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    CSV Import Summary: {importSummary.type.toUpperCase()}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Data validation and Ingestion audit log report
+                  </p>
+                </div>
+              </div>
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
+                importSummary.status === "success"
+                  ? "bg-emerald-100 text-emerald-850 border-emerald-250"
+                  : "bg-rose-100 text-rose-850 border-rose-250"
+              }`}>
+                {importSummary.status === "success" ? "Success" : "Failed"}
+              </span>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 text-slate-800">
+              {/* Counters Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                  <span className="block text-[9px] uppercase font-bold text-slate-400">Total Rows</span>
+                  <span className="block text-lg font-black text-slate-800 mt-0.5">{importSummary.total_rows}</span>
+                </div>
+                <div className="p-3 bg-emerald-50/50 border border-emerald-100/55 rounded-xl text-center">
+                  <span className="block text-[9px] uppercase font-bold text-emerald-600">Valid Rows</span>
+                  <span className="block text-lg font-black text-emerald-700 mt-0.5">{importSummary.valid_rows}</span>
+                </div>
+                <div className="p-3 bg-rose-50/50 border border-rose-100/55 rounded-xl text-center">
+                  <span className="block text-[9px] uppercase font-bold text-rose-600">Errors</span>
+                  <span className="block text-lg font-black text-rose-700 mt-0.5">{importSummary.invalid_rows}</span>
+                </div>
+                <div className="p-3 bg-amber-50/50 border border-amber-100/55 rounded-xl text-center">
+                  <span className="block text-[9px] uppercase font-bold text-amber-600">Duplicates</span>
+                  <span className="block text-lg font-black text-amber-700 mt-0.5">{importSummary.duplicate_rows}</span>
+                </div>
+              </div>
+
+              {/* Missing Columns warning */}
+              {importSummary.missing_columns && importSummary.missing_columns.length > 0 && (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-2.5 items-start">
+                  <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={15} />
+                  <div>
+                    <span className="text-xs font-bold text-amber-800">Missing Required Columns</span>
+                    <p className="text-[11px] text-amber-700 leading-relaxed mt-0.5">
+                      The uploaded file is missing columns: <strong className="font-semibold">{importSummary.missing_columns.join(", ")}</strong>. Please update your CSV headers.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Errors Breakdown table */}
+              {importSummary.errors && importSummary.errors.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
+                    Validation Violations Log
+                  </h4>
+                  <div className="border border-slate-100 rounded-xl overflow-hidden max-h-52 overflow-y-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead className="bg-slate-50 border-b border-slate-100 font-semibold text-slate-500">
+                        <tr>
+                          <th className="px-4 py-2 text-center w-12">Row</th>
+                          <th className="px-4 py-2 w-28">Column</th>
+                          <th className="px-4 py-2 w-24">Value</th>
+                          <th className="px-4 py-2">Failure Reason</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-600">
+                        {importSummary.errors.map((err, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/50 font-normal">
+                            <td className="px-4 py-2 font-mono text-slate-400 text-center">{err.row || "-"}</td>
+                            <td className="px-4 py-2 font-semibold text-slate-700">{err.column || "-"}</td>
+                            <td className="px-4 py-2 font-mono text-[11px] text-slate-500 truncate max-w-[95px]">{err.value !== null ? String(err.value) : <span className="text-slate-350 italic">null</span>}</td>
+                            <td className="px-4 py-2 text-rose-650">{err.message}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Success message */}
+              {importSummary.status === "success" && (
+                <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center space-y-1">
+                  <p className="text-xs font-bold text-emerald-800">
+                    Import completed successfully!
+                  </p>
+                  <p className="text-[11px] text-emerald-650 font-normal">
+                    All {importSummary.processed_count} records have been written to the database.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t bg-slate-50/50 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportSummary(false);
+                  setImportSummary(null);
+                }}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+              >
+                Close Summary
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Product Modal */}
       <AddProductModal

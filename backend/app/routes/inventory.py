@@ -14,6 +14,7 @@ import datetime
 import logging
 import pandas as pd
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session, joinedload
@@ -47,23 +48,34 @@ def upload_inventory_csv(
 
     try:
         contents = file.file.read()
-        if len(contents) > MAX_CSV_SIZE_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="File size exceeds 10MB limit. Please split your CSV into smaller batches."
+        if not contents or len(contents) == 0:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": "Uploaded file is empty."}
             )
-        df = pd.read_csv(io.BytesIO(contents))
+        if len(contents) > MAX_CSV_SIZE_BYTES:
+            return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content={"status": "error", "message": "File size exceeds 10MB limit. Please split your CSV into smaller batches."}
+            )
+        
+        try:
+            df = pd.read_csv(io.BytesIO(contents))
+        except (pd.errors.EmptyDataError, pd.errors.ParserError) as pe:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
+            )
+
         report = ImporterService.import_inventory(db, org_id, df)
         if report["status"] == "error":
-            raise HTTPException(status_code=400, detail=f"Import failed: {report['errors']}")
-        return {"status": "success", "message": f"Processed {report['processed_count']} inventory records."}
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Inventory Upload Error: {e}", exc_info=e)
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process inventory CSV: {str(e)}"
+            content={"status": "error", "message": f"Failed to process inventory CSV: {str(e)}"}
         )
 
 
@@ -82,23 +94,34 @@ def upload_sales_csv(
 
     try:
         contents = file.file.read()
-        if len(contents) > MAX_CSV_SIZE_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="File size exceeds 10MB limit. Please split your CSV into smaller batches."
+        if not contents or len(contents) == 0:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": "Uploaded file is empty."}
             )
-        df = pd.read_csv(io.BytesIO(contents))
+        if len(contents) > MAX_CSV_SIZE_BYTES:
+            return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content={"status": "error", "message": "File size exceeds 10MB limit. Please split your CSV into smaller batches."}
+            )
+
+        try:
+            df = pd.read_csv(io.BytesIO(contents))
+        except (pd.errors.EmptyDataError, pd.errors.ParserError) as pe:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
+            )
+
         report = ImporterService.import_sales(db, org_id, df)
         if report["status"] == "error":
-            raise HTTPException(status_code=400, detail=f"Import failed: {report['errors']}")
-        return {"status": "success", "message": f"Recorded {report['processed_count']} sales transactions."}
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Sales Upload Error: {e}", exc_info=e)
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process sales CSV: {str(e)}"
+            content={"status": "error", "message": f"Failed to process sales CSV: {str(e)}"}
         )
 
 
@@ -117,23 +140,34 @@ def upload_product_costs_csv(
 
     try:
         contents = file.file.read()
-        if len(contents) > MAX_CSV_SIZE_BYTES:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="File size exceeds 10MB limit. Please split your CSV into smaller batches."
+        if not contents or len(contents) == 0:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": "Uploaded file is empty."}
             )
-        df = pd.read_csv(io.BytesIO(contents))
+        if len(contents) > MAX_CSV_SIZE_BYTES:
+            return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content={"status": "error", "message": "File size exceeds 10MB limit. Please split your CSV into smaller batches."}
+            )
+
+        try:
+            df = pd.read_csv(io.BytesIO(contents))
+        except (pd.errors.EmptyDataError, pd.errors.ParserError) as pe:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
+            )
+
         report = ImporterService.import_costs(db, org_id, df)
         if report["status"] == "error":
-            raise HTTPException(status_code=400, detail=f"Import failed: {report['errors']}")
-        return {"status": "success", "message": f"Updated costs for {report['processed_count']} products."}
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Costs Upload Error: {e}", exc_info=e)
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process product cost CSV: {str(e)}"
+            content={"status": "error", "message": f"Failed to process product cost CSV: {str(e)}"}
         )
 
 

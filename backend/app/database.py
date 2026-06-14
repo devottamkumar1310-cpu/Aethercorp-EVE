@@ -91,8 +91,11 @@ def init_db():
         from app.models.executive_memory import BusinessGoal
         from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
         from app.models.ai_recommendation import AIRecommendation
+        from app.models.system_error import SystemError
+        from app.models.audit_log import AuditLog
         
         # Check if pgvector is supported by the connection before building schemas
+
         if "postgresql" in engine.url.drivername:
             with engine.begin() as conn:
                 from sqlalchemy import text

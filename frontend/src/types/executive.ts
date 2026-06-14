@@ -3,6 +3,14 @@ export interface StrategicPriority {
   description: string;
 }
 
+export interface ExecutiveRecommendation {
+  recommendation: string;
+  confidence: number;
+  evidence: string[];
+  assumptions: string[];
+  expected_impact: string;
+}
+
 export interface AgentAnalysisResult {
   agent: string;
   summary: string;
@@ -14,6 +22,14 @@ export interface AgentAnalysisResult {
   findings?: string[];
   recommendations?: string[];
   confidence?: number;
+  confidence_category?: string;
+  risk_classification?: string;
+  detected_conflicts?: string[];
+  trade_off_analysis?: string;
+  evidence_used?: Record<string, any>;
+  agent_contributors?: string[];
+  governance_decisions?: Record<string, any>;
+  recommendation_details?: ExecutiveRecommendation;
 }
 
 
