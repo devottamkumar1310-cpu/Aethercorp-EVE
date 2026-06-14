@@ -48,11 +48,12 @@ export function CashFlowForecastCard({ forecast, loading }: Props) {
             </p>
             <p className="text-xs text-slate-500 mt-1">Includes ${forecast.reorder_cost.toLocaleString()} reorder cost</p>
           </div>
-          <div className="flex flex-col items-end justify-center">
-            <div className={`flex items-center px-3 py-1.5 rounded-full ${isHighRisk ? 'bg-orange-100 text-orange-800' : 'bg-emerald-100 text-emerald-800'}`}>
-              {isHighRisk ? <AlertTriangle className="h-4 w-4 mr-1" /> : <ShieldCheck className="h-4 w-4 mr-1" />}
-              <span className="text-xs font-bold">{forecast.cash_flow_risk} Risk</span>
-            </div>
+          <div className="flex flex-col items-end justify-center max-w-[70%]">
+            <span className="text-xs font-semibold text-amber-600 text-right leading-snug">
+              {isHighRisk 
+                ? "Additional working capital may be required next month."
+                : "Capital levels are projected to be stable."}
+            </span>
             <p className="text-xs text-slate-500 mt-2">Confidence: {forecast.confidence_score}%</p>
           </div>
         </div>

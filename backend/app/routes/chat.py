@@ -38,6 +38,12 @@ class ChatResponse(BaseModel):
     executed_agents: List[str]
     event_bus_messages: List[Dict[str, Any]]
     orchestrator_aggregation: Dict[str, Any]
+    # Hardened single source of truth metrics
+    inventory_risk_score: float = 0.0
+    stockout_predictions: List[Dict[str, Any]] = Field(default_factory=list)
+    reorder_recommendations: List[Dict[str, Any]] = Field(default_factory=list)
+    pricing_recommendations: List[Dict[str, Any]] = Field(default_factory=list)
+    estimated_profit_impact: float = 0.0
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -107,6 +113,13 @@ async def chat_endpoint(
         if not recommendations:
             recommendations.append("Ensure regular review of inventory health parameters.")
 
+        from app.services.analytics_service import AnalyticsService
+        try:
+            metrics = AnalyticsService.get_dashboard_metrics(db, workspace_id)
+        except Exception as e:
+            logger.error(f"Error fetching dashboard metrics for chat alignment: {e}")
+            metrics = {}
+
         return ChatResponse(
             executive_summary=executive_summary.get("strategic_recommendation", "Analysis complete."),
             participating_agents=executed_agents,
@@ -114,7 +127,12 @@ async def chat_endpoint(
             discovered_agents=discovered_agents,
             executed_agents=executed_agents,
             event_bus_messages=captured_events,
-            orchestrator_aggregation=executive_summary
+            orchestrator_aggregation=executive_summary,
+            inventory_risk_score=metrics.get("inventory_risk_score", 0.0),
+            stockout_predictions=metrics.get("stockout_predictions", []),
+            reorder_recommendations=metrics.get("reorder_recommendations", []),
+            pricing_recommendations=metrics.get("pricing_recommendations", []),
+            estimated_profit_impact=metrics.get("estimated_profit_impact", 0.0)
         )
 
     except Exception as e:

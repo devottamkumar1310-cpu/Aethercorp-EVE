@@ -130,6 +130,14 @@ class Orchestrator:
             
             # 5. Evaluate response
             if response.status == "failure":
+                if node.agent_role in ["pricing", "inventory"]:
+                    fallback_result = {"status": "failed", "error": response.error_message or "Agent reported execution failure."}
+                    node.complete(fallback_result)
+                    context.results[node.id] = fallback_result
+                    context.set_variable(node.id, fallback_result)
+                    context.log(f"Node '{node.id}' execution failed, trapped fallback: {fallback_result['error']}")
+                    return
+
                 node.fail(response.error_message or "Agent reported execution failure.")
                 context.log(f"Node '{node.id}' execution failed: {node.error}")
                 await event_bus.publish(
@@ -146,6 +154,14 @@ class Orchestrator:
             # 6. Validate the output payload mathematically
             is_valid, validation_err = Validator.validate_node_output(node.agent_role, response.result)
             if not is_valid:
+                if node.agent_role in ["pricing", "inventory"]:
+                    fallback_result = {"status": "failed", "error": f"Output validation failed: {validation_err}"}
+                    node.complete(fallback_result)
+                    context.results[node.id] = fallback_result
+                    context.set_variable(node.id, fallback_result)
+                    context.log(f"Node '{node.id}' output validation failed, trapped fallback: {validation_err}")
+                    return
+
                 node.fail(f"Output validation failed: {validation_err}")
                 context.log(f"Node '{node.id}' output validation failed: {validation_err}")
                 await event_bus.publish(
@@ -183,6 +199,14 @@ class Orchestrator:
             )
 
         except Exception as e:
+            if node.agent_role in ["pricing", "inventory"]:
+                fallback_result = {"status": "failed", "error": str(e)}
+                node.complete(fallback_result)
+                context.results[node.id] = fallback_result
+                context.set_variable(node.id, fallback_result)
+                context.log(f"Fatal error during node '{node.id}' run, trapped fallback: {e}")
+                return
+
             logger.error(f"Fatal error executing node '{node.id}': {e}", exc_info=e)
             node.fail(str(e))
             context.log(f"Fatal error during node '{node.id}' run: {e}")

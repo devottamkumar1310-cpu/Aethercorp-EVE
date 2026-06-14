@@ -21,8 +21,10 @@ class COOAgent:
         inventory_result: Optional[AgentAnalysisResult] = None,
         client_result: Optional[AgentAnalysisResult] = None,
         growth_result: Optional[AgentAnalysisResult] = None,
+        forecasting_result: Optional[AgentAnalysisResult] = None,
         health: Optional[dict] = None,
-        goals: Optional[list] = None
+        goals: Optional[list] = None,
+        conversation_history: Optional[list] = None
     ) -> ExecutiveSynthesisResult:
         # Retrieve overall health score and goals if not passed as cached params
         if health is None:
@@ -58,10 +60,21 @@ class COOAgent:
             sub_agent_reports.append(format_report("Client Intelligence Agent", client_result))
         if growth_result:
             sub_agent_reports.append(format_report("Growth Agent", growth_result))
+        if forecasting_result:
+            sub_agent_reports.append(format_report("Forecasting Agent", forecasting_result))
             
         reports_block = "\n".join([r for r in sub_agent_reports if r])
         
+        history_block = ""
+        if conversation_history:
+            history_lines = []
+            for msg in conversation_history:
+                role_label = "Founder" if msg.get("role") == "user" else "EVE COO"
+                history_lines.append(f"{role_label}: {msg.get('content')}")
+            history_block = "\n=== RECENT CONVERSATION HISTORY ===\n" + "\n".join(history_lines) + "\n====================================\n"
+
         prompt = f"""
+        {history_block}
         User Question/Goal: {question}
         
         Current Overall Business Health & Goals:
@@ -74,7 +87,8 @@ class COOAgent:
         gemini_result: GeminiExecutiveSynthesisResult = await self.gemini_service.generate_structured_response(
             prompt=prompt,
             response_schema=GeminiExecutiveSynthesisResult,
-            system_instruction=COO_SYSTEM_PROMPT
+            system_instruction=COO_SYSTEM_PROMPT,
+            agent_name="coo"
         )
         
         result = ExecutiveSynthesisResult(

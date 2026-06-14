@@ -9,7 +9,7 @@
 # ==============================================================================
 
 import logging
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, List, Optional
 
 logger = logging.getLogger("eve.orchestration.validator")
 
@@ -146,3 +146,311 @@ class Validator:
                 return False, "Competitor price must be numeric."
 
         return True, ""
+
+
+class ExecutiveGovernanceValidator:
+    """
+    Evaluates EVE's Executive Agent outputs for trustworthiness, evidence alignment, and risk.
+    Ensures Launch-Ready Governance and Guardrails.
+    """
+
+    @staticmethod
+    def identify_requested_domains(question: str) -> List[str]:
+        """
+        Parses keywords from the user question to identify requested business data domains.
+        """
+        q_lower = question.lower()
+        requested = []
+        if any(kw in q_lower for kw in ["churn", "retention", "client", "customer", "vip"]):
+            requested.append("client")
+        if any(kw in q_lower for kw in ["inventory", "stock", "warehouse", "sku", "reorder", "supplier", "safety stock", "overstock", "dead stock"]):
+            requested.append("inventory")
+        if any(kw in q_lower for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
+            requested.append("finance")
+        if any(kw in q_lower for kw in ["project", "task", "velocity", "capacity", "deadline", "delay", "workflow", "operations"]):
+            requested.append("operations")
+        if any(kw in q_lower for kw in ["growth", "opportunity", "opportunities", "expand"]):
+            requested.append("growth")
+        return requested
+
+    @classmethod
+    def validate_data_sufficiency(cls, overview: Dict[str, Any], question: Optional[str] = None) -> Tuple[str, str, Dict[str, bool]]:
+        """
+        Checks if the organization has sufficient data to generate meaningful executive insights.
+        Evaluates specific data domains (Sales, Inventory, Clients, Projects, Tasks).
+        Returns status (NO_DATA, DATA_INSUFFICIENT, PARTIAL_DATA, FULL_DATA), message, and available domains map.
+        """
+        if not overview:
+            return "NO_DATA", "Insufficient business data available.", {}
+        
+        # Determine availability per domain
+        has_clients = overview.get("clients", 0) > 0
+        has_projects = overview.get("projects", 0) > 0
+        has_tasks = overview.get("tasks", 0) > 0
+        has_revenue = overview.get("revenue", 0.0) > 0.0
+        has_inventory = overview.get("inventory", 0) > 0
+        
+        available_domains = {
+            "finance": has_revenue,
+            "growth": has_revenue and (has_clients or has_projects),
+            "client": has_clients,
+            "operations": has_projects or has_tasks,
+            "inventory": has_inventory
+        }
+        
+        active_domain_count = sum(1 for is_active in available_domains.values() if is_active)
+            
+        if active_domain_count == 0:
+            return "NO_DATA", "Insufficient business data available.", available_domains
+        
+        # If question is provided, do query-specific data sufficiency check
+        if question:
+            requested_domains = cls.identify_requested_domains(question)
+            insufficient_domains = [rd for rd in requested_domains if not available_domains.get(rd, False)]
+            if insufficient_domains:
+                # Target the first missing requested domain to return a precise message
+                primary_missing = insufficient_domains[0]
+                if primary_missing == "client":
+                    return "DATA_INSUFFICIENT", "Insufficient customer data available.", available_domains
+                elif primary_missing == "finance":
+                    return "DATA_INSUFFICIENT", "Insufficient financial data available.", available_domains
+                elif primary_missing == "inventory":
+                    return "DATA_INSUFFICIENT", "Insufficient inventory data available.", available_domains
+                elif primary_missing == "operations":
+                    return "DATA_INSUFFICIENT", "Insufficient project data available.", available_domains
+                elif primary_missing == "growth":
+                    # Growth requires finance and either clients or projects
+                    if not has_revenue:
+                        return "DATA_INSUFFICIENT", "Insufficient financial data available.", available_domains
+                    else:
+                        return "DATA_INSUFFICIENT", "Insufficient customer data available.", available_domains
+
+        if active_domain_count < len(available_domains):
+            missing = [k.capitalize() for k, v in available_domains.items() if not v]
+            return "PARTIAL_DATA", f"Partial data detected. Missing context for: {', '.join(missing)}.", available_domains
+            
+        return "FULL_DATA", "Data sufficiency validated across all domains.", available_domains
+
+    @staticmethod
+    def detect_hallucinations(synthesis: Any, overview: Dict[str, Any], trends: Optional[Dict[str, Any]] = None) -> Tuple[bool, List[str]]:
+        """
+        Cross-references numerical claims, trends, and risk assessments in the synthesis against actual ground-truth metrics from the DB.
+        """
+        violations = []
+        
+        # Gather text content
+        priorities_text = " ".join([f"{p.title} {p.description}" for p in getattr(synthesis, "priorities", [])])
+        expected_impact = getattr(synthesis, "expected_impact", "") or ""
+        summary_text = getattr(synthesis, "summary", "") or ""
+        text_payload = f"{summary_text} {priorities_text} {expected_impact}"
+        text_payload_lower = text_payload.lower()
+        
+        # 1. Mismatch checks: Missing data domains referenced
+        if overview.get("revenue", 0.0) == 0.0 and any(kw in text_payload_lower for kw in ["revenue", "profit", "margin", "expenses"]):
+            violations.append("Referenced financial metrics, but organization has no financial data.")
+            
+        if overview.get("clients", 0) == 0 and any(kw in text_payload_lower for kw in ["client", "customer", "churn", "retention"]):
+            violations.append("Referenced customer metrics, but organization has no client data.")
+
+        if overview.get("inventory", 0) == 0 and any(kw in text_payload_lower for kw in ["inventory", "stock", "sku", "warehouse"]):
+            violations.append("Referenced inventory metrics, but organization has no inventory data.")
+
+        if overview.get("projects", 0) == 0 and overview.get("tasks", 0) == 0 and any(kw in text_payload_lower for kw in ["project", "task", "velocity", "capacity", "delay"]):
+            violations.append("Referenced project metrics, but organization has no project/task data.")
+
+        # 2. Gather ground truth numbers/percentages from the DB
+        ground_truth_values = set()
+        
+        # Add values from overview
+        for val in overview.values():
+            if isinstance(val, (int, float)):
+                ground_truth_values.add(round(float(val), 2))
+                
+        # Net Profit
+        revenue = float(overview.get("revenue", 0.0))
+        expenses = float(overview.get("expenses", 0.0))
+        profit = revenue - expenses
+        ground_truth_values.add(round(profit, 2))
+        
+        # Add values from trends
+        if trends:
+            for val in trends.values():
+                if isinstance(val, (int, float)):
+                    ground_truth_values.add(round(float(val), 2))
+                    
+        # Add common system-safe constants (dates, index counts, standard offsets, reorder safety numbers)
+        safe_constants = {1, 2, 3, 4, 5, 10, 14, 15, 30, 90, 2025, 2026, 0.0, 10.0, 50.0, 20.0, 0.95}
+        
+        # 3. Parse percentages (e.g. 15%)
+        import re
+        percentage_matches = re.findall(r'(\d+(?:\.\d+)?)\s*%', text_payload)
+        for pct_str in percentage_matches:
+            val = float(pct_str)
+            # Allow common constants
+            if val in safe_constants:
+                continue
+            # Check if value matches any database indicators or goals
+            matched = False
+            for gt in ground_truth_values:
+                # check direct percentage (e.g. health score or trend rate) or fraction match
+                if abs(gt - val) < 0.05 or abs((gt * 100) - val) < 0.05 or abs((gt / 100) - val) < 0.05:
+                    matched = True
+                    break
+            if not matched:
+                violations.append(f"Percentage claim {val}% could not be validated against database records.")
+
+        # 4. Parse dollar amounts and other large numbers
+        numbers = re.findall(r'\$?\b\d+(?:,\d{3})*(?:\.\d+)?\b', text_payload)
+        for num_str in numbers:
+            # Skip numbers that look like percentages checked above
+            if num_str + "%" in text_payload or num_str + " %" in text_payload:
+                continue
+                
+            clean_str = num_str.replace('$', '').replace(',', '')
+            try:
+                val = float(clean_str)
+                # Ignore small numbers, standard offsets, and years
+                if val in safe_constants or val < 10 or 2020 <= val <= 2030:
+                    continue
+                
+                # Verify number matches ground truth
+                matched = False
+                for gt in ground_truth_values:
+                    if abs(gt - val) < 0.05:
+                        matched = True
+                        break
+                if not matched:
+                    violations.append(f"Numerical claim {num_str} could not be validated against database records.")
+            except ValueError:
+                pass
+
+        # 5. Validate trends
+        if trends:
+            rev_trend = trends.get("revenue_trend", "stable").lower()
+            if "revenue is growing" in text_payload_lower or "increasing revenue" in text_payload_lower or "revenue growth" in text_payload_lower:
+                if rev_trend == "downward":
+                    violations.append("Claims revenue is increasing, but calculated trend is downward.")
+            if "revenue is declining" in text_payload_lower or "decreasing revenue" in text_payload_lower or "declining revenue" in text_payload_lower:
+                if rev_trend == "upward":
+                    violations.append("Claims revenue is decreasing, but calculated trend is upward.")
+
+        return len(violations) == 0, violations
+
+    @staticmethod
+    def validate_risk_confidence_alignment(confidence_score: float, risk_classification: str) -> Tuple[bool, str]:
+        """
+        Enforces that higher-risk strategic recommendations require stronger evidence (higher confidence).
+        """
+        if risk_classification == "Strategic Risk":
+            required = 0.90
+            grade = "Executive Grade (90%)"
+        elif risk_classification == "High Risk":
+            required = 0.85
+            grade = "High Confidence (85%)"
+        elif risk_classification == "Medium Risk":
+            required = 0.65
+            grade = "Moderate Confidence (65%)"
+        else:
+            required = 0.0
+            grade = "Low Confidence (0%)"
+
+        if confidence_score < required:
+            return False, f"Recommendation categorized as {risk_classification} requires at least {grade} evidence, but has {int(confidence_score * 100)}% confidence."
+        return True, ""
+
+    @staticmethod
+    def classify_risk(priorities: List[Any]) -> str:
+        """
+        Classifies the strategic risk of the recommended priorities.
+        """
+        strategic_risk_keywords = ["shut down", "pivot", "rebrand", "terminate business", "liquidate brand", "exit market"]
+        high_risk_keywords = ["fire", "liquidate", "lay off", "drastic", "terminate", "cut budget", "reduce spend", "freeze hire"]
+        medium_risk_keywords = ["discount", "renegotiate", "invest", "upsell", "adjust price", "reallocate", "expand roster"]
+        
+        highest_risk = "Low Risk"
+        for p in priorities:
+            desc_lower = p.description.lower()
+            title_lower = p.title.lower()
+            combined = f"{title_lower} {desc_lower}"
+            if any(kw in combined for kw in strategic_risk_keywords):
+                return "Strategic Risk"
+            if any(kw in combined for kw in high_risk_keywords):
+                highest_risk = "High Risk"
+            elif any(kw in combined for kw in medium_risk_keywords) and highest_risk != "High Risk":
+                highest_risk = "Medium Risk"
+                
+        return highest_risk
+
+    @staticmethod
+    def govern_confidence(confidence_score: float) -> str:
+        """
+        Maps a float confidence score to a Governance Category.
+        """
+        if confidence_score >= 0.90:
+            return "Executive Grade"
+        elif confidence_score >= 0.85:
+            return "High Confidence"
+        elif confidence_score >= 0.65:
+            return "Moderate Confidence"
+        else:
+            return "Low Confidence"
+
+    @staticmethod
+    def detect_conflicts(findings_by_agent: Dict[str, List[str]], recommendations_by_agent: Dict[str, List[str]]) -> Tuple[List[str], str]:
+        """
+        Detects conflicting recommendations across specialized agents.
+        Example: Finance says 'cut marketing', Growth says 'increase marketing'.
+        Returns conflicts list and trade-off analysis string.
+        """
+        conflicts = []
+        trade_off_lines = []
+        
+        # 1. Marketing / Spend conflict check
+        finance_recs = " ".join(recommendations_by_agent.get("Finance Agent", [])).lower()
+        growth_recs = " ".join(recommendations_by_agent.get("Growth Agent", [])).lower()
+        
+        has_finance_cut = any(kw in finance_recs for kw in ["cut", "reduce", "decrease", "contain"]) and any(kw in finance_recs for kw in ["spend", "marketing", "budget", "cost", "overhead"])
+        has_growth_increase = any(kw in growth_recs for kw in ["increase", "boost", "grow", "double down", "reinvest"]) and any(kw in growth_recs for kw in ["marketing", "spend", "budget", "advertising"])
+        
+        if has_finance_cut and has_growth_increase:
+            conflicts.append("Marketing Spend Conflict: Finance recommends budget cuts, while Growth recommends reinvestment.")
+            trade_off_lines.append(
+                "Conflict Report: Finance Agent identifies margin erosion and recommends cost containment. Growth Agent identifies customer acquisition opportunities and recommends expanding spend.\n"
+                "Trade-Off Analysis: Reducing overall cost overhead preserves margins but limits new client acquisition. Conversely, broad spending expansion introduces operational burn risks.\n"
+                "Final Recommendation: Cap marketing spend at a 10% increase, directed solely at high-margin categories, while liquidating apparel overstock to offset the budget increase."
+            )
+
+        # 2. Pricing conflict check (discounting vs margin expansion)
+        client_recs = " ".join(recommendations_by_agent.get("Client Intelligence Agent", [])).lower()
+        pricing_recs = " ".join(recommendations_by_agent.get("Pricing Agent", [])).lower()
+        if not pricing_recs:
+            pricing_recs = " ".join(recommendations_by_agent.get("Finance Agent", [])).lower()
+
+        has_client_discount = any(kw in client_recs for kw in ["discount", "promotion", "coupon", "lower price"])
+        has_pricing_increase = any(kw in pricing_recs for kw in ["raise price", "increase price", "optimize margin"])
+
+        if has_client_discount and has_pricing_increase:
+            conflicts.append("Pricing Strategy Conflict: Client Agent recommends discounts for retention, while Pricing/Finance recommends price increases to optimize margins.")
+            trade_off_lines.append(
+                "Conflict Report: Client Intelligence Agent highlights churn risk and advises promotional discounting. Pricing Agent identifies margin optimization opportunities and recommends price increases.\n"
+                "Trade-Off Analysis: Broad discounting erodes unit margin and devalues catalog branding. Broad price hikes increase churn risk among price-sensitive cohorts.\n"
+                "Final Recommendation: Avoid sitewide discounts. Apply targeted loyalty retention credits ONLY to customers with high churn risk scores, while executing price increases on low-elasticity, high-demand items."
+            )
+
+        # 3. Operations Capacity vs Growth
+        ops_recs = " ".join(recommendations_by_agent.get("Operations Agent", [])).lower()
+        has_ops_capacity = any(kw in ops_recs for kw in ["bottleneck", "delay", "overloaded", "capacity limit", "reduce tasks"])
+        has_growth_expansion = any(kw in growth_recs for kw in ["onboard", "acquire", "expand roster", "new client", "upsell"])
+
+        if has_ops_capacity and has_growth_expansion:
+            conflicts.append("Capacity Roster Conflict: Operations reports capacity bottlenecks and shipping delays, while Growth recommends expansion.")
+            trade_off_lines.append(
+                "Conflict Report: Operations Agent warns of capacity bottlenecks and fulfillment delays. Growth Agent recommends client roster expansion.\n"
+                "Trade-Off Analysis: Onboarding new clients during capacity limits increases late delivery rates and harms brand reputation. Freezing growth completely stalls revenue scaling.\n"
+                "Final Recommendation: Freeze new client onboarding for 14 days to restructure standard class carrier agreements and reallocate team members to pending tasks, then open onboarding under premium class shipping only."
+            )
+
+        trade_off_str = "\n\n".join(trade_off_lines) if trade_off_lines else "No direct agent conflicts detected."
+        return conflicts, trade_off_str
+
+

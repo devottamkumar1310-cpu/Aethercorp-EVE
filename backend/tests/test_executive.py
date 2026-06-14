@@ -13,6 +13,46 @@ from app.core.security import get_current_user_and_tenant, get_current_user, get
 from app.core.dependency_container import container
 from app.services.gemini_service import GeminiService
 
+def seed_business_data(db, org_id):
+    from app.models.client import Client
+    from app.models.project import Project
+    from app.models.task import Task
+    from app.models.product import Product
+    from app.models.inventory import InventoryItem
+    from app.models.finance import Revenue
+    import datetime
+
+    # Check if they already exist
+    if db.query(Client).filter(Client.organization_id == org_id).count() == 0:
+        client = Client(organization_id=org_id, company_name="Test Client", email="client@test.com", status="active")
+        db.add(client)
+        db.flush()
+    else:
+        client = db.query(Client).filter(Client.organization_id == org_id).first()
+
+    if db.query(Product).filter(Product.organization_id == org_id).count() == 0:
+        product = Product(organization_id=org_id, sku="SKU-SEED", name="Seeded Product", category="General", selling_price=100.0, unit_cost=40.0)
+        db.add(product)
+        db.flush()
+        if db.query(InventoryItem).filter(InventoryItem.organization_id == org_id).count() == 0:
+            item = InventoryItem(organization_id=org_id, product_id=product.id, stock_on_hand=50, reorder_point=10)
+            db.add(item)
+
+    if db.query(Project).filter(Project.organization_id == org_id).count() == 0:
+        project = Project(organization_id=org_id, name="Test Project", client_id=client.id, status="active")
+        db.add(project)
+        db.flush()
+    else:
+        project = db.query(Project).filter(Project.organization_id == org_id).first()
+        
+    if db.query(Task).filter(Task.organization_id == org_id).count() == 0:
+        task = Task(organization_id=org_id, title="Test Task", project_id=project.id, status="completed")
+        db.add(task)
+    if db.query(Revenue).filter(Revenue.organization_id == org_id).count() == 0:
+        rev = Revenue(organization_id=org_id, project_id=project.id, amount=1000.0, date=datetime.datetime.utcnow(), description="Sales")
+        db.add(rev)
+    db.commit()
+
 @pytest.fixture(autouse=True)
 def setup_dependencies():
     # Ensure gemini_service is registered in container since other tests might clear it
@@ -22,6 +62,19 @@ def setup_dependencies():
         container.register_singleton("gemini_service", service)
     # Force mock mode to avoid hitting live Gemini API rate limits in tests
     service.mock_mode = True
+
+    # Seed dynamic business data
+    db = TestingSessionLocal()
+    seed_business_data(db, MOCK_ORG_ID)
+    db.close()
+
+    # Set dependency overrides dynamically for this module
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_required_workspace_id] = override_get_required_workspace_id
+    
+    yield
 
 # Database Setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -75,11 +128,6 @@ def override_get_current_user():
 def override_get_required_workspace_id():
     return MOCK_ORG_ID
 
-
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
-app.dependency_overrides[get_current_user] = override_get_current_user
-app.dependency_overrides[get_required_workspace_id] = override_get_required_workspace_id
 
 client = TestClient(app)
 

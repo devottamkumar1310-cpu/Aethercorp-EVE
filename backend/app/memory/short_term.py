@@ -32,18 +32,23 @@ class ShortTermMemoryService:
         return session
 
     @classmethod
-    def add_message(cls, db: Session, session_id: int, role: str, content: str) -> ChatMessage:
+    def add_message(cls, db: Session, session_id: int, organization_id: Any, role: str, content: str) -> ChatMessage:
         """
         Appends a message to the chat session history.
         """
+        # Enforce tenant check
+        session = db.query(ConversationSession).filter(
+            ConversationSession.id == session_id,
+            ConversationSession.organization_id == organization_id
+        ).first()
+        if not session:
+            raise ValueError("Conversation session not found or unauthorized.")
+
         msg = ChatMessage(session_id=session_id, role=role, content=content)
         db.add(msg)
         
-        # Update session timestamp
-        session = db.query(ConversationSession).filter(ConversationSession.id == session_id).first()
-        if session:
-            import datetime
-            session.updated_at = datetime.datetime.utcnow()
+        import datetime
+        session.updated_at = datetime.datetime.utcnow()
             
         db.commit()
         db.refresh(msg)
@@ -51,10 +56,18 @@ class ShortTermMemoryService:
         return msg
 
     @classmethod
-    def get_formatted_history(cls, db: Session, session_id: int, limit: int = 15) -> str:
+    def get_formatted_history(cls, db: Session, session_id: int, organization_id: Any, limit: int = 15) -> str:
         """
         Retrieves the last N messages of a session formatted as a prompt context block.
         """
+        # Enforce tenant check
+        session = db.query(ConversationSession).filter(
+            ConversationSession.id == session_id,
+            ConversationSession.organization_id == organization_id
+        ).first()
+        if not session:
+            return ""
+
         messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id)\
                      .order_by(ChatMessage.created_at.desc()).limit(limit).all()
                      
