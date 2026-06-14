@@ -81,14 +81,36 @@ class ForecastingAgent:
             "clearly and concisely. Do not compute or invent any numbers."
         )
 
-        result: AgentAnalysisResult = await self.gemini_service.generate_structured_response(
-            prompt=prompt,
-            response_schema=AgentAnalysisResult,
-            system_instruction=system_instruction,
-            agent_name="forecasting"
-        )
-        
-        # Override the confidence score with EVE's deterministic score
-        result.confidence = confidence
-        
-        return result
+        try:
+            result: AgentAnalysisResult = await self.gemini_service.generate_structured_response(
+                prompt=prompt,
+                response_schema=AgentAnalysisResult,
+                system_instruction=system_instruction,
+                agent_name="forecasting"
+            )
+            result.confidence = confidence
+            return result
+        except Exception as e:
+            logger.warning(f"Forecasting Agent LLM analysis failed: {e}. Falling back to deterministic analysis.")
+            summary = (
+                f"Forecasting Fallback: Executed deterministic simulation for scenario '{sim_data.get('scenario')}' "
+                f"with parameter {parameter_val}. Expected Profit Impact: ${sim_data.get('expected_profit_change', 0.0):,.2f}, "
+                f"required capital: ${sim_data.get('required_capital', 0.0):,.2f}, available capital: ${sim_data.get('available_capital', 0.0):,.2f}, "
+                f"capital gap: ${sim_data.get('capital_gap', 0.0):,.2f}."
+            )
+            findings = [
+                f"Profit Impact: ${sim_data.get('expected_profit_change', 0.0):,.2f}",
+                f"Capital Required: ${sim_data.get('required_capital', 0.0):,.2f}",
+                f"Capital Gap: ${sim_data.get('capital_gap', 0.0):,.2f}"
+            ]
+            recommendations = [
+                "Maintain a capital buffer to cover potential gaps.",
+                "Optimize operational efficiency to mitigate volume/price changes."
+            ]
+            return AgentAnalysisResult(
+                agent="Forecasting Agent",
+                summary=summary,
+                findings=findings,
+                recommendations=recommendations,
+                confidence=confidence
+            )
