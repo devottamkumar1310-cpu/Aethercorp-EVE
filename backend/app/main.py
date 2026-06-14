@@ -51,6 +51,7 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("EVE Platform database initialized successfully.")
+        logger.info(f"CORS allowed origins configured: {allowed_origins}")
     except Exception as e:
         logger.critical(f"Failed to bootstrap database schemas: {e}", exc_info=e)
 
@@ -103,26 +104,75 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 
 
-# Global exception handler to prevent leaking internal stack traces / details
-from fastapi import Request, HTTPException
+# Global exception handlers for gateway error consistency
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.responses import JSONResponse
+
+def get_error_code(status_code: int) -> str:
+    if status_code == 400:
+        return "BAD_REQUEST"
+    elif status_code == 401:
+        return "UNAUTHORIZED"
+    elif status_code == 402:
+        return "PAYMENT_REQUIRED"
+    elif status_code == 403:
+        return "FORBIDDEN"
+    elif status_code == 404:
+        return "NOT_FOUND"
+    elif status_code == 422:
+        return "VALIDATION_ERROR"
+    elif status_code == 429:
+        return "RATE_LIMIT_EXCEEDED"
+    elif status_code >= 500:
+        return "INTERNAL_SERVER_ERROR"
+    return "ERROR"
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        headers=getattr(exc, "headers", None),
+        content={
+            "status": "error",
+            "message": exc.detail,
+            "code": get_error_code(exc.status_code),
+            "detail": exc.detail
+        }
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    msg = str(exc)
+    return JSONResponse(
+        status_code=422,
+        content={
+            "status": "error",
+            "message": msg,
+            "code": "VALIDATION_ERROR",
+            "detail": msg
+        }
+    )
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    # If it's already an HTTPException, let it bubble up to be handled by FastAPI's default handlers
-    if isinstance(exc, HTTPException):
-        raise exc
     logger.error(f"[GLOBAL UNHANDLED EXCEPTION] path={request.url.path} error={exc}", exc_info=exc)
+    msg = "An unexpected error occurred."
     return JSONResponse(
         status_code=500,
-        content={"detail": "An unexpected error occurred."}
+        content={
+            "status": "error",
+            "message": msg,
+            "code": "INTERNAL_SERVER_ERROR",
+            "detail": msg
+        }
     )
 
 
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability
 app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(organization.router)
@@ -135,6 +185,7 @@ app.include_router(activity.router)
 app.include_router(intelligence.router)
 app.include_router(executive.router)
 app.include_router(feedback.router)
+app.include_router(observability.router)
 
 
 from sqlalchemy.orm import Session

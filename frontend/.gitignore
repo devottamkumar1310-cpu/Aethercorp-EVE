@@ -57,3 +57,9 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 *.pem
+
+# Gemini / AI workspace
+.gemini/
+
+# Temporary files
+backend/scratch_validation.py

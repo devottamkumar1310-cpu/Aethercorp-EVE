@@ -42,7 +42,7 @@ class MemoryManager:
         logger.info(f"MemoryManager: compiling agent context (Session: {session_id}, Org: {organization_id})")
         
         # 1. Fetch short term chat logs
-        short_term_history = self.short_term.get_formatted_history(db, session_id, history_limit)
+        short_term_history = self.short_term.get_formatted_history(db, session_id, organization_id, history_limit)
 
         # 2. Fetch long term matching memories
         similar_entries = self.retrieval.search_similar_memories(
@@ -75,9 +75,9 @@ class MemoryManager:
         Records dialogue exchanges in short term, and extracts salient facts to save to vector memory.
         """
         # Save user message
-        self.short_term.add_message(db, session_id, "user", user_message)
+        self.short_term.add_message(db, session_id, organization_id, "user", user_message)
         # Save assistant message
-        self.short_term.add_message(db, session_id, "assistant", assistant_response)
+        self.short_term.add_message(db, session_id, organization_id, "assistant", assistant_response)
 
         # Automatically extract salient facts and store in vector memory
         # In a fully autonomous loop, we would call LLM to extract facts.

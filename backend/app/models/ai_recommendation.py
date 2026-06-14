@@ -22,6 +22,8 @@ class AIRecommendation(Base):
     opportunity_factors = Column(JSON, nullable=False)
     
     confidence_level = Column(Float, nullable=False)
+    expected_outcome = Column(Text, nullable=True)
+    actual_outcome = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     # Relationships

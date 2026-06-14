@@ -55,7 +55,9 @@ export async function sendExecutiveChat(
   message: string, 
   token: string, 
   conversationId?: string, 
-  mode: string = "smart"
+  mode: string = "smart",
+  developerMode?: boolean,
+  language?: string
 ): Promise<ExecutiveChatResponse> {
   const res = await fetch(`${API_BASE_URL}/api/executive/chat`, {
     method: "POST",
@@ -63,7 +65,9 @@ export async function sendExecutiveChat(
     body: JSON.stringify({
       question: message,
       conversation_id: conversationId || null,
-      mode
+      mode,
+      language: language || "en",
+      developer_mode: developerMode !== undefined ? developerMode : null
     })
   });
   if (!res.ok) {

@@ -22,14 +22,14 @@ def get_dashboard(
     """
     if not workspace_id:
         return {
+            "top_3_actions": [],
             "inventory_risk_score": 0.0,
             "dead_stock_items": [],
             "stockout_predictions": [],
             "reorder_recommendations": [],
             "pricing_recommendations": [],
             "estimated_profit_impact": 0.0,
-            "cash_flow_forecast": None,
-            "top_3_actions": []
+            "cash_flow_forecast": None
         }
 
     try:
@@ -45,28 +45,64 @@ def get_dashboard(
             qty = sum(rec.get("recommended_reorder", 0) if isinstance(rec, dict) else rec for rec in metrics["reorder_recommendations"])
             top_actions.append({
                 "action": f"Reorder {qty} units immediately",
+                "why": "Safety stock levels are violated. Replenish immediately to prevent stockouts and revenue loss.",
+                "explanation": "Safety stock levels are violated. Replenish immediately to prevent stockouts and revenue loss.",
+                "expected_impact": "Prevent stockout revenue loss",
                 "impact": "Prevent stockout revenue loss",
+                "confidence": 92,
                 "confidence_score": 92
             })
         if metrics.get("pricing_recommendations"):
             first_rec = metrics["pricing_recommendations"][0]
             top_actions.append({
                 "action": f"Adjust {first_rec.get('sku')} price to ${first_rec.get('recommended_price')}",
+                "why": f"Optimize listing price for {first_rec.get('sku')} based on price elasticity analysis to capture maximum profit margin.",
+                "explanation": f"Optimize listing price for {first_rec.get('sku')} based on price elasticity analysis to capture maximum profit margin.",
+                "expected_impact": "Margin optimization",
                 "impact": "Margin optimization",
+                "confidence": 88,
                 "confidence_score": 88
             })
         if metrics.get("dead_stock_items"):
             top_actions.append({
                 "action": f"Liquidate {len(metrics['dead_stock_items'])} dead stock SKUs",
+                "why": "Free up locked working capital and reduce carrying costs by discounting slow-moving or dead apparel stock.",
+                "explanation": "Free up locked working capital and reduce carrying costs by discounting slow-moving or dead apparel stock.",
+                "expected_impact": "Free up warehouse capital",
                 "impact": "Free up warehouse capital",
+                "confidence": 95,
                 "confidence_score": 95
             })
         if not top_actions:
-            top_actions = [{"action": "Maintain current operations", "impact": "Stable", "confidence_score": 99}]
+            top_actions = [{
+                "action": "Maintain current operations", 
+                "why": "All inventory, margins, and sales metrics are within safe operating thresholds.",
+                "explanation": "All inventory, margins, and sales metrics are within safe operating thresholds.",
+                "expected_impact": "Stable", 
+                "impact": "Stable", 
+                "confidence": 99,
+                "confidence_score": 99
+            }]
             
-        metrics["top_3_actions"] = top_actions[:3]
+        # Reorder response prioritizing actions over metrics
+        ordered_response = {
+            "top_3_actions": top_actions[:3],
+            "inventory_risk_score": metrics.get("inventory_risk_score"),
+            "dead_stock_items": metrics.get("dead_stock_items"),
+            "stockout_predictions": metrics.get("stockout_predictions"),
+            "reorder_recommendations": metrics.get("reorder_recommendations"),
+            "pricing_recommendations": metrics.get("pricing_recommendations"),
+            "estimated_profit_impact": metrics.get("estimated_profit_impact"),
+            "inventory_capital_requirements": metrics.get("inventory_capital_requirements"),
+            "revenue_forecast": metrics.get("revenue_forecast"),
+            "risk_forecast": metrics.get("risk_forecast"),
+            "required_capital": metrics.get("required_capital"),
+            "available_capital": metrics.get("available_capital"),
+            "capital_gap": metrics.get("capital_gap"),
+            "cash_flow_forecast": metrics.get("cash_flow_forecast")
+        }
         
-        return metrics
+        return ordered_response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
