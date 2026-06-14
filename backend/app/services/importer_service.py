@@ -152,6 +152,7 @@ class ImporterService:
             product = products_cache.get(sku)
             if not product:
                 product = Product(
+                    id=uuid.uuid4(),
                     organization_id=org_id,
                     sku=sku,
                     name=name,
@@ -160,7 +161,6 @@ class ImporterService:
                     unit_cost=20.0
                 )
                 db.add(product)
-                db.flush()
                 products_cache[sku] = product
             else:
                 product.name = name
@@ -169,11 +169,11 @@ class ImporterService:
             inventory_item = inventory_cache.get(product.id)
             if not inventory_item:
                 inventory_item = InventoryItem(
+                    id=uuid.uuid4(),
                     organization_id=org_id,
                     product_id=product.id
                 )
                 db.add(inventory_item)
-                db.flush()
                 inventory_cache[product.id] = inventory_item
                 
             inventory_item.stock_on_hand = stock
@@ -336,6 +336,7 @@ class ImporterService:
             product = products_cache.get(sku)
             if not product:
                 product = Product(
+                    id=uuid.uuid4(),
                     organization_id=org_id,
                     sku=sku,
                     name=f"Product {sku}",
@@ -344,7 +345,6 @@ class ImporterService:
                     unit_cost=20.0
                 )
                 db.add(product)
-                db.flush()
                 products_cache[sku] = product
                 
             price = product.selling_price

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
 from app.database import get_db
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, verify_workspace_admin
 from app.models.profile import Profile
 from app.models.executive_conversation import ExecutiveMessage, ExecutiveConversation
 from app.models.system_error import SystemError
@@ -28,7 +28,8 @@ class FrontendErrorRequest(BaseModel):
 def get_costs(
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    admin_check: Any = Depends(verify_workspace_admin)
 ):
     try:
         today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -125,7 +126,8 @@ def get_errors(
     limit: int = 50,
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    admin_check: Any = Depends(verify_workspace_admin)
 ):
     errors = ErrorMonitoringService.get_errors(db, skip=skip, limit=limit, org_id=workspace_id)
     return [
@@ -145,7 +147,8 @@ def get_errors(
 def get_performance(
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    admin_check: Any = Depends(verify_workspace_admin)
 ):
     try:
         messages = db.query(ExecutiveMessage).join(ExecutiveConversation).filter(
@@ -214,7 +217,8 @@ def get_performance(
 def get_analytics(
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    admin_check: Any = Depends(verify_workspace_admin)
 ):
     try:
         # 1. Onboarding Status (Active data entities in workspace)

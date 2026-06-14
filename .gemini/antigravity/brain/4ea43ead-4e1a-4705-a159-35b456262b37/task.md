@@ -1,0 +1,22 @@
+# EVE Phase 6 (AI COO) Task List
+
+- `[x]` Milestone 1: Recommendation Tracking Database Setup
+  - `[x]` Modify `AIRecommendation` model to add `expected_outcome` and `actual_outcome`
+  - `[x]` Update `save_recommendation` in `memory_service.py` to populate these new fields
+- `[x]` Milestone 2: Forecasting Methodology & Capital Gap Engines
+  - `[x]` Create `app/services/forecasting_engine.py` with MA, WMA, and Exponential Smoothing
+  - `[x]` Update `SimulationEngine` methods with capital gap math (required, available, gap)
+  - `[x]` Expose assumptions and deterministic confidence scores in all simulations
+- `[x]` Milestone 3: Explicit Risk Engine & Dashboard Expositions
+  - `[x]` Implement `stockout_risk`, `cash_risk`, `inventory_risk`, and `margin_risk` in `AnalyticsService`
+  - `[x]` Expand `/api/dashboard` payload to return new forecast panel metrics
+  - `[x]` Add confidence score and explanation to each item in `top_3_actions`
+- `[x]` Milestone 4: Scenario Routing, Executive Board, & Deterministic Actions
+  - `[x]` Update `Planner.create_plan` regex classifiers to support precise scenario phrasings
+  - `[x]` Create service-level `ForecastingAgent` for the Executive Board
+  - `[x]` Integrate `ForecastingAgent` into `ExecutiveBoard` router selection and keyword heuristics
+  - `[x]` Implement deterministic priorities (Top 3 Actions) generator in `ExecutiveBoard`
+  - `[x]` Add `GET /api/executive/scenarios` route to return execution history
+- `[x]` Milestone 5: Verification & Testing
+  - `[x]` Create `test_phase6_coo.py` asserting all requirements and scenarios
+  - `[x]` Run test suite to verify 100% green tests
