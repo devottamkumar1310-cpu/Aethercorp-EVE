@@ -93,6 +93,7 @@ def init_db():
         from app.models.ai_recommendation import AIRecommendation
         from app.models.system_error import SystemError
         from app.models.audit_log import AuditLog
+        from app.models.document import ProcessedDocument
         
         # Check if pgvector is supported by the connection before building schemas
 

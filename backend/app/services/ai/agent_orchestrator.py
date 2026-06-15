@@ -26,7 +26,8 @@ class AgentOrchestrator:
         conversation_id: Optional[uuid.UUID] = None,
         user_id: Optional[uuid.UUID] = None,
         language: Optional[str] = "en",
-        developer_mode: Optional[bool] = None
+        developer_mode: Optional[bool] = None,
+        document_id: Optional[uuid.UUID] = None
     ) -> ExecutiveMessage:
         import datetime
         import time
@@ -37,6 +38,21 @@ class AgentOrchestrator:
         from app.config import settings
         
         logger = logging.getLogger("eve.services.ai.agent_orchestrator")
+
+        if document_id:
+            from app.models.document import ProcessedDocument
+            doc = db.query(ProcessedDocument).filter(ProcessedDocument.id == document_id).first()
+            if doc and doc.status == "success":
+                # Create a concise summary of the document context to inject
+                quality_val = doc.quality_assessment.get("quality_score", 100.0) if doc.quality_assessment else 100.0
+                context_intro = (
+                    f"[CONTEXT: USER ASKED A CONTEXTUAL QUESTION REGARDING DOCUMENT '{doc.filename}' "
+                    f"(Type: {doc.document_type}, Quality Score: {quality_val})]\n"
+                    f"Document Extracted Content:\n{doc.extracted_data}\n"
+                    f"Document COO Strategic Insights:\n{doc.coo_insights}\n\n"
+                    f"User Question: "
+                )
+                question = context_intro + question
 
         # 1. Route intent deterministically
         intent = ConversationLayer.classify_intent(question)

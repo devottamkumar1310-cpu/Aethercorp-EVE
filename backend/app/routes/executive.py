@@ -59,7 +59,8 @@ async def chat(
             conversation_id=body.conversation_id,
             user_id=current_user.id,
             language=body.language,
-            developer_mode=body.developer_mode
+            developer_mode=body.developer_mode,
+            document_id=body.document_id
         )
         
         # Check if we should enforce founder mode filtering
