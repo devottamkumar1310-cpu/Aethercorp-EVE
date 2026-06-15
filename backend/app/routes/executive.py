@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user, get_required_workspace_id
 from app.models.profile import Profile
+from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
 from app.schemas.executive import (
     ExecutiveChatRequest,
     ExecutiveChatResponse,
@@ -12,7 +13,10 @@ from app.schemas.executive import (
     BusinessGoalCreate,
     BusinessGoalResponse,
     DailyBriefResponse,
-    AIRecommendationResponse
+    AIRecommendationResponse,
+    ExecutiveConversationResponse,
+    ExecutiveConversationDetailResponse,
+    ExecutiveConversationUpdate
 )
 from app.services.ai.agent_orchestrator import AgentOrchestrator
 from app.services.ai.finance_agent import FinanceAgent
@@ -255,3 +259,71 @@ def get_scenarios(
             "results": f.metrics.get("results")
         })
     return results
+
+
+@router.get("/conversations", response_model=List[ExecutiveConversationResponse])
+def get_conversations(
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    return db.query(ExecutiveConversation).filter(
+        ExecutiveConversation.organization_id == workspace_id
+    ).order_by(ExecutiveConversation.created_at.desc()).all()
+
+
+@router.get("/conversations/{conversation_id}", response_model=ExecutiveConversationDetailResponse)
+def get_conversation_detail(
+    conversation_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    conversation = db.query(ExecutiveConversation).filter(
+        ExecutiveConversation.id == conversation_id,
+        ExecutiveConversation.organization_id == workspace_id
+    ).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    return conversation
+
+
+@router.patch("/conversations/{conversation_id}", response_model=ExecutiveConversationResponse)
+def rename_conversation(
+    conversation_id: uuid.UUID,
+    body: ExecutiveConversationUpdate,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    conversation = db.query(ExecutiveConversation).filter(
+        ExecutiveConversation.id == conversation_id,
+        ExecutiveConversation.organization_id == workspace_id
+    ).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    conversation.title = body.title
+    db.commit()
+    db.refresh(conversation)
+    return conversation
+
+
+@router.delete("/conversations/{conversation_id}")
+def delete_conversation(
+    conversation_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    conversation = db.query(ExecutiveConversation).filter(
+        ExecutiveConversation.id == conversation_id,
+        ExecutiveConversation.organization_id == workspace_id
+    ).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    db.delete(conversation)
+    db.commit()
+    return {"status": "success", "message": "Conversation successfully deleted"}
+

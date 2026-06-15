@@ -104,3 +104,31 @@ class AIRecommendationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ExecutiveConversationResponse(BaseModel):
+    id: UUID
+    organization_id: UUID
+    title: str
+    created_at: datetime
+    message_count: int
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ExecutiveConversationDetailResponse(BaseModel):
+    id: UUID
+    organization_id: UUID
+    title: str
+    created_at: datetime
+    messages: List[MessageResponse]
+
+    class Config:
+        from_attributes = True
+
+
+class ExecutiveConversationUpdate(BaseModel):
+    title: str
+

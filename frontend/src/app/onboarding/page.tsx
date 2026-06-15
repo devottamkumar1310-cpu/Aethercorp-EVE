@@ -32,7 +32,7 @@ export default function OnboardingPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.organization_id) {
-            router.push("/dashboard");
+            router.push("/dashboard/eve");
           }
         }
       } catch (e) {
@@ -70,7 +70,7 @@ export default function OnboardingPage() {
         throw new Error(errData.detail || "Failed to create workspace");
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard/eve");
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
   };
 
   const handleSkip = () => {
-    router.push("/dashboard");
+    router.push("/dashboard/eve");
   };
 
   return (

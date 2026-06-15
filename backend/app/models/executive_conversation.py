@@ -19,6 +19,16 @@ class ExecutiveConversation(Base):
     organization = relationship("Organization", back_populates="executive_conversations")
     messages = relationship("ExecutiveMessage", back_populates="conversation", cascade="all, delete-orphan", order_by="ExecutiveMessage.created_at")
 
+    @property
+    def message_count(self) -> int:
+        return len(self.messages)
+
+    @property
+    def updated_at(self):
+        if self.messages:
+            return self.messages[-1].created_at
+        return self.created_at
+
 
 class ExecutiveMessage(Base):
     """

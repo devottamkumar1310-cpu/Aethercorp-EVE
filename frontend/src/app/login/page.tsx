@@ -41,7 +41,7 @@ export default function LoginPage() {
       } catch (e) {
         console.error("Sync failed", e);
       }
-      router.push("/dashboard");
+      router.push("/dashboard/eve");
     }
   };
 

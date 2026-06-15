@@ -264,17 +264,24 @@ class AgentOrchestrator:
                     ExecutiveConversation.organization_id == org_id,
                     ExecutiveConversation.id == conversation_id
                 ).first()
-                if not conversation:
-                    conversation = ExecutiveConversation(
-                        organization_id=org_id,
-                        title=question[:50] or "Executive Consultation"
-                    )
-                    db.add(conversation)
-                    db.flush()
             else:
+                conversation = None
+
+            if not conversation:
+                # Generate a lightweight title from the first user message
+                cleaned = re.sub(r'[^\w\s]', '', question)
+                words = cleaned.split()
+                if words:
+                    title_words = [w.capitalize() for w in words[:5]]
+                    title = " ".join(title_words)
+                    if len(words) > 5:
+                        title += "..."
+                else:
+                    title = "Executive Consultation"
+
                 conversation = ExecutiveConversation(
                     organization_id=org_id,
-                    title=question[:50] or "Executive Consultation"
+                    title=title
                 )
                 db.add(conversation)
                 db.flush()

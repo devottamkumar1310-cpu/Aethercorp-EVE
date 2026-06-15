@@ -5,7 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { 
   sendExecutiveChat, 
   listGoals, 
-  getRecommendations 
+  getRecommendations,
+  listConversations,
+  getConversation,
+  renameConversation,
+  deleteConversation
 } from "@/services/executiveService";
 import { 
   fetchHealth, 
@@ -40,7 +44,11 @@ import {
   HelpCircle, 
   ArrowRight,
   BookOpen,
-  Mic
+  Mic,
+  Plus,
+  Trash2,
+  Edit,
+  MessageSquare
 } from "lucide-react";
 
 // Markdown parser helpers
@@ -110,6 +118,66 @@ function isGreetingMessage(text: string): boolean {
   return greetingRegex.test(cleaned) || hindiGreeting.test(cleaned);
 }
 
+interface GroupedConversations {
+  [key: string]: any[];
+}
+
+function groupConversationsByDate(conversations: any[]): GroupedConversations {
+  const groups: GroupedConversations = {
+    "Today": [],
+    "Yesterday": [],
+    "Previous 7 Days": [],
+    "Older": []
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  conversations.forEach(c => {
+    const updatedDate = new Date(c.updated_at || c.created_at);
+    updatedDate.setHours(0, 0, 0, 0);
+
+    if (updatedDate.getTime() === today.getTime()) {
+      groups["Today"].push(c);
+    } else if (updatedDate.getTime() === yesterday.getTime()) {
+      groups["Yesterday"].push(c);
+    } else if (updatedDate.getTime() >= sevenDaysAgo.getTime()) {
+      groups["Previous 7 Days"].push(c);
+    } else {
+      groups["Older"].push(c);
+    }
+  });
+
+  return Object.keys(groups).reduce((acc, key) => {
+    if (groups[key].length > 0) {
+      acc[key] = groups[key];
+    }
+    return acc;
+  }, {} as GroupedConversations);
+}
+
+function getRelativeTimeString(dateString: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
 export default function EVECoocommandCenter() {
   const [sessionToken, setSessionToken] = useState("");
   const [loading, setLoading] = useState(true);
@@ -131,9 +199,14 @@ export default function EVECoocommandCenter() {
     "Pricing optimizations"
   ]);
 
+  // Collapsible panels states
+  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+  const [isDashboardPanelOpen, setIsDashboardPanelOpen] = useState(true);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
+
   // Resizable panel widths (percentages)
   const [leftWidth, setLeftWidth] = useState(22);
-  const [chatWidth, setChatWidth] = useState(43);
+  const [rightWidth, setRightWidth] = useState(30);
 
   // Loading stage tracker
   const [loadingStage, setLoadingStage] = useState(0);
@@ -200,17 +273,15 @@ export default function EVECoocommandCenter() {
     document.addEventListener("mouseup", stopDrag);
   };
 
-  const handleChatMouseDown = (e: React.MouseEvent) => {
+  const handleRightMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     const startX = e.clientX;
-    const startWidth = chatWidth;
+    const startWidth = rightWidth;
     const doDrag = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX;
       const deltaPercent = (deltaX / window.innerWidth) * 100;
-      const newWidth = Math.max(30, Math.min(55, startWidth + deltaPercent));
-      if (100 - leftWidth - newWidth >= 20) {
-        setChatWidth(newWidth);
-      }
+      const newWidth = Math.max(20, Math.min(45, startWidth - deltaPercent));
+      setRightWidth(newWidth);
     };
     const stopDrag = () => {
       document.removeEventListener("mousemove", doDrag);
@@ -251,15 +322,21 @@ export default function EVECoocommandCenter() {
     scrollChatToBottom();
   }, [messages, chatLoading]);
 
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
   // Initial dashboard hydration
   const hydrateDashboard = async (token: string) => {
     try {
-      const [healthData, riskData, oppData, trendData, goalsData] = await Promise.all([
+      const [healthData, riskData, oppData, trendData, goalsData, convsData] = await Promise.all([
         fetchHealth(token),
         fetchRisks(token),
         fetchOpportunities(token),
         fetchTrends(token),
-        listGoals(token)
+        listGoals(token),
+        listConversations(token).catch(() => [])
       ]);
 
       if (healthData) {
@@ -270,6 +347,7 @@ export default function EVECoocommandCenter() {
       if (oppData && oppData.opportunities) setOpportunities(oppData.opportunities.slice(0, 3));
       setHealthTrends(trendData);
       setGoals(goalsData);
+      if (convsData) setConversations(convsData);
     } catch (err) {
       console.error("Hydration failed:", err);
     }
@@ -294,6 +372,89 @@ export default function EVECoocommandCenter() {
     }
     initialize();
   }, []);
+
+  const handleSelectConversation = async (id: string) => {
+    if (!sessionToken) return;
+    try {
+      const detail = await getConversation(id, sessionToken);
+      setConversationId(detail.id);
+      
+      if (detail.messages && detail.messages.length > 0) {
+        const mapped = detail.messages.map((m: any) => ({
+          id: m.id,
+          role: m.role,
+          content: m.content,
+          agent_data: m.agent_data,
+          created_at: m.created_at
+        }));
+        setMessages(mapped);
+        
+        // Auto select last assistant message reasoning if present
+        const assistantMsgs = mapped.filter((m: any) => m.role === "assistant");
+        if (assistantMsgs.length > 0) {
+          const lastAssistant = assistantMsgs[assistantMsgs.length - 1];
+          if (lastAssistant.agent_data) {
+            setSelectedReasoning(lastAssistant.agent_data);
+            setIsInsightsOpen(true);
+          } else {
+            setSelectedReasoning(null);
+            setIsInsightsOpen(false);
+          }
+        } else {
+          setSelectedReasoning(null);
+          setIsInsightsOpen(false);
+        }
+      } else {
+        setMessages([]);
+        setSelectedReasoning(null);
+        setIsInsightsOpen(false);
+      }
+    } catch (err) {
+      console.error("Load conversation failed:", err);
+    }
+  };
+
+  const handleStartNewChat = () => {
+    setConversationId(undefined);
+    setSelectedReasoning(null);
+    setIsInsightsOpen(false);
+    setMessages([
+      {
+        id: "welcome-msg",
+        role: "assistant",
+        content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Memory Manager or request a Daily Brief. What analysis shall we run?",
+        created_at: new Date().toISOString()
+      }
+    ]);
+  };
+
+  const handleRenameSession = async (id: string) => {
+    if (!editingTitle.trim() || !sessionToken) return;
+    try {
+      await renameConversation(id, editingTitle.trim(), sessionToken);
+      setConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, title: editingTitle.trim() } : c))
+      );
+      setEditingSessionId(null);
+      setEditingTitle("");
+    } catch (err) {
+      console.error("Rename failed:", err);
+    }
+  };
+
+  const handleDeleteSession = async (id: string) => {
+    if (!sessionToken) return;
+    try {
+      await deleteConversation(id, sessionToken);
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (conversationId === id) {
+        handleStartNewChat();
+      }
+      setDeleteConfirmId(null);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  };
 
   const handleSendChat = async (messageText: string) => {
     if (!messageText.trim() || !sessionToken || chatLoading) return;
@@ -321,6 +482,8 @@ export default function EVECoocommandCenter() {
         developerMode,
         language
       );
+      
+      const isNewChat = !conversationId;
       setConversationId(response.conversation_id);
 
       const assistantMsg: MessageResponse = response.message;
@@ -329,6 +492,16 @@ export default function EVECoocommandCenter() {
       // Automatically populate Right Reasoning panel with returned agent data
       if (assistantMsg.agent_data) {
         setSelectedReasoning(assistantMsg.agent_data as AgentAnalysisResult);
+        setIsInsightsOpen(true);
+      } else {
+        setSelectedReasoning(null);
+        setIsInsightsOpen(false);
+      }
+
+      // Reload conversations list to show new auto-title or updated sorting
+      if (isNewChat && sessionToken) {
+        const convs = await listConversations(sessionToken).catch(() => []);
+        setConversations(convs);
       }
     } catch (err: any) {
       console.error("Chat send failed:", err);
@@ -476,18 +649,144 @@ export default function EVECoocommandCenter() {
 
   return (
     <div className="bg-slate-950 text-slate-100 min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-y-auto xl:overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans">
-      
+      {/* Column 0: Conversation History Sidebar */}
+      <div className={`w-full xl:h-full bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col gap-3 flex-shrink-0 xl:overflow-hidden transition-all duration-300 ${
+        isHistoryOpen ? "xl:w-64 p-4 opacity-100" : "xl:w-0 p-0 border-0 overflow-hidden opacity-0 pointer-events-none"
+      }`}>
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <MessageSquare size={14} className="text-indigo-400" /> Chat History
+          </h3>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleStartNewChat}
+              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold border border-slate-800 hover:border-slate-700 cursor-pointer"
+              title="Start New Chat"
+            >
+              <Plus size={12} /> New Chat
+            </button>
+            <button
+              onClick={() => setIsHistoryOpen(false)}
+              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-[10px]"
+              title="Collapse Panel"
+            >
+              &lt;&lt;
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-grow overflow-y-auto space-y-4 pr-0.5 scrollbar-none">
+          {Object.entries(groupConversationsByDate(conversations)).map(([groupName, groupConvs]) => (
+            <div key={groupName} className="space-y-1.5">
+              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block px-1 mb-1">
+                {groupName}
+              </span>
+              {groupConvs.map((c) => {
+                const isActive = conversationId === c.id;
+                const isEditing = editingSessionId === c.id;
+                return (
+                  <div
+                    key={c.id}
+                    className={`group w-full p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between relative ${
+                      isActive
+                        ? "bg-indigo-600/10 text-indigo-200 border-indigo-500/30"
+                        : "bg-slate-950/45 text-slate-400 border-slate-800/60 hover:bg-slate-800/40 hover:text-slate-200"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-1 w-full">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onBlur={() => handleRenameSession(c.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleRenameSession(c.id);
+                            if (e.key === "Escape") setEditingSessionId(null);
+                          }}
+                          className="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs px-1.5 py-0.5 rounded outline-none"
+                          autoFocus
+                        />
+                      ) : (
+                        <button
+                          onClick={() => handleSelectConversation(c.id)}
+                          className="text-xs font-medium truncate flex-1 text-left leading-snug cursor-pointer block pr-14"
+                        >
+                          {c.title || "New Conversation"}
+                        </button>
+                      )}
+                      
+                      {/* Actions (visible on hover/active) */}
+                      {!isEditing && (
+                        <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-1 bg-slate-900/95 p-0.5 rounded border border-slate-800">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingSessionId(c.id);
+                              setEditingTitle(c.title || "");
+                            }}
+                            className="p-1 hover:text-indigo-400 text-slate-400 hover:bg-slate-800 rounded transition-all cursor-pointer"
+                            title="Rename Chat"
+                          >
+                            <Edit size={10} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmId(c.id);
+                            }}
+                            className="p-1 hover:text-rose-400 text-slate-400 hover:bg-slate-800 rounded transition-all cursor-pointer"
+                            title="Delete Chat"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-[8px] text-slate-500 mt-1 flex justify-between items-center">
+                      <span>
+                        {getRelativeTimeString(c.updated_at || c.created_at)}
+                      </span>
+                      {c.message_count !== undefined && c.message_count > 0 && (
+                        <span className="bg-slate-800 text-slate-450 px-1 py-0.2 rounded text-[7px] font-bold">
+                          {c.message_count} {c.message_count === 1 ? "msg" : "msgs"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+          {conversations.length === 0 && (
+            <p className="text-[10px] text-slate-550 italic text-center py-6">No previous conversations.</p>
+          )}
+        </div>
+      </div>
+
       {/* Left Column - System Health & Alerts */}
       <div 
-        className="w-full xl:h-full xl:overflow-y-auto pr-1 flex flex-col gap-4 scrollbar-thin flex-shrink-0"
-        style={isDesktop ? { width: `${leftWidth}%` } : undefined}
+        className={`w-full xl:h-full xl:overflow-y-auto pr-1 flex flex-col gap-4 scrollbar-thin flex-shrink-0 transition-all duration-300 ${
+          isDashboardPanelOpen ? "opacity-100" : "xl:w-0 opacity-0 overflow-hidden pointer-events-none p-0 border-0"
+        }`}
+        style={isDesktop && isDashboardPanelOpen ? { width: `${leftWidth}%` } : undefined}
       >
         {/* Health Score Box */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-lg relative overflow-hidden flex-shrink-0">
           <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl" />
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Brain size={14} className="text-indigo-400" /> Executive Dashboard
-          </h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Brain size={14} className="text-indigo-400" /> Executive Dashboard
+            </h3>
+            <button
+              onClick={() => setIsDashboardPanelOpen(false)}
+              className="p-0.5 hover:bg-slate-800 text-slate-500 hover:text-indigo-455 rounded-md transition-all cursor-pointer text-[10px] font-bold"
+              title="Collapse Panel"
+            >
+              &lt;&lt;
+            </button>
+          </div>
 
           <div className="flex items-center gap-4">
             <div className={`w-14 h-14 rounded-xl flex flex-col items-center justify-center border font-bold text-xl ${
@@ -587,7 +886,7 @@ export default function EVECoocommandCenter() {
                   : "text-slate-400 hover:text-slate-200"
               }`}
             >
-              <Lightbulb size={11} className="text-emerald-450" />
+              <Lightbulb size={11} className="text-emerald-455" />
               <span>Opportunities ({opportunities.length})</span>
             </button>
           </div>
@@ -604,7 +903,7 @@ export default function EVECoocommandCenter() {
                   </div>
                 ))}
                 {risks.length === 0 && (
-                  <p className="text-xs text-slate-500 italic text-center py-8">No active risks detected.</p>
+                  <p className="text-xs text-slate-550 italic text-center py-8">No active risks detected.</p>
                 )}
               </>
             ) : (
@@ -627,7 +926,7 @@ export default function EVECoocommandCenter() {
       </div>
 
       {/* Draggable Divider 1 */}
-      {isDesktop && (
+      {isDesktop && isDashboardPanelOpen && (
         <div 
           onMouseDown={handleLeftMouseDown}
           className="group w-1.5 hover:bg-indigo-600/40 active:bg-indigo-500/80 cursor-col-resize self-stretch transition-all duration-150 z-20 flex-shrink-0 flex items-center justify-center"
@@ -639,13 +938,21 @@ export default function EVECoocommandCenter() {
 
       {/* Middle Column - Multi-Turn EVE Command Center Chat */}
       <div 
-        className="w-full xl:h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex-shrink-0"
-        style={isDesktop ? { width: `${chatWidth}%` } : undefined}
+        className="w-full xl:h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex-1 min-w-[320px] transition-all duration-300"
       >
         
         {/* Conversational Header */}
         <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center justify-between z-10 flex-shrink-0">
           <div className="flex items-center gap-2.5">
+            {!isHistoryOpen && (
+              <button
+                onClick={() => setIsHistoryOpen(true)}
+                className="p-1 hover:bg-slate-800 text-slate-450 hover:text-indigo-400 rounded-lg transition-all border border-slate-800 cursor-pointer flex items-center gap-1 text-[10px]"
+                title="Show Chat History"
+              >
+                <MessageSquare size={12} /> History
+              </button>
+            )}
             <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/30">
               <Brain size={18} />
             </div>
@@ -653,11 +960,50 @@ export default function EVECoocommandCenter() {
               <h2 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
                 EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Active</span>
               </h2>
-              <p className="text-[10px] text-slate-400">Queries route automatically to COO, Finance & Operations agents</p>
+              <p className="text-[10px] text-slate-405">Queries route automatically to COO, Finance & Operations agents</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Panel Toggles */}
+            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 mr-2">
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                  isHistoryOpen 
+                    ? "bg-slate-800 text-indigo-400 font-bold" 
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+                title={isHistoryOpen ? "Hide Chat History" : "Show Chat History"}
+              >
+                <MessageSquare size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDashboardPanelOpen(!isDashboardPanelOpen)}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                  isDashboardPanelOpen 
+                    ? "bg-slate-800 text-indigo-400 font-bold" 
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+                title={isDashboardPanelOpen ? "Hide Executive Dashboard" : "Show Executive Dashboard"}
+              >
+                <Target size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsInsightsOpen(!isInsightsOpen)}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                  isInsightsOpen 
+                    ? "bg-slate-800 text-indigo-400 font-bold" 
+                    : "text-slate-500 hover:text-slate-350"
+                }`}
+                title={isInsightsOpen ? "Hide Executive Insights" : "Show Executive Insights"}
+              >
+                <Sparkles size={13} />
+              </button>
+            </div>
             {/* Language Selector */}
             <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
               <button
@@ -1150,9 +1496,9 @@ export default function EVECoocommandCenter() {
         </div>
  
         {/* Draggable Divider 2 */}
-        {isDesktop && (
+        {isDesktop && isInsightsOpen && (
           <div 
-            onMouseDown={handleChatMouseDown}
+            onMouseDown={handleRightMouseDown}
             className="group w-1.5 hover:bg-indigo-600/40 active:bg-indigo-500/80 cursor-col-resize self-stretch transition-all duration-150 z-20 flex-shrink-0 flex items-center justify-center"
             title="Drag to resize panels"
           >
@@ -1162,28 +1508,39 @@ export default function EVECoocommandCenter() {
  
         {/* Right Column - Deep Sub-Agent Reasoning & Confidence metrics */}
         <div 
-          className="w-full xl:h-full bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl flex-shrink-0"
-          style={isDesktop ? { width: `${100 - leftWidth - chatWidth}%` } : undefined}
+          className={`w-full xl:h-full bg-slate-900 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shadow-2xl flex-shrink-0 transition-all duration-300 ${
+            isInsightsOpen ? "opacity-100" : "xl:w-0 opacity-0 overflow-hidden pointer-events-none p-0 border-0"
+          }`}
+          style={isDesktop && isInsightsOpen ? { width: `${rightWidth}%` } : undefined}
         >
           
-          <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center gap-2 flex-shrink-0">
-            {developerMode ? (
-              <>
-                <Compass className="w-5 h-5 text-indigo-400" />
-                <div>
-                  <h2 className="text-sm font-bold text-slate-100">Deep Agent Reasoning</h2>
-                  <p className="text-[10px] text-slate-400">Sub-agent telemetry, margins, & weighted confidence</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5 text-indigo-400" />
-                <div>
-                  <h2 className="text-sm font-bold text-slate-100">Executive Insights</h2>
-                  <p className="text-[10px] text-slate-400">Synthesized priorities, core evidence, & projected impacts</p>
-                </div>
-              </>
-            )}
+          <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              {developerMode ? (
+                <>
+                  <Compass className="w-5 h-5 text-indigo-400" />
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-100">Deep Agent Reasoning</h2>
+                    <p className="text-[10px] text-slate-405">Sub-agent telemetry, margins, & weighted confidence</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 text-indigo-400" />
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-100">Executive Insights</h2>
+                    <p className="text-[10px] text-slate-405">Synthesized priorities, core evidence, & projected impacts</p>
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={() => setIsInsightsOpen(false)}
+              className="p-1 hover:bg-slate-800 text-slate-500 hover:text-indigo-455 rounded-md transition-all cursor-pointer text-[10px] font-bold"
+              title="Collapse Panel"
+            >
+              &gt;&gt;
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -1671,6 +2028,37 @@ export default function EVECoocommandCenter() {
         onClose={() => setIsRecommendationsOpen(false)} 
         token={sessionToken} 
       />
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-2">
+              <Trash2 size={24} />
+            </div>
+            <h3 className="text-base font-bold text-slate-100">Delete Conversation?</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Are you sure you want to delete this conversation? This will permanently erase the chat history and context.
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2 bg-slate-800 hover:bg-slate-750 text-slate-350 rounded-xl text-xs font-semibold cursor-pointer border border-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteSession(deleteConfirmId)}
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md shadow-rose-600/20"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
