@@ -25,6 +25,8 @@ import {
   Menu,
   Brain,
   MessageSquare,
+  Sun,
+  Moon,
 } from "lucide-react";
 import FeedbackModal from "@/components/business/FeedbackModal";
 
@@ -36,21 +38,30 @@ interface Workspace {
 }
 
 const navItems = [
-  { label: "MAIN", items: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true },
-    { href: "/dashboard/clients", label: "Clients", icon: Users },
-    { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
-    { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
-    { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
-    { href: "/dashboard/inventory", label: "Inventory", icon: Package },
-    { href: "/dashboard/activity", label: "Activity", icon: Activity },
-  ]},
-  { label: "INTELLIGENCE", items: [
-    { href: "/dashboard/eve", label: "AI COO", icon: Brain, isAI: true },
-  ]},
-  { label: "ACCOUNT", items: [
-    { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  ]},
+  {
+    label: "INTELLIGENCE",
+    items: [
+      { href: "/dashboard/eve", label: "AI Command Center", icon: Brain, isAI: true },
+    ],
+  },
+  {
+    label: "OPERATIONS",
+    items: [
+      { href: "/dashboard", label: "Operations Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/dashboard/clients", label: "Clients", icon: Users },
+      { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
+      { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
+      { href: "/dashboard/inventory", label: "Inventory", icon: Package },
+      { href: "/dashboard/activity", label: "Activity", icon: Activity },
+    ],
+  },
+  {
+    label: "SYSTEM",
+    items: [
+      { href: "/dashboard/settings", label: "Settings", icon: Settings },
+    ],
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -59,6 +70,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [profile, setProfile] = useState<any>(null);
   const [sessionToken, setSessionToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [loadingStage, setLoadingStage] = useState(0);
+  const [theme, setTheme] = useState("dark");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
@@ -70,6 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
 
+  // Load sidebar state on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebar_collapsed");
@@ -78,6 +92,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     }
   }, []);
+
+  // Theme Sync on Mount
+  useEffect(() => {
+    const activeTheme = localStorage.getItem("theme") || "dark";
+    setTheme(activeTheme);
+    if (activeTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const getThemePreference = (profileData?: any): string => {
+    if (profileData?.preferences?.theme) {
+      return profileData.preferences.theme;
+    }
+    if (profile?.preferences?.theme) {
+      return profile.preferences.theme;
+    }
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("theme") || "dark";
+    }
+    return "dark";
+  };
+
+  const setThemePreference = (newTheme: string) => {
+    setTheme(newTheme);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", newTheme);
+      if (newTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+    // Future integration point: update preferences table in backend if needed
+  };
 
   const toggleSidebar = () => {
     const next = !isSidebarCollapsed;
@@ -95,7 +146,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (profileRes.ok) setProfile(await profileRes.json());
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        setProfile(profileData);
+        
+        // Sync theme preference if available in profile data
+        const activeTheme = getThemePreference(profileData);
+        setTheme(activeTheme);
+        if (activeTheme === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      }
 
       const wsRes = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -122,10 +185,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     async function init() {
       const supabase = createClient();
+      setLoadingStage(1); // Authenticating
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push("/login"); return; }
       setSessionToken(session.access_token);
+      
+      setLoadingStage(2); // Loading Workspace
+      await new Promise(r => setTimeout(r, 450));
+      
       await loadWorkspacesAndProfile(session.access_token);
+      
+      setLoadingStage(3); // Loading Business Data
+      await new Promise(r => setTimeout(r, 450));
+      
+      setLoadingStage(4); // Preparing AI Executive
+      await new Promise(r => setTimeout(r, 500));
+      
       setLoading(false);
     }
     init();
@@ -176,17 +251,78 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl animate-pulse shadow-lg shadow-indigo-500/20">E</div>
-          <span className="text-sm font-medium text-slate-400">Loading Operations Workspace...</span>
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
+        <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-8 shadow-2xl space-y-6 animate-fade-in">
+          <div className="flex justify-center mb-2">
+            <div className="h-14 w-14 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl animate-pulse shadow-lg shadow-indigo-500/30">
+              EVE
+            </div>
+          </div>
+          <div className="text-center space-y-1">
+            <h3 className="text-lg font-bold tracking-tight">Initializing EVE AI OS</h3>
+            <p className="text-xs text-slate-400">Setting up executive operations context</p>
+          </div>
+          
+          <div className="space-y-3 pt-2">
+            {/* Stage 1 */}
+            <div className="flex items-center gap-3 text-sm transition-all duration-300">
+              {loadingStage >= 2 ? (
+                <span className="text-indigo-400 font-bold">✓</span>
+              ) : (
+                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+              )}
+              <span className={loadingStage >= 2 ? "text-slate-400 line-through decoration-indigo-500/50" : "text-white font-medium"}>
+                Authenticating session
+              </span>
+            </div>
+            
+            {/* Stage 2 */}
+            <div className="flex items-center gap-3 text-sm transition-all duration-300">
+              {loadingStage >= 3 ? (
+                <span className="text-indigo-400 font-bold">✓</span>
+              ) : loadingStage === 2 ? (
+                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+              ) : (
+                <div className="h-2 w-2 rounded-full bg-slate-800 ml-1" />
+              )}
+              <span className={loadingStage >= 3 ? "text-slate-400 line-through decoration-indigo-500/50" : loadingStage === 2 ? "text-white font-medium animate-pulse" : "text-slate-500"}>
+                Loading active workspace
+              </span>
+            </div>
+            
+            {/* Stage 3 */}
+            <div className="flex items-center gap-3 text-sm transition-all duration-300">
+              {loadingStage >= 4 ? (
+                <span className="text-indigo-400 font-bold">✓</span>
+              ) : loadingStage === 3 ? (
+                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+              ) : (
+                <div className="h-2 w-2 rounded-full bg-slate-800 ml-1" />
+              )}
+              <span className={loadingStage >= 4 ? "text-slate-400 line-through decoration-indigo-500/50" : loadingStage === 3 ? "text-white font-medium animate-pulse" : "text-slate-500"}>
+                Loading business metrics & datasets
+              </span>
+            </div>
+            
+            {/* Stage 4 */}
+            <div className="flex items-center gap-3 text-sm transition-all duration-300">
+              {loadingStage === 4 ? (
+                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+              ) : (
+                <div className="h-2 w-2 rounded-full bg-slate-800 ml-1" />
+              )}
+              <span className={loadingStage === 4 ? "text-indigo-300 font-semibold animate-pulse" : "text-slate-500"}>
+                Preparing AI Executive portal...
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans">
+    <div className="min-h-screen bg-background text-foreground flex font-sans transition-colors duration-200">
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div
@@ -197,32 +333,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-all duration-200 ${
+        className={`fixed top-0 left-0 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 flex flex-col transition-all duration-200 ${
           isSidebarCollapsed ? "w-16" : "w-64"
         } ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Sidebar Brand */}
-        <div className={`flex items-center border-b border-slate-800 transition-all ${
+        <div className={`flex items-center border-b border-sidebar-border transition-all ${
           isSidebarCollapsed ? "px-3 py-5 justify-center" : "gap-3 px-5 py-5"
         }`}>
           <div
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/dashboard/eve")}
             className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
           >
             EVE
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col min-w-0 animate-fade-in">
-              <span className="font-bold text-slate-100 text-xs tracking-tight leading-none">EVE PORTAL</span>
+              <span className="font-bold text-slate-100 dark:text-slate-200 text-xs tracking-tight leading-none">EVE PORTAL</span>
               <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
             </div>
           )}
           
           <button
             onClick={toggleSidebar}
-            className="ml-auto p-1 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors hidden md:block"
+            className="ml-auto p-1 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-sidebar-accent transition-colors hidden md:block"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
@@ -241,11 +377,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {navItems.map((group) => (
             <div key={group.label}>
               {!isSidebarCollapsed ? (
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest px-3 mb-2">
+                <p className="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest px-3 mb-2">
                   {group.label}
                 </p>
               ) : (
-                <div className="h-px bg-slate-800 my-4" />
+                <div className="h-px bg-sidebar-border my-4" />
               )}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
@@ -271,7 +407,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           ? "opacity-45 cursor-not-allowed text-slate-600"
                           : active
                           ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
-                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-sidebar-accent"
                       } ${
                         (item as any).isAI && !active && !isItemDisabled
                           ? "hover:bg-indigo-900/30 hover:text-indigo-300"
@@ -292,9 +428,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* Sidebar Footer: Active Workspace */}
-        <div className="px-4 py-4 border-t border-slate-800 space-y-2">
+        <div className="px-4 py-4 border-t border-sidebar-border space-y-2">
           <div 
-            className={`flex items-center rounded-lg bg-slate-800/60 transition-all ${
+            className={`flex items-center rounded-lg bg-sidebar-accent/60 transition-all ${
               isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-2 py-2"
             }`}
             title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
@@ -309,7 +445,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <button
             onClick={() => setIsFeedbackOpen(true)}
             title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
-            className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-slate-800 transition-all border border-slate-800 hover:border-slate-700 bg-slate-900/40 ${
+            className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
               isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-3 py-2"
             }`}
           >
@@ -324,12 +460,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
       }`}>
         {/* Top Header */}
-        <header className="sticky top-0 z-20 w-full bg-slate-900 border-b border-slate-800 text-white">
+        <header className="sticky top-0 z-20 w-full bg-sidebar border-b border-sidebar-border text-sidebar-foreground transition-colors duration-200">
           <div className="px-4 py-3 flex items-center justify-between">
             {/* Mobile hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-sidebar-accent rounded-lg transition-colors"
             >
               <Menu size={18} />
             </button>
@@ -339,11 +475,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Right: Workspace Switcher + User */}
             <div className="flex items-center gap-3">
+              {/* Theme Toggler */}
+              <button
+                onClick={() => setThemePreference(theme === "dark" ? "light" : "dark")}
+                className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent rounded-lg transition-all"
+                title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+              >
+                {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+
               {/* Workspace Selector */}
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-slate-200 transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-sidebar-accent/80 hover:bg-sidebar-accent border border-sidebar-border rounded-lg text-sm font-medium text-sidebar-foreground transition-all"
                 >
                   <Building2 size={14} className="text-indigo-400" />
                   <span className="max-w-[140px] truncate">{activeWorkspace?.name || "Select Workspace"}</span>
@@ -353,8 +498,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {isDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-60 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
-                      <div className="p-3 border-b border-slate-700">
+                    <div className="absolute right-0 mt-2 w-60 bg-sidebar border border-sidebar-border rounded-xl shadow-xl z-50 overflow-hidden text-sidebar-foreground">
+                      <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
                         <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">My Workspaces</span>
                       </div>
                       <div className="py-1 max-h-48 overflow-y-auto">
@@ -362,8 +507,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <button
                             key={ws.id}
                             onClick={() => handleSwitchWorkspace(ws.id)}
-                            className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-slate-700 transition-colors ${
-                              ws.id === activeWorkspaceId ? "text-indigo-400 font-bold" : "text-slate-300"
+                            className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-sidebar-accent transition-colors ${
+                              ws.id === activeWorkspaceId ? "text-indigo-400 font-bold" : "text-sidebar-foreground"
                             }`}
                           >
                             <span className="truncate">{ws.name}</span>
@@ -374,7 +519,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <div className="px-4 py-3 text-sm text-slate-500 italic">No active workspaces</div>
                         )}
                       </div>
-                      <div className="p-2 border-t border-slate-700">
+                      <div className="p-2 border-t border-sidebar-border">
                         <button
                           onClick={() => { setIsDropdownOpen(false); setIsCreateModalOpen(true); }}
                           className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all"
@@ -387,17 +532,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               </div>
 
-              <div className="h-5 w-px bg-slate-700" />
+              <div className="h-5 w-px bg-sidebar-border" />
 
               {/* Profile */}
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-xs font-semibold text-slate-200 leading-none">{profile?.full_name || "Guest"}</span>
+                <span className="text-xs font-semibold text-slate-200 dark:text-slate-300 leading-none">{profile?.full_name || "Guest"}</span>
                 <span className="text-[10px] text-slate-500 mt-0.5">{profile?.email || ""}</span>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
+                className="p-2 text-slate-400 hover:text-red-400 hover:bg-sidebar-accent rounded-lg transition-all"
                 title="Sign Out"
               >
                 <LogOut size={16} />
@@ -407,17 +552,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-background text-foreground transition-colors duration-200">
           {!activeWorkspaceId && pathname !== "/dashboard/settings" ? (
             <div className="flex-1 p-6 max-w-2xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[70vh]">
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden p-8 text-center space-y-6">
+              <div className="bg-card text-card-foreground rounded-2xl border border-border shadow-xl overflow-hidden p-8 text-center space-y-6">
                 <div className="flex justify-center">
                   <div className="h-16 w-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center animate-bounce-slow">
                     <Sparkles size={32} />
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900">Welcome to EVE</h2>
-                <p className="text-slate-500 text-sm max-w-md mx-auto">
+                <h2 className="text-2xl font-bold text-foreground">Welcome to EVE</h2>
+                <p className="text-muted-foreground text-sm max-w-md mx-auto">
                   Create your first workspace to begin tracking business operations and using executive intelligence features.
                 </p>
 
@@ -433,7 +578,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     value={newWorkspaceName}
                     onChange={(e) => setNewWorkspaceName(e.target.value)}
                     placeholder="e.g. Acme Clothing"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
                   />
                   <button
                     type="submit"
@@ -454,12 +599,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Create Workspace Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-950 flex items-center gap-2">
+          <div className="w-full max-w-md bg-card text-card-foreground rounded-2xl shadow-2xl border border-border overflow-hidden">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Building2 className="text-indigo-600" size={20} /> Create New Workspace
               </h3>
-              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 rounded-lg hover:bg-slate-100 text-slate-400">
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 rounded-lg hover:bg-sidebar-accent text-slate-400">
                 <X size={18} />
               </button>
             </div>
@@ -478,11 +623,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   value={newWorkspaceName}
                   onChange={(e) => setNewWorkspaceName(e.target.value)}
                   placeholder="e.g. Acme Fashion Corp"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-semibold">
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 border border-border text-foreground hover:bg-sidebar-accent rounded-lg text-sm font-semibold">
                   Cancel
                 </button>
                 <button type="submit" disabled={createLoading || !newWorkspaceName.trim()} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50">

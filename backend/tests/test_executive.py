@@ -341,3 +341,60 @@ def test_executive_chat_fallback_intent_routing():
         gemini_service.mock_mode = original_mock_mode
 
 
+def test_conversations_chat_history_crud():
+    client = TestClient(app)
+    
+    # 1. Send first message to start conversation and trigger auto-titling
+    res = client.post("/api/executive/chat", json={
+        "question": "What is our current financial health score?",
+        "mode": "smart"
+    })
+    assert res.status_code == 200
+    data = res.json()
+    conv_id = data["conversation_id"]
+    title = data["title"]
+    
+    # Verify lightweight title: "What is our current financial health score?"
+    # First 5 words capitalized, punctuation stripped, and "..." appended since word count > 5
+    assert title == "What Is Our Current Financial..."
+    
+    # 2. Get list of conversations
+    res_list = client.get("/api/executive/conversations")
+    assert res_list.status_code == 200
+    conversations = res_list.json()
+    assert len(conversations) > 0
+    target_conv = next(c for c in conversations if str(c["id"]) == conv_id)
+    assert target_conv["message_count"] == 2
+    assert "updated_at" in target_conv
+    
+    # 3. Get detailed messages of this conversation
+    res_detail = client.get(f"/api/executive/conversations/{conv_id}")
+    assert res_detail.status_code == 200
+    detail = res_detail.json()
+    assert detail["title"] == "What Is Our Current Financial..."
+    assert len(detail["messages"]) == 2  # User message and Assistant response
+    assert detail["messages"][0]["role"] == "user"
+    assert detail["messages"][1]["role"] == "assistant"
+    
+    # 4. Rename the conversation
+    res_rename = client.patch(f"/api/executive/conversations/{conv_id}", json={
+        "title": "Renamed Budget Review"
+    })
+    assert res_rename.status_code == 200
+    assert res_rename.json()["title"] == "Renamed Budget Review"
+    
+    # Verify name updated in detail API
+    res_detail_updated = client.get(f"/api/executive/conversations/{conv_id}")
+    assert res_detail_updated.json()["title"] == "Renamed Budget Review"
+    
+    # 5. Delete the conversation
+    res_delete = client.delete(f"/api/executive/conversations/{conv_id}")
+    assert res_delete.status_code == 200
+    assert res_delete.json()["status"] == "success"
+    
+    # Verify it returns 404 now
+    res_detail_404 = client.get(f"/api/executive/conversations/{conv_id}")
+    assert res_detail_404.status_code == 404
+
+
+

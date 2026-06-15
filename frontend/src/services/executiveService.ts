@@ -137,3 +137,49 @@ export async function getRecommendations(
   }
   return res.json();
 }
+
+export async function listConversations(token: string): Promise<any[]> {
+  const res = await fetch(`${API_BASE_URL}/api/executive/conversations`, {
+    method: "GET",
+    headers: getHeaders(token)
+  });
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to fetch conversations");
+  }
+  return res.json();
+}
+
+export async function getConversation(conversationId: string, token: string): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
+    method: "GET",
+    headers: getHeaders(token)
+  });
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to load conversation history");
+  }
+  return res.json();
+}
+
+export async function renameConversation(conversationId: string, title: string, token: string): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
+    method: "PATCH",
+    headers: getHeaders(token, "application/json"),
+    body: JSON.stringify({ title })
+  });
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to rename conversation");
+  }
+  return res.json();
+}
+
+export async function deleteConversation(conversationId: string, token: string): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
+    method: "DELETE",
+    headers: getHeaders(token)
+  });
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to delete conversation");
+  }
+  return res.json();
+}
+
