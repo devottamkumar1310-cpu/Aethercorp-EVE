@@ -221,6 +221,8 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
                     {brief.opportunities.length === 0 && (
                       <p className="text-sm text-slate-500 italic">No immediate growth opportunities detected.</p>
                     )}
+                  </div>
+                </div>
               </div>
 
               {/* Recent Activity */}

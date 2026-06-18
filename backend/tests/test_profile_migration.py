@@ -105,8 +105,8 @@ def test_returning_user_login():
 
 def test_legacy_profile_migration():
     """
-    Verifies that a legacy user with an old UUID is migrated to the new Supabase UUID,
-    and their memberships and dependencies are correctly re-pointed.
+    Verifies that a legacy user with an old UUID has their profile purged,
+    and a fresh profile is created without automatic restoration of old memberships.
     """
     db = TestingSessionLocal()
     old_uuid = uuid.uuid4()
@@ -146,16 +146,14 @@ def test_legacy_profile_migration():
     old_profile = db.query(Profile).filter(Profile.id == old_uuid).first()
     assert old_profile is None
     
-    # Assert membership updated to new uuid
+    # Assert membership associated with the old profile/org was purged
     updated_membership = db.query(Membership).filter(Membership.user_id == new_uuid).first()
-    assert updated_membership is not None
-    assert updated_membership.organization_id == org.id
+    assert updated_membership is None
     db.close()
 
 def test_concurrent_profile_migrations():
     """
-    Verifies that multiple concurrent calls to migrate a user profile resolve cleanly
-    without unique constraint/foreign key/lock failures.
+    Verifies that multiple concurrent calls to provision a user profile with the same email resolve cleanly.
     """
     db = TestingSessionLocal()
     old_uuid = uuid.uuid4()

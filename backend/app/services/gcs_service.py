@@ -11,6 +11,8 @@ class GCSService:
 
     @classmethod
     def _get_client(cls):
+        if not settings.GCS_BUCKET_NAME:
+            return None
         if cls._client is None:
             try:
                 from google.cloud import storage
