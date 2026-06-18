@@ -1,81 +1,174 @@
-# EVE — Your AI Chief Operating Officer
+# EVE - AI Business Operating System
 
-EVE is an AI-powered Chief Operating Officer that transforms business data into actionable forecasts, operational insights, and strategic decisions.
+> An AI-powered executive operating system that helps founders manage operations, documents, analytics, and business decisions from a single workspace.
 
-## Features
+## Why EVE?
 
-- Authentication & Workspace Management
-- Multi-Tenant SaaS Architecture
-- Inventory Intelligence
-- Sales Analytics
-- Demand Forecasting
-- Executive Decision Support
+Small and growing businesses often operate across spreadsheets, invoices, inventory systems, CRMs, accounting tools, and messaging platforms.
 
-## Tech Stack
+EVE brings these workflows together into a unified AI-powered workspace.
 
-### Frontend
-- Next.js
-- TypeScript
-- Tailwind CSS
+Instead of manually analyzing reports and documents, founders can ask EVE questions and receive actionable business insights.
 
-### Backend
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
+---
 
-### Authentication
-- Supabase Auth
+## Core Features
 
-### AI
-- Gemini
+### AI COO Workspace
 
-## Roadmap
+* Multi-agent executive intelligence
+* Strategic recommendations
+* Executive conversation history
+* Business decision support
 
-### Phase 1
-Authentication & Workspace Foundation
+### Document Intelligence
 
-### Phase 2
-Data Hub & CSV Upload
+* Invoice processing
+* Purchase order analysis
+* Receipt extraction
+* Validation and quality scoring
+* AI-powered document insights
 
-### Phase 3
-Executive Intelligence Dashboard
+### Business Operations
 
-### Phase 4
-AI COO Agent
+* Client management
+* Project tracking
+* Task management
+* Inventory monitoring
+* Financial tracking
 
-### Phase 5
-Forecasting & Scenario Simulation
+### Executive Intelligence
 
+* Business health scoring
+* Risk detection
+* Opportunity identification
+* Executive daily brief
+
+### User Ownership & Lifecycle
+
+* Multi-tenant workspaces
+* Account deletion
+* Workspace deletion
+* Demo environments
+* Tenant isolation
+
+---
+
+## Architecture Overview
+
+Frontend:
+
+* Next.js 15
+* React
+* Tailwind CSS
+* Shadcn UI
+
+Backend:
+
+* FastAPI
+* SQLAlchemy
+* PostgreSQL (Supabase)
+
+AI Layer:
+
+* Multi-Agent COO Architecture
+* Document Intelligence Engine
+* Executive Intelligence Engine
+
+Infrastructure:
+
+* Vercel
+* Google Cloud Run
+* Google Cloud Storage
+
+---
 
 ## Project Structure
 
-```text
-aethercorp-eve/
+Aethercorp-EVE/
+
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── dashboard/
+│   │   │   ├── login/
+│   │   │   ├── onboarding/
+│   │   │   └── settings/
+│   │   │
+│   │   ├── components/
+│   │   ├── services/
+│   │   └── types/
 │
-├── frontend/         # Next.js web interface
-├── backend/          # FastAPI backend services
-├── docs/             # Documentation
+├── backend/
+│   ├── app/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   │   ├── ai/
+│   │   │   ├── business_intelligence/
+│   │   │   └── document_intelligence/
+│   │   │
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   └── core/
+│   │
+│   ├── tests/
+│   └── alembic/
+│
+├── docs/
+│   ├── architecture/
+│   ├── audits/
+│   ├── releases/
+│   └── testing/
+│
 ├── README.md
-└── .gitignore
-```
+├── CHANGELOG.md
+└── ROADMAP.md
 
-## Setup & Local Development
+---
 
-### 1. Backend Setup
-Navigate to the `backend` directory, install Python dependencies, configure `.env` values, and run the service using `app.main:app`:
-```bash
-cd backend
-pip install -r requirements.txt
-# Copy .env.production and configure local values as .env
-uvicorn app.main:app --reload
-```
-The API Swagger documentation will load at: `http://127.0.0.1:8000/docs`
+## Current Status
 
-### 2. Frontend Setup
-Navigate to the `frontend` directory, install packages, and boot the Next.js development server:
-```bash
+Version: v0.10.0-rc1
+
+Status:
+
+* Private Beta Candidate
+* Core Systems Operational
+* User Testing Phase
+
+---
+
+## Roadmap
+
+Completed:
+
+* Multi-Tenant Architecture
+* Business Operations Engine
+* AI COO Workspace
+* Document Intelligence
+* Executive Dashboard
+* Conversation History
+* User Lifecycle Management
+
+Upcoming:
+
+* Cloud Run Migration
+* Performance Optimization
+* Executive Forecasting
+* Public Beta
+
+---
+
+## Local Development
+
+Frontend
+
 cd frontend
 npm install
 npm run dev
-```
-Open `http://localhost:3000` to interact with the EVE AI COO portal.
+
+Backend
+
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
