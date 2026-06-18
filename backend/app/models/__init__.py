@@ -14,6 +14,11 @@ from .activity_log import ActivityLog
 from .intelligence_snapshot import IntelligenceSnapshot
 from .feedback import FeedbackSubmission
 from .audit_log import AuditLog
+from .document import ProcessedDocument
+from .executive_memory import BusinessGoal
+from .executive_conversation import ExecutiveConversation, ExecutiveMessage
+from .ai_recommendation import AIRecommendation
+from .system_error import SystemError
 
 # This ensures all models are imported and registered with SQLAlchemy's Base.metadata
 

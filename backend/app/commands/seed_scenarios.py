@@ -11,7 +11,7 @@ from typing import Tuple
 from sqlalchemy import text
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-
+ 
 from app.database import SessionLocal
 from app.services.importer_service import ImporterService
 from app.models.profile import Profile
@@ -21,6 +21,9 @@ from app.models.client import Client
 from app.models.project import Project
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
+from app.models.document import ProcessedDocument
+from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
+from app.models.ai_recommendation import AIRecommendation
 
 DEV_ORG_ID = uuid.UUID("ea337dee-5c68-41ae-bb08-45afe771db8a")
 DIPTI_ORG_ID = uuid.UUID("dbbb6f95-f4e7-4bb4-b8c3-b776aca126cf")
@@ -274,6 +277,183 @@ def seed_scenario(db, org_id, is_healthy=True):
     
     # Seed ledger and clients
     seed_finance_and_clients(db, org_id, is_healthy)
+
+def seed_demo_workspace_data(db, org_id):
+    """
+    Seeds a fully preloaded demo workspace including inventory, finance,
+    sample documents, chat conversations, and recommendations.
+    """
+    # 1. Seed standard healthy inventory and ledger scenario
+    seed_scenario(db, org_id, is_healthy=True)
+
+    # 2. Seed Sample Documents
+    doc1 = ProcessedDocument(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        filename="supplier_invoice_cotton.pdf",
+        content_type="application/pdf",
+        file_size=12543,
+        status="completed",
+        document_type="Purchase Invoice",
+        classification_confidence=0.98,
+        extracted_data={
+            "invoice_number": "INV-2026-0001",
+            "invoice_date": "2026-06-14",
+            "supplier_name": "Premium Cotton Textiles Ltd",
+            "customer_name": "Aether Apparel",
+            "items": [
+                {
+                    "product_name": "Premium Cotton Roll (Black)",
+                    "sku": "FABRIC-COTTON-01",
+                    "quantity": 100,
+                    "unit_price": 25.0
+                }
+            ],
+            "tax": 250.0,
+            "total_amount": 2750.0
+        },
+        quality_assessment={
+            "quality_score": 95.0,
+            "issues": []
+        },
+        coo_insights={
+            "summary": "Purchase invoice for FABRIC-COTTON-01 processed successfully. Unit cost of $25.0 is in line with supplier agreements. Margin impact is minimal given D2C target pricing of $85.0.",
+            "risks": [],
+            "opportunities": [
+                {"description": "Establish volume discounts on FABRIC-COTTON-01 if ordering > 500 rolls", "value_potential": 1250}
+            ],
+            "recommendations": [
+                "Approve payment for INV-2026-0001 before 2026-07-14 to capture 2% early payment discount."
+            ]
+        },
+        file_path="uploads/demo_invoice.pdf"
+    )
+    
+    doc2 = ProcessedDocument(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        filename="june_sales_report.csv",
+        content_type="text/csv",
+        file_size=4892,
+        status="completed",
+        document_type="Sales Report",
+        classification_confidence=0.99,
+        extracted_data={
+            "sales_records": [
+                {"sku": "TSHIRT-CLASSIC", "quantity": 120, "date": "2026-06-14", "unit_price": 25.0, "revenue": 3000.0}
+            ]
+        },
+        quality_assessment={
+            "quality_score": 98.0,
+            "issues": []
+        },
+        coo_insights={
+            "summary": "Classic Tee (TSHIRT-CLASSIC) sales volume surged by 15% week-over-week. Inventory levels are fast approaching the safety stock threshold.",
+            "risks": [
+                {"description": "Potential stockout of TSHIRT-CLASSIC within 12 days if current sales velocity persists.", "impact_level": "high"}
+            ],
+            "opportunities": [],
+            "recommendations": [
+                "Trigger immediate reorder of 500 units of TSHIRT-CLASSIC to prevent inventory gap."
+            ]
+        },
+        file_path="uploads/demo_sales.csv"
+    )
+    db.add_all([doc1, doc2])
+    db.flush()
+
+    # 3. Seed Sample Conversations
+    conv1 = ExecutiveConversation(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        title="Strategic Q&A on Cash Flow"
+    )
+    db.add(conv1)
+    db.flush()
+    
+    msg1_1 = ExecutiveMessage(
+        id=uuid.uuid4(),
+        conversation_id=conv1.id,
+        role="user",
+        content="How is our cash flow looking for the next 30 days?",
+        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+    )
+    msg1_2 = ExecutiveMessage(
+        id=uuid.uuid4(),
+        conversation_id=conv1.id,
+        role="assistant",
+        content="Based on our current ledger, we have $48,000 available capital and $12,000 in upcoming rent & logistics overhead. Revenues from Season Rollout Project 1 are expected to bring in $25,000, leaving us with a healthy capital surplus of $61,000. No immediate cash flow risks detected.",
+        agent_data={
+            "reasoning_summary": "Synthesized available balances, projects timeline, and overhead logs.",
+            "data_used": ["Revenues", "Expenses", "Projects"],
+            "risk_factors": [],
+            "opportunity_factors": ["Project Rollout Payments"],
+            "confidence_level": 0.98,
+            "agent_sources": ["finance"]
+        },
+        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=2) + datetime.timedelta(seconds=30)
+    )
+    db.add_all([msg1_1, msg1_2])
+
+    conv2 = ExecutiveConversation(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        title="Inventory Optimization Strategy"
+    )
+    db.add(conv2)
+    db.flush()
+
+    msg2_1 = ExecutiveMessage(
+        id=uuid.uuid4(),
+        conversation_id=conv2.id,
+        role="user",
+        content="What are the top reorder priorities for Aether Apparel?",
+        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+    )
+    msg2_2 = ExecutiveMessage(
+        id=uuid.uuid4(),
+        conversation_id=conv2.id,
+        role="assistant",
+        content="Our primary bottleneck is TSHIRT-CLASSIC. Stock on hand is currently 80 units, and our lead time from TextileCorp is 7 days. At our current average D2C sales velocity of 20 units/day, we will experience a stockout in 4 days. I recommend placing an immediate purchase order for 500 units of Premium Cotton rolls (FABRIC-COTTON-01) to support replenishing manufacturing lines.",
+        agent_data={
+            "reasoning_summary": "Calculated current sales velocity, safety stock limits, and lead times.",
+            "data_used": ["InventoryItem (TSHIRT-CLASSIC)", "Sales Records"],
+            "risk_factors": ["Stockout of bestseller TSHIRT-CLASSIC"],
+            "opportunity_factors": ["Bulk fabric pricing optimization"],
+            "confidence_level": 0.95,
+            "agent_sources": ["operations", "coo"]
+        },
+        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1) + datetime.timedelta(seconds=30)
+    )
+    db.add_all([msg2_1, msg2_2])
+
+    # 4. Seed Sample AI Recommendations
+    rec1 = AIRecommendation(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        agent_source="coo",
+        recommendation="Trigger immediate reorder of 500 units of Classic Tee (TSHIRT-CLASSIC) fabric rolls to prevent stockout.",
+        reasoning_summary="Current stock on hand (80 units) will support only 4 days of sales, while the supplier lead time is 7 days.",
+        data_used=["InventoryItem (TSHIRT-CLASSIC)", "Sales Records"],
+        risk_factors=["Revenue loss of ~$12,500 due to stockout"],
+        opportunity_factors=["Optimize logistics cost by bundling shipments"],
+        confidence_level=0.95,
+        expected_outcome="Maintain uninterrupted D2C sales operations."
+    )
+    rec2 = AIRecommendation(
+        id=uuid.uuid4(),
+        organization_id=org_id,
+        agent_source="finance",
+        recommendation="Approve payment for invoice INV-2026-0001 early to capture 2% terms discount.",
+        reasoning_summary="Paying before 2026-07-14 saves $55.0 on cotton rolls invoice with no adverse cash flow impact.",
+        data_used=["ProcessedDocument (INV-2026-0001)"],
+        risk_factors=["Late fees if delayed beyond 30 days"],
+        opportunity_factors=["Capture 2% early settlement discount"],
+        confidence_level=0.98,
+        expected_outcome="Save $55.0 on textile vendor costs."
+    )
+    db.add_all([rec1, rec2])
+    db.commit()
 
 def main():
     db = SessionLocal()

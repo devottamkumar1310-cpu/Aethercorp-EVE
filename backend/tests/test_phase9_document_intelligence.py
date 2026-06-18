@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
+from app.main import app as api_app
 from app.database import Base, get_db
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
@@ -37,18 +37,27 @@ def override_get_db():
     finally:
         db_session.close()
 
+import app.routes.document_intelligence
+
 @pytest.fixture(autouse=True, scope="module")
 def manage_dependency_overrides():
     from app.core.security import verify_supabase_token, get_current_user_and_tenant, get_current_user, get_required_workspace_id
-    saved_overrides = app.dependency_overrides.copy()
+    saved_overrides = api_app.dependency_overrides.copy()
     
     for dep in [get_db, get_current_user, get_required_workspace_id, verify_supabase_token, get_current_user_and_tenant]:
-        app.dependency_overrides.pop(dep, None)
+        api_app.dependency_overrides.pop(dep, None)
         
-    app.dependency_overrides[get_db] = override_get_db
+    api_app.dependency_overrides[get_db] = override_get_db
+    
+    # Patch SessionLocal for async background tasks in tests
+    old_session_local = app.routes.document_intelligence.SessionLocal
+    app.routes.document_intelligence.SessionLocal = TestingSessionLocal
+    
     yield
-    app.dependency_overrides.clear()
-    app.dependency_overrides.update(saved_overrides)
+    
+    app.routes.document_intelligence.SessionLocal = old_session_local
+    api_app.dependency_overrides.clear()
+    api_app.dependency_overrides.update(saved_overrides)
 
 @pytest.fixture(scope="module")
 def seeded_data():
@@ -119,7 +128,7 @@ def get_headers(user_id: uuid.UUID, email: str, org_id: uuid.UUID) -> dict:
     }
 
 def test_document_classification_and_extraction(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock Purchase Invoice PDF
@@ -128,11 +137,18 @@ def test_document_classification_and_extraction(seeded_data):
     assert resp.status_code == status.HTTP_201_CREATED
     
     data = resp.json()
-    assert data["status"] == "success"
-    assert data["document_type"] == "Purchase Invoice"
-    assert "extracted_data" in data
-    assert data["extracted_data"]["invoice_number"] == "INV-2026-0001"
-    assert data["coo_insights"] != ""
+    assert data["status"] == "uploaded"
+    doc_id = data["id"]
+
+    # Check status transitions to completed in detail view
+    detail_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
+    assert detail_resp.status_code == status.HTTP_200_OK
+    detail_data = detail_resp.json()
+    assert detail_data["status"] == "completed"
+    assert detail_data["document_type"] == "Purchase Invoice"
+    assert "extracted_data" in detail_data
+    assert detail_data["extracted_data"]["invoice_number"] == "INV-2026-0001"
+    assert detail_data["coo_insights"] != ""
 
     # Verify inventory was updated
     db = TestingSessionLocal()
@@ -153,7 +169,7 @@ def test_document_classification_and_extraction(seeded_data):
     db.close()
 
 def test_purchase_order_ingestion(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock Purchase Order PO image
@@ -162,9 +178,16 @@ def test_purchase_order_ingestion(seeded_data):
     assert resp.status_code == status.HTTP_201_CREATED
     
     data = resp.json()
-    assert data["status"] == "success"
-    assert data["document_type"] == "Purchase Order"
-    assert data["extracted_data"]["po_number"] == "PO-2026-8899"
+    assert data["status"] == "uploaded"
+    doc_id = data["id"]
+
+    # Check details for success
+    detail_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
+    assert detail_resp.status_code == status.HTTP_200_OK
+    detail_data = detail_resp.json()
+    assert detail_data["status"] == "completed"
+    assert detail_data["document_type"] == "Purchase Order"
+    assert detail_data["extracted_data"]["po_number"] == "PO-2026-8899"
     
     # Verify PO inventory updates
     db = TestingSessionLocal()
@@ -177,7 +200,7 @@ def test_purchase_order_ingestion(seeded_data):
     db.close()
 
 def test_expense_receipt_ingestion(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock Receipt image
@@ -186,8 +209,15 @@ def test_expense_receipt_ingestion(seeded_data):
     assert resp.status_code == status.HTTP_201_CREATED
     
     data = resp.json()
-    assert data["status"] == "success"
-    assert data["document_type"] == "Receipt"
+    assert data["status"] == "uploaded"
+    doc_id = data["id"]
+
+    # Check details for success
+    detail_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
+    assert detail_resp.status_code == status.HTTP_200_OK
+    detail_data = detail_resp.json()
+    assert detail_data["status"] == "completed"
+    assert detail_data["document_type"] == "Receipt"
     
     # Verify expense record added to DB
     db = TestingSessionLocal()
@@ -200,27 +230,36 @@ def test_expense_receipt_ingestion(seeded_data):
     db.close()
 
 def test_validation_duplicate_invoice(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock duplicate Invoice PDF
     file_payload = {"file": ("invoice_duplicate.pdf", b"%PDF-1.4 mock content", "application/pdf")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
-    # Duplicate reduces quality score below 50, triggering 422 Unprocessable Entity
-    assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-    assert "validation issues detected" in resp.json()["detail"].lower()
+    assert resp.status_code == status.HTTP_201_CREATED
+    
+    doc_id = resp.json()["id"]
+    detail_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
+    detail_data = detail_resp.json()
+    assert detail_data["status"] == "failure"
+    assert "validation issues detected" in detail_data["error_message"].lower()
 
 def test_validation_negative_value(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock negative values invoice PDF
     file_payload = {"file": ("invoice_negative.pdf", b"%PDF-1.4 mock content", "application/pdf")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
-    assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert resp.status_code == status.HTTP_201_CREATED
+    
+    doc_id = resp.json()["id"]
+    detail_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
+    detail_data = detail_resp.json()
+    assert detail_data["status"] == "failure"
 
 def test_invalid_file_types(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload txt file (unsupported format)
@@ -229,7 +268,7 @@ def test_invalid_file_types(seeded_data):
     assert resp.status_code == status.HTTP_415_UNSUPPORTED_MEDIA_TYPE
 
 def test_file_size_limit(seeded_data):
-    client = TestClient(app)
+    client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Generate large payload exceeding 10MB limit
