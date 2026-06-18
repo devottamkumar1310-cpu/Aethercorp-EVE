@@ -76,6 +76,13 @@ export interface DailyBriefResponse {
   }>;
   summary: string;
   recommendations: string[];
+  urgent_actions?: string[];
+  recent_activity?: Array<{
+    id: string;
+    action: string;
+    description?: string;
+    created_at?: string;
+  }>;
 }
 
 export interface AIRecommendationResponse {

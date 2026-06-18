@@ -27,6 +27,7 @@ import {
   MessageSquare,
   Sun,
   Moon,
+  FileText,
 } from "lucide-react";
 import FeedbackModal from "@/components/business/FeedbackModal";
 
@@ -42,6 +43,7 @@ const navItems = [
     label: "INTELLIGENCE",
     items: [
       { href: "/dashboard/eve", label: "AI Command Center", icon: Brain, isAI: true },
+      { href: "/dashboard/documents", label: "Document Hub", icon: FileText, isAI: true },
     ],
   },
   {

@@ -59,7 +59,8 @@ async def chat(
             conversation_id=body.conversation_id,
             user_id=current_user.id,
             language=body.language,
-            developer_mode=body.developer_mode
+            developer_mode=body.developer_mode,
+            document_id=body.document_id
         )
         
         # Check if we should enforce founder mode filtering
@@ -123,13 +124,47 @@ async def daily_brief(
         risks_data = detect_risks(db, workspace_id)
         opportunities_data = detect_opportunities(db, workspace_id)
         
+        # Calculate urgent actions
+        urgent_actions = []
+        for risk in risks_data.get("risks", []):
+            if risk.get("impact_level") == "high":
+                urgent_actions.append(f"Mitigate risk: {risk.get('description')}")
+        
+        try:
+            from app.services.analytics_service import AnalyticsService
+            metrics = AnalyticsService.get_dashboard_metrics(db, workspace_id)
+            if metrics.get("reorder_recommendations"):
+                urgent_actions.append("Reorder safety stock immediately to prevent D2C stockout.")
+            if metrics.get("pricing_recommendations"):
+                first_rec = metrics["pricing_recommendations"][0]
+                urgent_actions.append(f"Adjust pricing for SKU {first_rec.get('sku')} to optimize margin.")
+        except Exception:
+            pass
+            
+        if not urgent_actions:
+            urgent_actions.append("No critical alerts. Maintain current operating strategy.")
+
+        # Calculate recent activity
+        from app.services.activity_service import ActivityService
+        activities = ActivityService.get_activities(db, workspace_id, limit=5)
+        recent_activity = []
+        for act in activities:
+            recent_activity.append({
+                "id": str(act.id),
+                "action": act.action,
+                "description": act.description,
+                "created_at": act.created_at.isoformat() if act.created_at else None
+            })
+
         return DailyBriefResponse(
             health_score=health.get("score", 50.0),
             health_status=health.get("status", "warning"),
             risks=risks_data.get("risks", []),
             opportunities=opportunities_data.get("opportunities", []),
             summary=coo_result.summary,
-            recommendations=health.get("recommendations", [])
+            recommendations=health.get("recommendations", []),
+            urgent_actions=urgent_actions,
+            recent_activity=recent_activity
         )
     except Exception as e:
         err_str = str(e)
@@ -169,13 +204,34 @@ async def daily_brief(
                 f"Operational metrics have been processed locally. Please review the listed risks and opportunities for active items."
             )
             
+            # Fallback urgent actions and activity
+            urgent_actions = []
+            for r in risks:
+                if r.get("impact_level") == "high":
+                    urgent_actions.append(f"Mitigate risk: {r.get('description')}")
+            if not urgent_actions:
+                urgent_actions.append("Verify local warehouse and inventory catalog consistency.")
+                
+            from app.services.activity_service import ActivityService
+            activities = ActivityService.get_activities(db, workspace_id, limit=5)
+            recent_activity = []
+            for act in activities:
+                recent_activity.append({
+                    "id": str(act.id),
+                    "action": act.action,
+                    "description": act.description,
+                    "created_at": act.created_at.isoformat() if act.created_at else None
+                })
+
             return DailyBriefResponse(
                 health_score=health.get("score", 50.0),
                 health_status=health.get("status", "warning"),
                 risks=risks,
                 opportunities=opportunities,
                 summary=summary,
-                recommendations=recommendations
+                recommendations=recommendations,
+                urgent_actions=urgent_actions,
+                recent_activity=recent_activity
             )
         except Exception as fallback_err:
             logger.critical(f"Daily brief fallback failed: {fallback_err}", exc_info=True)

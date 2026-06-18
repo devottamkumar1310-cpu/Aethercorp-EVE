@@ -132,60 +132,44 @@ def get_current_user(
                     # Check if another concurrent request already migrated it
                     profile = db.query(Profile).filter(Profile.id == user_id).first()
                     if profile:
-                        logger.info("Profile already migrated by concurrent request.")
+                        logger.info("Profile already exists for this user ID.")
                         return profile
                     
                     if old_id == user_id:
                         return existing_profile
 
-                    logger.info(f"Migrating profile ID from {old_id} to {user_id} for email {email}")
+                    # Purge the orphaned profile and all its data, then create fresh
+                    logger.info(f"Found orphaned profile {old_id} for email {email}. Purging and creating fresh profile.")
                     try:
-                        from sqlalchemy import text
-                        from app.models.organization import Membership
-                        from app.models.task import Task
-                        from app.models.activity_log import ActivityLog
-                        from sqlalchemy.exc import IntegrityError
-
-                        # 1. Update the email of the old profile temporarily to free up the unique constraint
-                        temp_email = f"migrated_{old_id}_{email}"
-                        existing_profile.email = temp_email
-                        db.flush()
-
-                        # 2. Create the new profile record with the Supabase UUID
-                        new_profile = Profile(
-                            id=user_id,
-                            email=email,
-                            hashed_password=existing_profile.hashed_password,
-                            full_name=full_name or existing_profile.full_name,
-                            avatar_url=existing_profile.avatar_url,
-                            is_active=existing_profile.is_active,
-                            created_at=existing_profile.created_at
-                        )
-                        db.add(new_profile)
-                        db.flush()
-
-                        # 3. Re-point foreign keys
-                        db.query(Membership).filter(Membership.user_id == old_id).update({Membership.user_id: user_id})
-                        db.query(Task).filter(Task.assigned_to == old_id).update({Task.assigned_to: user_id})
-                        db.query(ActivityLog).filter(ActivityLog.user_id == old_id).update({ActivityLog.user_id: user_id})
-                        db.flush()
-
-                        # 4. Delete the old profile
-                        db.delete(existing_profile)
-                        db.commit()
-
-                        # 5. Expire ORM cache and reload the migrated profile
-                        db.expire_all()
-                        profile = db.query(Profile).filter(Profile.id == user_id).first()
-                        logger.info("Profile ID migration completed successfully.")
+                        from app.services.account_service import AccountService
+                        AccountService.purge_orphaned_profile(db, email)
                     except Exception as e:
+                        logger.error(f"Failed to purge orphaned profile: {e}", exc_info=e)
                         db.rollback()
-                        logger.error(f"Failed to migrate profile ID: {e}", exc_info=e)
-                        # Check if another thread completed it while we failed
+                    
+                    # Now create a fresh profile (fall through to the auto-provision block below)
+                    try:
                         profile = db.query(Profile).filter(Profile.id == user_id).first()
                         if profile:
-                            logger.info("Profile was successfully migrated by concurrent request despite error.")
                             return profile
+
+                        profile = Profile(
+                            id=user_id,
+                            email=email,
+                            full_name=full_name,
+                            hashed_password="supabase-managed",
+                            is_active=True
+                        )
+                        db.add(profile)
+                        db.commit()
+                        db.refresh(profile)
+                        logger.info(f"Fresh profile provisioned after purge: {user_id}")
+                    except Exception as e:
+                        db.rollback()
+                        profile = db.query(Profile).filter(Profile.id == user_id).first()
+                        if profile:
+                            return profile
+                        logger.error(f"Failed to provision fresh profile after purge: {e}", exc_info=e)
                         raise HTTPException(status_code=500, detail="Profile sync error")
                 else:
                     logger.info(f"Auto-provisioning missing profile for user: {user_id}")

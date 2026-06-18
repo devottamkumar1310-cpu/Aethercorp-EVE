@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { 
   sendExecutiveChat, 
@@ -48,7 +49,9 @@ import {
   Plus,
   Trash2,
   Edit,
-  MessageSquare
+  MessageSquare,
+  X,
+  FileText
 } from "lucide-react";
 
 // Markdown parser helpers
@@ -179,6 +182,9 @@ function getRelativeTimeString(dateString: string): string {
 }
 
 export default function EVECoocommandCenter() {
+  const searchParams = useSearchParams();
+  const [documentId, setDocumentId] = useState<string | null>(null);
+  const [documentName, setDocumentName] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState("");
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(false);
@@ -363,6 +369,20 @@ export default function EVECoocommandCenter() {
           return;
         }
         setSessionToken(session.access_token);
+        
+        // Extract document ID parameter
+        const docParam = searchParams?.get("document_id");
+        if (docParam) {
+          setDocumentId(docParam);
+          try {
+            const { getDocumentDetails } = await import("@/services/documentService");
+            const docDetails = await getDocumentDetails(docParam, session.access_token);
+            setDocumentName(docDetails.filename);
+          } catch (err) {
+            console.error("Failed to load document context for chat:", err);
+          }
+        }
+
         await hydrateDashboard(session.access_token);
       } catch (err) {
         console.error("EVE setup error:", err);
@@ -371,7 +391,7 @@ export default function EVECoocommandCenter() {
       }
     }
     initialize();
-  }, []);
+  }, [searchParams]);
 
   const handleSelectConversation = async (id: string) => {
     if (!sessionToken) return;
@@ -480,7 +500,8 @@ export default function EVECoocommandCenter() {
         conversationId, 
         chatMode,
         developerMode,
-        language
+        language,
+        documentId || undefined
       );
       
       const isNewChat = !conversationId;
@@ -1449,6 +1470,28 @@ export default function EVECoocommandCenter() {
               ))}
             </div>
  
+            {documentId && (
+              <div className="flex items-center justify-between p-2.5 bg-indigo-950/20 border border-indigo-900/30 rounded-xl text-xs text-indigo-300">
+                <div className="flex items-center gap-2">
+                  <FileText size={14} className="text-indigo-400" />
+                  <span>
+                    Context: <strong className="font-semibold text-slate-200">{documentName || "Loading file details..."}</strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDocumentId(null);
+                    setDocumentName(null);
+                  }}
+                  className="text-slate-500 hover:text-slate-350 transition-colors cursor-pointer"
+                  title="Remove document context"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             {voiceError && (
               <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs text-rose-400 flex items-center gap-2 animate-fade-in">
                 <AlertTriangle size={14} className="flex-shrink-0" />

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     FRONTEND_URL: str = "http://localhost:3000"
     CLOUD_RUN_SERVICE_URL: Optional[str] = None
+    GCS_BUCKET_NAME: Optional[str] = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     FOUNDER_MODE: bool = True

@@ -48,6 +48,7 @@ class GeminiExecutiveSynthesisResult(BaseModel):
 class ExecutiveChatRequest(BaseModel):
     question: str
     conversation_id: Optional[UUID] = None
+    document_id: Optional[UUID] = None
     mode: Optional[str] = "smart"  # "full" or "smart"
     language: Optional[str] = "en"  # "en" or "hi"
     developer_mode: Optional[bool] = None
@@ -90,6 +91,8 @@ class DailyBriefResponse(BaseModel):
     opportunities: List[Dict[str, Any]]
     summary: str
     recommendations: List[str]
+    urgent_actions: List[str] = []
+    recent_activity: List[Dict[str, Any]] = []
 
 class AIRecommendationResponse(BaseModel):
     id: UUID
