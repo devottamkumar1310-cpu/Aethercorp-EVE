@@ -27,6 +27,21 @@ class GCSService:
         """
         bucket_name = settings.GCS_BUCKET_NAME
         client = cls._get_client()
+        is_prod = (settings.ENV == "production" or settings.ENVIRONMENT == "production")
+
+        if is_prod:
+            if not bucket_name:
+                raise ValueError("GCS_BUCKET_NAME must be configured in production environment.")
+            if not client:
+                raise RuntimeError("Could not initialize Google Cloud Storage Client in production environment.")
+            try:
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(filename)
+                blob.upload_from_string(file_bytes, content_type=content_type)
+                return f"gs://{bucket_name}/{filename}"
+            except Exception as e:
+                logger.critical(f"Production GCS Upload failed: {e}")
+                raise RuntimeError(f"GCS Upload failed in production: {e}")
 
         if bucket_name and client:
             try:

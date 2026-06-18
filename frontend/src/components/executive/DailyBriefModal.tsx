@@ -129,22 +129,43 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
                 </div>
               </div>
 
-              {/* Priorities & Recommendations */}
-              <div className="p-5 bg-indigo-950/20 border border-indigo-500/10 rounded-xl">
-                <h3 className="text-sm font-semibold text-indigo-400 flex items-center gap-1.5 mb-3">
-                  <Sparkles size={16} /> Top Recommendations & Priorities
-                </h3>
-                <ul className="space-y-2">
-                  {brief.recommendations.map((rec, i) => (
-                    <li key={i} className="flex gap-2 text-sm text-slate-300">
-                      <span className="text-indigo-400 font-bold">{i + 1}.</span>
-                      <span>{rec}</span>
-                    </li>
-                  ))}
-                  {brief.recommendations.length === 0 && (
-                    <li className="text-sm text-slate-500 italic">No recommendations calculated for today.</li>
-                  )}
-                </ul>
+              {/* Recommendations & Urgent Actions Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Priorities & Recommendations */}
+                <div className="p-5 bg-indigo-950/20 border border-indigo-500/10 rounded-xl">
+                  <h3 className="text-sm font-semibold text-indigo-400 flex items-center gap-1.5 mb-3">
+                    <Sparkles size={16} /> Top Recommendations & Priorities
+                  </h3>
+                  <ul className="space-y-2">
+                    {brief.recommendations.map((rec, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-300">
+                        <span className="text-indigo-400 font-bold">{i + 1}.</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                    {brief.recommendations.length === 0 && (
+                      <li className="text-sm text-slate-500 italic">No recommendations calculated for today.</li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Urgent Actions */}
+                <div className="p-5 bg-amber-950/20 border border-amber-500/10 rounded-xl">
+                  <h3 className="text-sm font-semibold text-amber-400 flex items-center gap-1.5 mb-3">
+                    <AlertTriangle size={16} /> Urgent Actions Required
+                  </h3>
+                  <ul className="space-y-2">
+                    {brief.urgent_actions && brief.urgent_actions.map((act, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-300">
+                        <span className="text-amber-400 font-bold">⚠️</span>
+                        <span>{act}</span>
+                      </li>
+                    ))}
+                    {(!brief.urgent_actions || brief.urgent_actions.length === 0) && (
+                      <li className="text-sm text-slate-500 italic">No urgent actions pending.</li>
+                    )}
+                  </ul>
+                </div>
               </div>
 
               {/* Risks & Opportunities Grid */}
@@ -200,9 +221,31 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
                     {brief.opportunities.length === 0 && (
                       <p className="text-sm text-slate-500 italic">No immediate growth opportunities detected.</p>
                     )}
+              </div>
+
+              {/* Recent Activity */}
+              {brief.recent_activity && brief.recent_activity.length > 0 && (
+                <div className="p-5 bg-slate-950/30 border border-slate-800/80 rounded-xl space-y-3">
+                  <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-1.5">
+                    <TrendingUp size={16} className="text-indigo-400" /> Recent Activity Feed
+                  </h3>
+                  <div className="divide-y divide-slate-800/40">
+                    {brief.recent_activity.map((act) => (
+                      <div key={act.id} className="py-2.5 flex justify-between items-start text-xs text-slate-300">
+                        <div>
+                          <span className="font-semibold text-slate-200 block">{act.action}</span>
+                          <span className="text-slate-400">{act.description}</span>
+                        </div>
+                        {act.created_at && (
+                          <span className="text-slate-500 text-[10px]">
+                            {new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </div>

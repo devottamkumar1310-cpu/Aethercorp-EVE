@@ -91,6 +91,8 @@ class DailyBriefResponse(BaseModel):
     opportunities: List[Dict[str, Any]]
     summary: str
     recommendations: List[str]
+    urgent_actions: List[str] = []
+    recent_activity: List[Dict[str, Any]] = []
 
 class AIRecommendationResponse(BaseModel):
     id: UUID

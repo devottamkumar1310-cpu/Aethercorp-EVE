@@ -74,3 +74,40 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
         raise HTTPException(status_code=500, detail="Failed to create workspace")
 
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
+
+@router.post("/onboard-demo")
+def onboard_demo(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Generate unique slug for demo workspace
+    name = "Aether Apparel (Demo)"
+    slug = "aether-apparel-demo"
+    base_slug = slug
+    counter = 1
+    while db.query(Organization).filter(Organization.slug == slug).first():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
+    # Create Organization
+    org = Organization(name=name, slug=slug)
+    db.add(org)
+    db.flush() # To get org.id
+
+    # Create Membership
+    membership = Membership(
+        user_id=current_user.id,
+        organization_id=org.id,
+        role="owner"
+    )
+    db.add(membership)
+    db.commit()
+
+    # Seed all demo workspace scenario data, sample documents, sample chats, recommendations
+    from app.commands.seed_scenarios import seed_demo_workspace_data
+    try:
+        seed_demo_workspace_data(db, org.id)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger("eve.organization")
+        logger.error(f"Seeding demo workspace data failed: {e}", exc_info=True)
+
+    return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
+

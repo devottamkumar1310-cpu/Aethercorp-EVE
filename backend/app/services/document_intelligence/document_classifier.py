@@ -25,6 +25,47 @@ class DocumentClassifier:
         Classifies an uploaded document automatically using Gemini multi-modal input
         or local parsing helpers.
         """
+        # Check for corrupt files (Invalid magic bytes or unparseable formats)
+        fn_lower = filename.lower()
+        if fn_lower.endswith(".pdf"):
+            if not file_content.startswith(b"%PDF"):
+                return DocumentClassificationResult(
+                    document_type="Unknown",
+                    confidence=0.1,
+                    explanation="Invalid PDF format: File header does not begin with standard PDF signature."
+                )
+        elif fn_lower.endswith(".xlsx"):
+            if not file_content.startswith(b"PK\x03\x04"):
+                return DocumentClassificationResult(
+                    document_type="Unknown",
+                    confidence=0.1,
+                    explanation="Invalid Excel format: File header does not begin with standard ZIP/Office signature."
+                )
+        elif fn_lower.endswith(".csv"):
+            try:
+                # Try decoding to check if it's readable text
+                file_content.decode("utf-8")
+            except Exception:
+                return DocumentClassificationResult(
+                    document_type="Unknown",
+                    confidence=0.1,
+                    explanation="Invalid CSV format: File is binary or cannot be decoded as UTF-8 text."
+                )
+        elif fn_lower.endswith((".png", ".jpg", ".jpeg")):
+            # Basic signature check for images
+            if fn_lower.endswith(".png") and not file_content.startswith(b"\x89PNG"):
+                return DocumentClassificationResult(
+                    document_type="Unknown",
+                    confidence=0.1,
+                    explanation="Invalid PNG format: Missing standard signature."
+                )
+            elif fn_lower.endswith((".jpg", ".jpeg")) and not file_content.startswith(b"\xff\xd8\xff"):
+                return DocumentClassificationResult(
+                    document_type="Unknown",
+                    confidence=0.1,
+                    explanation="Invalid JPEG format: Missing standard SOI marker."
+                )
+
         gemini_service = container.get("gemini_service")
         
         # 1. Check if we should execute Mock Mode
