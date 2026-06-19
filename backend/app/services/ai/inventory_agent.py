@@ -5,27 +5,16 @@ from app.models.product import Product
 from app.services.ai.prompt_templates import INVENTORY_SYSTEM_PROMPT
 from app.schemas.executive import AgentAnalysisResult
 from app.core.dependency_container import container
+from app.services.analytics_service import AnalyticsService
 
 class InventoryAgent:
     def __init__(self, gemini_service=None):
         self.gemini_service = gemini_service or container.get("gemini_service")
 
     async def analyze(self, db: Session, org_id: uuid.UUID, question: str = "") -> AgentAnalysisResult:
-        # Query inventory parameters from the database
-        items = db.query(InventoryItem).join(Product).filter(InventoryItem.organization_id == org_id).all()
-        
-        inventory_data = []
-        for item in items:
-            inventory_data.append({
-                "sku": item.product.sku,
-                "name": item.product.name,
-                "category": item.product.category,
-                "stock_on_hand": item.stock_on_hand,
-                "reorder_point": item.reorder_point,
-                "safety_stock": item.safety_stock,
-                "avg_daily_sales": item.avg_daily_sales,
-                "lead_time_days": item.lead_time_days
-            })
+        # Run full inventory analysis using the AnalyticsService
+        analysis = AnalyticsService.get_inventory_analysis(db, org_id)
+        inventory_data = analysis.get("items_at_risk", [])
             
         prompt = f"""
         User Question/Goal: {question or "Analyze inventory health, overstock risks, and reorder alerts."}

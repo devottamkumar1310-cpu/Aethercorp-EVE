@@ -17,6 +17,18 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<any>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [developerMode, setDeveloperMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDeveloperMode(localStorage.getItem("developer_mode") === "true");
+    }
+  }, []);
+
+  const handleToggleDeveloperMode = (enabled: boolean) => {
+    setDeveloperMode(enabled);
+    localStorage.setItem("developer_mode", String(enabled));
+  };
 
   // Workspace deletion modal state
   const [deleteWsModal, setDeleteWsModal] = useState<Workspace | null>(null);
@@ -260,6 +272,36 @@ export default function SettingsPage() {
             className="text-sm font-medium bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 transition-colors"
           >
             Send Password Reset Email
+          </button>
+        </div>
+      </div>
+
+      {/* Developer Settings Section */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+          <h2 className="text-lg font-semibold flex items-center text-slate-800">
+            <Lock className="h-5 w-5 mr-2 text-indigo-600" />
+            Developer Settings
+          </h2>
+        </div>
+        <div className="p-6 flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-slate-900">Developer Mode</h3>
+            <p className="text-sm text-slate-500">
+              Enable advanced telemetry monitoring, sub-agent latency stats, routing classifications, and developer logs.
+            </p>
+          </div>
+          <button
+            onClick={() => handleToggleDeveloperMode(!developerMode)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
+              developerMode ? "bg-indigo-600" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                developerMode ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
           </button>
         </div>
       </div>

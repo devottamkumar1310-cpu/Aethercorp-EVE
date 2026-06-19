@@ -25,7 +25,15 @@ INTENT_PATTERNS = {
         re.IGNORECASE
     ),
     "Finance Query": re.compile(
-        r"\b(finance|revenue|expense|profit|budget|cash flow|cash|working capital|margin|balance sheet|income|loss|spend)\b",
+        r"\b(finance|financial|revenue|expense|expenses|profit|budget|cash flow|cash|working capital|margin|balance sheet|income|loss|spend|spending|spent)\b",
+        re.IGNORECASE
+    ),
+    "Client Query": re.compile(
+        r"\b(client|clients|customer|customers|churn|retention|outreach|contact|inactive clients|at risk|at-risk)\b",
+        re.IGNORECASE
+    ),
+    "Project Query": re.compile(
+        r"\b(project|projects|delayed projects|overdue tasks|deadlines|milestone|weekly focus|team focus|operational priorities)\b",
         re.IGNORECASE
     ),
     "Executive Query": re.compile(
@@ -90,6 +98,10 @@ class ConversationLayer:
         if not words:
             return None
 
+        # Filter out common stop words to prevent false positives like "the" matching "thx"
+        stop_words = {"the", "and", "but", "for", "are", "you", "our", "him", "her", "its", "not", "a", "an", "of", "to", "in", "is", "at", "on"}
+        words = [w for w in words if w not in stop_words]
+
         static_keywords = {
             "Greeting": ["hi", "hello", "hey", "namaste", "morning", "afternoon", "evening", "gday", "hola", "yo"],
             "Thanks": ["thanks", "thank", "ty", "thx", "appreciate", "grateful", "cheers"],
@@ -131,6 +143,8 @@ class ConversationLayer:
             "Inventory Query",
             "Pricing Query",
             "Finance Query",
+            "Client Query",
+            "Project Query",
             "Executive Query",
             "Capability Discovery",
             "Small Talk",

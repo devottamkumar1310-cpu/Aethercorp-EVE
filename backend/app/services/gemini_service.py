@@ -421,15 +421,23 @@ class GeminiService:
         record_tokens(80, 30, (80 * 0.000000075) + (30 * 0.00000030))
         schema_name = response_schema.__name__
         p_lower = prompt.lower()
+        
+        # Extract the user question if present in the prompt to avoid matching keywords in sub-agent reports
+        question_segment = ""
+        for line in prompt.split("\n"):
+            if "user question/goal:" in line.lower() or "user question:" in line.lower():
+                question_segment = line.split(":", 1)[1].strip()
+                break
+        q_check = question_segment.lower() if question_segment else p_lower
 
         if schema_name == "AgentSelection":
             # Determine routing based on query
-            run_finance = any(k in p_lower for k in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"])
-            run_inventory = any(k in p_lower for k in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"])
-            run_client = any(k in p_lower for k in ["client", "customer", "retention", "churn", "inactive"])
-            run_growth = any(k in p_lower for k in ["growth", "opportunity", "opportunities", "expand"])
-            run_operations = any(k in p_lower for k in ["projects", "tasks", "operations", "velocity", "delay", "capacity", "bottleneck", "deadline"])
-            run_forecasting = any(k in p_lower for k in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"])
+            run_finance = any(k in q_check for k in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"])
+            run_inventory = any(k in q_check for k in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"])
+            run_client = any(k in q_check for k in ["client", "customer", "retention", "churn", "inactive"])
+            run_growth = any(k in q_check for k in ["growth", "opportunity", "opportunities", "expand"])
+            run_operations = any(k in q_check for k in ["projects", "tasks", "operations", "velocity", "delay", "capacity", "bottleneck", "deadline"])
+            run_forecasting = any(k in q_check for k in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"])
             if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
                 run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
             
@@ -529,19 +537,66 @@ class GeminiService:
                     confidence=0.85
                 )
 
-        elif schema_name == "GeminiExecutiveSynthesisResult" or schema_name == "ExecutiveSynthesisResult":
-            # Strategic prioritizations
+        elif schema_name in ["GeminiExecutiveSynthesisResult", "ExecutiveSynthesisResult"]:
             from app.schemas.executive import StrategicPriority
-            return response_schema(
-                agent="COO Lead",
-                summary="EVE Executive Board Synthesis: In order to address the key risks of contract customer churn and negative-margin product sales, the board recommends liquidating overstocked inventory to free up cash, converting short-term contracts to 1-year terms using targeted promotions, and optimizing standard shipping routes to resolve late deliveries.",
-                priorities=[
-                    StrategicPriority(title="Price Optimization", description="Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag."),
-                    StrategicPriority(title="Contract Conversion Campaign", description="Offer loyalty incentives to convert high-risk Month-to-month contracts to stable 1-year terms."),
-                    StrategicPriority(title="Logistics Routing Audit", description="Restructure standard class shipping carriers to reduce the 11.5% late delivery rate.")
-                ],
-                expected_impact="Expected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital."
-            )
+            
+            # Make the mock synthesis context-aware and question-sensitive
+            if any(kw in q_check for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
+                return response_schema(
+                    agent="COO Lead",
+                    summary="EVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.",
+                    priorities=[
+                        StrategicPriority(title="Price Optimization", description="Audit retail price points on low-margin products to eliminate margin drag."),
+                        StrategicPriority(title="Cost Containment", description="Trim monthly project licensing and review vendor contracts to reduce overhead."),
+                        StrategicPriority(title="Working Capital Allocation", description="Redirect cash reserve allocations to high-ROI projects.")
+                    ],
+                    expected_impact="Expected to boost overall profit margin by 8.0% and save $5,000 in monthly operational costs."
+                )
+            elif any(kw in q_check for kw in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"]):
+                return response_schema(
+                    agent="COO Lead",
+                    summary="EVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.",
+                    priorities=[
+                        StrategicPriority(title="Liquidate Overstock", description="Launch promotional markdown campaigns to clear dead stock and free warehouse space."),
+                        StrategicPriority(title="Automate Reorders", description="Configure automatic reorder points (ROP) for high-velocity items violating safety stock."),
+                        StrategicPriority(title="Adjust Lead Times", description="Audit supplier lead times to build appropriate safety stock buffers.")
+                    ],
+                    expected_impact="Expected to free up 15% of warehouse capacity and prevent shipping bottlenecks on top-selling SKUs."
+                )
+            elif any(kw in q_check for kw in ["client", "customer", "retention", "churn", "inactive"]):
+                return response_schema(
+                    agent="COO Lead",
+                    summary="EVE Executive Board Synthesis (Client Analysis): Customer retention audit reveals high risk concentrated in Month-to-month contracts. Our two-year contract accounts remain our most stable profit driver.",
+                    priorities=[
+                        StrategicPriority(title="Contract Conversion Campaign", description="Offer loyalty discount incentives to convert high-risk Month-to-month contracts to 1-year terms."),
+                        StrategicPriority(title="VIP Loyalty Program", description="Establish dedicated account managers for top-tier corporate VIP clients."),
+                        StrategicPriority(title="Automate Survey Loops", description="Deploy automated customer satisfaction triggers post-project delivery.")
+                    ],
+                    expected_impact="Expected to reduce client churn by 12% and convert at least 10 high-risk contracts to annual terms."
+                )
+            elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week"]):
+                return response_schema(
+                    agent="COO Lead",
+                    summary="EVE Executive Board Synthesis (Weekly Focus): Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.",
+                    priorities=[
+                        StrategicPriority(title="Resolve Project Bottlenecks", description="Reallocate developer capacity to clear backlogs in active client projects."),
+                        StrategicPriority(title="Trigger Stock Replenishment", description="Place immediate supplier orders for ROP-violated inventory lines."),
+                        StrategicPriority(title="Initialize Client Outreach", description="Connect with high-churn-risk accounts to discuss contract upgrades.")
+                    ],
+                    expected_impact="Expected to improve task velocity by 20% and stabilize high-risk revenue streams within the week."
+                )
+            else:
+                # Default Executive Summary
+                return response_schema(
+                    agent="COO Lead",
+                    summary="EVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.",
+                    priorities=[
+                        StrategicPriority(title="Price Optimization", description="Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag."),
+                        StrategicPriority(title="Contract Conversion Campaign", description="Offer loyalty incentives to convert high-risk Month-to-month contracts to stable 1-year terms."),
+                        StrategicPriority(title="Logistics Routing Audit", description="Restructure standard class shipping carriers to reduce the 11.5% late delivery rate.")
+                    ],
+                    expected_impact="Expected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital."
+                )
 
         # Fallback to generic auto-mocking
         dummy = {}

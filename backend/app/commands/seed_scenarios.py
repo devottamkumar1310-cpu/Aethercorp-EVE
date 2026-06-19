@@ -19,6 +19,7 @@ from app.models.organization import Organization, Membership
 from app.models.finance import Revenue, Expense
 from app.models.client import Client
 from app.models.project import Project
+from app.models.task import Task
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
 from app.models.document import ProcessedDocument
@@ -212,19 +213,133 @@ def seed_finance_and_clients(db, org_id, is_healthy=True):
     
     # 2. Projects
     projects = []
-    for idx, client in enumerate(clients_data[:3]):
-        p = Project(
+    if is_healthy:
+        for idx, client in enumerate(clients_data[:3]):
+            p = Project(
+                organization_id=org_id,
+                client_id=client.id,
+                name=f"Season Rollout Project {idx+1}",
+                status="active" if idx < 2 else "completed",
+                budget=50000.0,
+                start_date=datetime.date(2025, 1, 1),
+                deadline=datetime.date(2026, 12, 31)
+            )
+            db.add(p)
+            projects.append(p)
+        db.flush()
+    else:
+        # Find a user profile in this org to assign tasks to (bottleneck simulation)
+        profile = db.query(Profile).join(Membership).filter(Membership.organization_id == org_id).first()
+        assigned_to_id = profile.id if profile else None
+        
+        # Project A: 85% complete, deadline in 5 days, 8 overdue tasks
+        p_a = Project(
             organization_id=org_id,
-            client_id=client.id,
-            name=f"Season Rollout Project {idx+1}",
-            status="active" if idx < 2 else "completed",
-            budget=50000.0 if is_healthy else 15000.0,
+            client_id=clients_data[0].id,
+            name="Project A (Season Rollout 1)",
+            status="active",
+            budget=15000.0,
+            completion_percentage=85.0,
             start_date=datetime.date(2025, 1, 1),
-            deadline=datetime.date(2026, 12, 31)
+            deadline=datetime.date.today() + datetime.timedelta(days=5)
         )
-        db.add(p)
-        projects.append(p)
-    db.flush()
+        db.add(p_a)
+        db.flush()
+        projects.append(p_a)
+        
+        # Seed 8 overdue tasks for Project A
+        for i in range(8):
+            t = Task(
+                organization_id=org_id,
+                project_id=p_a.id,
+                title=f"Critical Overdue Milestone A.{i+1}",
+                status="todo" if i % 2 == 0 else "in_progress",
+                priority="high" if i < 4 else "critical",
+                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=2 + i),
+                assigned_to=assigned_to_id
+            )
+            db.add(t)
+            
+        # Project B: 40% complete, deadline in 14 days, resource bottleneck
+        p_b = Project(
+            organization_id=org_id,
+            client_id=clients_data[1].id,
+            name="Project B (Season Rollout 2)",
+            status="active",
+            budget=15000.0,
+            completion_percentage=40.0,
+            start_date=datetime.date(2025, 1, 1),
+            deadline=datetime.date.today() + datetime.timedelta(days=14)
+        )
+        db.add(p_b)
+        db.flush()
+        projects.append(p_b)
+        
+        # Resource bottleneck: several open tasks assigned to the same user
+        for i in range(6):
+            t = Task(
+                organization_id=org_id,
+                project_id=p_b.id,
+                title=f"Bottlenecked Task B.{i+1}",
+                status="in_progress" if i < 3 else "todo",
+                priority="medium" if i % 2 == 0 else "high",
+                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=1 + i) if i < 2 else datetime.datetime.utcnow() + datetime.timedelta(days=2 + i),
+                assigned_to=assigned_to_id
+            )
+            db.add(t)
+            
+        for i in range(2):
+            t = Task(
+                organization_id=org_id,
+                project_id=p_b.id,
+                title=f"Completed Setup B.{i+1}",
+                status="completed",
+                priority="low",
+                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=10 + i),
+                assigned_to=assigned_to_id
+            )
+            db.add(t)
+            
+        # Project C: Healthy project, on track (completion 70%, deadline in 60 days, 0 overdue tasks)
+        p_c = Project(
+            organization_id=org_id,
+            client_id=clients_data[2].id,
+            name="Project C (Season Rollout 3)",
+            status="active",
+            budget=15000.0,
+            completion_percentage=70.0,
+            start_date=datetime.date(2025, 1, 1),
+            deadline=datetime.date.today() + datetime.timedelta(days=60)
+        )
+        db.add(p_c)
+        db.flush()
+        projects.append(p_c)
+        
+        for i in range(3):
+            t = Task(
+                organization_id=org_id,
+                project_id=p_c.id,
+                title=f"Future Task C.{i+1}",
+                status="todo",
+                priority="medium",
+                due_date=datetime.datetime.utcnow() + datetime.timedelta(days=20 + i * 10),
+                assigned_to=assigned_to_id
+            )
+            db.add(t)
+            
+        for i in range(7):
+            t = Task(
+                organization_id=org_id,
+                project_id=p_c.id,
+                title=f"Healthy Completed Milestone C.{i+1}",
+                status="completed",
+                priority="medium",
+                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=5 + i * 2),
+                assigned_to=assigned_to_id
+            )
+            db.add(t)
+            
+        db.flush()
     
     # 3. Revenues & Expenses
     for idx, p in enumerate(projects):
@@ -283,8 +398,8 @@ def seed_demo_workspace_data(db, org_id):
     Seeds a fully preloaded demo workspace including inventory, finance,
     sample documents, chat conversations, and recommendations.
     """
-    # 1. Seed standard healthy inventory and ledger scenario
-    seed_scenario(db, org_id, is_healthy=True)
+    # 1. Seed standard challenged inventory and ledger scenario (Phase 5.1 requirements)
+    seed_scenario(db, org_id, is_healthy=False)
 
     # 2. Seed Sample Documents
     doc1 = ProcessedDocument(
@@ -300,7 +415,7 @@ def seed_demo_workspace_data(db, org_id):
             "invoice_number": "INV-2026-0001",
             "invoice_date": "2026-06-14",
             "supplier_name": "Premium Cotton Textiles Ltd",
-            "customer_name": "Aether Apparel",
+            "customer_name": "NovaWear Fashion",
             "items": [
                 {
                     "product_name": "Premium Cotton Roll (Black)",
@@ -407,7 +522,7 @@ def seed_demo_workspace_data(db, org_id):
         id=uuid.uuid4(),
         conversation_id=conv2.id,
         role="user",
-        content="What are the top reorder priorities for Aether Apparel?",
+        content="What are the top reorder priorities for NovaWear Fashion?",
         created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1)
     )
     msg2_2 = ExecutiveMessage(
@@ -455,9 +570,73 @@ def seed_demo_workspace_data(db, org_id):
     db.add_all([rec1, rec2])
     db.commit()
 
+def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):
+    from app.models.organization import Organization, Membership
+    from app.models.profile import Profile
+    import uuid
+    
+    org = db.query(Organization).filter(Organization.id == org_id).first()
+    if not org:
+        print(f"Creating missing Organization: {name} ({org_id})")
+        org = Organization(id=org_id, name=name, slug=slug)
+        db.add(org)
+        db.flush()
+        
+    if user_id is None:
+        user_id = uuid.uuid4()
+        
+    prof = db.query(Profile).filter(Profile.id == user_id).first()
+    if not prof:
+        prof_email = db.query(Profile).filter(Profile.email == email).first()
+        if prof_email:
+            prof = prof_email
+        else:
+            print(f"Creating missing Profile: {email} ({user_id})")
+            prof = Profile(
+                id=user_id,
+                email=email,
+                hashed_password="scrypt:32768:8:1$placeholder$hashedpassword",
+                full_name=name + " Admin",
+                is_active=True
+            )
+            db.add(prof)
+            db.flush()
+            
+    member = db.query(Membership).filter(
+        Membership.organization_id == org_id,
+        Membership.user_id == prof.id
+    ).first()
+    if not member:
+        print(f"Creating missing Membership for Org {org_id} and User {prof.id}")
+        member = Membership(
+            organization_id=org_id,
+            user_id=prof.id,
+            role="owner"
+        )
+        db.add(member)
+        db.flush()
+    db.commit()
+
 def main():
     db = SessionLocal()
     try:
+        # Ensure workspaces/users exist first
+        ensure_organization_and_user(
+            db, 
+            DEV_ORG_ID, 
+            "Dev Workspace", 
+            "dev-workspace", 
+            "dev@aethercorp.com"
+        )
+        ensure_organization_and_user(
+            db, 
+            DIPTI_ORG_ID, 
+            "NovaWear Fashion", 
+            "novawear", 
+            "dipti@novawear.com", 
+            uuid.UUID("9e3f929a-2e59-487f-a827-82ce8df09594")
+        )
+
         # Seed Workspace A (DEV) -> Healthy
         seed_scenario(db, DEV_ORG_ID, is_healthy=True)
         

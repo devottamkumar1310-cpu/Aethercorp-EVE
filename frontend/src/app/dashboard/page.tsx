@@ -18,7 +18,6 @@ import { ProjectModal } from "@/components/business/ProjectModal";
 import { TaskModal } from "@/components/business/TaskModal";
 import { RevenueModal } from "@/components/business/RevenueModal";
 import { ExpenseModal } from "@/components/business/ExpenseModal";
-import { IntelligencePanel } from "@/components/dashboard/IntelligencePanel";
 import { fetchTrends } from "@/services/intelligenceService";
 
 export default function DashboardPage() {
@@ -124,7 +123,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6">
-          <IntelligencePanel token={sessionToken} />
           
           {/* Quick Navigation Links */}
           <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">

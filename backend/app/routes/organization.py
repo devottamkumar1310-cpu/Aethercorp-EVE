@@ -78,8 +78,8 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
 @router.post("/onboard-demo")
 def onboard_demo(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
     # Generate unique slug for demo workspace
-    name = "Aether Apparel (Demo)"
-    slug = "aether-apparel-demo"
+    name = "NovaWear Fashion"
+    slug = "novawear-fashion"
     base_slug = slug
     counter = 1
     while db.query(Organization).filter(Organization.slug == slug).first():
