@@ -383,3 +383,75 @@ def delete_conversation(
     db.commit()
     return {"status": "success", "message": "Conversation successfully deleted"}
 
+
+@router.get("/suggested-questions")
+def get_suggested_questions(
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    """
+    Returns suggested questions for the AI COO chat, dynamically customized 
+    based on the state of the active workspace.
+    """
+    from app.services.analytics_service import AnalyticsService
+    
+    finance_questions = [
+        "How profitable is this business?",
+        "What expenses are hurting margins?"
+    ]
+    inventory_questions = [
+        "Which products should I reorder?",
+        "What inventory is becoming dead stock?"
+    ]
+    growth_questions = [
+        "How can revenue be increased?",
+        "Which customers are most valuable?"
+    ]
+    founder_questions = [
+        "Give me an executive summary.",
+        "What should I focus on this week?"
+    ]
+
+    try:
+        metrics = AnalyticsService.get_dashboard_metrics(db, workspace_id)
+        
+        # Check stockout risks
+        stockout_recs = metrics.get("reorder_recommendations", [])
+        stockout_preds = metrics.get("stockout_predictions", [])
+        has_stockout_risk = len(stockout_recs) > 0 or any(p.get("days_until_stockout", 99) <= 15 for p in stockout_preds)
+        
+        # Check dead stock
+        inv_analysis = metrics.get("inventory_analysis", {})
+        has_dead_stock = inv_analysis.get("dead_stock_skus", 0) > 0 or any(
+            item.get("is_dead_stock") for item in inv_analysis.get("items_at_risk", [])
+        )
+
+        # Check margins
+        pricing_recs = metrics.get("pricing_recommendations", [])
+        has_margin_decline = len(pricing_recs) > 0 or metrics.get("margin_risk_score", 0.0) > 0.0
+        
+        # Inject dynamic context questions
+        if has_dead_stock:
+            inventory_questions.insert(0, "Why do we have dead inventory?")
+            inventory_questions.insert(1, "Which products are causing it?")
+            
+        if has_margin_decline:
+            finance_questions.insert(0, "Why are margins decreasing?")
+            finance_questions.insert(1, "What costs increased recently?")
+            
+        if has_stockout_risk:
+            inventory_questions.insert(0, "Which products need immediate replenishment?")
+            inventory_questions.insert(1, "What is the financial impact of stockouts?")
+            
+    except Exception as e:
+        logger.error(f"Error compiling dynamic suggested questions: {e}")
+        
+    return {
+        "Finance": list(dict.fromkeys(finance_questions)),
+        "Inventory": list(dict.fromkeys(inventory_questions)),
+        "Growth": list(dict.fromkeys(growth_questions)),
+        "Founder": list(dict.fromkeys(founder_questions))
+    }
+
+

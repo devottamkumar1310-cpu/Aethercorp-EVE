@@ -365,3 +365,35 @@ def test_observability_costs_endpoint():
     assert "monthly_cost" in data
     assert "agent_breakdown" in data
     assert data["daily_cost"] > 2.0  # Since we seeded $2.25 in test_daily_cost_budget_safeguard
+
+
+def test_blocked_response_formatting():
+    """
+    Verify that when a response is blocked, confidence is 0% (Low Confidence),
+    and evidence list is overridden to avoid database validation language.
+    """
+    from app.schemas.executive import ExecutiveSynthesisResult
+    from app.services.ai.executive_formatter import ExecutiveFormatter
+
+    # Blocked due to hallucination
+    blocked_synth = ExecutiveSynthesisResult(
+        agent="EVE COO",
+        summary="Hallucination detected. Claims could not be verified against database records: Percentage claim 87.0% could not be validated.",
+        priorities=[],
+        expected_impact="Recommendation blocked.",
+        findings_by_agent={"EVE COO": ["Percentage claim 87.0% could not be validated."]},
+        recommendations_by_agent={"EVE COO": ["Please ensure recommendations strictly map to verified ground-truth data."]},
+        confidence_scores={"Overall": 0.0},
+        confidence_category="Low Confidence",
+        risk_classification="High Risk",
+        detected_conflicts=[]
+    )
+
+    rec = ExecutiveFormatter.build_executive_recommendation(blocked_synth, "What are our margins?")
+    assert rec.confidence == 0.0
+    assert "Insufficient verified database evidence." in rec.evidence
+    assert "Audited database KPIs" not in rec.evidence
+
+    formatted = ExecutiveFormatter.format_executive_response(blocked_synth, "What are our margins?")
+    assert "I don't currently have enough verified data" in formatted
+    assert "Recommendation Confidence: 0% (Low Confidence)" in formatted
