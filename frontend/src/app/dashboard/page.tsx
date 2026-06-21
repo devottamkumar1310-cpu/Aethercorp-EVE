@@ -136,7 +136,7 @@ export default function DashboardPage() {
           </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
               <span className="text-sm font-medium text-slate-500">Total Clients</span>
               <span className="text-3xl font-bold text-slate-800">{summary?.kpis?.clients || 0}</span>

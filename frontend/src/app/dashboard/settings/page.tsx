@@ -268,7 +268,9 @@ export default function SettingsPage() {
         </div>
         <div className="p-6">
           <button
-            onClick={() => supabase.auth.resetPasswordForEmail(profile?.email || "")}
+            onClick={() => supabase.auth.resetPasswordForEmail(profile?.email || "", {
+              redirectTo: `${window.location.origin}/reset-password`,
+            })}
             className="text-sm font-medium bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 transition-colors"
           >
             Send Password Reset Email
