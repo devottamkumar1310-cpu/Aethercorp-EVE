@@ -401,29 +401,31 @@ export default function InventoryDashboardPage() {
             </span>
             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase font-semibold">
-              <tr>
-                <th className="px-4 py-2 text-left">SKU</th>
-                <th className="px-4 py-2 text-left">Name</th>
-                <th className="px-4 py-2 text-right">Sold</th>
-                <th className="px-4 py-2 text-right">Revenue</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {data?.best_sellers?.map((p) => (
-                <tr key={p.sku} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku}</td>
-                  <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
-                  <td className="px-4 py-2.5 text-right font-bold text-slate-900">{p.qty_sold.toLocaleString()}</td>
-                  <td className="px-4 py-2.5 text-right font-medium text-emerald-600">${p.revenue.toLocaleString()}</td>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm">
+              <thead className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase font-semibold">
+                <tr>
+                  <th className="px-4 py-2 text-left">SKU</th>
+                  <th className="px-4 py-2 text-left">Name</th>
+                  <th className="px-4 py-2 text-right">Sold</th>
+                  <th className="px-4 py-2 text-right">Revenue</th>
                 </tr>
-              ))}
-              {!data?.best_sellers?.length && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No sales data yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data?.best_sellers?.map((p) => (
+                  <tr key={p.sku} className="hover:bg-slate-50/50">
+                    <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku}</td>
+                    <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                    <td className="px-4 py-2.5 text-right font-bold text-slate-900">{p.qty_sold.toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-emerald-600">${p.revenue.toLocaleString()}</td>
+                  </tr>
+                ))}
+                {!data?.best_sellers?.length && (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No sales data yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Worst Sellers */}
@@ -434,29 +436,31 @@ export default function InventoryDashboardPage() {
             </span>
             <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase font-semibold">
-              <tr>
-                <th className="px-4 py-2 text-left">SKU</th>
-                <th className="px-4 py-2 text-left">Name</th>
-                <th className="px-4 py-2 text-right">Sold</th>
-                <th className="px-4 py-2 text-right">Stock</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {data?.worst_sellers?.map((p) => (
-                <tr key={p.sku} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku}</td>
-                  <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-slate-700">{p.qty_sold}</td>
-                  <td className="px-4 py-2.5 text-right font-medium text-slate-900">{p.stock_on_hand.toLocaleString()}</td>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm">
+              <thead className="bg-white border-b border-slate-100 text-slate-500 text-xs uppercase font-semibold">
+                <tr>
+                  <th className="px-4 py-2 text-left">SKU</th>
+                  <th className="px-4 py-2 text-left">Name</th>
+                  <th className="px-4 py-2 text-right">Sold</th>
+                  <th className="px-4 py-2 text-right">Stock</th>
                 </tr>
-              ))}
-              {!data?.worst_sellers?.length && (
-                <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No products yet.</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data?.worst_sellers?.map((p) => (
+                  <tr key={p.sku} className="hover:bg-slate-50/50">
+                    <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{p.sku}</td>
+                    <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold text-slate-700">{p.qty_sold}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-slate-900">{p.stock_on_hand.toLocaleString()}</td>
+                  </tr>
+                ))}
+                {!data?.worst_sellers?.length && (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No products yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

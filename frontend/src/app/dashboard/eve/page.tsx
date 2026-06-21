@@ -250,8 +250,13 @@ export default function EVECoocommandCenter() {
   ]);
   const [suggestedQuestions, setSuggestedQuestions] = useState<Record<string, string[]> | null>(null);
 
-  // Collapsible panels states
-  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsHistoryOpen(window.innerWidth >= 1280);
+    }
+  }, []);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
   // Resizable panel widths (percentages)
@@ -762,9 +767,19 @@ export default function EVECoocommandCenter() {
 
   return (
     <div className="bg-slate-950 text-slate-100 min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-y-auto xl:overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans">
+      {/* Mobile Sidebar Backdrop */}
+      {isHistoryOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 xl:hidden transition-opacity duration-300"
+          onClick={() => setIsHistoryOpen(false)}
+        />
+      )}
+
       {/* Column 0: Conversation History Sidebar */}
-      <div className={`w-full xl:h-full bg-slate-900 border border-slate-800 rounded-2xl shadow-lg flex flex-col gap-3 flex-shrink-0 xl:overflow-hidden transition-all duration-300 ${
-        isHistoryOpen ? "xl:w-64 p-4 opacity-100" : "xl:w-0 p-0 border-0 overflow-hidden opacity-0 pointer-events-none"
+      <div className={`fixed inset-y-0 left-0 z-50 h-full w-64 border-r border-slate-800 bg-slate-900 rounded-r-2xl rounded-l-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-3 xl:flex-shrink-0 xl:overflow-hidden ${
+        isHistoryOpen 
+          ? "translate-x-0 p-4 opacity-100" 
+          : "-translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
       }`}>
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
           <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">

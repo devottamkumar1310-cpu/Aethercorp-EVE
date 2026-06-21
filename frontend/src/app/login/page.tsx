@@ -1,18 +1,21 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowRight, Lock, Mail } from "lucide-react";
+import { Lock, Mail } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const infoMessage = searchParams?.get("message");
+  const queryError = searchParams?.get("error");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +64,16 @@ export default function LoginPage() {
             {error && (
               <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
                 {error}
+              </div>
+            )}
+            {queryError && !error && (
+              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-md border border-red-200">
+                {queryError}
+              </div>
+            )}
+            {infoMessage && !error && (
+              <div className="p-3 bg-emerald-50 text-emerald-700 text-sm rounded-md border border-emerald-200">
+                {infoMessage}
               </div>
             )}
             <div>
@@ -119,5 +132,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">Loading login portal...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

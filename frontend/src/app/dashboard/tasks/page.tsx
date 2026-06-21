@@ -84,42 +84,44 @@ export default function TasksPage() {
         <div className="text-center py-10 text-slate-500">Loading tasks...</div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3 font-medium text-slate-600">Task Title</th>
-                <th className="px-6 py-3 font-medium text-slate-600">Priority</th>
-                <th className="px-6 py-3 font-medium text-slate-600">Status</th>
-                <th className="px-6 py-3 font-medium text-slate-600">Due Date</th>
-                <th className="px-6 py-3 font-medium text-slate-600 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {tasks.map(t => (
-                <tr key={t.id} className="hover:bg-slate-50 group">
-                  <td className="px-6 py-4 font-medium text-slate-800">{t.title}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>{t.priority}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{t.status.replace('_', ' ')}</span>
-                  </td>
-                  <td className="px-6 py-4 text-slate-500">{t.due_date ? new Date(t.due_date).toLocaleDateString() : '-'}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleEdit(t)} className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Edit">
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-2" title="Delete">
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3 font-medium text-slate-600">Task Title</th>
+                  <th className="px-6 py-3 font-medium text-slate-600">Priority</th>
+                  <th className="px-6 py-3 font-medium text-slate-600">Status</th>
+                  <th className="px-6 py-3 font-medium text-slate-600">Due Date</th>
+                  <th className="px-6 py-3 font-medium text-slate-600 text-right">Actions</th>
                 </tr>
-              ))}
-              {tasks.length === 0 && (
-                <tr><td colSpan={5} className="text-center py-12 text-slate-500">No tasks found. Click "New Task" to get started.</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {tasks.map(t => (
+                  <tr key={t.id} className="hover:bg-slate-50 group">
+                    <td className="px-6 py-4 font-medium text-slate-800">{t.title}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>{t.priority}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{t.status.replace('_', ' ')}</span>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500">{t.due_date ? new Date(t.due_date).toLocaleDateString() : '-'}</td>
+                    <td className="px-6 py-4 text-right">
+                      <button onClick={() => handleEdit(t)} className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Edit">
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors ml-2" title="Delete">
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {tasks.length === 0 && (
+                  <tr><td colSpan={5} className="text-center py-12 text-slate-500">No tasks found. Click "New Task" to get started.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
