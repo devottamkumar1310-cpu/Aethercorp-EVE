@@ -27,8 +27,8 @@ if database_url.startswith("sqlite"):
     engine_args["connect_args"] = {"check_same_thread": False}
 else:
     # Postgres specific connection pool limits
-    engine_args["pool_size"] = 20
-    engine_args["max_overflow"] = 10
+    engine_args["pool_size"] = 5
+    engine_args["max_overflow"] = 5
     engine_args["pool_pre_ping"] = True
 
 # Attempt connection to Postgres. If it fails, fallback to SQLite for local development.
