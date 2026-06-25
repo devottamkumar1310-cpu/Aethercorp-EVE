@@ -20,6 +20,17 @@ Base.metadata.create_all(bind=engine)
 
 MOCK_ORG_ID = "00000000-0000-0000-0000-000000000001"
 
+from app.models.organization import Organization
+import uuid
+
+@pytest.fixture(autouse=True, scope="module")
+def seed_mock_org():
+    db = TestingSessionLocal()
+    org = Organization(id=uuid.UUID(MOCK_ORG_ID), name="Mock Org", slug="mock-org")
+    db.add(org)
+    db.commit()
+    db.close()
+
 
 def test_inventory_csv_missing_columns():
     db = TestingSessionLocal()

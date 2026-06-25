@@ -122,7 +122,7 @@ class SimulationEngine:
             },
             "provenance": {
                 "source": "SimulationEngine.simulate_price_change",
-                "calculated_at": datetime.datetime.utcnow().isoformat()
+                "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         }
         
@@ -172,7 +172,7 @@ class SimulationEngine:
             },
             "provenance": {
                 "source": "SimulationEngine.simulate_demand_growth",
-                "calculated_at": datetime.datetime.utcnow().isoformat()
+                "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         }
         
@@ -222,7 +222,7 @@ class SimulationEngine:
             },
             "provenance": {
                 "source": "SimulationEngine.simulate_demand_decline",
-                "calculated_at": datetime.datetime.utcnow().isoformat()
+                "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         }
         
@@ -268,7 +268,7 @@ class SimulationEngine:
             },
             "provenance": {
                 "source": "SimulationEngine.simulate_inventory_expansion",
-                "calculated_at": datetime.datetime.utcnow().isoformat()
+                "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         }
         
@@ -318,7 +318,7 @@ class SimulationEngine:
             },
             "provenance": {
                 "source": "SimulationEngine.simulate_cash_flow_forecast",
-                "calculated_at": datetime.datetime.utcnow().isoformat()
+                "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
         }
         

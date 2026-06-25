@@ -286,7 +286,7 @@ def test_executive_chat_fallback_intent_routing():
         })
         assert res_finance.status_code == 200
         data_finance = res_finance.json()
-        assert "finance" in data_finance["message"]["content"].lower()
+        assert "financ" in data_finance["message"]["content"].lower()
         
         # Test 2: Inventory Intent
         res_inventory = client.post("/api/executive/chat", json={

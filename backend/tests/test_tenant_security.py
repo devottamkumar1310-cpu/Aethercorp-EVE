@@ -109,12 +109,12 @@ def test_workspace_membership_enforcement():
 
     # 1. Access Org A (should be allowed since User A is a member of Org A)
     headers = {"X-Workspace-Id": str(ORG_A_ID)}
-    response = client.get("/analytics/overview", headers=headers)
+    response = client.get("/api/analytics/overview", headers=headers)
     assert response.status_code == 200
 
     # 2. Try to access Org B (should be Forbidden / 403)
     headers_malicious = {"X-Workspace-Id": str(ORG_B_ID)}
-    response = client.get("/analytics/overview", headers=headers_malicious)
+    response = client.get("/api/analytics/overview", headers=headers_malicious)
     assert response.status_code == 403
     assert "Not a member of this workspace" in response.json()["detail"]
 

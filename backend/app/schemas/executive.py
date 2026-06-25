@@ -73,6 +73,12 @@ class BusinessGoalCreate(BaseModel):
     description: str
     target_value: Optional[float] = None
 
+class BusinessGoalUpdate(BaseModel):
+    goal_type: Optional[str] = None
+    description: Optional[str] = None
+    target_value: Optional[float] = None
+    is_active: Optional[bool] = None
+
 class BusinessGoalResponse(BaseModel):
     id: UUID
     goal_type: str
@@ -104,6 +110,7 @@ class AIRecommendationResponse(BaseModel):
     opportunity_factors: List[str]
     confidence_level: float
     created_at: datetime
+    influenced_by_goals: Optional[List[BusinessGoalResponse]] = None
 
     class Config:
         from_attributes = True

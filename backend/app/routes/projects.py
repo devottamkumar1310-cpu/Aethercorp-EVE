@@ -8,7 +8,7 @@ from app.services.project_service import ProjectService
 from app.core.security import get_current_user, get_required_workspace_id
 from app.models.profile import Profile
 
-router = APIRouter(prefix="/projects", tags=["Projects"])
+router = APIRouter(prefix="/api/projects", tags=["Projects"])
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(project: ProjectCreate, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):

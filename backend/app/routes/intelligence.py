@@ -23,7 +23,7 @@ from app.services.intelligence_snapshot_service import create_snapshot, get_rece
 from app.core.security import get_current_user, get_required_workspace_id
 from app.models.profile import Profile
 
-router = APIRouter(prefix="/intelligence", tags=["Intelligence"])
+router = APIRouter(prefix="/api/intelligence", tags=["Intelligence"])
 
 @router.get("/health", response_model=HealthScoreResponse)
 def get_health(db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):

@@ -61,6 +61,20 @@ class InventoryReportExtractionResult(BaseModel):
     inventory_items: List[InventoryReportItem] = Field(..., description="List of inventory levels parsed from the report")
 
 
+class FinancialStatementExtractionResult(BaseModel):
+    company_name: str = Field(..., description="Name of the company/entity")
+    statement_period: str = Field(..., description="Period covered by the statement")
+    net_income: float = Field(0.0, description="Reported net income or net profit")
+    total_assets: float = Field(0.0, description="Reported total assets")
+
+
+class BusinessContractExtractionResult(BaseModel):
+    contract_title: str = Field(..., description="Title or name of the contract")
+    parties: List[str] = Field(..., description="Parties involved in the agreement")
+    effective_date: str = Field("", description="Effective date of the contract")
+    termination_date: Optional[str] = Field(None, description="Termination or expiration date of the contract")
+
+
 class ExtractionEngine:
     @staticmethod
     async def extract_details(
@@ -79,10 +93,14 @@ class ExtractionEngine:
         schema_map = {
             "Sales Invoice": InvoiceExtractionResult,
             "Purchase Invoice": InvoiceExtractionResult,
+            "Invoice": InvoiceExtractionResult,
             "Purchase Order": PurchaseOrderExtractionResult,
             "Receipt": ExpenseExtractionResult,
-            "Sales Report": SalesReportExtractionResult,
-            "Inventory Report": InventoryReportExtractionResult
+            "Financial Statement": FinancialStatementExtractionResult,
+            "Business Contract": BusinessContractExtractionResult,
+            "Inventory Document": InventoryReportExtractionResult,
+            "Inventory Report": InventoryReportExtractionResult,
+            "Sales Report": SalesReportExtractionResult
         }
         
         target_schema = schema_map.get(document_type)
@@ -224,6 +242,19 @@ class ExtractionEngine:
                         lead_time_days=7
                     )
                 ]
+            )
+        elif schema == FinancialStatementExtractionResult:
+            return FinancialStatementExtractionResult(
+                company_name="AetherCorp EVE",
+                statement_period="Q2 2026",
+                net_income=45000.00,
+                total_assets=250000.00
+            )
+        elif schema == BusinessContractExtractionResult:
+            return BusinessContractExtractionResult(
+                contract_title="Vendor Supply Agreement",
+                parties=["AetherCorp EVE", "Global Apparel Fabricators"],
+                effective_date="2026-06-01"
             )
         else:
             raise ValueError(f"Unknown mock extraction schema: {schema}")

@@ -189,7 +189,7 @@ class AnalyticsService:
                 },
                 "provenance": {
                     "source": "AnalyticsService.get_inventory_analysis",
-                    "calculated_at": datetime.datetime.utcnow().isoformat()
+                    "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
             })
 
@@ -352,7 +352,7 @@ class AnalyticsService:
                 },
                 "provenance": {
                     "source": "AnalyticsService.get_pricing_analysis",
-                    "calculated_at": datetime.datetime.utcnow().isoformat()
+                    "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
             })
 

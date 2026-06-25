@@ -2,7 +2,7 @@ import { API_BASE_URL } from "@/lib/api";
 import { getHeaders } from "./businessService";
 
 export async function fetchHealth(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/health`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/health`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch health");
@@ -10,7 +10,7 @@ export async function fetchHealth(token: string) {
 }
 
 export async function fetchExecutiveSummary(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/executive-summary`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/executive-summary`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch summary");
@@ -18,7 +18,7 @@ export async function fetchExecutiveSummary(token: string) {
 }
 
 export async function fetchRisks(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/risks`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/risks`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch risks");
@@ -26,7 +26,7 @@ export async function fetchRisks(token: string) {
 }
 
 export async function fetchOpportunities(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/opportunities`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/opportunities`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch opportunities");
@@ -34,7 +34,7 @@ export async function fetchOpportunities(token: string) {
 }
 
 export async function fetchTrends(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/trends`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/trends`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch trends");
@@ -42,7 +42,7 @@ export async function fetchTrends(token: string) {
 }
 
 export async function fetchActions(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/actions`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/actions`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch actions");
@@ -50,7 +50,7 @@ export async function fetchActions(token: string) {
 }
 
 export async function createSnapshot(token: string) {
-  const res = await fetch(`${API_BASE_URL}/intelligence/snapshot`, {
+  const res = await fetch(`${API_BASE_URL}/api/intelligence/snapshot`, {
     method: 'POST',
     headers: getHeaders(token)
   });

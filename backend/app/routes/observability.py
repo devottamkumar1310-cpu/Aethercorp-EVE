@@ -32,7 +32,7 @@ def get_costs(
     admin_check: Any = Depends(verify_workspace_admin)
 ):
     try:
-        today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = today_start - datetime.timedelta(days=7)
         month_start = today_start - datetime.timedelta(days=30)
 
@@ -138,7 +138,7 @@ def get_errors(
             "message": err.message,
             "stack_trace": err.stack_trace,
             "metadata_json": err.metadata_json,
-            "created_at": err.created_at.isoformat()
+            "created_at": (err.created_at.replace(tzinfo=datetime.timezone.utc) if err.created_at.tzinfo is None else err.created_at).isoformat()
         }
         for err in errors
     ]

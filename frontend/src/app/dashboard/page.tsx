@@ -92,7 +92,34 @@ export default function DashboardPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-500 font-medium">Loading Operations Engine...</div>;
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 max-w-[1600px] mx-auto w-full space-y-6 animate-pulse">
+        {/* CTAs Toolbar Skeleton */}
+        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300" />
+        
+        {/* Navigation Toolbar Skeleton */}
+        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300" />
+
+        {/* KPI Cards Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-28 bg-slate-200 rounded-xl border border-slate-300 p-5 space-y-3">
+              <div className="h-4 bg-slate-300 rounded w-1/2" />
+              <div className="h-8 bg-slate-300 rounded w-3/4" />
+            </div>
+          ))}
+        </div>
+
+        {/* Tables Grid Skeleton */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300" />
+          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300" />
+        </div>
+
+        {/* Timeline Skeleton */}
+        <div className="h-80 bg-slate-200 rounded-xl border border-slate-300" />
+      </div>
+    );
   }
 
   const activeWorkspace = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;

@@ -170,9 +170,35 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 p-6 flex justify-center items-center h-screen bg-slate-50">
-        <div className="animate-pulse text-indigo-600 font-medium">Loading settings...</div>
-      </div>
+      <main className="p-6 max-w-4xl mx-auto w-full space-y-8 animate-pulse">
+        {/* Profile Card Skeleton */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-48 flex flex-col justify-between">
+          <div className="h-12 bg-slate-100 border-b border-slate-200" />
+          <div className="p-6 space-y-4 flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="h-10 bg-slate-100 rounded border border-slate-200" />
+              <div className="h-10 bg-slate-100 rounded border border-slate-200" />
+            </div>
+          </div>
+        </div>
+
+        {/* Workspaces Card Skeleton */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-52">
+          <div className="h-12 bg-slate-100 border-b border-slate-200" />
+          <div className="p-6 space-y-3">
+            <div className="h-14 bg-slate-50 border border-slate-200 rounded-lg w-full" />
+            <div className="h-14 bg-slate-50 border border-slate-200 rounded-lg w-full" />
+          </div>
+        </div>
+
+        {/* Security Skeleton */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-36">
+          <div className="h-12 bg-slate-100 border-b border-slate-200" />
+          <div className="p-6">
+            <div className="h-10 bg-slate-100 border border-slate-300 rounded w-44" />
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -269,7 +295,7 @@ export default function SettingsPage() {
         <div className="p-6">
           <button
             onClick={() => supabase.auth.resetPasswordForEmail(profile?.email || "", {
-              redirectTo: `${window.location.origin}/reset-password`,
+              redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
             })}
             className="text-sm font-medium bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 transition-colors"
           >
@@ -321,7 +347,7 @@ export default function SettingsPage() {
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-slate-900">Delete Account</h3>
               <p className="text-sm text-slate-500">
-                Permanently delete your account and all associated data. This action cannot be undone.
+                Deleting your account permanently removes all associated data and cannot be undone.
               </p>
             </div>
             <button
@@ -409,8 +435,7 @@ export default function SettingsPage() {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-600">
-                This will permanently delete your account, all workspaces you own, and all associated data.{" "}
-                <span className="font-semibold text-red-600">This action cannot be undone.</span>
+                Deleting your account permanently removes all associated data and cannot be undone. This will permanently delete your account, all workspaces you own, and all associated data. If you have any questions or require support before deletion, please email us at <a href="mailto:aethercorp.support@gmail.com" className="text-indigo-650 hover:underline font-semibold">aethercorp.support@gmail.com</a>.
               </p>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">

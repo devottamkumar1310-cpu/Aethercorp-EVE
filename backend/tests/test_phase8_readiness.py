@@ -184,11 +184,11 @@ def test_admin_authorization(seeded_data):
     assert resp.status_code == status.HTTP_403_FORBIDDEN
     
     # 3. Admin accessing product analytics -> OK
-    resp = client.get("/analytics/products", headers=admin_h)
+    resp = client.get("/api/analytics/products", headers=admin_h)
     assert resp.status_code == status.HTTP_200_OK
     
     # 4. Member accessing product analytics -> 403 Forbidden
-    resp = client.get("/analytics/products", headers=member_h)
+    resp = client.get("/api/analytics/products", headers=member_h)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 def test_tenant_isolation_idor(seeded_data):
@@ -272,7 +272,7 @@ def test_product_analytics_logic(seeded_data):
     client = TestClient(app)
     headers = get_headers(seeded_data["admin_id"], seeded_data["admin_email"], seeded_data["org_a_id"])
     
-    resp = client.get("/analytics/products", headers=headers)
+    resp = client.get("/api/analytics/products", headers=headers)
     assert resp.status_code == status.HTTP_200_OK
     
     data = resp.json()

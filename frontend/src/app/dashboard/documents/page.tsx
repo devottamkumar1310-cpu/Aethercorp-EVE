@@ -121,7 +121,15 @@ export default function DocumentHubPage() {
       toast.success(`${file.name} uploaded successfully. EVE is analyzing it.`, { id: toastId });
       setDocuments(prev => [newDoc, ...prev]);
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload file", { id: toastId });
+      toast.error(
+        <div className="flex flex-col gap-0.5">
+          <span>{err.message || "Failed to upload file"}.</span>
+          <span className="text-[10px] text-slate-400 leading-normal">
+            Need help? Contact <a href="mailto:aethercorp.support@gmail.com" className="underline text-indigo-450 hover:text-indigo-350">aethercorp.support@gmail.com</a> or use our <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="underline text-indigo-450 hover:text-indigo-350">Feedback Form</a>.
+          </span>
+        </div>,
+        { id: toastId, duration: 8000 }
+      );
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -199,6 +207,9 @@ export default function DocumentHubPage() {
               <p className="text-xs text-slate-500 mt-1.5">
                 Supported formats: PDF, CSV, XLSX, PNG, JPG, JPEG (Max 10MB)
               </p>
+              <p className="text-xs text-indigo-400 mt-2.5 font-medium max-w-md mx-auto">
+                Only upload business documents that you are authorized to process.
+              </p>
             </div>
           </div>
         )}
@@ -216,8 +227,31 @@ export default function DocumentHubPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 flex justify-center items-center">
-            <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+          <div className="overflow-x-auto animate-pulse">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800/80 bg-slate-950/20 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                  <th className="p-4 pl-6">Filename</th>
+                  <th className="p-4">Doc Type</th>
+                  <th className="p-4">File Size</th>
+                  <th className="p-4">Upload Date</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 pr-6 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-850/40">
+                {[...Array(3)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="p-4 pl-6"><div className="h-4 bg-slate-800 rounded w-2/3" /></td>
+                    <td className="p-4"><div className="h-4 bg-slate-800 rounded w-1/3" /></td>
+                    <td className="p-4"><div className="h-4 bg-slate-800 rounded w-1/4" /></td>
+                    <td className="p-4"><div className="h-4 bg-slate-800 rounded w-1/4" /></td>
+                    <td className="p-4"><div className="h-6 bg-slate-800 rounded-full w-16" /></td>
+                    <td className="p-4 pr-6 text-right"><div className="h-4 bg-slate-800 rounded w-12 ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : documents.length === 0 ? (
           <div className="p-12 text-center text-slate-500">

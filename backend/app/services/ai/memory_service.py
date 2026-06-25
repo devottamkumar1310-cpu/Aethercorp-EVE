@@ -117,3 +117,70 @@ def get_recent_recommendations(db: Session, org_id: uuid.UUID, limit: int = 10) 
     return db.query(AIRecommendation).filter(
         AIRecommendation.organization_id == org_id
     ).order_by(AIRecommendation.created_at.desc()).limit(limit).all()
+
+def update_goal(
+    db: Session,
+    org_id: uuid.UUID,
+    goal_id: uuid.UUID,
+    update_data: dict
+) -> Optional[BusinessGoal]:
+    """Updates an existing business goal with organization scoping."""
+    goal = db.query(BusinessGoal).filter(
+        BusinessGoal.organization_id == org_id,
+        BusinessGoal.id == goal_id
+    ).first()
+    if not goal:
+        return None
+        
+    for key, val in update_data.items():
+        if val is not None:
+            setattr(goal, key, val)
+            
+    db.commit()
+    db.refresh(goal)
+    return goal
+
+def get_influencing_goals(
+    db: Session,
+    org_id: uuid.UUID,
+    recommendation_text: str,
+    agent_source: str
+) -> List[BusinessGoal]:
+    """Determines which active goals influenced the recommendation using type and text matching."""
+    active_goals = db.query(BusinessGoal).filter(
+        BusinessGoal.organization_id == org_id,
+        BusinessGoal.is_active == True
+    ).all()
+    
+    influenced = []
+    rec_lower = (recommendation_text or "").lower()
+    
+    for g in active_goals:
+        # 1. Type matching with agent source domain
+        type_match = False
+        g_type = g.goal_type.lower()
+        s_type = agent_source.lower()
+        
+        if g_type == "profitability" and s_type == "finance":
+            type_match = True
+        elif g_type == "cost_reduction" and s_type in ["finance", "operations"]:
+            type_match = True
+        elif g_type == "growth" and s_type in ["finance", "client"]:
+            type_match = True
+        elif g_type == "retention" and s_type == "client":
+            type_match = True
+        elif s_type in ["coo", "eve lead"]:
+            type_match = True  # COO synthesis aggregates all active goals
+            
+        # 2. Text keyword matching
+        keyword_match = False
+        desc_words = [w for w in (g.description or "").lower().split() if len(w) > 3]
+        if desc_words:
+            matched_words = [w for w in desc_words if w in rec_lower]
+            if len(matched_words) >= 2 or (len(matched_words) / len(desc_words) >= 0.4):
+                keyword_match = True
+                
+        if type_match or keyword_match:
+            influenced.append(g)
+            
+    return influenced

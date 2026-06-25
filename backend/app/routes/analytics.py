@@ -7,7 +7,7 @@ from typing import Any
 from app.core.security import get_current_user, get_required_workspace_id, verify_workspace_admin
 from app.models.profile import Profile
 
-router = APIRouter(prefix="/analytics", tags=["Analytics"])
+router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
 @router.get("/overview")
 def get_analytics_overview(

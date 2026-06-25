@@ -8,7 +8,7 @@ from app.services.finance_service import FinanceService
 from app.core.security import get_current_user, get_required_workspace_id
 from app.models.profile import Profile
 
-router = APIRouter(prefix="/finance", tags=["Finance"])
+router = APIRouter(prefix="/api/finance", tags=["Finance"])
 
 @router.post("/revenue", response_model=RevenueResponse, status_code=status.HTTP_201_CREATED)
 def create_revenue(revenue: RevenueCreate, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):

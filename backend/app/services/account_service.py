@@ -5,6 +5,7 @@ from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 from app.models.document import ProcessedDocument
 from app.services.gcs_service import GCSService
+from app.config import settings
 
 logger = logging.getLogger("eve.services.account")
 
@@ -77,6 +78,10 @@ class AccountService:
         Deletes a user account and all solely-owned workspaces.
         For workspaces with other owners, just removes the user's membership.
         """
+        if not settings.SUPABASE_SERVICE_ROLE_KEY or not settings.SUPABASE_URL:
+            logger.error("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL is not configured. Account deletion aborted to prevent orphaned auth records.")
+            raise ValueError("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL is not configured. Account deletion aborted to prevent orphaned auth records.")
+
         import time
         t_start = time.perf_counter()
         user_id = user_profile.id
@@ -127,6 +132,27 @@ class AccountService:
                 logger.info(f"[TIMING] Queueing membership deletion in SQLAlchemy...")
                 db.delete(membership)
                 logger.info(f"[TIMING] Finished queueing membership deletion in {(time.perf_counter() - t_mem) * 1000:.2f} ms")
+
+        # Delete user from Supabase auth if service role key is present
+        if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_URL:
+            import httpx
+            try:
+                logger.info(f"Triggering Supabase Auth deletion for user {user_id}")
+                url = f"{settings.SUPABASE_URL}/auth/v1/admin/users/{user_id}"
+                headers = {
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}"
+                }
+                with httpx.Client() as client:
+                    resp = client.delete(url, headers=headers)
+                    if resp.status_code not in (200, 204):
+                        logger.error(f"Failed to delete Supabase user: status={resp.status_code} response={resp.text}")
+                    else:
+                        logger.info(f"Supabase Auth user {user_id} deleted successfully.")
+            except Exception as e:
+                logger.error(f"Error calling Supabase user delete API: {e}", exc_info=True)
+        else:
+            logger.warning("SUPABASE_SERVICE_ROLE_KEY not configured. Skipping Supabase Auth user deletion.")
 
         # Delete the profile (cascades to remaining memberships and activity logs)
         t_profile = time.perf_counter()
@@ -180,6 +206,25 @@ class AccountService:
                     db.delete(org)
             else:
                 db.delete(membership)
+
+        # Delete user from Supabase auth if service role key is present
+        if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_URL:
+            import httpx
+            try:
+                logger.info(f"Triggering Supabase Auth deletion for orphaned user {existing.id}")
+                url = f"{settings.SUPABASE_URL}/auth/v1/admin/users/{existing.id}"
+                headers = {
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}"
+                }
+                with httpx.Client() as client:
+                    resp = client.delete(url, headers=headers)
+                    if resp.status_code not in (200, 204):
+                        logger.error(f"Failed to delete Supabase user: status={resp.status_code} response={resp.text}")
+                    else:
+                        logger.info(f"Supabase Auth user {existing.id} deleted successfully.")
+            except Exception as e:
+                logger.error(f"Error calling Supabase user delete API: {e}", exc_info=True)
 
         # Delete the orphaned profile
         db.delete(existing)

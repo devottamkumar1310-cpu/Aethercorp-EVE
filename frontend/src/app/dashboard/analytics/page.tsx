@@ -39,7 +39,20 @@ export default function AnalyticsPage() {
       </div>
       
       {loading ? (
-        <div className="text-center py-10 text-slate-500">Loading analytics...</div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-8 animate-pulse">
+          <div className="h-6 bg-slate-200 rounded w-1/4 mb-6" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="h-4 bg-slate-200 rounded w-2/3" />
+                <div className="h-6 bg-slate-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 pt-8 border-t border-slate-100">
+            <div className="h-4 bg-slate-200 rounded w-3/4" />
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-8">
             <h2 className="text-xl font-bold text-slate-800 mb-6">Business Metrics Overview</h2>

@@ -104,7 +104,18 @@ export default function ActivityPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-10 text-slate-500">Loading activity feed...</div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col p-6 space-y-6 animate-pulse">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex gap-4 items-start pb-6 border-b border-slate-100 last:border-0 last:pb-0">
+              <div className="w-10 h-10 rounded-full bg-slate-200 flex-shrink-0" />
+              <div className="space-y-3 flex-1">
+                <div className="h-4 bg-slate-200 rounded w-1/3" />
+                <div className="h-3 bg-slate-200 rounded w-3/4" />
+                <div className="h-2 bg-slate-200 rounded w-1/6 mt-2" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
           <div className="p-6 space-y-6 flex-1">

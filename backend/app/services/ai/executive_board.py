@@ -45,7 +45,8 @@ class ExecutiveBoard:
         question: str,
         mode: str = "smart",
         user_id: Optional[uuid.UUID] = None,
-        conversation_history: Optional[List[dict]] = None
+        conversation_history: Optional[List[dict]] = None,
+        intent: Optional[str] = None
     ) -> ExecutiveSynthesisResult:
         run_finance = True
         run_operations = True
@@ -55,6 +56,7 @@ class ExecutiveBoard:
 
         import time
         from app.core.telemetry import record_agent_metric
+        from app.services.ai.conversation_layer import ConversationLayer
 
         # Helper wrapper to measure sub-agent execution time and record telemetry
         async def timed_agent_run(agent_name, coro):
@@ -72,45 +74,88 @@ class ExecutiveBoard:
         # 1. Intent Routing Classifier
         run_forecasting = False
         if mode == "smart":
-            start_route = time.time()
-            try:
-                system_instruction = "Identify which specialized sub-agents to invoke based on the user question."
-                prompt = f"User question: {question}"
-                selection: AgentSelection = await self.gemini_service.generate_structured_response(
-                    prompt=prompt,
-                    response_schema=AgentSelection,
-                    system_instruction=system_instruction,
-                    agent_name="router"
-                )
-                run_finance = selection.run_finance
-                run_operations = selection.run_operations
-                run_inventory = selection.run_inventory
-                run_client = selection.run_client
-                run_growth = selection.run_growth
-                run_forecasting = selection.run_forecasting
-                
-                # If nothing selected, run COO synthesis with all
-                if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
-                    run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
-                
-                route_latency = int((time.time() - start_route) * 1000)
-                record_agent_metric("router", "success", route_latency)
-            except Exception as e:
-                route_latency = int((time.time() - start_route) * 1000)
-                record_agent_metric("router", "failed", route_latency, str(e))
-                logger.warning(f"LLM routing classification failed: {e}. Defaulting to keyword heuristics.")
-                # Fallback to keyword heuristics
-                q_lower = question.lower()
-                run_finance = any(k in q_lower for k in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"])
-                run_inventory = any(k in q_lower for k in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"])
-                run_client = any(k in q_lower for k in ["client", "customer", "retention", "churn", "inactive"])
-                run_growth = any(k in q_lower for k in ["growth", "opportunity", "opportunities", "expand"])
-                run_operations = any(k in q_lower for k in ["projects", "tasks", "operations", "velocity", "delay", "capacity", "bottleneck", "deadline"])
-                run_forecasting = any(k in q_lower for k in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"])
-                
-                # If keyword fallback is empty, run all
-                if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
-                    run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
+            resolved_intent = intent or ConversationLayer.classify_intent(question)
+            
+            fast_path_selection = None
+            if resolved_intent == "Finance Query" or resolved_intent == "Pricing Query":
+                fast_path_selection = {
+                    "run_finance": True, "run_operations": False, "run_inventory": False,
+                    "run_client": False, "run_growth": True, "run_forecasting": False
+                }
+            elif resolved_intent == "Forecast Query":
+                fast_path_selection = {
+                    "run_finance": False, "run_operations": False, "run_inventory": False,
+                    "run_client": False, "run_growth": False, "run_forecasting": True
+                }
+            elif resolved_intent == "Inventory Query":
+                fast_path_selection = {
+                    "run_finance": False, "run_operations": False, "run_inventory": True,
+                    "run_client": False, "run_growth": False, "run_forecasting": False
+                }
+            elif resolved_intent == "Client Query":
+                fast_path_selection = {
+                    "run_finance": False, "run_operations": False, "run_inventory": False,
+                    "run_client": True, "run_growth": True, "run_forecasting": False
+                }
+            elif resolved_intent == "Project Query":
+                fast_path_selection = {
+                    "run_finance": False, "run_operations": True, "run_inventory": False,
+                    "run_client": False, "run_growth": False, "run_forecasting": False
+                }
+            elif resolved_intent == "Technical Query":
+                fast_path_selection = {
+                    "run_finance": False, "run_operations": True, "run_inventory": False,
+                    "run_client": False, "run_growth": False, "run_forecasting": False
+                }
+            
+            if fast_path_selection:
+                logger.info(f"Fast-Path Intent Routing matched intent: '{resolved_intent}'. Bypassing LLM router.")
+                run_finance = fast_path_selection["run_finance"]
+                run_operations = fast_path_selection["run_operations"]
+                run_inventory = fast_path_selection["run_inventory"]
+                run_client = fast_path_selection["run_client"]
+                run_growth = fast_path_selection["run_growth"]
+                run_forecasting = fast_path_selection["run_forecasting"]
+            else:
+                start_route = time.time()
+                try:
+                    system_instruction = "Identify which specialized sub-agents to invoke based on the user question."
+                    prompt = f"User question: {question}"
+                    selection: AgentSelection = await self.gemini_service.generate_structured_response(
+                        prompt=prompt,
+                        response_schema=AgentSelection,
+                        system_instruction=system_instruction,
+                        agent_name="router"
+                    )
+                    run_finance = selection.run_finance
+                    run_operations = selection.run_operations
+                    run_inventory = selection.run_inventory
+                    run_client = selection.run_client
+                    run_growth = selection.run_growth
+                    run_forecasting = selection.run_forecasting
+                    
+                    # If nothing selected, run COO synthesis with all
+                    if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
+                        run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
+                    
+                    route_latency = int((time.time() - start_route) * 1000)
+                    record_agent_metric("router", "success", route_latency)
+                except Exception as e:
+                    route_latency = int((time.time() - start_route) * 1000)
+                    record_agent_metric("router", "failed", route_latency, str(e))
+                    logger.warning(f"LLM routing classification failed: {e}. Defaulting to keyword heuristics.")
+                    # Fallback to keyword heuristics
+                    q_lower = question.lower()
+                    run_finance = any(k in q_lower for k in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"])
+                    run_inventory = any(k in q_lower for k in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"])
+                    run_client = any(k in q_lower for k in ["client", "customer", "retention", "churn", "inactive"])
+                    run_growth = any(k in q_lower for k in ["growth", "opportunity", "opportunities", "expand"])
+                    run_operations = any(k in q_lower for k in ["projects", "tasks", "operations", "velocity", "delay", "capacity", "bottleneck", "deadline"])
+                    run_forecasting = any(k in q_lower for k in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"])
+                    
+                    # If keyword fallback is empty, run all
+                    if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):
+                        run_finance = run_operations = run_inventory = run_client = run_growth = run_forecasting = True
 
         # 1.5 Pre-fetch common database indicators once to optimize parallel execution query latencies
         from app.services.business_analytics_service import BusinessAnalyticsService

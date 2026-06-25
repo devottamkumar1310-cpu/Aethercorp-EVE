@@ -65,7 +65,7 @@ class IngestionService:
             mime_type=content_type
         )
         
-        if classification.document_type == "Unknown" or classification.confidence < 0.8:
+        if classification.document_type == "Unknown / Unsupported" or classification.confidence < 0.8:
             AuditLogger.log(
                 db, 
                 "document_ingestion", 
@@ -74,15 +74,27 @@ class IngestionService:
                 f"Classification rejected: {classification.document_type} (Confidence: {classification.confidence:.2f})"
             )
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to classify document with high confidence (Got: '{classification.document_type}', confidence: {classification.confidence:.2f})."
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This file does not appear to be a supported business document."
             )
+
+        # Refine Invoice and Inventory Document into internal types for backward compatibility
+        refined_doc_type = classification.document_type
+        if refined_doc_type == "Invoice":
+            if "purchase" in filename.lower() or "supplier" in filename.lower():
+                refined_doc_type = "Purchase Invoice"
+            elif "sales" in filename.lower() or "customer" in filename.lower():
+                refined_doc_type = "Sales Invoice"
+            else:
+                refined_doc_type = "Sales Invoice"
+        elif refined_doc_type == "Inventory Document":
+            refined_doc_type = "Inventory Report"
 
         # 3. Document Extraction
         extracted_data = await ExtractionEngine.extract_details(
             file_content=file_bytes,
             mime_type=content_type,
-            document_type=classification.document_type,
+            document_type=refined_doc_type,
             filename=filename
         )
 
@@ -100,7 +112,7 @@ class IngestionService:
                 "document_ingestion", 
                 "failure", 
                 org_id, 
-                f"Validation failed for {classification.document_type}: Score {validation.quality_score:.1f}"
+                f"Validation failed for {refined_doc_type}: Score {validation.quality_score:.1f}"
             )
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -108,13 +120,13 @@ class IngestionService:
             )
 
         # 5. Database Integration
-        IngestionService._integrate_data(db, org_id, classification.document_type, extracted_data)
+        IngestionService._integrate_data(db, org_id, refined_doc_type, extracted_data)
 
         # 6. COO Insights Generation
         coo_insights = await IngestionService._generate_coo_insights(
             db, 
             org_id, 
-            classification.document_type, 
+            refined_doc_type, 
             extracted_data, 
             validation
         )
@@ -128,9 +140,9 @@ class IngestionService:
             "document_ingestion", 
             "success", 
             org_id, 
-            f"Successfully processed {classification.document_type} from file: {filename}",
+            f"Successfully processed {refined_doc_type} from file: {filename}",
             metadata_json={
-                "document_type": classification.document_type,
+                "document_type": refined_doc_type,
                 "quality_score": validation.quality_score,
                 "issues_count": len(validation.detected_issues)
             }
@@ -138,7 +150,7 @@ class IngestionService:
 
         return {
             "status": "success",
-            "document_type": classification.document_type,
+            "document_type": refined_doc_type,
             "classification_confidence": classification.confidence,
             "quality_assessment": validation.model_dump(),
             "extracted_data": extracted_data.model_dump(),

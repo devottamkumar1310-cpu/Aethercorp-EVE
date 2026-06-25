@@ -1,9 +1,18 @@
 import re
 import logging
+import datetime
 from typing import List, Dict, Any, Optional
 from app.schemas.executive import ExecutiveSynthesisResult, ExecutiveRecommendation, StrategicPriority
 
 logger = logging.getLogger("eve.services.ai.executive_formatter")
+
+
+def to_utc(dt: Optional[datetime.datetime]) -> Optional[datetime.datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=datetime.timezone.utc)
+    return dt.astimezone(datetime.timezone.utc)
 
 
 class ExecutiveFormatter:
@@ -27,6 +36,22 @@ class ExecutiveFormatter:
             return "I don't currently have enough verified data to support that conclusion."
 
         return text
+
+    @staticmethod
+    def build_domains_from_question(question: str) -> List[str]:
+        q_lower = question.lower() if question else ""
+        requested = []
+        if any(kw in q_lower for kw in ["churn", "retention", "client", "customer", "vip"]):
+            requested.append("client")
+        if any(kw in q_lower for kw in ["inventory", "stock", "warehouse", "sku", "reorder", "supplier", "safety stock", "overstock", "dead stock"]):
+            requested.append("inventory")
+        if any(kw in q_lower for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
+            requested.append("finance")
+        if any(kw in q_lower for kw in ["project", "task", "velocity", "capacity", "deadline", "delay", "workflow", "operations", "weekly", "focus", "priorities", "priority", "week"]):
+            requested.append("operations")
+        if any(kw in q_lower for kw in ["growth", "opportunity", "opportunities", "expand"]):
+            requested.append("growth")
+        return requested
 
     @staticmethod
     def build_assumptions(question: str) -> List[str]:
@@ -260,16 +285,17 @@ class ExecutiveFormatter:
             active_projects = sum(1 for p in c.projects if p.status == "active")
             
             # Last Activity Date
-            dates = [c.updated_at]
+            dates = [to_utc(c.updated_at)] if c.updated_at else []
             for p in c.projects:
                 if p.updated_at:
-                    dates.append(p.updated_at)
+                    dates.append(to_utc(p.updated_at))
                 for r in p.revenues:
                     if r.date:
-                        dates.append(r.date)
-            last_activity = max(dates) if dates else c.updated_at
+                        dates.append(to_utc(r.date))
+            dates = [d for d in dates if d is not None]
+            last_activity = max(dates) if dates else to_utc(c.updated_at)
             
-            days_since = (datetime.datetime.utcnow() - last_activity).days if last_activity else 999
+            days_since = (datetime.datetime.now(datetime.timezone.utc) - last_activity).days if last_activity else 999
             
             # Risk logic
             is_at_risk = False
@@ -346,16 +372,17 @@ class ExecutiveFormatter:
             active_projects = sum(1 for p in c.projects if p.status == "active")
             
             # Last Activity Date
-            dates = [c.updated_at]
+            dates = [to_utc(c.updated_at)] if c.updated_at else []
             for p in c.projects:
                 if p.updated_at:
-                    dates.append(p.updated_at)
+                    dates.append(to_utc(p.updated_at))
                 for r in p.revenues:
                     if r.date:
-                        dates.append(r.date)
-            last_activity = max(dates) if dates else c.updated_at
+                        dates.append(to_utc(r.date))
+            dates = [d for d in dates if d is not None]
+            last_activity = max(dates) if dates else to_utc(c.updated_at)
             
-            days_since = (datetime.datetime.utcnow() - last_activity).days if last_activity else 999
+            days_since = (datetime.datetime.now(datetime.timezone.utc) - last_activity).days if last_activity else 999
             
             # Calculate Opportunity Score and track factors
             factors = []
@@ -506,16 +533,17 @@ class ExecutiveFormatter:
             revenue_contribution = sum(r.amount for p in c.projects for r in p.revenues)
             
             # Last Activity Date
-            dates = [c.updated_at]
+            dates = [to_utc(c.updated_at)] if c.updated_at else []
             for p in c.projects:
                 if p.updated_at:
-                    dates.append(p.updated_at)
+                    dates.append(to_utc(p.updated_at))
                 for r in p.revenues:
                     if r.date:
-                        dates.append(r.date)
-            last_activity = max(dates) if dates else c.updated_at
+                        dates.append(to_utc(r.date))
+            dates = [d for d in dates if d is not None]
+            last_activity = max(dates) if dates else to_utc(c.updated_at)
             
-            days_since = (datetime.datetime.utcnow() - last_activity).days if last_activity else 999
+            days_since = (datetime.datetime.now(datetime.timezone.utc) - last_activity).days if last_activity else 999
             
             # Inactive condition: status inactive or days_since >= 30
             if c.status == "inactive" or days_since >= 30:
@@ -567,10 +595,10 @@ class ExecutiveFormatter:
         delayed_list = []
         for p in projects:
             # Overdue tasks
-            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and t.due_date < datetime.datetime.utcnow())
+            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and to_utc(t.due_date) < datetime.datetime.now(datetime.timezone.utc))
             open_tasks = sum(1 for t in p.tasks if t.status != "completed")
             
-            days_remaining = (p.deadline - datetime.datetime.utcnow()).days if p.deadline else None
+            days_remaining = (to_utc(p.deadline) - datetime.datetime.now(datetime.timezone.utc)).days if p.deadline else None
             
             # Delayed condition: not completed and either deadline missed or has overdue tasks
             if p.status != "completed" and ((days_remaining is not None and days_remaining < 0) or overdue_tasks > 0):
@@ -647,9 +675,9 @@ class ExecutiveFormatter:
             if p.status == "completed":
                 continue
             # Overdue tasks
-            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and t.due_date < datetime.datetime.utcnow())
+            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and to_utc(t.due_date) < datetime.datetime.now(datetime.timezone.utc))
             open_tasks = sum(1 for t in p.tasks if t.status != "completed")
-            days_remaining = (p.deadline - datetime.datetime.utcnow()).days if p.deadline else None
+            days_remaining = (to_utc(p.deadline) - datetime.datetime.now(datetime.timezone.utc)).days if p.deadline else None
             
             # Risk Level calculation
             if (days_remaining is not None and days_remaining < 0) or overdue_tasks >= 3:
@@ -714,13 +742,13 @@ class ExecutiveFormatter:
         for p in projects:
             if p.status == "completed":
                 continue
-            days_remaining = (p.deadline - datetime.datetime.utcnow()).days if p.deadline else None
+            days_remaining = (to_utc(p.deadline) - datetime.datetime.now(datetime.timezone.utc)).days if p.deadline else None
             
             if days_remaining is None:
                 continue
                 
             # Overdue tasks
-            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and t.due_date < datetime.datetime.utcnow())
+            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and to_utc(t.due_date) < datetime.datetime.now(datetime.timezone.utc))
             
             # Risk condition: deadline close or overdue, or overdue tasks present
             if days_remaining <= 14 or overdue_tasks > 0:
@@ -778,9 +806,9 @@ class ExecutiveFormatter:
             if p.status == "completed":
                 continue
                 
-            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and t.due_date < datetime.datetime.utcnow())
+            overdue_tasks = sum(1 for t in p.tasks if t.status != "completed" and t.due_date and to_utc(t.due_date) < datetime.datetime.now(datetime.timezone.utc))
             open_tasks = sum(1 for t in p.tasks if t.status != "completed")
-            days_remaining = (p.deadline - datetime.datetime.utcnow()).days if p.deadline else None
+            days_remaining = (to_utc(p.deadline) - datetime.datetime.now(datetime.timezone.utc)).days if p.deadline else None
             
             score = 0
             factors = []
@@ -1131,32 +1159,79 @@ class ExecutiveFormatter:
                 "team focus" in q_clean
             )
             
+            raw_text = None
+            domain_name = "general"
             if is_overstock_query:
-                return cls.format_sku_overstock(db, org_id)
+                raw_text = cls.format_sku_overstock(db, org_id)
+                domain_name = "inventory"
             elif is_reorder_query:
-                return cls.format_sku_reorders(db, org_id)
+                raw_text = cls.format_sku_reorders(db, org_id)
+                domain_name = "inventory"
             elif is_spending_query:
-                return cls.format_finance_spending(db, org_id)
+                raw_text = cls.format_finance_spending(db, org_id)
+                domain_name = "finance"
             elif is_profitability_query:
-                return cls.format_finance_profitability_leaks(db, org_id)
+                raw_text = cls.format_finance_profitability_leaks(db, org_id)
+                domain_name = "finance"
             elif is_finance_summary_query:
-                return cls.format_finance_summary(db, org_id)
+                raw_text = cls.format_finance_summary(db, org_id)
+                domain_name = "finance"
             elif is_client_risk_query:
-                return cls.format_client_at_risk(db, org_id)
+                raw_text = cls.format_client_at_risk(db, org_id)
+                domain_name = "client"
             elif is_client_contact_query:
-                return cls.format_client_outreach(db, org_id)
+                raw_text = cls.format_client_outreach(db, org_id)
+                domain_name = "client"
             elif is_client_revenue_query:
-                return cls.format_client_revenue(db, org_id)
+                raw_text = cls.format_client_revenue(db, org_id)
+                domain_name = "client"
             elif is_client_inactive_query:
-                return cls.format_client_inactive(db, org_id)
+                raw_text = cls.format_client_inactive(db, org_id)
+                domain_name = "client"
             elif is_project_delayed_query:
-                return cls.format_project_delayed(db, org_id)
+                raw_text = cls.format_project_delayed(db, org_id)
+                domain_name = "operations"
             elif is_project_attention_query:
-                return cls.format_project_attention(db, org_id)
+                raw_text = cls.format_project_attention(db, org_id)
+                domain_name = "operations"
             elif is_project_deadlines_query:
-                return cls.format_project_deadlines_at_risk(db, org_id)
+                raw_text = cls.format_project_deadlines_at_risk(db, org_id)
+                domain_name = "operations"
             elif is_project_focus_query:
-                return cls.format_project_weekly_focus(db, org_id)
+                raw_text = cls.format_project_weekly_focus(db, org_id)
+                domain_name = "operations"
+
+            if raw_text:
+                parts = raw_text.split("Recommended Action:\n")
+                if len(parts) == 1:
+                    parts = raw_text.split("Recommended Action:")
+                facts = parts[0].strip()
+                recs = parts[1].strip() if len(parts) > 1 else "Maintain standard operations."
+                
+                table_mappings = {
+                    "inventory": ["InventoryItem", "Product", "SalesRecord"],
+                    "finance": ["Revenue", "Expense"],
+                    "client": ["Client"],
+                    "operations": ["Project", "Task"],
+                    "general": ["Revenue", "Expense", "Product", "InventoryItem", "Project", "Task", "Client"]
+                }
+                tables_str = ", ".join(table_mappings.get(domain_name, table_mappings["general"]))
+                
+                formatted = (
+                    f"### 📑 Executive Summary\nDeterministic business intelligence lookup for: \"{question}\".\n\n"
+                    f"### 📋 Verified Facts (Database Ground Truth)\n{facts}\n\n"
+                    f"### 🧠 EVE Executive Interpretation\nDeterministic query execution matching business parameters.\n\n"
+                    f"### 💼 Business Interpretation\nVerified data retrieved directly from workspace database tables.\n\n"
+                    f"### 💡 Strategic Recommendations\n{recs}\n\n"
+                    f"### 🔍 Reason\nDirect SQL search based on user criteria.\n\n"
+                    f"### 📈 Expected Impact\nHigh accuracy business analytics mapping without generative drift.\n\n"
+                    f"---\n"
+                    f"### 🔒 Auditable Trust Metrics\n"
+                    f"- **Confidence Level**: 100% (High Confidence - Deterministic)\n"
+                    f"- **Source Database Tables**: {tables_str}\n"
+                    f"- **Auditable Evidence Log**: [Deterministic calculations applied directly on SQL records]"
+                )
+                return formatted
 
         # Clean the summary text first
         clean_summary = cls.convert_technical_to_founder_language(synthesis.summary)
@@ -1170,12 +1245,6 @@ class ExecutiveFormatter:
         else:
             priorities_text = "- No immediate manual actions required. Maintain current operational levels."
 
-        # Expected impact
-        clean_impact = cls.convert_technical_to_founder_language(synthesis.expected_impact)
-        has_impact = False
-        if clean_impact and clean_impact.strip() != "" and clean_impact.strip().upper() != "N/A":
-            has_impact = True
-
         # Supporting evidence details
         rec_details = cls.build_executive_recommendation(synthesis, question)
         evidence_text = "\n".join([f"- {ev}" for ev in rec_details.evidence])
@@ -1184,15 +1253,69 @@ class ExecutiveFormatter:
         conf_category = getattr(synthesis, "confidence_category", "High Confidence") or "High Confidence"
         if "Insufficient verified database evidence." in rec_details.evidence:
             conf_category = "Low Confidence"
-        evidence_text += f"\n- Recommendation Confidence: {int(rec_details.confidence * 100)}% ({conf_category})"
+            
+        # Parse domains for tables
+        domains = cls.build_domains_from_question(question)
+        table_mappings = {
+            "client": ["Client"],
+            "inventory": ["InventoryItem", "Product", "Supplier"],
+            "finance": ["Revenue", "Expense"],
+            "operations": ["Project", "Task"],
+            "growth": ["Revenue", "Expense", "Client", "Project", "IntelligenceSnapshot"]
+        }
+        queried_tables = set()
+        for d in domains:
+            queried_tables.update(table_mappings.get(d, []))
+        if not queried_tables:
+            queried_tables = {"Revenue", "Expense", "Product", "InventoryItem", "Project", "Task", "Client"}
+        tables_str = ", ".join(sorted(queried_tables))
 
-        # Construct structured markdown output
-        formatted = (
-            f"### Executive Summary\n{clean_summary}\n\n"
-            f"### Recommended Action\n{priorities_text}\n\n"
-        )
+        # Extract verified facts
+        facts_list = []
+        if synthesis.evidence_used and "metrics" in synthesis.evidence_used:
+            metrics = synthesis.evidence_used["metrics"]
+            if metrics.get("revenue", 0.0) > 0 or metrics.get("expenses", 0.0) > 0:
+                facts_list.append(f"Total Revenue: ${metrics.get('revenue', 0.0):,.2f}")
+                facts_list.append(f"Total Expenses: ${metrics.get('expenses', 0.0):,.2f}")
+                facts_list.append(f"Net Profit: ${metrics.get('profit', 0.0):,.2f}")
+            if metrics.get("clients", 0) > 0:
+                facts_list.append(f"Active Clients: {metrics.get('clients', 0)}")
+            if metrics.get("projects", 0) > 0 or metrics.get("tasks", 0) > 0:
+                facts_list.append(f"Active Projects: {metrics.get('projects', 0)} | Tasks: {metrics.get('tasks', 0)}")
+            if metrics.get("inventory_count", 0) > 0:
+                facts_list.append(f"Inventory SKU Count: {metrics.get('inventory_count', 0)}")
         
-        formatted += f"### Supporting Evidence\n{evidence_text}"
+        if not facts_list:
+            for ev in rec_details.evidence:
+                if not any(blocked_kw in ev for blocked_kw in ["Insufficient", "EVE"]):
+                    facts_list.append(ev)
+                    
+        if not facts_list:
+            facts_list.append("No active business records detected in the current workspace.")
+            
+        facts_text = "\n".join([f"- {fact}" for fact in facts_list])
+
+        # Construct structured markdown output separating facts, interpretation, and recommendations
+        exec_summary = clean_summary[:180] + "..." if len(clean_summary) > 180 else clean_summary
+        reason_text = f"Synthesized from executive board analysis across queried database records."
+        impact_text = synthesis.expected_impact or "Optimized operational efficiency and risk mitigation."
+
+        formatted = (
+            f"### 📑 Executive Summary\n{exec_summary}\n\n"
+            f"### 📋 Verified Facts (Database Ground Truth)\n{facts_text}\n\n"
+            f"### 🧠 EVE Executive Interpretation\n{clean_summary}\n\n"
+            f"### 💼 Business Interpretation\n{clean_summary}\n\n"
+            f"### 💡 Strategic Recommendations\n{priorities_text}\n\n"
+            f"### 🔍 Reason\n{reason_text}\n\n"
+            f"### 📈 Expected Impact\n{impact_text}\n\n"
+            f"---\n"
+            f"### 🔒 Auditable Trust Metrics\n"
+            f"- Recommendation Confidence: {int(rec_details.confidence * 100)}% ({conf_category})\n"
+            f"- **Source Database Tables**: {tables_str}\n"
+            f"- **Auditable Evidence Log**:\n{evidence_text}"
+        )
         return formatted
+
+
 
 

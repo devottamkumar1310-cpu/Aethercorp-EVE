@@ -83,9 +83,40 @@ export default function DocumentDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col justify-center items-center gap-4 text-slate-100">
-        <Loader2 className="h-10 w-10 text-indigo-400 animate-spin" />
-        <p className="text-slate-400 text-sm">Retrieving document intelligence details...</p>
+      <div className="space-y-6 p-6 max-w-7xl mx-auto text-slate-100 animate-pulse">
+        {/* Navigation & Actions Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/60 pb-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-slate-800 rounded-xl" />
+            <div className="space-y-2">
+              <div className="h-6 bg-slate-800 rounded w-48" />
+              <div className="h-3.5 bg-slate-800 rounded w-32" />
+            </div>
+          </div>
+          <div className="h-10 bg-slate-800 rounded-xl w-32" />
+        </div>
+
+        {/* Main Split Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column: File Preview Panel */}
+          <div className="bg-slate-900/40 border border-slate-800/80 rounded-2xl flex flex-col min-h-[500px]">
+            <div className="p-4 bg-slate-950/40 border-b border-slate-800/80 h-12" />
+            <div className="flex-1 bg-slate-950/60 p-4" />
+          </div>
+
+          {/* Right Column: Extracted Metadata & Analytics */}
+          <div className="space-y-6">
+            <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 space-y-4">
+              <div className="h-5 bg-slate-800 rounded w-1/3" />
+              <div className="h-16 bg-slate-850 rounded-xl" />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="h-16 bg-slate-850 rounded-xl" />
+                <div className="h-16 bg-slate-850 rounded-xl" />
+              </div>
+            </div>
+            <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-5 h-44" />
+          </div>
+        </div>
       </div>
     );
   }

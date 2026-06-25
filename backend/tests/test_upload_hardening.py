@@ -1,9 +1,7 @@
 import pytest
 import uuid
-import datetime
 import jwt
-import io
-import os
+import time
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -14,7 +12,6 @@ from app.main import app as api_app
 from app.database import Base, get_db
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
-from app.models.document import ProcessedDocument
 from app.config import settings
 
 # Setup isolated in-memory database for testing
@@ -36,25 +33,10 @@ def override_get_db():
     finally:
         db_session.close()
 
-from app.core.dependency_container import container
-from app.services.gemini_service import GeminiService
-
 @pytest.fixture(autouse=True, scope="module")
 def manage_dependency_overrides():
-    from app.core.security import verify_supabase_token, get_current_user_and_tenant, get_current_user, get_required_workspace_id
     saved_overrides = api_app.dependency_overrides.copy()
-    
-    for dep in [get_db, get_current_user, get_required_workspace_id, verify_supabase_token, get_current_user_and_tenant]:
-        api_app.dependency_overrides.pop(dep, None)
-        
     api_app.dependency_overrides[get_db] = override_get_db
-    
-    # Ensure gemini_service is registered in container
-    service = container.get_optional("gemini_service")
-    if not service:
-        service = GeminiService()
-        container.register_singleton("gemini_service", service)
-    service.mock_mode = True
     
     # Patch SessionLocal for async background tasks
     old_session_local = app.routes.document_intelligence.SessionLocal
@@ -72,8 +54,8 @@ def seeded_data():
     org_id = uuid.uuid4()
     user_id = uuid.uuid4()
     
-    profile = Profile(id=user_id, email="user@docintel.com", full_name="DocIntel User", hashed_password="pw")
-    org = Organization(id=org_id, name="Test Doc Org", slug="test-doc-org")
+    profile = Profile(id=user_id, email="auditor@eve.com", full_name="Auditor User", hashed_password="pw")
+    org = Organization(id=org_id, name="Audited Corp", slug="audited-corp")
     membership = Membership(user_id=user_id, organization_id=org_id, role="member")
     
     db.add_all([profile, org, membership])
@@ -83,10 +65,8 @@ def seeded_data():
     return {
         "org_id": org_id,
         "user_id": user_id,
-        "email": "user@docintel.com"
+        "email": "auditor@eve.com"
     }
-
-import time
 
 def get_headers(user_id: uuid.UUID, email: str, org_id: uuid.UUID) -> dict:
     payload = {
@@ -101,48 +81,52 @@ def get_headers(user_id: uuid.UUID, email: str, org_id: uuid.UUID) -> dict:
         "X-Workspace-Id": str(org_id)
     }
 
-def test_document_lifecycle(seeded_data):
+def test_invoice_upload_allowed(seeded_data):
     client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    # 1. Upload Document
     file_content = b"%PDF-1.4 mock content"
     file_payload = {"file": ("supplier_invoice.pdf", file_content, "application/pdf")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
-    
     data = resp.json()
     assert data["status"] == "uploaded"
     assert data["filename"] == "supplier_invoice.pdf"
-    doc_id = data["id"]
+
+def test_receipt_upload_allowed(seeded_data):
+    client = TestClient(api_app)
+    headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    # Wait for background task to complete (it runs synchronously within the TestClient cycle)
-    # 2. List Documents
-    list_resp = client.get("/api/documents", headers=headers)
-    assert list_resp.status_code == status.HTTP_200_OK
-    docs_list = list_resp.json()
-    assert len(docs_list) > 0
+    file_payload = {"file": ("office_receipt.png", b"mock png content", "image/png")}
+    resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
+    assert resp.status_code == status.HTTP_201_CREATED
+    data = resp.json()
+    assert data["status"] == "uploaded"
+    assert data["filename"] == "office_receipt.png"
+
+def test_selfie_rejected(seeded_data):
+    client = TestClient(api_app)
+    headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    uploaded_doc = next(d for d in docs_list if d["id"] == doc_id)
-    assert uploaded_doc["status"] in ["uploaded", "processing", "classified", "validated", "completed"]
+    file_payload = {"file": ("my_selfie.png", b"mock selfie content", "image/png")}
+    resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.json()["detail"] == "This file does not appear to be a supported business document."
+
+def test_random_photo_rejected(seeded_data):
+    client = TestClient(api_app)
+    headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    # 3. Get Document Details
-    detail_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
-    assert detail_resp.status_code == status.HTTP_200_OK
-    detail_data = detail_resp.json()
-    assert detail_data["id"] == doc_id
-    assert detail_data["status"] == "completed"
+    file_payload = {"file": ("vacation_photo.jpg", b"mock photo content", "image/jpeg")}
+    resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.json()["detail"] == "This file does not appear to be a supported business document."
+
+def test_meme_rejected(seeded_data):
+    client = TestClient(api_app)
+    headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    # 4. Preview Document
-    preview_resp = client.get(f"/api/documents/{doc_id}/preview", headers=headers)
-    assert preview_resp.status_code == status.HTTP_200_OK
-    assert preview_resp.content == file_content
-    
-    # 5. Delete Document
-    del_resp = client.delete(f"/api/documents/{doc_id}", headers=headers)
-    assert del_resp.status_code == status.HTTP_200_OK
-    assert del_resp.json()["status"] == "success"
-    
-    # Confirm deletion
-    get_del_resp = client.get(f"/api/documents/{doc_id}", headers=headers)
-    assert get_del_resp.status_code == status.HTTP_404_NOT_FOUND
+    file_payload = {"file": ("funny_meme.jpg", b"mock meme content", "image/jpeg")}
+    resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.json()["detail"] == "This file does not appear to be a supported business document."

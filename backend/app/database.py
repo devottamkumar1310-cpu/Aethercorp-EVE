@@ -61,6 +61,20 @@ except Exception as e:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if "sqlite" in str(dbapi_connection.__class__.__name__).lower() or hasattr(dbapi_connection, "cursor"):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA foreign_keys=ON")
+        except Exception:
+            pass
+        finally:
+            cursor.close()
+
 
 def get_db():
     """
@@ -72,6 +86,17 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+from sqlalchemy import event
+import datetime
+
+@event.listens_for(Base, 'load', propagate=True)
+def convert_datetimes_to_utc(target, context):
+    for key in list(target.__dict__.keys()):
+        value = target.__dict__[key]
+        if isinstance(value, datetime.datetime) and value.tzinfo is None:
+            setattr(target, key, value.replace(tzinfo=datetime.timezone.utc))
 
 
 def init_db():

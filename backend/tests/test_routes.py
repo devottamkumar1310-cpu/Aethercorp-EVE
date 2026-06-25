@@ -77,11 +77,17 @@ def override_get_required_workspace_id():
     return MOCK_ORG_ID
 
 
-# Override dependencies in FastAPI
-app.dependency_overrides[get_db] = override_get_db
-app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
-app.dependency_overrides[get_current_user] = override_get_current_user
-app.dependency_overrides[get_required_workspace_id] = override_get_required_workspace_id
+# Override dependencies in FastAPI with proper cleanup to prevent test pollution
+@pytest.fixture(autouse=True, scope="module")
+def manage_overrides():
+    saved_overrides = app.dependency_overrides.copy()
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_required_workspace_id] = override_get_required_workspace_id
+    yield
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(saved_overrides)
 
 client = TestClient(app)
 

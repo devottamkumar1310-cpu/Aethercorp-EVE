@@ -3,14 +3,23 @@ import { getHeaders } from "./businessService";
 import { ProcessedDocument, ProcessedDocumentDetail } from "@/types/document";
 
 async function handleResponseError(res: Response, defaultMessage: string = "An unexpected error occurred."): Promise<never> {
-  let detail = "";
+  let detail: any = "";
   try {
     const errData = await res.json();
     detail = errData.detail || "";
   } catch {}
 
   if (detail) {
-    throw new Error(detail);
+    if (Array.isArray(detail)) {
+      const formattedErrors = detail.map((err: any) => {
+        const field = err.loc ? err.loc.filter((l: any) => l !== "body").join(".") : "";
+        return field ? `${field}: ${err.msg}` : err.msg;
+      }).join(", ");
+      throw new Error(formattedErrors);
+    } else if (typeof detail === "object") {
+      throw new Error(JSON.stringify(detail));
+    }
+    throw new Error(String(detail));
   }
   throw new Error(defaultMessage);
 }
