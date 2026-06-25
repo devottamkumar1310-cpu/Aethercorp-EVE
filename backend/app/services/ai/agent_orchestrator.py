@@ -129,7 +129,8 @@ class AgentOrchestrator:
                     question=question,
                     mode=mode,
                     user_id=user_id,
-                    conversation_history=conversation_history
+                    conversation_history=conversation_history,
+                    intent=intent
                 )
             except Exception as e:
                 err_str = str(e)
@@ -150,7 +151,7 @@ class AgentOrchestrator:
                     error_type = "NETWORK_ERROR"
                     status_code = 502
                     
-                timestamp = datetime.datetime.utcnow().isoformat()
+                timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 
                 logger.error(
                     f"[AI COO ERROR] workspace_id={org_id} user_id={user_id} model=gemini-2.5-flash "

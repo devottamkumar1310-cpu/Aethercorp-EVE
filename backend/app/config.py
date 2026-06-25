@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "aethercorp-nexus-super-secret-key-replace-in-production"
     SUPABASE_JWT_SECRET: str = ""
     SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
     FRONTEND_URL: str = "http://localhost:3000"
     CLOUD_RUN_SERVICE_URL: Optional[str] = None
     GCS_BUCKET_NAME: Optional[str] = None

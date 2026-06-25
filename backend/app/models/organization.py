@@ -46,6 +46,12 @@ class Organization(Base):
     business_goals = relationship("BusinessGoal", back_populates="organization", cascade="all, delete-orphan")
     executive_conversations = relationship("ExecutiveConversation", back_populates="organization", cascade="all, delete-orphan")
     ai_recommendations = relationship("AIRecommendation", back_populates="organization", cascade="all, delete-orphan")
+    processed_documents = relationship("ProcessedDocument", back_populates="organization", cascade="all, delete-orphan")
+    forecasts = relationship("Forecast", cascade="all, delete-orphan")
+    recommendations = relationship("Recommendation", cascade="all, delete-orphan")
+    reports = relationship("Report", cascade="all, delete-orphan")
+    system_errors = relationship("SystemError", cascade="all, delete-orphan")
+    audit_logs = relationship("AuditLog", cascade="all, delete-orphan")
 
 
 class Membership(Base):

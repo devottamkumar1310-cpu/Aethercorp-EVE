@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Loader2, Sparkles, Award, ArrowUpRight, TrendingUp, AlertTriangle } from "lucide-react";
+import { X, Loader2, Sparkles, Award, ArrowUpRight, TrendingUp, AlertTriangle, Target } from "lucide-react";
 import { getRecommendations } from "@/services/executiveService";
 import { AIRecommendationResponse } from "@/types/executive";
 
@@ -144,6 +144,27 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
                       <p className="text-sm font-medium text-slate-200 leading-relaxed">
                         {item.recommendation}
                       </p>
+                      {item.influenced_by_goals && item.influenced_by_goals.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-0.5">
+                            <Target size={11} className="text-indigo-400" /> Influenced by:
+                          </span>
+                          {item.influenced_by_goals.map((g) => (
+                            <span
+                              key={g.id}
+                              title={g.description}
+                              className={`text-[9px] font-bold px-2 py-0.5 rounded-full border cursor-help ${
+                                g.goal_type === 'profitability' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                g.goal_type === 'growth' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                                g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                              }`}
+                            >
+                              {g.goal_type.replace('_', ' ')}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Reasoning Summary (only if expanded or snippet) */}

@@ -52,7 +52,9 @@ import {
   Edit,
   MessageSquare,
   X,
-  FileText
+  FileText,
+  Play,
+  Coins
 } from "lucide-react";
 
 // Markdown parser helpers
@@ -251,13 +253,14 @@ export default function EVECoocommandCenter() {
   const [suggestedQuestions, setSuggestedQuestions] = useState<Record<string, string[]> | null>(null);
 
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setIsHistoryOpen(window.innerWidth >= 1280);
+      setIsInsightsOpen(window.innerWidth >= 1440);
     }
   }, []);
-  const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
   // Resizable panel widths (percentages)
   const [rightWidth, setRightWidth] = useState(30);
@@ -283,6 +286,54 @@ export default function EVECoocommandCenter() {
   const [goals, setGoals] = useState<BusinessGoalResponse[]>([]);
   const [overview, setOverview] = useState<any>(null);
 
+  const getDynamicSuggestions = () => {
+    const suggestions: { category: string; questions: string[] }[] = [];
+    
+    if (risks.length > 0) {
+      const riskQuestions = risks.map(r => {
+        const desc = r.description.toLowerCase();
+        if (desc.includes("margin") || desc.includes("profit") || desc.includes("decay")) {
+          return "How can we address the declining net margins?";
+        }
+        if (desc.includes("stock") || desc.includes("inventory") || desc.includes("reorder") || desc.includes("safety")) {
+          return "What is the replenishment plan for stock risks?";
+        }
+        if (desc.includes("cash") || desc.includes("capital") || desc.includes("runway")) {
+          return "What cash flow adjustments will stabilize our runway?";
+        }
+        return `How do we mitigate the risk: "${r.description.slice(0, 45)}"?`;
+      }).slice(0, 2);
+      suggestions.push({ category: "Risk Mitigation", questions: riskQuestions });
+    }
+
+    if (opportunities.length > 0) {
+      const oppQuestions = opportunities.map(o => {
+        const desc = o.description.toLowerCase();
+        if (desc.includes("price") || desc.includes("pricing") || desc.includes("markdown")) {
+          return "Calculate the profit impact of suggested pricing changes.";
+        }
+        if (desc.includes("growth") || desc.includes("expansion") || desc.includes("revenue")) {
+          return "What is the timeline for our growth opportunities?";
+        }
+        return `How do we execute on: "${o.description.slice(0, 45)}"?`;
+      }).slice(0, 2);
+      suggestions.push({ category: "Opportunity Capture", questions: oppQuestions });
+    }
+
+    // Fallbacks if lists are empty
+    if (suggestions.length === 0) {
+      suggestions.push({
+        category: "General Strategy",
+        questions: [
+          "What are the top bottlenecks in our supply chain?",
+          "Show a detailed profitability breakdown by product category."
+        ]
+      });
+    }
+
+    return suggestions;
+  };
+
   // Track if desktop viewport size is active
   useEffect(() => {
     const handleResize = () => {
@@ -298,7 +349,7 @@ export default function EVECoocommandCenter() {
     {
       id: "welcome-msg",
       role: "assistant",
-      content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Memory Manager or request a Daily Brief. What analysis shall we run?",
+      content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Strategic Goals Manager or request a Daily Brief. What analysis shall we run?",
       created_at: new Date().toISOString()
     }
   ]);
@@ -366,30 +417,48 @@ export default function EVECoocommandCenter() {
   // Initial dashboard hydration
   const hydrateDashboard = async (token: string) => {
     try {
-      const [healthData, riskData, oppData, trendData, goalsData, convsData, overviewData] = await Promise.all([
+      const [
+        healthRes,
+        riskRes,
+        oppRes,
+        trendRes,
+        goalsRes,
+        convsRes,
+        overviewRes
+      ] = await Promise.allSettled([
         fetchHealth(token),
         fetchRisks(token),
         fetchOpportunities(token),
         fetchTrends(token),
         listGoals(token),
-        listConversations(token).catch(() => []),
+        listConversations(token),
         fetch(`${API_BASE_URL}/api/analytics/overview`, {
           headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.ok ? r.json() : null).catch(() => null)
+        }).then(r => r.ok ? r.json() : null)
       ]);
 
-      if (healthData) {
-        setHealthScore(healthData.score || 0);
-        setHealthStatus(healthData.status || "Unknown");
+      if (healthRes.status === "fulfilled" && healthRes.value) {
+        setHealthScore(healthRes.value.score || 0);
+        setHealthStatus(healthRes.value.status || "Unknown");
       }
-      if (riskData && riskData.risks) setRisks(riskData.risks.slice(0, 3));
-      if (oppData && oppData.opportunities) setOpportunities(oppData.opportunities.slice(0, 3));
-      setHealthTrends(trendData);
-      setGoals(goalsData);
-      if (overviewData) {
-        setOverview(overviewData);
+      if (riskRes.status === "fulfilled" && riskRes.value?.risks) {
+        setRisks(riskRes.value.risks.slice(0, 3));
       }
-      if (convsData) {
+      if (oppRes.status === "fulfilled" && oppRes.value?.opportunities) {
+        setOpportunities(oppRes.value.opportunities.slice(0, 3));
+      }
+      if (trendRes.status === "fulfilled" && trendRes.value) {
+        setHealthTrends(trendRes.value);
+      }
+      if (goalsRes.status === "fulfilled" && goalsRes.value) {
+        setGoals(goalsRes.value);
+      }
+      if (overviewRes.status === "fulfilled" && overviewRes.value) {
+        setOverview(overviewRes.value);
+      }
+      
+      if (convsRes.status === "fulfilled" && convsRes.value) {
+        const convsData = convsRes.value;
         setConversations(convsData);
         if (convsData.length > 0) {
           try {
@@ -408,6 +477,9 @@ export default function EVECoocommandCenter() {
         } else {
           // No conversations; seed beautiful default initial state based on workspace metrics
           const defaultEvidence: string[] = [];
+          const healthData = healthRes.status === "fulfilled" ? healthRes.value : null;
+          const riskData = riskRes.status === "fulfilled" ? riskRes.value : null;
+          const oppData = oppRes.status === "fulfilled" ? oppRes.value : null;
           if (riskData && riskData.risks) {
             riskData.risks.forEach((r: any) => defaultEvidence.push(`Risk: ${r.title} - ${r.description}`));
           }
@@ -539,7 +611,7 @@ export default function EVECoocommandCenter() {
       {
         id: "welcome-msg",
         role: "assistant",
-        content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Memory Manager or request a Daily Brief. What analysis shall we run?",
+        content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Strategic Goals Manager or request a Daily Brief. What analysis shall we run?",
         created_at: new Date().toISOString()
       }
     ]);
@@ -758,9 +830,33 @@ export default function EVECoocommandCenter() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] bg-slate-950 text-slate-100">
-        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-        <p className="text-slate-400 text-sm tracking-wider animate-pulse">Initializing EVE COO Command Center...</p>
+      <div className="bg-slate-950 text-slate-100 min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans animate-pulse">
+        {/* Column 0: Conversation History Sidebar Skeleton */}
+        <div className="hidden xl:flex xl:flex-col xl:gap-3 xl:w-64 border border-slate-800 rounded-2xl p-4 bg-slate-900/50" />
+
+        {/* Column 1: Active Chat Panel Skeleton */}
+        <div className="flex-1 border border-slate-800 rounded-2xl p-5 bg-slate-900/20 flex flex-col justify-between h-[80vh]">
+          <div className="space-y-4">
+            <div className="h-6 bg-slate-800 rounded w-1/4" />
+            <div className="h-px bg-slate-800" />
+            <div className="flex gap-3">
+              <div className="h-8 w-8 bg-slate-800 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <div className="h-4 bg-slate-800 rounded w-3/4" />
+                <div className="h-4 bg-slate-800 rounded w-1/2" />
+              </div>
+            </div>
+          </div>
+          <div className="h-14 bg-slate-950 border border-slate-850 rounded-xl w-full" />
+        </div>
+
+        {/* Column 2: Right-hand Executive Reasoning Panel Skeleton */}
+        <div className="w-96 border border-slate-800 rounded-2xl p-5 bg-slate-900/40 hidden xl:block space-y-6">
+          <div className="h-6 bg-slate-800 rounded w-1/2" />
+          <div className="h-px bg-slate-800" />
+          <div className="h-28 bg-slate-950 border border-slate-850 rounded-xl w-full" />
+          <div className="h-28 bg-slate-950 border border-slate-850 rounded-xl w-full" />
+        </div>
       </div>
     );
   }
@@ -936,10 +1032,10 @@ export default function EVECoocommandCenter() {
                 type="button"
                 onClick={() => setIsMemoryOpen(true)}
                 className="py-1 px-2.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-md text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Goals Memory"
+                title="Strategic Goals"
               >
                 <Target size={11} className="text-indigo-400" />
-                <span>Goals Memory</span>
+                <span>Strategic Goals</span>
               </button>
             </div>
 
@@ -956,6 +1052,18 @@ export default function EVECoocommandCenter() {
                 title={isHistoryOpen ? "Hide Chat History" : "Show Chat History"}
               >
                 <MessageSquare size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsInsightsOpen(!isInsightsOpen)}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                  isInsightsOpen 
+                    ? "bg-slate-800 text-indigo-400 font-bold" 
+                    : "text-slate-500 hover:text-slate-300"
+                }`}
+                title={isInsightsOpen ? "Hide Executive Insights" : "Show Executive Insights"}
+              >
+                <Sparkles size={13} />
               </button>
             </div>
             {/* Language Selector */}
@@ -1034,63 +1142,6 @@ export default function EVECoocommandCenter() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-               {/* Business Snapshot & Suggested Questions Section */}
-        <div className="px-6 py-2.5 border-b border-slate-800/60 bg-slate-900/10 flex flex-col gap-2.5 flex-shrink-0">
-          {/* Business Snapshot Cards */}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-            {/* Business Health Badge */}
-            <div className="flex items-center gap-1.5 bg-slate-950/50 border border-slate-800/60 px-2.5 py-1 rounded-full">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Health:</span>
-              <span className={`font-bold flex items-center gap-1 ${
-                healthScore >= 80 ? 'text-emerald-450' : healthScore >= 60 ? 'text-amber-450' : 'text-rose-450'
-              }`}>
-                {healthScore} - {healthStatus}
-              </span>
-            </div>
-
-            {/* Top Risk Pill */}
-            <div className="flex items-center gap-1.5 bg-slate-950/50 border border-slate-800/60 px-2.5 py-1 rounded-full min-w-0 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
-              <ShieldAlert size={12} className="text-rose-450 flex-shrink-0" />
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-505 flex-shrink-0">Risk:</span>
-              <span className="truncate text-slate-300 font-medium" title={risks[0]?.description || "None"}>
-                {risks[0]?.description || "No active risks."}
-              </span>
-            </div>
-
-            {/* Top Opportunity Pill */}
-            <div className="flex items-center gap-1.5 bg-slate-950/50 border border-slate-800/60 px-2.5 py-1 rounded-full min-w-0 max-w-xs md:max-w-md lg:max-w-lg xl:max-w-xl">
-              <Lightbulb size={12} className="text-emerald-400 flex-shrink-0" />
-              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-505 flex-shrink-0">Opportunity:</span>
-              <span className="truncate text-slate-300 font-medium" title={opportunities[0]?.description || "None"}>
-                {opportunities[0]?.description || "No opportunities."}
-              </span>
-            </div>
-          </div>
-
-          {/* Suggested Questions Row */}
-          <div className="flex flex-col gap-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Suggested Questions</span>
-            <div className="flex flex-wrap gap-2">
-              {[
-                "What needs my attention?",
-                "Show my daily brief.",
-                "Give me a finance summary.",
-                "Identify inventory risks.",
-                "What should I focus on this week?"
-              ].map((q, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSendChat(q)}
-                  disabled={chatLoading}
-                  className="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 text-slate-350 hover:text-slate-200 rounded-lg text-xs transition-all duration-200 leading-normal cursor-pointer disabled:opacity-50"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -1353,44 +1404,36 @@ export default function EVECoocommandCenter() {
             })}
 
             {messages.length <= 1 && (
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl ml-11 pb-6 animate-fade-in">
-                {Object.entries(suggestedQuestions || {
-                  Finance: [
-                    "How profitable is this business?",
-                    "What expenses are hurting margins?"
-                  ],
-                  Inventory: [
-                    "Which products should I reorder?",
-                    "What inventory is becoming dead stock?"
-                  ],
-                  Growth: [
-                    "How can revenue be increased?",
-                    "Which customers are most valuable?"
-                  ],
-                  Founder: [
-                    "Give me an executive summary.",
-                    "What should I focus on this week?"
-                  ]
-                }).map(([category, qs]) => (
-                  <div key={category} className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4 flex flex-col space-y-3 shadow-md hover:border-slate-800/95 transition-all duration-300">
-                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block border-b border-slate-800/60 pb-2">
-                      {category}
-                    </span>
-                    <div className="flex flex-col gap-2">
-                      {qs.map((q, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSendChat(q)}
-                          disabled={chatLoading}
-                          className="text-left text-xs bg-slate-950/60 hover:bg-slate-950 border border-slate-850 hover:border-indigo-500/40 p-2.5 rounded-xl text-slate-400 hover:text-slate-200 transition-all duration-200 leading-normal cursor-pointer disabled:opacity-50"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+              <div className="max-w-2xl mx-auto py-16 text-center space-y-8 animate-fade-in px-4">
+                <div className="h-16 w-16 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-600/20 mx-auto">
+                  <Brain size={28} />
+                </div>
+                <div className="space-y-3">
+                  <h2 className="text-xl font-bold text-slate-100 tracking-tight">EVE Agent Command Center</h2>
+                  <p className="text-xs text-slate-450 leading-relaxed max-w-md mx-auto">
+                    Welcome! I am your AI COO. Ask me any business query related to operational margins, inventory levels, project progress, or set custom executive goals.
+                  </p>
+                </div>
+                <div className="flex flex-wrap justify-center gap-2 pt-2">
+                  {[
+                    "What needs my attention?",
+                    "Give me a finance summary",
+                    "Identify inventory risks"
+                  ].map((q, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSendChat(q)}
+                      disabled={chatLoading}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-indigo-500/40 text-slate-350 hover:text-slate-100 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-550 pt-2">
+                  💡 Tip: Click the <Sparkles size={10} className="inline text-indigo-400" /> Executive Insights button in the top right to view real-time health scores and detailed metrics.
+                </p>
               </div>
             )}
  
@@ -1562,10 +1605,170 @@ export default function EVECoocommandCenter() {
                 <Send size={16} />
               </button>
             </form>
+            <p className="text-[10px] text-slate-500 text-center leading-normal select-none">
+              EVE provides AI-generated business recommendations. Always verify information before making financial or operational decisions.
+            </p>
           </div>
         </div>
- 
 
+      {/* Mobile Insights Backdrop */}
+      {isInsightsOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 xl:hidden transition-opacity duration-300"
+          onClick={() => setIsInsightsOpen(false)}
+        />
+      )}
+
+      {/* Column 2: Right-hand Executive Snapshot Panel */}
+      <div className={`fixed inset-y-0 right-0 z-50 h-full w-72 border-l border-slate-800 bg-slate-900 rounded-l-2xl rounded-r-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-4 xl:flex-shrink-0 xl:overflow-hidden ${
+        isInsightsOpen 
+          ? "translate-x-0 p-4 opacity-100" 
+          : "translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
+      }`}>
+        <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
+          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles size={14} className="text-indigo-400 animate-pulse" /> Executive Snapshot
+          </h3>
+          <button
+            onClick={() => setIsInsightsOpen(false)}
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-xs"
+            title="Collapse Panel"
+          >
+            <X size={14} />
+          </button>
+        </div>
+
+        <div className="flex-grow overflow-y-auto space-y-5 pr-0.5 scrollbar-none pb-8">
+          {/* Working Capital & Profit Buffer */}
+          <div className="bg-slate-950/40 border border-slate-850 p-4 rounded-xl space-y-3">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block flex items-center gap-1.5">
+              <Coins size={11} className="text-indigo-400" /> Capital & Profit Buffer
+            </span>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-[10px] text-slate-500 block">Total Profit</span>
+                <span className="text-sm font-bold text-slate-200">${overview?.kpis?.profit?.toLocaleString() || "0"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 block">Gross Revenue</span>
+                <span className="text-sm font-bold text-slate-200">${overview?.kpis?.revenue?.toLocaleString() || "0"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Decision Center Header */}
+          <div className="pt-2 border-t border-slate-800/80">
+            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Decision Center</span>
+          </div>
+
+          {/* Active Risks */}
+          <div className="space-y-2">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Active Risks</span>
+            <div className="space-y-2">
+              {risks.length > 0 ? (
+                risks.map((risk, idx) => (
+                  <div key={idx} className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl text-xs space-y-2">
+                    <div className="flex gap-2">
+                      <ShieldAlert size={14} className="text-rose-450 shrink-0 mt-0.5" />
+                      <span className="text-slate-350 font-medium leading-relaxed">{risk.description}</span>
+                    </div>
+                    <button
+                      onClick={() => handleSendChat(`Address and mitigate this risk: ${risk.description}`)}
+                      className="w-full py-1 px-2.5 bg-rose-950/50 hover:bg-rose-900/60 text-rose-350 hover:text-white rounded border border-rose-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <Play size={10} /> Mitigate Risk
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] text-slate-550 italic">No critical risks active.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Active Opportunities */}
+          <div className="space-y-2">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Opportunities</span>
+            <div className="space-y-2">
+              {opportunities.length > 0 ? (
+                opportunities.map((opp, idx) => (
+                  <div key={idx} className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-xs space-y-2">
+                    <div className="flex gap-2">
+                      <Lightbulb size={14} className="text-emerald-450 shrink-0 mt-0.5" />
+                      <span className="text-slate-350 font-medium leading-relaxed">{opp.description}</span>
+                    </div>
+                    <button
+                      onClick={() => handleSendChat(`Analyze and execute opportunity: ${opp.description}`)}
+                      className="w-full py-1 px-2.5 bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-350 hover:text-white rounded border border-emerald-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <Play size={10} /> Capture Opportunity
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-[10px] text-slate-555 italic">No strategic opportunities flagged.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Recommended Actions (Action Triggers) */}
+          <div className="space-y-2 pt-1 border-t border-slate-800/80">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Recommended Actions</span>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => handleSendChat("Run replenishment analysis for out-of-stock items and check safety stock levels")}
+                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+              >
+                <span>Run Replenishment Analysis</span>
+                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={() => handleSendChat("Analyze margin risk and trace operational profit leaks")}
+                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+              >
+                <span>Analyze Margin Risk</span>
+                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={() => handleSendChat("Review dead stock inventory and outline liquidation path")}
+                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+              >
+                <span>Review Dead Stock</span>
+                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={() => handleSendChat("Generate pricing recommendations based on inventory turnover rates")}
+                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+              >
+                <span>Generate Pricing Recommendations</span>
+                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Dynamic Suggested Queries */}
+          <div className="space-y-4 pt-3 border-t border-slate-800/80">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Suggested Context Queries</span>
+            {getDynamicSuggestions().map((group, gIdx) => (
+              <div key={gIdx} className="space-y-1.5">
+                <span className="text-[9px] font-bold text-indigo-400/90 uppercase tracking-wider block">{group.category}</span>
+                <div className="flex flex-col gap-1.5">
+                  {group.questions.map((q, qIdx) => (
+                    <button
+                      key={qIdx}
+                      onClick={() => handleSendChat(q)}
+                      disabled={chatLoading}
+                      className="text-left text-[11px] bg-slate-950/80 hover:bg-slate-950 border border-slate-850 p-2.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Render Daily Brief Modal */}
       <DailyBriefModal 

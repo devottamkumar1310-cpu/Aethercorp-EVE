@@ -67,6 +67,10 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div className="text-[11px] text-slate-400 bg-slate-950/80 p-3 rounded-lg border border-slate-850 space-y-1">
+            <p>Prefer our feedback form? <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="text-indigo-450 hover:underline font-semibold">Open Google Forms</a>.</p>
+            <p>Or email us at: <a href="mailto:aethercorp.support@gmail.com" className="text-indigo-450 hover:underline font-semibold">aethercorp.support@gmail.com</a></p>
+          </div>
           {/* Rating */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">

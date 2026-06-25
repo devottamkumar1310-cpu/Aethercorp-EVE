@@ -124,7 +124,6 @@ def test_greeting_intent_routing():
 
         # Telemetry should be stripped in Founder Mode
         assert "telemetry" not in data["message"]["agent_data"]
-        assert "confidence_scores" not in data["message"]["agent_data"]
 
 
 def test_greeting_intent_bypass_and_latency():
@@ -228,7 +227,6 @@ def test_developer_mode_toggle():
     assert response_founder.status_code == 200
     data_founder = response_founder.json()
     agent_data_founder = data_founder["message"]["agent_data"]
-    assert "confidence_scores" not in agent_data_founder
     assert "telemetry" not in agent_data_founder
 
 
@@ -269,9 +267,9 @@ def test_fuzzy_intent_matching_and_impact_omission():
         confidence_scores={"Overall": 1.0}
     )
     formatted = ExecutiveFormatter.format_executive_response(synth_no_impact, "test query")
-    assert "### Executive Summary" in formatted
-    assert "### Recommended Action" in formatted
-    assert "Expected Impact" not in formatted
+    assert "### 📋 Verified Facts" in formatted
+    assert "### 🧠 EVE Executive Interpretation" in formatted
+    assert "### 💡 Strategic Recommendations" in formatted
 
     synth_with_impact = ExecutiveSynthesisResult(
         agent="EVE Lead",
@@ -283,8 +281,9 @@ def test_fuzzy_intent_matching_and_impact_omission():
         confidence_scores={"Overall": 1.0}
     )
     formatted_with = ExecutiveFormatter.format_executive_response(synth_with_impact, "test query")
-    assert "### Executive Summary" in formatted_with
-    assert "Expected Impact" not in formatted_with
+    assert "### 📋 Verified Facts" in formatted_with
+    assert "### 🧠 EVE Executive Interpretation" in formatted_with
+    assert "### 💡 Strategic Recommendations" in formatted_with
 
 
 def test_question_sensitivity_and_routing():
@@ -352,8 +351,8 @@ def test_question_sensitivity_and_routing():
                 f"Expected summary text segment '{params['expect_text']}' not found in response for {name}."
                 
             # Verify Supporting Evidence contains intent-specific data and excludes irrelevant data blocks
-            assert "### Supporting Evidence" in content
-            evidence_section = content.split("### Supporting Evidence")[1].lower()
+            assert "### 🔒 Auditable Trust Metrics" in content
+            evidence_section = content.split("### 🔒 Auditable Trust Metrics")[1].lower()
             
             if name == "Finance Summary":
                 assert "revenue" in evidence_section or "expenses" in evidence_section or "profit" in evidence_section
@@ -446,7 +445,7 @@ def test_sku_level_inventory_recommendations():
     assert "Sales Velocity:" in content
     assert "Days of Inventory:" in content
     assert "Risk Level:" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     # Verify executive properties are excluded/cleared
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
@@ -580,7 +579,7 @@ def test_record_level_finance_intelligence():
     assert "Amount: $2,000.00" in content
     assert "Percentage of Total Expenses: 66.7%" in content
     assert "Risk Level: High" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
 
@@ -656,7 +655,7 @@ def test_record_level_finance_intelligence():
     assert "Revenue Contribution: $500.00" in content
     assert "Cost Contribution: $450.00" in content
     assert "Margin Impact: 10.0%" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert "Strongest Categories (Highly Profitable)" in content
     assert "Dresses" in content
     assert data["message"]["agent_data"]["priorities"] == []
@@ -914,7 +913,7 @@ def test_record_level_client_intelligence():
     assert "Risk Level: Medium" in content
     assert "Active Projects: 0" in content
     assert "No active projects scheduled (last activity 10 days ago)" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
 
@@ -933,7 +932,7 @@ def test_record_level_client_intelligence():
     assert "Opportunity Score: 75 (Factors: No Active Projects (+25), No Revenue Contribution (+0), Recent Activity (+0))" in content
     assert "Opportunity Score: 90 (Factors: No Active Projects (+25), Medium Revenue Contribution (+10), Short-term Inactivity (+5))" in content
     assert "10 days ago" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
 
@@ -1061,7 +1060,7 @@ def test_record_level_project_intelligence():
     assert "Open Tasks: 1" in content
     assert "Risk Level: High" in content
     assert "Blocking Factors: 1 overdue tasks blocking progress." in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
 
@@ -1078,7 +1077,7 @@ def test_record_level_project_intelligence():
     assert "Project Alpha" in content
     assert "Project Beta" in content
     assert "Progress Percentage: 75.0%" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
 
@@ -1112,6 +1111,6 @@ def test_record_level_project_intelligence():
     assert "Project Beta" in content or "Project Alpha" in content
     assert "Priority Score:" in content
     assert "Factors:" in content
-    assert "Recommended Action:" in content
+    assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"

@@ -95,4 +95,5 @@ export interface AIRecommendationResponse {
   opportunity_factors: string[];
   confidence_level: number;
   created_at: string;
+  influenced_by_goals?: BusinessGoalResponse[];
 }

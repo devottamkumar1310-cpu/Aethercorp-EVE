@@ -81,7 +81,39 @@ export default function ProjectsPage() {
       </div>
       
       {loading ? (
-        <div className="text-center py-10 text-slate-500">Loading projects...</div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-pulse">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3 font-medium text-slate-400">Project Name</th>
+                  <th className="px-6 py-3 font-medium text-slate-400">Budget</th>
+                  <th className="px-6 py-3 font-medium text-slate-400">Progress</th>
+                  <th className="px-6 py-3 font-medium text-slate-400">Status</th>
+                  <th className="px-6 py-3 font-medium text-slate-400">Deadline</th>
+                  <th className="px-6 py-3 font-medium text-slate-400 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {[...Array(4)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 rounded w-2/3" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 rounded w-1/4" /></td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-24 bg-slate-200 rounded-full h-2" />
+                        <div className="h-3 bg-slate-200 rounded w-6" />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="h-6 bg-slate-200 rounded-full w-16" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 rounded w-1/4" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-4 bg-slate-200 rounded w-8 ml-auto" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto w-full">

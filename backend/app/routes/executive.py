@@ -11,6 +11,7 @@ from app.schemas.executive import (
     ExecutiveChatResponse,
     MessageResponse,
     BusinessGoalCreate,
+    BusinessGoalUpdate,
     BusinessGoalResponse,
     DailyBriefResponse,
     AIRecommendationResponse,
@@ -26,6 +27,8 @@ from app.services.ai.memory_service import (
     save_goal,
     list_goals,
     delete_goal,
+    update_goal,
+    get_influencing_goals,
     get_recent_recommendations,
     save_recommendation
 )
@@ -71,12 +74,7 @@ async def chat(
         message_data = MessageResponse.model_validate(message)
         if is_founder and message_data.agent_data:
             filtered_data = message_data.agent_data.copy()
-            filtered_data.pop("confidence_scores", None)
-            filtered_data.pop("detected_conflicts", None)
-            filtered_data.pop("trade_off_analysis", None)
-            filtered_data.pop("findings_by_agent", None)
-            filtered_data.pop("recommendations_by_agent", None)
-            filtered_data.pop("governance_decisions", None)
+            # Do NOT strip audit, confidence, and governance metrics in founder mode to ensure explainability and trust
             filtered_data.pop("telemetry", None)
             message_data.agent_data = filtered_data
             
@@ -98,6 +96,25 @@ async def daily_brief(
     workspace_id: uuid.UUID = Depends(get_required_workspace_id),
     _: None = Depends(rate_limit(requests=5, window_seconds=60))
 ):
+    from app.services.business_analytics_service import BusinessAnalyticsService
+    from app.orchestration.validator import ExecutiveGovernanceValidator
+    
+    overview = BusinessAnalyticsService.get_overview(db, workspace_id)
+    data_state, sufficiency_msg, available_domains = ExecutiveGovernanceValidator.validate_data_sufficiency(overview)
+    
+    if data_state in ("NO_DATA", "DATA_INSUFFICIENT"):
+        logger.warning(f"Daily Brief blocked due to data sufficiency: {sufficiency_msg}")
+        return DailyBriefResponse(
+            health_score=50.0,
+            health_status="warning",
+            risks=[],
+            opportunities=[],
+            summary=sufficiency_msg,
+            recommendations=["Please complete onboarding: Connect data sources or upload CSVs."],
+            urgent_actions=["Upload business data to unlock EVE reasoning."],
+            recent_activity=[]
+        )
+
     finance_agent = FinanceAgent()
     operations_agent = OperationsAgent()
     coo_agent = COOAgent()
@@ -153,7 +170,7 @@ async def daily_brief(
                 "id": str(act.id),
                 "action": act.action,
                 "description": act.description,
-                "created_at": act.created_at.isoformat() if act.created_at else None
+                "created_at": (act.created_at.replace(tzinfo=datetime.timezone.utc) if act.created_at.tzinfo is None else act.created_at).isoformat() if act.created_at else None
             })
 
         return DailyBriefResponse(
@@ -182,7 +199,7 @@ async def daily_brief(
             status_code = 503
             
         import datetime
-        timestamp = datetime.datetime.utcnow().isoformat()
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
         logger.error(
             f"[AI COO DAILY BRIEF ERROR] workspace_id={workspace_id} user_id={current_user.id} model=gemini-2.5-flash "
             f"error_type={error_type} timestamp={timestamp} error_msg={err_str}"
@@ -220,7 +237,7 @@ async def daily_brief(
                     "id": str(act.id),
                     "action": act.action,
                     "description": act.description,
-                    "created_at": act.created_at.isoformat() if act.created_at else None
+                    "created_at": (act.created_at.replace(tzinfo=datetime.timezone.utc) if act.created_at.tzinfo is None else act.created_at).isoformat() if act.created_at else None
                 })
 
             return DailyBriefResponse(
@@ -271,6 +288,24 @@ def create_goal(
         target_value=body.target_value
     )
 
+@router.put("/goals/{goal_id}", response_model=BusinessGoalResponse)
+def edit_business_goal(
+    goal_id: uuid.UUID,
+    body: BusinessGoalUpdate,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+):
+    updated = update_goal(
+        db=db,
+        org_id=workspace_id,
+        goal_id=goal_id,
+        update_data=body.model_dump(exclude_none=True)
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    return updated
+
 @router.delete("/goals/{goal_id}")
 def delete_business_goal(
     goal_id: uuid.UUID,
@@ -290,7 +325,10 @@ def get_recommendations(
     current_user: Profile = Depends(get_current_user),
     workspace_id: uuid.UUID = Depends(get_required_workspace_id)
 ):
-    return get_recent_recommendations(db, workspace_id, limit)
+    recs = get_recent_recommendations(db, workspace_id, limit)
+    for r in recs:
+        r.influenced_by_goals = get_influencing_goals(db, workspace_id, r.recommendation, r.agent_source)
+    return recs
 
 @router.get("/scenarios", response_model=List[Dict[str, Any]])
 def get_scenarios(
@@ -305,11 +343,12 @@ def get_scenarios(
     forecasts = db.query(Forecast).filter(Forecast.organization_id == workspace_id).order_by(Forecast.created_at.desc()).all()
     
     from typing import Dict, Any
+    import datetime
     results = []
     for f in forecasts:
         results.append({
             "id": str(f.id),
-            "created_at": f.created_at.isoformat(),
+            "created_at": (f.created_at.replace(tzinfo=datetime.timezone.utc) if f.created_at.tzinfo is None else f.created_at).isoformat(),
             "scenario_type": f.metrics.get("scenario_type"),
             "parameter": f.metrics.get("parameter"),
             "results": f.metrics.get("results")

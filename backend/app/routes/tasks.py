@@ -8,7 +8,7 @@ from app.services.task_service import TaskService
 from app.core.security import get_current_user, get_required_workspace_id
 from app.models.profile import Profile
 
-router = APIRouter(prefix="/tasks", tags=["Tasks"])
+router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
 
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(task: TaskCreate, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):

@@ -63,7 +63,38 @@ export default function FinancePage() {
       </div>
       
       {loading ? (
-        <div className="text-center py-10 text-slate-500">Loading financials...</div>
+        <div className="space-y-8 animate-pulse">
+          {/* Quick Stats Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center items-center h-28 space-y-3">
+                <div className="h-4 bg-slate-200 rounded w-1/3" />
+                <div className="h-8 bg-slate-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Table Skeletons */}
+            {[...Array(2)].map((_, tableIdx) => (
+              <div key={tableIdx} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col p-6 space-y-4">
+                <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                  <div className="h-5 bg-slate-200 rounded w-1/4" />
+                  <div className="h-8 bg-slate-200 rounded w-24" />
+                </div>
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex justify-between items-center py-2">
+                      <div className="h-4 bg-slate-200 rounded w-1/3" />
+                      <div className="h-4 bg-slate-200 rounded w-1/4" />
+                      <div className="h-4 bg-slate-200 rounded w-12" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="space-y-8">
           {/* Quick Stats */}

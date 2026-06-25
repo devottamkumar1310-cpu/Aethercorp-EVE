@@ -21,8 +21,15 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-async def process_document_in_background(doc_id: uuid.UUID, org_id: uuid.UUID, file_bytes: bytes, filename: str, content_type: str):
-    from app.services.document_intelligence.document_classifier import DocumentClassifier
+async def process_document_in_background(
+    doc_id: uuid.UUID,
+    org_id: uuid.UUID,
+    file_bytes: bytes,
+    filename: str,
+    content_type: str,
+    classified_type: str,
+    classified_confidence: float
+):
     from app.services.document_intelligence.extraction_engine import ExtractionEngine
     from app.services.document_intelligence.validation_engine import ValidationEngine
     from app.services.document_intelligence.ingestion_service import IngestionService
@@ -39,30 +46,29 @@ async def process_document_in_background(doc_id: uuid.UUID, org_id: uuid.UUID, f
         doc.status = "processing"
         db.commit()
 
-        # Run Classification
-        classification = await DocumentClassifier.classify_document(
-            db=db,
-            file_content=file_bytes,
-            filename=filename,
-            mime_type=content_type
-        )
-
-        if classification.document_type == "Unknown" or classification.confidence < 0.8:
-            raise Exception(
-                f"Unable to classify document with high confidence (Got: '{classification.document_type}', confidence: {classification.confidence:.2f})."
-            )
+        # Refine Invoice and Inventory Document into internal types for backward compatibility
+        refined_doc_type = classified_type
+        if refined_doc_type == "Invoice":
+            if "purchase" in filename.lower() or "supplier" in filename.lower():
+                refined_doc_type = "Purchase Invoice"
+            elif "sales" in filename.lower() or "customer" in filename.lower():
+                refined_doc_type = "Sales Invoice"
+            else:
+                refined_doc_type = "Sales Invoice"
+        elif refined_doc_type == "Inventory Document":
+            refined_doc_type = "Inventory Report"
 
         # Transition to classified stage
         doc.status = "classified"
-        doc.document_type = classification.document_type
-        doc.classification_confidence = classification.confidence
+        doc.document_type = refined_doc_type
+        doc.classification_confidence = classified_confidence
         db.commit()
 
         # Run Extraction
         extracted_data = await ExtractionEngine.extract_details(
             file_content=file_bytes,
             mime_type=content_type,
-            document_type=classification.document_type,
+            document_type=refined_doc_type,
             filename=filename
         )
 
@@ -85,13 +91,13 @@ async def process_document_in_background(doc_id: uuid.UUID, org_id: uuid.UUID, f
         db.commit()
 
         # Integrate operational data
-        IngestionService._integrate_data(db, org_id, classification.document_type, extracted_data)
+        IngestionService._integrate_data(db, org_id, refined_doc_type, extracted_data)
 
         # Generate COO Insights
         coo_insights = await IngestionService._generate_coo_insights(
             db,
             org_id,
-            classification.document_type,
+            refined_doc_type,
             extracted_data,
             validation
         )
@@ -103,7 +109,7 @@ async def process_document_in_background(doc_id: uuid.UUID, org_id: uuid.UUID, f
 
         AuditLogger.log(
             db, "document_ingestion", "success", org_id,
-            f"Asynchronously processed {classification.document_type} from file: {filename}"
+            f"Asynchronously processed {refined_doc_type} from file: {filename}"
         )
     except Exception as e:
         db.rollback()
@@ -152,6 +158,31 @@ async def upload_document(
             detail=f"Unsupported file format '{file_ext}'."
         )
 
+    # Run synchronous classification to reject unsupported files before intelligence pipeline
+    from app.services.document_intelligence.document_classifier import DocumentClassifier
+    from app.services.audit_logger import AuditLogger
+
+    classification = await DocumentClassifier.classify_document(
+        db=db,
+        file_content=file_bytes,
+        filename=filename,
+        mime_type=content_type
+    )
+
+    if classification.document_type == "Unknown / Unsupported" or classification.confidence < 0.8:
+        # Log rejected uploads for observability
+        AuditLogger.log(
+            db,
+            "document_ingestion",
+            "failure",
+            workspace_id,
+            f"Rejected upload for file: {filename}. Reason: Unsupported type '{classification.document_type}' (confidence: {classification.confidence:.2f})"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This file does not appear to be a supported business document."
+        )
+
     # Create processed document record in DB
     doc_id = uuid.uuid4()
     file_ext_clean = file_ext.replace(".", "")
@@ -180,7 +211,9 @@ async def upload_document(
         org_id=workspace_id,
         file_bytes=file_bytes,
         filename=filename,
-        content_type=content_type
+        content_type=content_type,
+        classified_type=classification.document_type,
+        classified_confidence=classification.confidence
     )
 
     return processed_doc

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
+import Link from "next/link";
 import {
   Building2,
   ChevronDown,
@@ -173,6 +174,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (wsRes.ok) {
         const wsData = await wsRes.json();
         setWorkspaces(wsData);
+        if (wsData.length === 0) {
+          localStorage.removeItem("active_workspace_id");
+          setActiveWorkspaceId(null);
+          router.push("/onboarding");
+          return;
+        }
         const storedId = localStorage.getItem("active_workspace_id");
         if (storedId && wsData.some((w: Workspace) => w.id === storedId)) {
           setActiveWorkspaceId(storedId);
@@ -197,18 +204,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!session) { router.push("/login"); return; }
       setSessionToken(session.access_token);
       
-      setLoadingStage(2); // Loading Workspace
-      await new Promise(r => setTimeout(r, 450));
+      const isAlreadyInitialized = typeof window !== "undefined" && sessionStorage.getItem("eve_initialized") === "true";
       
-      await loadWorkspacesAndProfile(session.access_token);
-      
-      setLoadingStage(3); // Loading Business Data
-      await new Promise(r => setTimeout(r, 450));
-      
-      setLoadingStage(4); // Preparing AI Executive
-      await new Promise(r => setTimeout(r, 500));
-      
-      setLoading(false);
+      if (isAlreadyInitialized) {
+        setLoading(false);
+        await loadWorkspacesAndProfile(session.access_token);
+      } else {
+        setLoadingStage(2); // Loading Workspace
+        await new Promise(r => setTimeout(r, 450));
+        
+        await loadWorkspacesAndProfile(session.access_token);
+        
+        setLoadingStage(3); // Loading Business Data
+        await new Promise(r => setTimeout(r, 450));
+        
+        setLoadingStage(4); // Preparing AI Executive
+        await new Promise(r => setTimeout(r, 500));
+        
+        setLoading(false);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("eve_initialized", "true");
+        }
+      }
     }
     init();
   }, [router]);
@@ -217,6 +234,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     localStorage.setItem("active_workspace_id", id);
     setActiveWorkspaceId(id);
     setIsDropdownOpen(false);
+    // When switching workspaces, we want a fresh bootstrap animation to load the new workspace assets/reasoning context
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("eve_initialized");
+    }
     window.location.reload();
   };
 
@@ -277,12 +298,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const supabase = createClient();
     await supabase.auth.signOut();
     localStorage.removeItem("active_workspace_id");
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("eve_initialized");
+    }
     router.push("/login");
   };
 
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
 
-  if (loading) {
+  if (loading || !activeWorkspaceId) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
         <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-8 shadow-2xl space-y-6 animate-fade-in">
@@ -422,7 +446,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   const active = isActive(item.href, (item as any).exact);
                   const isItemDisabled = !activeWorkspaceId && item.href !== "/dashboard/settings";
                   return (
-                    <a
+                    <Link
                       key={item.href}
                       href={isItemDisabled ? "#" : item.href}
                       onClick={(e) => {
@@ -452,7 +476,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {!isSidebarCollapsed && (item as any).isAI && (
                         <span className="ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide">NEW</span>
                       )}
-                    </a>
+                    </Link>
                   );
                 })}
               </div>
@@ -476,7 +500,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
           </div>
           <button
-            onClick={() => setIsFeedbackOpen(true)}
+            onClick={() => window.open("https://forms.gle/qETMVJfDzHnF86xi7", "_blank")}
             title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
             className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
               isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-3 py-2"
@@ -485,6 +509,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <MessageSquare size={13} className="text-indigo-400" />
             {!isSidebarCollapsed && <span className="animate-fade-in">Give Beta Feedback</span>}
           </button>
+          {!isSidebarCollapsed && (
+            <div className="text-[10px] text-slate-550 text-center mt-1 leading-normal">
+              Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
+            </div>
+          )}
         </div>
       </aside>
 

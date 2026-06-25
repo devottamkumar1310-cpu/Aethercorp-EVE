@@ -28,4 +28,4 @@ class ProcessedDocument(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
 
     # Relationships
-    organization = relationship("Organization")
+    organization = relationship("Organization", back_populates="processed_documents")

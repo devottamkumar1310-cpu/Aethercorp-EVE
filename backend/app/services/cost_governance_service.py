@@ -12,7 +12,7 @@ class CostGovernanceService:
         Sums estimated cost of all AI assistant queries run by the organization today.
         """
         try:
-            today_start = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
             
             messages = db.query(ExecutiveMessage).join(ExecutiveConversation).filter(
                 ExecutiveConversation.organization_id == org_id,

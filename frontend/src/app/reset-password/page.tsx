@@ -17,6 +17,33 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Password validation rules
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  const isPasswordValid = hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecialChar;
+
+  // Strength score out of 5
+  const strengthScore = [
+    hasMinLength,
+    hasUppercase,
+    hasLowercase,
+    hasNumber,
+    hasSpecialChar
+  ].filter(Boolean).length;
+
+  const getStrengthText = (score: number) => {
+    if (password.length === 0) return { label: "", color: "bg-slate-900", text: "text-slate-500" };
+    if (score <= 2) return { label: "Weak", color: "bg-rose-500", text: "text-rose-500" };
+    if (score <= 4) return { label: "Fair", color: "bg-amber-500", text: "text-amber-550" };
+    return { label: "Strong", color: "bg-emerald-500", text: "text-emerald-400" };
+  };
+
+  const strength = getStrengthText(strengthScore);
+
   useEffect(() => {
     const supabase = createClient();
     
@@ -46,8 +73,8 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     if (!password || !confirmPassword) return;
 
-    if (password.length < 6) {
-      setErrorMsg("Password must be at least 6 characters long.");
+    if (!isPasswordValid) {
+      setErrorMsg("Password does not meet the complexity requirements.");
       return;
     }
 
@@ -141,6 +168,58 @@ export default function ResetPasswordPage() {
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+
+                {/* Password Strength Meter & Visual Indicators */}
+                {password.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500">Strength:</span>
+                      <span className={`font-semibold ${strength.text}`}>{strength.label}</span>
+                    </div>
+                    
+                    {/* Strength Bar */}
+                    <div className="h-1.5 w-full bg-slate-955 rounded-full overflow-hidden border border-slate-900">
+                      <div 
+                        className={`h-full ${strength.color} transition-all duration-300`} 
+                        style={{ width: `${(strengthScore / 5) * 100}%` }}
+                      />
+                    </div>
+
+                    {/* Rules Checklist */}
+                    <ul className="space-y-1.5 text-[11px] text-slate-500 mt-2">
+                      <li className="flex items-center gap-1.5">
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasMinLength ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-600"}`}>
+                          {hasMinLength ? "✓" : "✕"}
+                        </span>
+                        <span>At least 8 characters</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasUppercase ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-600"}`}>
+                          {hasUppercase ? "✓" : "✕"}
+                        </span>
+                        <span>At least one uppercase letter (A-Z)</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasLowercase ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-600"}`}>
+                          {hasLowercase ? "✓" : "✕"}
+                        </span>
+                        <span>At least one lowercase letter (a-z)</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasNumber ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-600"}`}>
+                          {hasNumber ? "✓" : "✕"}
+                        </span>
+                        <span>At least one number (0-9)</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasSpecialChar ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-900 text-slate-600"}`}>
+                          {hasSpecialChar ? "✓" : "✕"}
+                        </span>
+                        <span>At least one special character (!@#$%^&*)</span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -157,7 +236,7 @@ export default function ResetPasswordPage() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !isPasswordValid}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-slate-550 transition-all cursor-pointer mt-6"
               >
                 {loading ? (

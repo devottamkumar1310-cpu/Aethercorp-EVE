@@ -34,7 +34,7 @@ export async function fetchBusinessKPIs(token: string): Promise<BusinessKPIs> {
 }
 
 export async function fetchClients(token: string): Promise<Client[]> {
-  const res = await fetch(`${API_BASE_URL}/clients/`, {
+  const res = await fetch(`${API_BASE_URL}/api/clients/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch clients");
@@ -42,7 +42,7 @@ export async function fetchClients(token: string): Promise<Client[]> {
 }
 
 export async function fetchProjects(token: string): Promise<Project[]> {
-  const res = await fetch(`${API_BASE_URL}/projects/`, {
+  const res = await fetch(`${API_BASE_URL}/api/projects/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch projects");
@@ -50,7 +50,7 @@ export async function fetchProjects(token: string): Promise<Project[]> {
 }
 
 export async function fetchTasks(token: string): Promise<Task[]> {
-  const res = await fetch(`${API_BASE_URL}/tasks/`, {
+  const res = await fetch(`${API_BASE_URL}/api/tasks/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch tasks");
@@ -58,7 +58,7 @@ export async function fetchTasks(token: string): Promise<Task[]> {
 }
 
 export async function fetchRevenues(token: string): Promise<Revenue[]> {
-  const res = await fetch(`${API_BASE_URL}/finance/revenue`, {
+  const res = await fetch(`${API_BASE_URL}/api/finance/revenue`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch revenues");
@@ -66,7 +66,7 @@ export async function fetchRevenues(token: string): Promise<Revenue[]> {
 }
 
 export async function fetchExpenses(token: string): Promise<Expense[]> {
-  const res = await fetch(`${API_BASE_URL}/finance/expenses`, {
+  const res = await fetch(`${API_BASE_URL}/api/finance/expenses`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch expenses");
@@ -74,7 +74,7 @@ export async function fetchExpenses(token: string): Promise<Expense[]> {
 }
 
 export async function fetchActivityLogs(token: string): Promise<ActivityLog[]> {
-  const res = await fetch(`${API_BASE_URL}/activity-logs/`, {
+  const res = await fetch(`${API_BASE_URL}/api/activity/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch activity logs");
@@ -101,23 +101,23 @@ async function apiCall(url: string, method: string, token: string, body?: any) {
 }
 
 // Clients
-export const createClientAPI = (token: string, data: any) => apiCall('/clients/', 'POST', token, data);
-export const updateClientAPI = (token: string, id: string, data: any) => apiCall(`/clients/${id}`, 'PUT', token, data);
-export const deleteClientAPI = (token: string, id: string) => apiCall(`/clients/${id}`, 'DELETE', token);
+export const createClientAPI = (token: string, data: any) => apiCall('/api/clients/', 'POST', token, data);
+export const updateClientAPI = (token: string, id: string, data: any) => apiCall(`/api/clients/${id}`, 'PUT', token, data);
+export const deleteClientAPI = (token: string, id: string) => apiCall(`/api/clients/${id}`, 'DELETE', token);
 
 // Projects
-export const createProjectAPI = (token: string, data: any) => apiCall('/projects/', 'POST', token, data);
-export const updateProjectAPI = (token: string, id: string, data: any) => apiCall(`/projects/${id}`, 'PUT', token, data);
-export const deleteProjectAPI = (token: string, id: string) => apiCall(`/projects/${id}`, 'DELETE', token);
+export const createProjectAPI = (token: string, data: any) => apiCall('/api/projects/', 'POST', token, data);
+export const updateProjectAPI = (token: string, id: string, data: any) => apiCall(`/api/projects/${id}`, 'PUT', token, data);
+export const deleteProjectAPI = (token: string, id: string) => apiCall(`/api/projects/${id}`, 'DELETE', token);
 
 // Tasks
-export const createTaskAPI = (token: string, data: any) => apiCall('/tasks/', 'POST', token, data);
-export const updateTaskAPI = (token: string, id: string, data: any) => apiCall(`/tasks/${id}`, 'PUT', token, data);
-export const deleteTaskAPI = (token: string, id: string) => apiCall(`/tasks/${id}`, 'DELETE', token);
+export const createTaskAPI = (token: string, data: any) => apiCall('/api/tasks/', 'POST', token, data);
+export const updateTaskAPI = (token: string, id: string, data: any) => apiCall(`/api/tasks/${id}`, 'PUT', token, data);
+export const deleteTaskAPI = (token: string, id: string) => apiCall(`/api/tasks/${id}`, 'DELETE', token);
 
 // Finance
-export const createRevenueAPI = (token: string, data: any) => apiCall('/finance/revenue', 'POST', token, data);
-export const createExpenseAPI = (token: string, data: any) => apiCall('/finance/expenses', 'POST', token, data);
+export const createRevenueAPI = (token: string, data: any) => apiCall('/api/finance/revenue', 'POST', token, data);
+export const createExpenseAPI = (token: string, data: any) => apiCall('/api/finance/expenses', 'POST', token, data);
 
 // Inventory
 export async function fetchInventoryDashboard(token: string): Promise<any> {

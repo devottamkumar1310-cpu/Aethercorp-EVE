@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Plus, Trash2, Loader2, Sparkles, Target, Activity } from "lucide-react";
-import { listGoals, addGoal, deleteGoal } from "@/services/executiveService";
+import { X, Plus, Trash2, Loader2, Target, Activity, Edit2, Check, Ban, Eye, EyeOff, Calendar } from "lucide-react";
+import { listGoals, addGoal, deleteGoal, updateGoal } from "@/services/executiveService";
 import { BusinessGoalResponse } from "@/types/executive";
 
 interface MemoryManagerPanelProps {
@@ -21,6 +21,13 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
   const [goalType, setGoalType] = useState("profitability");
   const [description, setDescription] = useState("");
   const [targetValue, setTargetValue] = useState("");
+
+  // Edit goal form state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editGoalType, setEditGoalType] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editTargetValue, setEditTargetValue] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const fetchGoals = async () => {
     if (!token) return;
@@ -77,6 +84,47 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
     }
   };
 
+  const handleToggleStatus = async (id: string, currentActive: boolean) => {
+    setUpdatingId(id);
+    try {
+      await updateGoal(id, { is_active: !currentActive }, token);
+      await fetchGoals();
+    } catch (err) {
+      console.error("Failed to toggle status:", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const startEditing = (g: BusinessGoalResponse) => {
+    setEditingId(g.id);
+    setEditGoalType(g.goal_type);
+    setEditDescription(g.description);
+    setEditTargetValue(g.target_value !== undefined && g.target_value !== null ? String(g.target_value) : "");
+  };
+
+  const handleEditSave = async (id: string) => {
+    if (!editDescription.trim()) return;
+    setUpdatingId(id);
+    try {
+      await updateGoal(
+        id,
+        {
+          goal_type: editGoalType,
+          description: editDescription,
+          target_value: editTargetValue ? parseFloat(editTargetValue) : undefined
+        },
+        token
+      );
+      setEditingId(null);
+      await fetchGoals();
+    } catch (err) {
+      console.error("Failed to save edited goal:", err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -96,7 +144,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                 <Target size={18} />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-slate-100">Long-Term Memory Manager</h2>
+                <h2 className="text-base font-semibold text-slate-100 font-sans">Strategic Goals Manager</h2>
                 <p className="text-xs text-slate-400">Set active business goals and strategic context for EVE</p>
               </div>
             </div>
@@ -119,7 +167,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                 <select
                   value={goalType}
                   onChange={(e) => setGoalType(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer"
                 >
                   <option value="profitability">Profitability</option>
                   <option value="growth">Growth</option>
@@ -137,7 +185,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                   required
                   placeholder="e.g. Increase margin on seasonal deadstock to 45% using pricing engine tools..."
                   rows={3}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-500 resize-none"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-500 resize-none font-sans"
                 />
               </div>
 
@@ -156,7 +204,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
               <button
                 type="submit"
                 disabled={addingGoal || !description.trim()}
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-slate-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-slate-500 text-white rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {addingGoal ? (
                   <>
@@ -172,7 +220,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
           </div>
 
           {/* Current Goals List */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-thin">
             <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
               <Activity size={14} /> Active Goals List
             </h3>
@@ -183,39 +231,173 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
               </div>
             ) : (
               <div className="space-y-3">
-                {goals.map((g) => (
-                  <div key={g.id} className="p-4 bg-slate-950/40 border border-slate-800/80 rounded-xl relative group hover:border-slate-800 transition-all">
-                    <button
-                      onClick={() => handleDeleteGoal(g.id)}
-                      disabled={deletingId === g.id}
-                      className="absolute top-3 right-3 p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                {goals.map((g) => {
+                  const isEditing = editingId === g.id;
+                  const isUpdating = updatingId === g.id;
+                  const createdDate = new Date(g.created_at).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  });
+
+                  return (
+                    <div 
+                      key={g.id} 
+                      className={`p-4 bg-slate-950/40 border rounded-xl relative group transition-all ${
+                        g.is_active 
+                          ? "border-slate-800/80 hover:border-slate-700" 
+                          : "border-slate-850/40 opacity-70 hover:opacity-100 hover:border-slate-800"
+                      }`}
                     >
-                      {deletingId === g.id ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={14} />
+                      {/* Top Action Buttons (Edit / Toggle Active / Delete) */}
+                      {!isEditing && (
+                        <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => startEditing(g)}
+                            disabled={isUpdating}
+                            title="Edit goal"
+                            className="p-1 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded transition-all cursor-pointer"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(g.id, g.is_active)}
+                            disabled={isUpdating}
+                            title={g.is_active ? "Disable goal" : "Enable goal"}
+                            className={`p-1 rounded transition-all cursor-pointer ${
+                              g.is_active 
+                                ? "text-slate-500 hover:text-amber-450 hover:bg-amber-500/10" 
+                                : "text-slate-500 hover:text-emerald-450 hover:bg-emerald-500/10"
+                            }`}
+                          >
+                            {isUpdating ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : g.is_active ? (
+                              <EyeOff size={13} />
+                            ) : (
+                              <Eye size={13} />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteGoal(g.id)}
+                            disabled={deletingId === g.id}
+                            title="Delete goal"
+                            className="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition-all cursor-pointer"
+                          >
+                            {deletingId === g.id ? (
+                              <Loader2 size={13} className="animate-spin" />
+                            ) : (
+                              <Trash2 size={13} />
+                            )}
+                          </button>
+                        </div>
                       )}
-                    </button>
 
-                    <div className="flex items-start gap-2.5">
-                      <div className={`p-1.5 rounded-lg border text-[10px] uppercase font-bold tracking-wider ${
-                        g.goal_type === 'profitability' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                        g.goal_type === 'growth' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                        g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                      }`}>
-                        {g.goal_type.replace('_', ' ')}
-                      </div>
+                      {isEditing ? (
+                        /* Inline Edit Form */
+                        <div className="space-y-3 pt-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                              Editing Goal
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleEditSave(g.id)}
+                                disabled={isUpdating || !editDescription.trim()}
+                                className="p-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 rounded transition-all flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 cursor-pointer"
+                              >
+                                {isUpdating ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingId(null)}
+                                disabled={isUpdating}
+                                className="p-1 bg-slate-800 text-slate-400 hover:bg-slate-700 rounded transition-all text-[10px] font-semibold px-2 py-0.5 cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5 font-medium">Goal Type</label>
+                            <select
+                              value={editGoalType}
+                              onChange={(e) => setEditGoalType(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                            >
+                              <option value="profitability">Profitability</option>
+                              <option value="growth">Growth</option>
+                              <option value="cost_reduction">Cost Reduction</option>
+                              <option value="retention">Retention</option>
+                              <option value="custom">Custom Goal</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5 font-medium">Goal Description</label>
+                            <textarea
+                              value={editDescription}
+                              onChange={(e) => setEditDescription(e.target.value)}
+                              required
+                              rows={3}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none font-sans"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5 font-medium">Target Value (Optional)</label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={editTargetValue}
+                              onChange={(e) => setEditTargetValue(e.target.value)}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        /* Normal Goal Display */
+                        <>
+                          <div className="flex flex-wrap items-center gap-2 pr-12">
+                            {/* Type Badge */}
+                            <div className={`p-1.5 py-0.5 rounded border text-[9px] uppercase font-bold tracking-wider ${
+                              g.goal_type === 'profitability' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                              g.goal_type === 'growth' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                              g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                              'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                            }`}>
+                              {g.goal_type.replace('_', ' ')}
+                            </div>
+
+                            {/* Status Badge */}
+                            <div className={`p-1.5 py-0.5 rounded border text-[9px] uppercase font-bold tracking-wider ${
+                              g.is_active 
+                                ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' 
+                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            }`}>
+                              {g.is_active ? 'Active' : 'Disabled'}
+                            </div>
+                          </div>
+
+                          <p className="text-slate-300 text-sm mt-3 pr-6 leading-relaxed font-normal font-sans">{g.description}</p>
+                          
+                          {g.target_value !== undefined && g.target_value !== null && (
+                            <div className="mt-2 text-xs text-indigo-400 font-medium">
+                              Target Value: <span className="text-slate-200">{g.target_value}</span>
+                            </div>
+                          )}
+
+                          {/* Created Date Info */}
+                          <div className="mt-3.5 pt-2.5 border-t border-slate-800/30 flex items-center gap-1.5 text-[10px] text-slate-500">
+                            <Calendar size={11} className="text-slate-500" />
+                            <span>Created: {createdDate}</span>
+                          </div>
+                        </>
+                      )}
                     </div>
-
-                    <p className="text-slate-300 text-sm mt-3.5 pr-6 leading-relaxed font-normal">{g.description}</p>
-                    {g.target_value !== undefined && g.target_value !== null && (
-                      <div className="mt-2 text-xs text-indigo-400 font-medium">
-                        Target Value: <span className="text-slate-200">{g.target_value}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
 
                 {goals.length === 0 && (
                   <div className="text-center py-12 px-4 border border-dashed border-slate-800 rounded-xl">

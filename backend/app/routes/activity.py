@@ -8,7 +8,7 @@ from app.services.activity_service import ActivityService
 from app.core.security import get_current_user, get_required_workspace_id
 from app.models.profile import Profile
 
-router = APIRouter(prefix="/activity-logs", tags=["Activity Logs"])
+router = APIRouter(prefix="/api/activity", tags=["Activity Logs"])
 
 @router.get("/", response_model=List[ActivityLogResponse])
 def get_activities(skip: int = 0, limit: int = 100, user_id: Optional[uuid.UUID] = None, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):

@@ -126,6 +126,22 @@ export async function deleteGoal(goalId: string, token: string): Promise<{ succe
   return res.json();
 }
 
+export async function updateGoal(
+  goalId: string,
+  goal: { goal_type?: string; description?: string; target_value?: number; is_active?: boolean },
+  token: string
+): Promise<BusinessGoalResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/executive/goals/${goalId}`, {
+    method: "PUT",
+    headers: getHeaders(token, "application/json"),
+    body: JSON.stringify(goal)
+  });
+  if (!res.ok) {
+    await handleResponseError(res, "Failed to update goal");
+  }
+  return res.json();
+}
+
 export async function getRecommendations(
   token: string, 
   limit: number = 10
