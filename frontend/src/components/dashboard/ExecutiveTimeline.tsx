@@ -15,9 +15,10 @@ import {
 
 interface Props {
   logs: ActivityLog[];
+  loading?: boolean;
 }
 
-export function ExecutiveTimeline({ logs }: Props) {
+export function ExecutiveTimeline({ logs, loading = false }: Props) {
   const getEventMeta = (entityType: string, action: string) => {
     const type = entityType.toLowerCase();
     const act = action.toLowerCase();
@@ -101,48 +102,58 @@ export function ExecutiveTimeline({ logs }: Props) {
       </CardHeader>
       <CardContent className="p-6">
         <div className="relative border-l border-slate-200 ml-4 pl-6 space-y-6">
-          {logs.map((log) => {
-            const meta = getEventMeta(log.entity_type, log.action);
-            const Icon = meta.icon;
-            
-            return (
-              <div key={log.id} className="relative group">
-                {/* Timeline dot icon */}
-                <div className={`absolute -left-[35px] top-0.5 w-6 h-6 rounded-full border flex items-center justify-center transition-all group-hover:scale-110 shadow-sm ${meta.iconClass}`}>
-                  <Icon size={12} />
-                </div>
-                
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-bold text-slate-800 tracking-tight">
-                        {log.action}
-                      </span>
-                      <Badge variant={meta.badgeVariant} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.2 rounded ${meta.badgeClass}`}>
-                        {meta.label}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-slate-500 leading-relaxed font-normal max-w-2xl">
-                      {log.description}
-                    </p>
+          {loading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="relative animate-pulse flex flex-col gap-2">
+                <div className="absolute -left-[35px] top-0.5 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800" />
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3" />
+              </div>
+            ))
+          ) : (
+            logs.map((log) => {
+              const meta = getEventMeta(log.entity_type, log.action);
+              const Icon = meta.icon;
+              
+              return (
+                <div key={log.id} className="relative group">
+                  {/* Timeline dot icon */}
+                  <div className={`absolute -left-[35px] top-0.5 w-6 h-6 rounded-full border flex items-center justify-center transition-all group-hover:scale-110 shadow-sm ${meta.iconClass}`}>
+                    <Icon size={12} />
                   </div>
                   
-                  {/* Timestamp */}
-                  <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
-                    <Clock size={11} className="text-slate-300" />
-                    {new Date(log.created_at).toLocaleString([], {
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit"
-                    })}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-bold text-slate-800 tracking-tight">
+                          {log.action}
+                        </span>
+                        <Badge variant={meta.badgeVariant} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.2 rounded ${meta.badgeClass}`}>
+                          {meta.label}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed font-normal max-w-2xl">
+                        {log.description}
+                      </p>
+                    </div>
+                    
+                    {/* Timestamp */}
+                    <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                      <Clock size={11} className="text-slate-300" />
+                      {new Date(log.created_at).toLocaleString([], {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
           
-          {logs.length === 0 && (
+          {!loading && logs.length === 0 && (
             <div className="text-slate-400 italic text-center py-8 text-sm">
               No recent activity recorded in this workspace. Create clients or run AI checks to populate the feed.
             </div>

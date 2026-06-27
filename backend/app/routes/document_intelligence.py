@@ -4,7 +4,7 @@ import logging
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, BackgroundTasks, Response
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 from app.services.gcs_service import GCSService
 
 from app.database import get_db, SessionLocal
@@ -225,7 +225,20 @@ def list_documents(
     current_user: Profile = Depends(get_current_user),
     workspace_id: uuid.UUID = Depends(get_required_workspace_id)
 ):
-    return db.query(ProcessedDocument).filter(
+    return db.query(ProcessedDocument).options(
+        load_only(
+            ProcessedDocument.id,
+            ProcessedDocument.organization_id,
+            ProcessedDocument.filename,
+            ProcessedDocument.content_type,
+            ProcessedDocument.file_size,
+            ProcessedDocument.status,
+            ProcessedDocument.document_type,
+            ProcessedDocument.classification_confidence,
+            ProcessedDocument.created_at,
+            ProcessedDocument.error_message
+        )
+    ).filter(
         ProcessedDocument.organization_id == workspace_id
     ).order_by(ProcessedDocument.created_at.desc()).all()
 

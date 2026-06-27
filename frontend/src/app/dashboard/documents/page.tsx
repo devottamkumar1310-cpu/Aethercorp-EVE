@@ -242,12 +242,12 @@ export default function DocumentHubPage() {
               <tbody className="divide-y divide-slate-850/40">
                 {[...Array(3)].map((_, i) => (
                   <tr key={i}>
-                    <td className="p-4 pl-6"><div className="h-4 bg-slate-800 rounded w-2/3" /></td>
-                    <td className="p-4"><div className="h-4 bg-slate-800 rounded w-1/3" /></td>
-                    <td className="p-4"><div className="h-4 bg-slate-800 rounded w-1/4" /></td>
-                    <td className="p-4"><div className="h-4 bg-slate-800 rounded w-1/4" /></td>
-                    <td className="p-4"><div className="h-6 bg-slate-800 rounded-full w-16" /></td>
-                    <td className="p-4 pr-6 text-right"><div className="h-4 bg-slate-800 rounded w-12 ml-auto" /></td>
+                    <td className="p-4 pl-6"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3" /></td>
+                    <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3" /></td>
+                    <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
+                    <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
+                    <td className="p-4"><div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-full w-16" /></td>
+                    <td className="p-4 pr-6 text-right"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-12 ml-auto" /></td>
                   </tr>
                 ))}
               </tbody>

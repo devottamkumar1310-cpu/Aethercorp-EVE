@@ -74,19 +74,19 @@ export function ProjectModal({ isOpen, onClose, token, project, clients, onSucce
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Project Name *</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Project Name *</label>
             <input 
               type="text" 
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Client *</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client *</label>
             <select 
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.client_id}
               onChange={(e) => setFormData({...formData, client_id: e.target.value})}
               required
@@ -100,29 +100,29 @@ export function ProjectModal({ isOpen, onClose, token, project, clients, onSucce
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Budget ($)</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Budget ($)</label>
               <input 
                 type="number" 
                 min="0"
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.budget}
                 onChange={(e) => setFormData({...formData, budget: Number(e.target.value)})}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Deadline</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Deadline</label>
               <input 
                 type="date" 
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={formData.deadline}
                 onChange={(e) => setFormData({...formData, deadline: e.target.value})}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
             <select 
-              className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.status}
               onChange={(e) => setFormData({...formData, status: e.target.value})}
             >
@@ -132,7 +132,7 @@ export function ProjectModal({ isOpen, onClose, token, project, clients, onSucce
             </select>
           </div>
           <div className="pt-4 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors" disabled={isSubmitting}>Cancel</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors" disabled={isSubmitting}>Cancel</button>
             <button type="submit" className="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors flex items-center gap-2" disabled={isSubmitting || clients.length === 0}>
               {isSubmitting ? "Saving..." : "Save Project"}
             </button>
