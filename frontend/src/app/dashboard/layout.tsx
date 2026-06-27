@@ -151,9 +151,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const loadWorkspacesAndProfile = async (token: string) => {
     try {
-      const profileRes = await fetch(`${API_BASE_URL}/api/profile/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const [profileRes, wsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/profile/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_BASE_URL}/api/organization/workspaces`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ]);
+
       if (profileRes.ok) {
         const profileData = await profileRes.json();
         setProfile(profileData);
@@ -168,9 +174,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       }
 
-      const wsRes = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
       if (wsRes.ok) {
         const wsData = await wsRes.json();
         setWorkspaces(wsData);
@@ -211,16 +214,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         await loadWorkspacesAndProfile(session.access_token);
       } else {
         setLoadingStage(2); // Loading Workspace
-        await new Promise(r => setTimeout(r, 450));
-        
         await loadWorkspacesAndProfile(session.access_token);
         
         setLoadingStage(3); // Loading Business Data
-        await new Promise(r => setTimeout(r, 450));
-        
         setLoadingStage(4); // Preparing AI Executive
-        await new Promise(r => setTimeout(r, 500));
-        
         setLoading(false);
         if (typeof window !== "undefined") {
           sessionStorage.setItem("eve_initialized", "true");
@@ -391,14 +388,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 flex flex-col transition-all duration-200 ${
-          isSidebarCollapsed ? "w-16" : "w-64"
+          isSidebarCollapsed ? "w-64 md:w-16" : "w-64"
         } ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
         {/* Sidebar Brand */}
         <div className={`flex items-center border-b border-sidebar-border transition-all ${
-          isSidebarCollapsed ? "px-3 py-5 justify-center" : "gap-3 px-5 py-5"
+          isSidebarCollapsed ? "px-5 py-5 md:px-3 md:py-5 md:justify-center" : "gap-3 px-5 py-5"
         }`}>
           <div
             onClick={() => router.push("/dashboard/eve")}
@@ -406,12 +403,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             EVE
           </div>
-          {!isSidebarCollapsed && (
-            <div className="flex flex-col min-w-0 animate-fade-in">
-              <span className="font-bold text-slate-100 dark:text-slate-200 text-xs tracking-tight leading-none">EVE PORTAL</span>
-              <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
-            </div>
-          )}
+          <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+            <span className="font-bold text-slate-100 dark:text-slate-200 text-xs tracking-tight leading-none">EVE PORTAL</span>
+            <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
+          </div>
           
           <button
             onClick={toggleSidebar}
@@ -433,13 +428,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
           {navItems.map((group) => (
             <div key={group.label}>
-              {!isSidebarCollapsed ? (
-                <p className="text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest px-3 mb-2">
-                  {group.label}
-                </p>
-              ) : (
-                <div className="h-px bg-sidebar-border my-4" />
-              )}
+              <p className={`text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest px-3 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+                {group.label}
+              </p>
+              <div className={`h-px bg-sidebar-border my-4 ${isSidebarCollapsed ? "md:block hidden" : "hidden"}`} />
               <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const Icon = item.icon;
@@ -458,7 +450,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       }}
                       title={isSidebarCollapsed ? item.label : undefined}
                       className={`flex items-center rounded-lg text-sm font-medium transition-all group relative ${
-                        isSidebarCollapsed ? "justify-center p-2.5 mx-1" : "gap-3 px-3 py-2"
+                        isSidebarCollapsed ? "justify-start gap-3 px-3 py-2 md:justify-center md:p-2.5 md:mx-1" : "gap-3 px-3 py-2"
                       } ${
                         isItemDisabled
                           ? "opacity-45 cursor-not-allowed text-slate-600"
@@ -472,9 +464,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       }`}
                     >
                       <Icon size={15} className={active && !isItemDisabled ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
-                      {!isSidebarCollapsed && <span className="animate-fade-in">{item.label}</span>}
-                      {!isSidebarCollapsed && (item as any).isAI && (
-                        <span className="ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide">NEW</span>
+                      <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>{item.label}</span>
+                      {(item as any).isAI && (
+                        <span className={`ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
                       )}
                     </Link>
                   );
@@ -488,32 +480,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-4 py-4 border-t border-sidebar-border space-y-2">
           <div 
             className={`flex items-center rounded-lg bg-sidebar-accent/60 transition-all ${
-              isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-2 py-2"
+              isSidebarCollapsed ? "justify-start gap-2 px-2 py-2 md:justify-center md:p-2" : "gap-2 px-2 py-2"
             }`}
             title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
           >
             <Building2 size={14} className="text-indigo-400 flex-shrink-0" />
-            {!isSidebarCollapsed && (
-              <span className="text-xs text-slate-300 font-medium truncate animate-fade-in">
-                {activeWorkspace?.name || "No workspace"}
-              </span>
-            )}
+            <span className={`text-xs text-slate-300 font-medium truncate animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+              {activeWorkspace?.name || "No workspace"}
+            </span>
           </div>
           <button
             onClick={() => window.open("https://forms.gle/qETMVJfDzHnF86xi7", "_blank")}
             title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
             className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
-              isSidebarCollapsed ? "justify-center p-2" : "gap-2 px-3 py-2"
+              isSidebarCollapsed ? "justify-start gap-2 px-3 py-2 md:justify-center md:p-2" : "gap-2 px-3 py-2"
             }`}
           >
             <MessageSquare size={13} className="text-indigo-400" />
-            {!isSidebarCollapsed && <span className="animate-fade-in">Give Beta Feedback</span>}
+            <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>Give Beta Feedback</span>
           </button>
-          {!isSidebarCollapsed && (
-            <div className="text-[10px] text-slate-550 text-center mt-1 leading-normal">
-              Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
-            </div>
-          )}
+          <div className={`text-[10px] text-slate-550 text-center mt-1 leading-normal ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+            Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
+          </div>
         </div>
       </aside>
 
