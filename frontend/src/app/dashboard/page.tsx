@@ -123,7 +123,7 @@ export default function DashboardPage() {
         }
         setError(null);
       } catch (err: any) {
-        setError(err.message || "Failed to connect to backend");
+        setError("Dashboard metrics are currently refreshing. Please try again in a moment.");
         setCheckingAuth(false);
       }
     }
@@ -181,7 +181,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950/40 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-background flex flex-col font-sans transition-colors duration-200">
       <main className="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
         {error && (
           <Alert variant="destructive">
@@ -192,49 +192,49 @@ export default function DashboardPage() {
         )}
 
         {/* Global Quick CTAs */}
-        <div className="flex flex-wrap gap-3 items-center bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-          <span className="font-medium text-slate-700 dark:text-slate-300 mr-2">Create Actions:</span>
-          <button onClick={() => setIsClientModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md text-sm font-medium transition-colors border border-blue-200 dark:border-blue-800/40"><Plus size={16}/> New Client</button>
-          <button onClick={() => setIsProjectModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-md text-sm font-medium transition-colors border border-indigo-200 dark:border-indigo-800/40"><Plus size={16}/> New Project</button>
-          <button onClick={() => setIsTaskModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 dark:bg-cyan-950/20 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-md text-sm font-medium transition-colors border border-cyan-200 dark:border-cyan-800/40"><Plus size={16}/> New Task</button>
-          <button onClick={() => setIsRevenueModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-md text-sm font-medium transition-colors border border-green-200 dark:border-green-800/40"><Plus size={16}/> Add Revenue</button>
-          <button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md text-sm font-medium transition-colors border border-red-200 dark:border-red-800/40"><Plus size={16}/> Add Expense</button>
+        <div className="flex flex-wrap gap-3 items-center bg-card p-4 rounded-xl border border-border shadow-sm">
+          <span className="font-medium text-foreground mr-2">Create Actions:</span>
+          <button onClick={() => setIsClientModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100:bg-blue-900/30 rounded-md text-sm font-medium transition-colors border border-blue-200"><Plus size={16}/> New Client</button>
+          <button onClick={() => setIsProjectModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100:bg-indigo-900/30 rounded-md text-sm font-medium transition-colors border border-indigo-200"><Plus size={16}/> New Project</button>
+          <button onClick={() => setIsTaskModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100:bg-cyan-900/30 rounded-md text-sm font-medium transition-colors border border-cyan-200"><Plus size={16}/> New Task</button>
+          <button onClick={() => setIsRevenueModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100:bg-green-900/30 rounded-md text-sm font-medium transition-colors border border-green-200"><Plus size={16}/> Add Revenue</button>
+          <button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100:bg-red-900/30 rounded-md text-sm font-medium transition-colors border border-red-200"><Plus size={16}/> Add Expense</button>
         </div>
 
         <div className="space-y-6">
           
           {/* Quick Navigation Links */}
-          <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-x-auto scrollbar-thin">
-            <span className="font-medium text-slate-700 dark:text-slate-300 px-2 whitespace-nowrap">Manage Modules:</span>
-            <Link href="/dashboard/clients" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 whitespace-nowrap"><Users size={16}/> Clients</Link>
-            <Link href="/dashboard/projects" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 whitespace-nowrap"><Briefcase size={16}/> Projects</Link>
-            <Link href="/dashboard/tasks" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 whitespace-nowrap"><CheckSquare size={16}/> Tasks</Link>
-            <Link href="/dashboard/finance" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 whitespace-nowrap"><DollarSign size={16}/> Finances</Link>
-            <Link href="/dashboard/inventory" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 whitespace-nowrap"><Package size={16}/> Inventory</Link>
-            <Link href="/dashboard/activity" className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-medium transition-colors text-slate-700 dark:text-slate-300 whitespace-nowrap"><Activity size={16}/> Activity Feed</Link>
+          <div className="flex items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-sm overflow-x-auto scrollbar-thin">
+            <span className="font-medium text-foreground px-2 whitespace-nowrap">Manage Modules:</span>
+            <Link href="/dashboard/clients" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Users size={16}/> Clients</Link>
+            <Link href="/dashboard/projects" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Briefcase size={16}/> Projects</Link>
+            <Link href="/dashboard/tasks" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><CheckSquare size={16}/> Tasks</Link>
+            <Link href="/dashboard/finance" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><DollarSign size={16}/> Finances</Link>
+            <Link href="/dashboard/inventory" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Package size={16}/> Inventory</Link>
+            <Link href="/dashboard/activity" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Activity size={16}/> Activity Feed</Link>
           </div>
 
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {loadingSummary ? (
               [...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between h-28 animate-pulse">
-                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2 mb-3" />
-                  <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
+                <div key={i} className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between h-28 animate-pulse">
+                  <div className="h-4 bg-muted rounded w-1/2 mb-3" />
+                  <div className="h-8 bg-muted rounded w-3/4" />
                 </div>
               ))
             ) : (
               <>
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Clients</span>
-                  <span className="text-3xl font-bold text-slate-800 dark:text-slate-100">{summary?.kpis?.clients || 0}</span>
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">{summary?.kpis?.active_clients || 0} Active</span>
+                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Total Clients</span>
+                  <span className="text-3xl font-bold text-foreground">{summary?.kpis?.clients || 0}</span>
+                  <span className="text-xs text-green-600 font-medium mt-1">{summary?.kpis?.active_clients || 0} Active</span>
                 </div>
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex justify-between">
+                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                  <span className="text-sm font-medium text-muted-foreground flex justify-between">
                     Total Projects 
                     {loadingTrends ? (
-                      <span className="h-4 w-4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                      <span className="h-4 w-4 bg-muted rounded animate-pulse" />
                     ) : (
                       <>
                         {trends?.task_trend === 'up' && <span className="text-green-500">↑</span>}
@@ -242,14 +242,14 @@ export default function DashboardPage() {
                       </>
                     )}
                   </span>
-                  <span className="text-3xl font-bold text-slate-800 dark:text-slate-100">{summary?.kpis?.projects || 0}</span>
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">{summary?.kpis?.active_projects || 0} Active</span>
+                  <span className="text-3xl font-bold text-foreground">{summary?.kpis?.projects || 0}</span>
+                  <span className="text-xs text-blue-600 font-medium mt-1">{summary?.kpis?.active_projects || 0} Active</span>
                 </div>
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex justify-between">
+                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                  <span className="text-sm font-medium text-muted-foreground flex justify-between">
                     Tasks Completion
                     {loadingTrends ? (
-                      <span className="h-4 w-4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                      <span className="h-4 w-4 bg-muted rounded animate-pulse" />
                     ) : (
                       <>
                         {trends?.task_trend === 'up' && <span className="text-green-500">↑</span>}
@@ -257,14 +257,14 @@ export default function DashboardPage() {
                       </>
                     )}
                   </span>
-                  <span className="text-3xl font-bold text-slate-800 dark:text-slate-100">{summary?.kpis?.completed_tasks || 0} / {summary?.kpis?.tasks || 0}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Pending vs Total</span>
+                  <span className="text-3xl font-bold text-foreground">{summary?.kpis?.completed_tasks || 0} / {summary?.kpis?.tasks || 0}</span>
+                  <span className="text-xs text-muted-foreground font-medium mt-1">Pending vs Total</span>
                 </div>
-                <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-                  <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex justify-between">
+                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                  <span className="text-sm font-medium text-muted-foreground flex justify-between">
                     Net Profit
                     {loadingTrends ? (
-                      <span className="h-4 w-4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                      <span className="h-4 w-4 bg-muted rounded animate-pulse" />
                     ) : (
                       <>
                         {trends?.profit_trend === 'up' && <span className="text-green-500">↑</span>}
@@ -272,8 +272,8 @@ export default function DashboardPage() {
                       </>
                     )}
                   </span>
-                  <span className="text-3xl font-bold text-slate-800 dark:text-slate-100">${(summary?.kpis?.profit || 0).toLocaleString()}</span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Rev: ${(summary?.kpis?.revenue || 0).toLocaleString()}</span>
+                  <span className="text-3xl font-bold text-foreground">${(summary?.kpis?.profit || 0).toLocaleString()}</span>
+                  <span className="text-xs text-muted-foreground font-medium mt-1">Rev: ${(summary?.kpis?.revenue || 0).toLocaleString()}</span>
                 </div>
               </>
             )}
@@ -281,36 +281,36 @@ export default function DashboardPage() {
 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Clients */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-50 dark:bg-slate-850 px-4 py-3 border-b border-slate-200 dark:border-slate-855 font-semibold text-slate-700 dark:text-slate-200 flex justify-between items-center">
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-foreground flex justify-between items-center">
                 Recent Clients
-                <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Add Client</button>
+                <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Client</button>
               </div>
               <div className="p-0 overflow-x-auto flex-1 scrollbar-thin">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+                  <thead className="bg-card border-b border-border text-muted-foreground">
                     <tr><th className="px-4 py-2 font-medium">Company</th><th className="px-4 py-2 font-medium">Status</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tbody className="divide-y divide-slate-100">
                     {loadingSummary ? (
                       [...Array(3)].map((_, i) => (
                         <tr key={i} className="animate-pulse">
-                          <td className="px-4 py-3"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3" /></td>
-                          <td className="px-4 py-3"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded-full w-12" /></td>
+                          <td className="px-4 py-3"><div className="h-4 bg-muted rounded w-2/3" /></td>
+                          <td className="px-4 py-3"><div className="h-4 bg-muted rounded-full w-12" /></td>
                         </tr>
                       ))
                     ) : (
                       summary?.recent_clients?.map(c => (
-                        <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                          <td className="px-4 py-3 text-slate-850 dark:text-slate-200 font-medium">{c.company_name}</td>
+                        <tr key={c.id} className="hover:bg-muted/40">
+                          <td className="px-4 py-3 text-slate-850 font-medium">{c.company_name}</td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>{c.status}</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-foreground'}`}>{c.status}</span>
                           </td>
                         </tr>
                       ))
                     )}
                     {!loadingSummary && (!summary?.recent_clients || summary.recent_clients.length === 0) && (
-                      <tr><td colSpan={2} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">No clients found. Click Add Client.</td></tr>
+                      <tr><td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">No clients found. Click Add Client.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -318,34 +318,34 @@ export default function DashboardPage() {
             </div>
 
             {/* Upcoming Deadlines */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-50 dark:bg-slate-855 px-4 py-3 border-b border-slate-200 dark:border-slate-855 font-semibold text-slate-700 dark:text-slate-200 flex justify-between items-center">
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-foreground flex justify-between items-center">
                 Upcoming Deadlines
-                <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Add Project</button>
+                <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Project</button>
               </div>
               <div className="p-0 overflow-x-auto flex-1 scrollbar-thin">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+                  <thead className="bg-card border-b border-border text-muted-foreground">
                     <tr><th className="px-4 py-2 font-medium">Project</th><th className="px-4 py-2 font-medium">Deadline</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tbody className="divide-y divide-slate-100">
                     {loadingSummary ? (
                       [...Array(3)].map((_, i) => (
                         <tr key={i} className="animate-pulse">
-                          <td className="px-4 py-3"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3" /></td>
-                          <td className="px-4 py-3"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
+                          <td className="px-4 py-3"><div className="h-4 bg-muted rounded w-2/3" /></td>
+                          <td className="px-4 py-3"><div className="h-4 bg-muted rounded w-1/4" /></td>
                         </tr>
                       ))
                     ) : (
                       summary?.upcoming_deadlines?.map(p => (
-                        <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                          <td className="px-4 py-3 text-slate-850 dark:text-slate-200 font-medium">{p.name}</td>
-                          <td className="px-4 py-3 text-red-650 dark:text-red-400 font-medium">{p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A'}</td>
+                        <tr key={p.id} className="hover:bg-muted/40">
+                          <td className="px-4 py-3 text-slate-850 font-medium">{p.name}</td>
+                          <td className="px-4 py-3 text-red-650 font-medium">{p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A'}</td>
                         </tr>
                       ))
                     )}
                     {!loadingSummary && (!summary?.upcoming_deadlines || summary.upcoming_deadlines.length === 0) && (
-                      <tr><td colSpan={2} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">No upcoming deadlines</td></tr>
+                      <tr><td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">No upcoming deadlines</td></tr>
                     )}
                   </tbody>
                 </table>

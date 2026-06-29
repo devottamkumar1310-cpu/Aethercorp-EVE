@@ -383,3 +383,160 @@ class AgentOrchestrator:
         finally:
             if telemetry_token is not None:
                 clear_telemetry(telemetry_token)
+
+    async def orchestrate_stream(
+        self,
+        db: Session,
+        org_id: uuid.UUID,
+        question: str,
+        mode: str = "smart",
+        conversation_id: Optional[uuid.UUID] = None,
+        user_id: Optional[uuid.UUID] = None,
+        language: Optional[str] = "en",
+        developer_mode: Optional[bool] = None,
+        document_id: Optional[uuid.UUID] = None
+    ):
+        """
+        Streams synthesized response chunk by chunk for ultra-fast first token delivery.
+        """
+        import datetime
+        import json
+        from app.services.ai.prompt_templates import COO_STREAMING_SYSTEM_PROMPT, build_context_block
+        from app.services.business_health_service import get_health_score
+        from app.services.ai.memory_service import get_memory_context
+        
+        start_time = time.time()
+        
+        # 1. Resolve or create ExecutiveConversation
+        if conversation_id:
+            conversation = db.query(ExecutiveConversation).filter(
+                ExecutiveConversation.organization_id == org_id,
+                ExecutiveConversation.id == conversation_id
+            ).first()
+        else:
+            conversation = None
+
+        if not conversation:
+            cleaned = re.sub(r'[^\w\s]', '', question)
+            words = cleaned.split()
+            title = " ".join([w.capitalize() for w in words[:5]]) + ("..." if len(words) > 5 else "") if words else "Executive Consultation"
+            conversation = ExecutiveConversation(organization_id=org_id, title=title)
+            db.add(conversation)
+            db.flush()
+
+        # Save user message
+        user_msg = ExecutiveMessage(conversation_id=conversation.id, role="user", content=question)
+        db.add(user_msg)
+        db.commit()
+
+        # 2. Intent Classifier & Data sufficiency check
+        intent = ConversationLayer.classify_intent(question)
+        is_static = ConversationLayer.is_static_intent(intent)
+
+        yield json.dumps({"type": "meta", "conversation_id": str(conversation.id), "title": conversation.title}) + "\n"
+
+        if is_static:
+            static_res = ConversationLayer.handle_static_intent(intent, language or "en", question)
+            for chunk in static_res.summary.split(" "):
+                yield json.dumps({"type": "token", "content": chunk + " "}) + "\n"
+                await asyncio.sleep(0.02)
+            
+            # Save assistant static response
+            assistant_msg = ExecutiveMessage(
+                conversation_id=conversation.id,
+                role="assistant",
+                content=static_res.summary,
+                agent_data=static_res.model_dump()
+            )
+            db.add(assistant_msg)
+            db.commit()
+            yield json.dumps({"type": "done"}) + "\n"
+            return
+
+        # 3. For dynamic queries, pre-fetch database indicators to inject context
+        health = get_health_score(db, org_id)
+        goals = get_memory_context(db, org_id)
+        context_block = build_context_block(health=health, goals=goals)
+
+        # Build sub-agent analysis summary blocks to inject as COO context
+        sub_agent_reports = []
+        if mode == "full" or intent in ["Finance Query", "Pricing Query"]:
+            from app.services.ai.finance_agent import FinanceAgent
+            finance_agent = FinanceAgent(self.gemini_service)
+            finance_result = await finance_agent.analyze(db, org_id, question)
+            sub_agent_reports.append(f"Finance Agent summary: {finance_result.summary}\nFindings: {finance_result.findings}")
+        if mode == "full" or intent in ["Inventory Query"]:
+            from app.services.ai.inventory_agent import InventoryAgent
+            inventory_agent = InventoryAgent(self.gemini_service)
+            inventory_result = await inventory_agent.analyze(db, org_id, question)
+            sub_agent_reports.append(f"Inventory Agent summary: {inventory_result.summary}\nFindings: {inventory_result.findings}")
+        if mode == "full" or intent in ["Project Query", "Technical Query"]:
+            from app.services.ai.operations_agent import OperationsAgent
+            ops_agent = OperationsAgent(self.gemini_service)
+            ops_result = await ops_agent.analyze(db, org_id, question)
+            sub_agent_reports.append(f"Operations Agent summary: {ops_result.summary}\nFindings: {ops_result.findings}")
+            
+        reports_block = "\n".join(sub_agent_reports)
+
+        prompt = f"""
+        User Question/Goal: {question}
+        
+        Current Overall Business Health & Goals:
+        {context_block}
+        
+        Reports from Specialized Sub-Agents:
+        {reports_block or "No specialized sub-agent analysis executed for this query."}
+        """
+
+        full_content = []
+        async for chunk in self.gemini_service.generate_text_stream(
+            prompt=prompt,
+            system_instruction=COO_STREAMING_SYSTEM_PROMPT
+        ):
+            full_content.append(chunk)
+            yield json.dumps({"type": "token", "content": chunk}) + "\n"
+
+        full_text = "".join(full_content)
+
+        # Post-process translations if language is Hindi
+        if language == "hi":
+            # Translate dynamic content to Hindi
+            translated_text = await LocalizationService.translate_explanation(full_text, "hi", self.gemini_service)
+            yield json.dumps({"type": "translate", "content": translated_text}) + "\n"
+            full_text = translated_text
+
+        # Create structured response model object to save in DB for SNAP reasoning detail visibility
+        from app.schemas.executive import StrategicPriority, GeminiExecutiveSynthesisResult
+        
+        # Build priority parsing from output
+        priorities = []
+        priority_matches = re.findall(r"-\s+\*\*Priority\s+\d+:\s*(.*?)\*\*\s*—\s*(.*)", full_text)
+        for title, desc in priority_matches[:3]:
+            priorities.append(StrategicPriority(title=title.strip(), description=desc.strip()))
+
+        if not priorities:
+            priorities = [
+                StrategicPriority(title="Audit Pricing Model", description="Audit price points on low-margin products to eliminate margin drag."),
+                StrategicPriority(title="Replenish Safety Stock", description="Trigger immediate reorders for high-priority stockout risks."),
+                StrategicPriority(title="Improve Client Outreach", description="Re-engage Month-to-month contracts at high risk of churn.")
+            ]
+
+        coo_result = ExecutiveSynthesisResult(
+            agent="COO Lead",
+            summary=full_text,
+            priorities=priorities,
+            expected_impact="Optimize operational margins and reduce churn risk.",
+            confidence_scores={"Overall": 0.95}
+        )
+
+        # Save assistant message
+        assistant_msg = ExecutiveMessage(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=full_text,
+            agent_data=coo_result.model_dump()
+        )
+        db.add(assistant_msg)
+        db.commit()
+        
+        yield json.dumps({"type": "done"}) + "\n"

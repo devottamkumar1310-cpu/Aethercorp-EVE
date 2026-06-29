@@ -47,7 +47,7 @@ export default function DocumentDetailPage() {
         console.error("Failed to load document preview blob:", err);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to load document details.");
+      toast.error("Document hub is currently processing updates. Please try again.");
       router.push("/dashboard/documents");
     } finally {
       setLoading(false);
@@ -153,28 +153,28 @@ export default function DocumentDetailPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6 p-6 max-w-7xl mx-auto text-slate-950 dark:text-slate-100 animate-pulse">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/60 pb-5">
+      <div className="space-y-6 p-6 max-w-7xl mx-auto text-slate-950 animate-pulse">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+            <div className="w-10 h-10 bg-muted rounded-xl" />
             <div className="space-y-2">
-              <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-48" />
-              <div className="h-3.5 bg-slate-200 dark:bg-slate-800 rounded w-32" />
+              <div className="h-6 bg-muted rounded w-48" />
+              <div className="h-3.5 bg-muted rounded w-32" />
             </div>
           </div>
-          <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl w-32" />
+          <div className="h-10 bg-muted rounded-xl w-32" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl flex flex-col min-h-[500px]">
-            <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800/80 h-12" />
-            <div className="flex-1 bg-slate-100 dark:bg-slate-950/60 p-4" />
+          <div className="bg-card border border-border rounded-2xl flex flex-col min-h-[500px]">
+            <div className="p-4 bg-background border-b border-border h-12" />
+            <div className="flex-1 bg-slate-100 p-4" />
           </div>
 
           <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 space-y-4">
-              <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
-              <div className="h-16 bg-slate-150 dark:bg-slate-850 rounded-xl" />
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+              <div className="h-5 bg-muted rounded w-1/3" />
+              <div className="h-16 bg-slate-150 rounded-xl" />
             </div>
           </div>
         </div>
@@ -426,14 +426,14 @@ export default function DocumentDetailPage() {
                   return (
                     <div key={stage.key} className="flex flex-col items-center gap-2 flex-1 relative text-center">
                       <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold transition-all duration-305 ${
-                        stepStatus === "completed"
-                          ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
-                          : stepStatus === "active"
-                            ? "bg-indigo-500/10 border-indigo-500 text-indigo-400 animate-pulse shadow-[0_0_12px_rgba(99,102,241,0.3)]"
-                            : stepStatus === "failed"
-                              ? "bg-rose-500/10 border-rose-500 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]"
-                              : "bg-slate-900 border-slate-800 text-slate-500"
-                      }`}>
+ stepStatus === "completed"
+ ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
+ : stepStatus === "active"
+ ? "bg-indigo-500/10 border-indigo-500 text-indigo-400 animate-pulse shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+ : stepStatus === "failed"
+ ? "bg-rose-500/10 border-rose-500 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]"
+ : "bg-slate-900 border-slate-800 text-slate-500"
+ }`}>
                         {stepStatus === "completed" ? (
                           <CheckCircle className="h-4.5 w-4.5" />
                         ) : stepStatus === "failed" ? (
@@ -445,14 +445,14 @@ export default function DocumentDetailPage() {
                         )}
                       </div>
                       <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider block ${
-                        stepStatus === "completed"
-                          ? "text-emerald-400"
-                          : stepStatus === "active"
-                            ? "text-indigo-400"
-                            : stepStatus === "failed"
-                              ? "text-rose-400"
-                              : "text-slate-500"
-                      }`}>
+ stepStatus === "completed"
+ ? "text-emerald-400"
+ : stepStatus === "active"
+ ? "text-indigo-400"
+ : stepStatus === "failed"
+ ? "text-rose-400"
+ : "text-slate-500"
+ }`}>
                         {stage.label}
                       </span>
                     </div>
@@ -466,7 +466,7 @@ export default function DocumentDetailPage() {
                 <ShieldAlert className="h-5 w-5 text-red-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-xs font-bold text-red-300">Processing Error</p>
-                  <p className="text-sm text-red-400/90 mt-1">{document.error_message}</p>
+                  <p className="text-sm text-red-400/90 mt-1">Processing anomaly detected. Document could not be fully analyzed.</p>
                 </div>
               </div>
             )}

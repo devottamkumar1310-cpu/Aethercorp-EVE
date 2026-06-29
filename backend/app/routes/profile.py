@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 import httpx
+import logging
 
 from app.database import get_db
 from app.core.security import get_current_user, verify_supabase_token
@@ -12,6 +13,7 @@ from app.services.audit_service import AuditService
 from app.services.gcs_service import GCSService
 from app.config import settings
 
+logger = logging.getLogger("eve.routes.profile")
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
 
@@ -31,12 +33,24 @@ def get_my_profile(
     payload: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
-    membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
-    
+    logger.info(f"[TRACE /api/profile/me] STEP 1: Request received — user_id={current_user.id} email={current_user.email}")
+
+    logger.info(f"[TRACE /api/profile/me] STEP 2: JWT validated — sub={payload.get('sub')} aud={payload.get('aud')}")
+
+    logger.info(f"[TRACE /api/profile/me] STEP 3: Querying membership for user_id={current_user.id}")
+    try:
+        membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
+        logger.info(f"[TRACE /api/profile/me] STEP 3a: Membership query OK — found={membership is not None}")
+    except Exception as exc:
+        logger.error(f"[TRACE /api/profile/me] STEP 3 FAILED: {type(exc).__name__}: {exc}", exc_info=True)
+        raise
+
     # Read verification claims from Supabase payload
     email_verified = payload.get("email_verified") or bool(payload.get("email_confirmed_at"))
 
-    return {
+    logger.info(f"[TRACE /api/profile/me] STEP 4: Building response — timezone={current_user.timezone!r} language={current_user.language!r} avatar_url={current_user.avatar_url!r}")
+
+    response = {
         "id": current_user.id,
         "email": current_user.email,
         "email_verified": bool(email_verified),
@@ -47,6 +61,8 @@ def get_my_profile(
         "organization_id": membership.organization_id if membership else None,
         "role": membership.role if membership else None
     }
+    logger.info(f"[TRACE /api/profile/me] STEP 5: Response ready — returning 200")
+    return response
 
 
 
@@ -166,9 +182,6 @@ async def upload_avatar(
 
     return {"status": "success", "avatar_url": avatar_url}
 
-
-import logging
-logger = logging.getLogger("eve.routes.profile")
 
 
 @router.post("/me/email")

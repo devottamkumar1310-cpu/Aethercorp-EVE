@@ -78,6 +78,58 @@ export async function sendExecutiveChat(
   return res.json();
 }
 
+export async function sendExecutiveChatStream(
+  message: string,
+  token: string,
+  onChunk: (type: string, content: any) => void,
+  conversationId?: string,
+  mode: string = "smart",
+  developerMode?: boolean,
+  language?: string,
+  documentId?: string
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/executive/chat/stream`, {
+    method: "POST",
+    headers: getHeaders(token, "application/json"),
+    body: JSON.stringify({
+      question: message,
+      conversation_id: conversationId || null,
+      mode,
+      language: language || "en",
+      developer_mode: developerMode !== undefined ? developerMode : null,
+      document_id: documentId || null
+    })
+  });
+
+  if (!response.ok) {
+    await handleResponseError(response, "An unexpected error occurred during streaming.");
+  }
+
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+  if (!reader) {
+    throw new Error("Failed to initialize stream reader.");
+  }
+
+  let buffer = "";
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const data = JSON.parse(line);
+        onChunk(data.type, data.content || data);
+      } catch (err) {
+        console.error("Failed to parse stream chunk line:", line, err);
+      }
+    }
+  }
+}
+
 export async function getDailyBrief(token: string): Promise<DailyBriefResponse> {
   const res = await fetch(`${API_BASE_URL}/api/executive/daily-brief`, {
     method: "GET",

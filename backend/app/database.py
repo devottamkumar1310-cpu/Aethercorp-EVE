@@ -29,7 +29,16 @@ else:
     # Postgres specific connection pool limits
     engine_args["pool_size"] = 20
     engine_args["max_overflow"] = 10
-    engine_args["pool_pre_ping"] = False
+    # pool_pre_ping: validate connection health before checkout.
+    # Eliminates 'idle in transaction' sessions that have been
+    # abandoned by a previous request but not yet returned/closed.
+    engine_args["pool_pre_ping"] = True
+    # pool_recycle: force-recycle connections older than 5 minutes.
+    # Prevents Postgres from accumulating long-lived idle connections.
+    engine_args["pool_recycle"] = 300
+    # pool_timeout: raise immediately if no connection available within 30s.
+    # Prevents request pile-up during overload instead of hanging forever.
+    engine_args["pool_timeout"] = 30
 
 # Attempt connection to Postgres. If it fails, fallback to SQLite for local development.
 Base = declarative_base()

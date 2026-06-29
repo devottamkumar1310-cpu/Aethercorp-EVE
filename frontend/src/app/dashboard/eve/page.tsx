@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
 import { 
   sendExecutiveChat, 
+  sendExecutiveChatStream,
   listGoals, 
   getRecommendations,
   listConversations,
@@ -655,55 +656,92 @@ export default function EVECoocommandCenter() {
       content: messageText,
       created_at: new Date().toISOString()
     };
-    setMessages((prev) => [...prev, userMsg]);
+    
+    // Add temporary empty assistant message to stream into
+    const assistantTempId = Math.random().toString();
+    const assistantPlaceholder: MessageResponse = {
+      id: assistantTempId,
+      role: "assistant",
+      content: "",
+      created_at: new Date().toISOString()
+    };
+
+    setMessages((prev) => [...prev, userMsg, assistantPlaceholder]);
     setInputMessage("");
     
     const isGreet = isGreetingMessage(messageText);
     setIsGreeting(isGreet);
     setChatLoading(true);
 
+    let accumulatedContent = "";
+    let activeConversationId = conversationId;
+
     try {
-      const response = await sendExecutiveChat(
-        messageText, 
-        sessionToken, 
-        conversationId, 
+      await sendExecutiveChatStream(
+        messageText,
+        sessionToken,
+        (type, content) => {
+          if (type === "meta") {
+            activeConversationId = content.conversation_id;
+            setConversationId(content.conversation_id);
+          } else if (type === "token") {
+            accumulatedContent += content;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantTempId
+                  ? { ...msg, content: accumulatedContent }
+                  : msg
+              )
+            );
+          } else if (type === "translate") {
+            accumulatedContent = content;
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantTempId
+                  ? { ...msg, content: accumulatedContent }
+                  : msg
+              )
+            );
+          } else if (type === "done") {
+            // Stream complete. Load full details to populate snap/telemetry panels
+            if (activeConversationId) {
+              getConversation(activeConversationId, sessionToken).then((detail) => {
+                const lastMsg = [...detail.messages]
+                  .reverse()
+                  .find(m => m.role === "assistant" && m.agent_data);
+                if (lastMsg) {
+                  setSelectedReasoning(lastMsg.agent_data);
+                  setIsInsightsOpen(true);
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === assistantTempId
+                        ? { ...msg, agent_data: lastMsg.agent_data }
+                        : msg
+                    )
+                  );
+                }
+              }).catch((e) => console.error("Error finalizing stream detail data:", e));
+
+              listConversations(sessionToken).then((convs) => setConversations(convs)).catch(() => {});
+            }
+          }
+        },
+        conversationId,
         chatMode,
         developerMode,
         language,
         documentId || undefined
       );
-      
-      const isNewChat = !conversationId;
-      setConversationId(response.conversation_id);
 
-      const assistantMsg: MessageResponse = response.message;
-      setMessages((prev) => [...prev, assistantMsg]);
-
-      // Automatically populate Right Reasoning panel with returned agent data
-      if (assistantMsg.agent_data) {
-        setSelectedReasoning(assistantMsg.agent_data as AgentAnalysisResult);
-        setIsInsightsOpen(true);
-      } else {
-        setSelectedReasoning(null);
-        setIsInsightsOpen(false);
-      }
-
-      // Reload conversations list to show new auto-title or updated sorting
-      if (isNewChat && sessionToken) {
-        const convs = await listConversations(sessionToken).catch(() => []);
-        setConversations(convs);
-      }
     } catch (err: any) {
-      console.error("Chat send failed:", err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          role: "assistant",
-          content: err.message || "An unexpected error occurred.",
-          created_at: new Date().toISOString()
-        }
-      ]);
+      console.error("Chat streaming failed:", err);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantTempId
+            ? { ...msg, content: "EVE is currently recalibrating context. Please ask your question again." }
+            : msg
+        )
+      );
     } finally {
       setChatLoading(false);
     }
@@ -756,7 +794,7 @@ export default function EVECoocommandCenter() {
         if (event.error === "not-allowed") {
           setVoiceError("Microphone permission denied. Please allow microphone access in your browser settings.");
         } else {
-          setVoiceError(`Voice input error: ${event.error}`);
+          setVoiceError(`Voice input requires microphone permissions.`);
         }
         setIsListening(false);
         setTimeout(() => setVoiceError(null), 5000);
@@ -873,10 +911,10 @@ export default function EVECoocommandCenter() {
 
       {/* Column 0: Conversation History Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 h-full w-64 border-r border-slate-800 bg-slate-900 rounded-r-2xl rounded-l-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-3 xl:flex-shrink-0 xl:overflow-hidden ${
-        isHistoryOpen 
-          ? "translate-x-0 p-4 opacity-100" 
-          : "-translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
-      }`}>
+ isHistoryOpen 
+ ? "translate-x-0 p-4 opacity-100" 
+ : "-translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
+ }`}>
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
           <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <MessageSquare size={14} className="text-indigo-400" /> Chat History
@@ -912,10 +950,10 @@ export default function EVECoocommandCenter() {
                   <div
                     key={c.id}
                     className={`group w-full p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between relative ${
-                      isActive
-                        ? "bg-indigo-600/10 text-indigo-200 border-indigo-500/30"
-                        : "bg-slate-950/45 text-slate-400 border-slate-800/60 hover:bg-slate-800/40 hover:text-slate-200"
-                    }`}
+ isActive
+ ? "bg-indigo-600/10 text-indigo-200 border-indigo-500/30"
+ : "bg-slate-950/45 text-slate-400 border-slate-800/60 hover:bg-slate-800/40 hover:text-slate-200"
+ }`}
                   >
                     <div className="flex items-start justify-between gap-1 w-full">
                       {isEditing ? (
@@ -1045,10 +1083,10 @@ export default function EVECoocommandCenter() {
                 type="button"
                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
                 className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  isHistoryOpen 
-                    ? "bg-slate-800 text-indigo-400 font-bold" 
-                    : "text-slate-500 hover:text-slate-300"
-                }`}
+ isHistoryOpen 
+ ? "bg-slate-800 text-indigo-400 font-bold" 
+ : "text-slate-500 hover:text-slate-300"
+ }`}
                 title={isHistoryOpen ? "Hide Chat History" : "Show Chat History"}
               >
                 <MessageSquare size={13} />
@@ -1057,10 +1095,10 @@ export default function EVECoocommandCenter() {
                 type="button"
                 onClick={() => setIsInsightsOpen(!isInsightsOpen)}
                 className={`p-1.5 rounded-md transition-all cursor-pointer ${
-                  isInsightsOpen 
-                    ? "bg-slate-800 text-indigo-400 font-bold" 
-                    : "text-slate-500 hover:text-slate-300"
-                }`}
+ isInsightsOpen 
+ ? "bg-slate-800 text-indigo-400 font-bold" 
+ : "text-slate-500 hover:text-slate-300"
+ }`}
                 title={isInsightsOpen ? "Hide Executive Insights" : "Show Executive Insights"}
               >
                 <Sparkles size={13} />
@@ -1072,10 +1110,10 @@ export default function EVECoocommandCenter() {
                 type="button"
                 onClick={() => setLanguage("en")}
                 className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
-                  language === "en" 
-                    ? "bg-indigo-600 text-white shadow-md" 
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+ language === "en" 
+ ? "bg-indigo-600 text-white shadow-md" 
+ : "text-slate-400 hover:text-slate-200"
+ }`}
                 title="English Language"
               >
                 EN
@@ -1084,10 +1122,10 @@ export default function EVECoocommandCenter() {
                 type="button"
                 onClick={() => setLanguage("hi")}
                 className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
-                  language === "hi" 
-                    ? "bg-indigo-600 text-white shadow-md" 
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
+ language === "hi" 
+ ? "bg-indigo-600 text-white shadow-md" 
+ : "text-slate-400 hover:text-slate-200"
+ }`}
                 title="Hindi Translation"
               >
                 हिन्दी
@@ -1102,10 +1140,10 @@ export default function EVECoocommandCenter() {
                 type="button"
                 onClick={() => setShowTelemetry(!showTelemetry)}
                 className={`text-[10px] font-bold px-2 py-1.5 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
-                  showTelemetry 
-                    ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
-                    : "bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700"
-                }`}
+ showTelemetry 
+ ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
+ : "bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700"
+ }`}
                 title="Toggle Advanced Telemetry"
               >
                 <Database size={10} />
@@ -1120,10 +1158,10 @@ export default function EVECoocommandCenter() {
                   type="button"
                   onClick={() => setChatMode("smart")}
                   className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
-                    chatMode === "smart" 
-                      ? "bg-indigo-600 text-white shadow-md" 
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
+ chatMode === "smart" 
+ ? "bg-indigo-600 text-white shadow-md" 
+ : "text-slate-400 hover:text-slate-200"
+ }`}
                   title="Fast query routing"
                 >
                   Smart
@@ -1132,10 +1170,10 @@ export default function EVECoocommandCenter() {
                   type="button"
                   onClick={() => setChatMode("full")}
                   className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
-                    chatMode === "full" 
-                      ? "bg-indigo-600 text-white shadow-md" 
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
+ chatMode === "full" 
+ ? "bg-indigo-600 text-white shadow-md" 
+ : "text-slate-400 hover:text-slate-200"
+ }`}
                   title="Deep sub-agent aggregation"
                 >
                   Full
@@ -1154,14 +1192,14 @@ export default function EVECoocommandCenter() {
                 <div
                   key={msg.id}
                   className={`flex gap-3 max-w-[85%] ${
-                    isAssistant ? "mr-auto" : "ml-auto flex-row-reverse"
-                  }`}
+ isAssistant ? "mr-auto" : "ml-auto flex-row-reverse"
+ }`}
                 >
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    isAssistant 
-                      ? "bg-indigo-600 text-white border border-indigo-500/20" 
-                      : "bg-slate-800 text-slate-300 border border-slate-700"
-                  }`}>
+ isAssistant 
+ ? "bg-indigo-600 text-white border border-indigo-500/20" 
+ : "bg-slate-800 text-slate-300 border border-slate-700"
+ }`}>
                     {isAssistant ? <Brain size={14} /> : <User size={14} />}
                   </div>
 
@@ -1174,12 +1212,12 @@ export default function EVECoocommandCenter() {
                         </span>
                         {agentData?.confidence !== undefined && (
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
-                            agentData.confidence >= 0.8 
-                              ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20" 
-                              : agentData.confidence >= 0.6 
-                                ? "bg-amber-500/10 text-amber-450 border-amber-500/20" 
-                                : "bg-rose-500/10 text-rose-450 border-rose-500/20"
-                          }`}>
+ agentData.confidence >= 0.8 
+ ? "bg-emerald-500/10 text-emerald-450 border-emerald-500/20" 
+ : agentData.confidence >= 0.6 
+ ? "bg-amber-500/10 text-amber-450 border-amber-500/20" 
+ : "bg-rose-500/10 text-rose-450 border-rose-500/20"
+ }`}>
                             {Math.round(agentData.confidence * 100)}% Confidence
                           </span>
                         )}
@@ -1196,10 +1234,10 @@ export default function EVECoocommandCenter() {
                     )}
  
                     <div className={`text-sm leading-relaxed space-y-2.5 ${
-                      isAssistant 
-                        ? "bg-transparent text-slate-100 border-none shadow-none px-1 py-0" 
-                        : "bg-indigo-600/10 text-indigo-100 border border-indigo-500/15 px-4.5 py-3 rounded-2xl shadow-sm"
-                    }`}>
+ isAssistant 
+ ? "bg-transparent text-slate-100 border-none shadow-none px-1 py-0" 
+ : "bg-indigo-600/10 text-indigo-100 border border-indigo-500/15 px-4.5 py-3 rounded-2xl shadow-sm"
+ }`}>
                       {isAssistant ? (
                         <>
                           {renderMarkdown(msg.content)}
@@ -1404,36 +1442,16 @@ export default function EVECoocommandCenter() {
             })}
 
             {messages.length <= 1 && (
-              <div className="max-w-2xl mx-auto py-16 text-center space-y-8 animate-fade-in px-4">
-                <div className="h-16 w-16 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-3xl flex items-center justify-center text-white shadow-xl shadow-indigo-600/20 mx-auto">
-                  <Brain size={28} />
+              <div className="max-w-2xl mx-auto py-24 text-center space-y-4 animate-fade-in px-4">
+                <div className="h-12 w-12 bg-indigo-650 rounded-2xl flex items-center justify-center text-white shadow-lg mx-auto">
+                  <Brain size={22} />
                 </div>
-                <div className="space-y-3">
-                  <h2 className="text-xl font-bold text-slate-100 tracking-tight">EVE Agent Command Center</h2>
-                  <p className="text-xs text-slate-450 leading-relaxed max-w-md mx-auto">
-                    Welcome! I am your AI COO. Ask me any business query related to operational margins, inventory levels, project progress, or set custom executive goals.
+                <div className="space-y-1">
+                  <h2 className="text-lg font-bold text-slate-100 tracking-tight">EVE</h2>
+                  <p className="text-xs text-slate-450 leading-relaxed max-w-sm mx-auto">
+                    Executive Operating System. Ask anything regarding margins, inventory forecasting, client projects, or health features.
                   </p>
                 </div>
-                <div className="flex flex-wrap justify-center gap-2 pt-2">
-                  {[
-                    "What needs my attention?",
-                    "Give me a finance summary",
-                    "Identify inventory risks"
-                  ].map((q, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleSendChat(q)}
-                      disabled={chatLoading}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-indigo-500/40 text-slate-350 hover:text-slate-100 rounded-xl text-xs transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-550 pt-2">
-                  💡 Tip: Click the <Sparkles size={10} className="inline text-indigo-400" /> Executive Insights button in the top right to view real-time health scores and detailed metrics.
-                </p>
               </div>
             )}
  
@@ -1525,20 +1543,6 @@ export default function EVECoocommandCenter() {
  
           {/* Quick chip selector & Input Form footer */}
           <div className="p-4 bg-slate-900 border-t border-slate-800 space-y-3 flex-shrink-0">
-            {/* Quick action chips */}
-            <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {suggestedActions.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleSendChat(chip)}
-                  disabled={chatLoading}
-                  className="px-3 py-1 bg-slate-950/80 border border-slate-800 hover:border-slate-700 disabled:opacity-50 text-slate-400 hover:text-slate-200 rounded-full text-xs transition-colors whitespace-nowrap cursor-pointer"
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
  
             {documentId && (
               <div className="flex items-center justify-between p-2.5 bg-indigo-950/20 border border-indigo-900/30 rounded-xl text-xs text-indigo-300">
@@ -1589,10 +1593,10 @@ export default function EVECoocommandCenter() {
                 onClick={handleVoiceInput}
                 disabled={chatLoading}
                 className={`p-3 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
-                  isListening 
-                    ? "bg-rose-600 hover:bg-rose-500 text-white animate-pulse" 
-                    : "bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-slate-200 border border-slate-700"
-                }`}
+ isListening 
+ ? "bg-rose-600 hover:bg-rose-500 text-white animate-pulse" 
+ : "bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-slate-200 border border-slate-700"
+ }`}
                 title={isListening ? "Listening... Click to stop" : "Start Voice Input"}
               >
                 <Mic size={16} />
@@ -1621,10 +1625,10 @@ export default function EVECoocommandCenter() {
 
       {/* Column 2: Right-hand Executive Snapshot Panel */}
       <div className={`fixed inset-y-0 right-0 z-50 h-full w-72 border-l border-slate-800 bg-slate-900 rounded-l-2xl rounded-r-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-4 xl:flex-shrink-0 xl:overflow-hidden ${
-        isInsightsOpen 
-          ? "translate-x-0 p-4 opacity-100" 
-          : "translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
-      }`}>
+ isInsightsOpen 
+ ? "translate-x-0 p-4 opacity-100" 
+ : "translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
+ }`}>
         <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
           <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles size={14} className="text-indigo-400 animate-pulse" /> Executive Snapshot

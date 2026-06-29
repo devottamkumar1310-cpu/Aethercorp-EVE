@@ -93,6 +93,39 @@ async def chat(
         logger.error(f"Chat execution unhandled error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
+
+@router.post("/chat/stream")
+async def chat_stream(
+    body: ExecutiveChatRequest,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _: None = Depends(rate_limit(requests=15, window_seconds=60))
+):
+    from fastapi.responses import StreamingResponse
+    orchestrator = AgentOrchestrator()
+    
+    async def event_generator():
+        try:
+            async for chunk in orchestrator.orchestrate_stream(
+                db=db,
+                org_id=workspace_id,
+                question=body.question,
+                mode=body.mode or "smart",
+                conversation_id=body.conversation_id,
+                user_id=current_user.id,
+                language=body.language,
+                developer_mode=body.developer_mode,
+                document_id=body.document_id
+            ):
+                yield chunk
+        except Exception as e:
+            logger.error(f"Streaming error occurred: {e}", exc_info=True)
+            import json
+            yield json.dumps({"type": "error", "content": str(e)}) + "\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 @router.get("/daily-brief", response_model=DailyBriefResponse)
 async def daily_brief(
     db: Session = Depends(get_db),
