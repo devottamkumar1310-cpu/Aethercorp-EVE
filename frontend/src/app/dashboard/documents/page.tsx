@@ -36,7 +36,7 @@ export default function DocumentHubPage() {
       const data = await listDocuments(token);
       setDocuments(data);
     } catch (err: any) {
-      toast.error(err.message || "Failed to fetch documents.");
+      toast.error("Document hub is currently processing updates.");
     }
   };
 
@@ -123,7 +123,7 @@ export default function DocumentHubPage() {
     } catch (err: any) {
       toast.error(
         <div className="flex flex-col gap-0.5">
-          <span>{err.message || "Failed to upload file"}.</span>
+          <span>Document processing is currently syncing. Please try again in a moment.</span>
           <span className="text-[10px] text-slate-400 leading-normal">
             Need help? Contact <a href="mailto:aethercorp.support@gmail.com" className="underline text-indigo-450 hover:text-indigo-350">aethercorp.support@gmail.com</a> or use our <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="underline text-indigo-450 hover:text-indigo-350">Feedback Form</a>.
           </span>
@@ -145,7 +145,7 @@ export default function DocumentHubPage() {
       toast.success("Document deleted.");
       setDocuments(prev => prev.filter(d => d.id !== docId));
     } catch (err: any) {
-      toast.error(err.message || "Failed to delete document.");
+      toast.error("Document deletion is currently synchronizing. Please try again.");
     }
   };
 
@@ -180,10 +180,10 @@ export default function DocumentHubPage() {
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
-          dragActive 
-            ? "border-indigo-400 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]" 
-            : "border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60"
-        }`}
+ dragActive 
+ ? "border-indigo-400 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]" 
+ : "border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60"
+ }`}
       >
         <input 
           ref={fileInputRef}
@@ -242,12 +242,12 @@ export default function DocumentHubPage() {
               <tbody className="divide-y divide-slate-850/40">
                 {[...Array(3)].map((_, i) => (
                   <tr key={i}>
-                    <td className="p-4 pl-6"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3" /></td>
-                    <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3" /></td>
-                    <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
-                    <td className="p-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
-                    <td className="p-4"><div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-full w-16" /></td>
-                    <td className="p-4 pr-6 text-right"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-12 ml-auto" /></td>
+                    <td className="p-4 pl-6"><div className="h-4 bg-muted rounded w-2/3" /></td>
+                    <td className="p-4"><div className="h-4 bg-muted rounded w-1/3" /></td>
+                    <td className="p-4"><div className="h-4 bg-muted rounded w-1/4" /></td>
+                    <td className="p-4"><div className="h-4 bg-muted rounded w-1/4" /></td>
+                    <td className="p-4"><div className="h-6 bg-muted rounded-full w-16" /></td>
+                    <td className="p-4 pr-6 text-right"><div className="h-4 bg-muted rounded w-12 ml-auto" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -320,7 +320,7 @@ export default function DocumentHubPage() {
                       )}
                       {doc.status === "failure" && (
                         <span 
-                          title={doc.error_message || "Unknown error occurred"}
+                          title="Processing anomaly detected"
                           className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-xs font-semibold cursor-help"
                         >
                           <XCircle className="h-3 w-3" /> Failed

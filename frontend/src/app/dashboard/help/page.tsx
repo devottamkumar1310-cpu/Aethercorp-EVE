@@ -257,10 +257,10 @@ export default function HelpPage() {
                 key={t.id}
                 onClick={() => setActiveTab(t.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left ${
-                  activeTab === t.id
-                    ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
-                }`}
+ activeTab === t.id
+ ? "bg-indigo-600/15 text-indigo-400 border border-indigo-500/20"
+ : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/60"
+ }`}
               >
                 <TopicIcon size={18} />
                 {t.title}
@@ -270,7 +270,7 @@ export default function HelpPage() {
         </div>
 
         {/* Content Panel */}
-        <div className="md:col-span-2 bg-slate-900/40 dark:bg-slate-950/40 border border-slate-800/80 backdrop-blur-md rounded-3xl p-8 shadow-xl min-h-[400px]">
+        <div className="md:col-span-2 bg-slate-900/40 border border-slate-800/80 backdrop-blur-md rounded-3xl p-8 shadow-xl min-h-[400px]">
           {activeTopic.content}
         </div>
       </div>

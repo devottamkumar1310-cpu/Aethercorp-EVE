@@ -1,5 +1,6 @@
 import re
 import uuid as _uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -8,6 +9,7 @@ from app.core.security import get_current_user, get_required_workspace_id, requi
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 
+logger = logging.getLogger("eve.routes.organization")
 router = APIRouter(prefix="/api/organization", tags=["organization"])
 
 class OnboardRequest(BaseModel):
@@ -15,17 +17,36 @@ class OnboardRequest(BaseModel):
 
 @router.get("/workspaces")
 def get_workspaces(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
-    memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()
+    logger.info(f"[TRACE /api/organization/workspaces] STEP 1: Request received — user_id={current_user.id}")
+
+    logger.info(f"[TRACE /api/organization/workspaces] STEP 2: Querying memberships")
+    try:
+        memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()
+        logger.info(f"[TRACE /api/organization/workspaces] STEP 2a: Found {len(memberships)} membership(s)")
+    except Exception as exc:
+        logger.error(f"[TRACE /api/organization/workspaces] STEP 2 FAILED: {type(exc).__name__}: {exc}", exc_info=True)
+        raise
+
     result = []
-    for m in memberships:
-        org = db.query(Organization).filter(Organization.id == m.organization_id).first()
-        if org:
-            result.append({
-                "id": str(org.id),
-                "name": org.name,
-                "slug": org.slug,
-                "role": m.role
-            })
+    for i, m in enumerate(memberships):
+        logger.info(f"[TRACE /api/organization/workspaces] STEP 3.{i}: Resolving org_id={m.organization_id}")
+        try:
+            org = db.query(Organization).filter(Organization.id == m.organization_id).first()
+            if org:
+                logger.info(f"[TRACE /api/organization/workspaces] STEP 3.{i}a: Found org name={org.name!r} slug={org.slug!r}")
+                result.append({
+                    "id": str(org.id),
+                    "name": org.name,
+                    "slug": org.slug,
+                    "role": m.role
+                })
+            else:
+                logger.warning(f"[TRACE /api/organization/workspaces] STEP 3.{i}: Org not found for org_id={m.organization_id} — skipping orphaned membership")
+        except Exception as exc:
+            logger.error(f"[TRACE /api/organization/workspaces] STEP 3.{i} FAILED: {type(exc).__name__}: {exc}", exc_info=True)
+            raise
+
+    logger.info(f"[TRACE /api/organization/workspaces] STEP 4: Returning {len(result)} workspace(s)")
     return result
 
 @router.post("/onboard")

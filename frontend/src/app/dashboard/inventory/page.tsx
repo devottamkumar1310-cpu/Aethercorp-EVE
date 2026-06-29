@@ -121,7 +121,7 @@ export default function InventoryDashboardPage() {
         setAlerts(alertData);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to load inventory metrics.");
+      toast.error("Inventory synchronization in progress. Please wait.");
     }
   };
 
@@ -170,7 +170,7 @@ export default function InventoryDashboardPage() {
         setShowImportSummary(true);
         toast.dismiss(toastId);
       } else {
-        toast.error(err.message || `Failed to process ${type} CSV.`, { id: toastId });
+        toast.error("Data synchronization failed. Please review your CSV structure.", { id: toastId });
       }
     } finally {
       if (type === "inventory") setUploadingInventory(false);
@@ -312,13 +312,13 @@ export default function InventoryDashboardPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            <Link href="/dashboard" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href="/dashboard" className="hover:text-indigo-600:text-indigo-400 transition-colors flex items-center gap-1">
               <ArrowLeft size={14} /> Dashboard
             </Link>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Inventory Intelligence</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm">Monitor stock levels, profitability, and demand performance.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Inventory Intelligence</h1>
+          <p className="text-muted-foreground text-sm">Monitor stock levels, profitability, and demand performance.</p>
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
@@ -335,8 +335,8 @@ export default function InventoryDashboardPage() {
             type: "inventory" as const,
             label: "1. Import Inventory Stock",
             icon: <Layers size={18} />,
-            colorClass: "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400",
-            borderClass: "hover:border-indigo-200 dark:hover:border-indigo-850",
+            colorClass: "bg-indigo-50 text-indigo-600",
+            borderClass: "hover:border-indigo-200:border-indigo-850",
             uploading: uploadingInventory,
             desc: "Required: sku, name, quantity",
           },
@@ -344,8 +344,8 @@ export default function InventoryDashboardPage() {
             type: "costs" as const,
             label: "2. Import Product Costs",
             icon: <DollarSign size={18} />,
-            colorClass: "bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400",
-            borderClass: "hover:border-green-200 dark:hover:border-green-850",
+            colorClass: "bg-green-50 text-green-600",
+            borderClass: "hover:border-green-200:border-green-850",
             uploading: uploadingCosts,
             desc: "Required: sku, cost, price",
           },
@@ -353,29 +353,29 @@ export default function InventoryDashboardPage() {
             type: "sales" as const,
             label: "3. Import Sales Records",
             icon: <TrendingUp size={18} />,
-            colorClass: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
-            borderClass: "hover:border-blue-200 dark:hover:border-blue-850",
+            colorClass: "bg-blue-50 text-blue-600",
+            borderClass: "hover:border-blue-200:border-blue-850",
             uploading: uploadingSales,
             desc: "Required: sku, date, quantity, price",
           },
         ].map(({ type, label, icon, colorClass, borderClass, uploading, desc }) => (
-          <div key={type} className={`bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm ${borderClass} transition-colors`}>
+          <div key={type} className={`bg-card p-4 rounded-xl border border-border shadow-sm ${borderClass} transition-colors`}>
             <div className={`h-8 w-8 ${colorClass} rounded-lg flex items-center justify-center mb-2`}>{icon}</div>
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{label}</h3>
+            <h3 className="font-semibold text-foreground text-sm">{label}</h3>
             <div className="flex items-center justify-between mt-1 mb-3 text-[10px]">
-              <span className="text-slate-400 dark:text-slate-500 truncate max-w-[75%]">{desc}</span>
+              <span className="text-muted-foreground truncate max-w-[75%]">{desc}</span>
               <button
                 type="button"
                 onClick={() => downloadTemplate(type)}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold hover:underline cursor-pointer outline-none flex-shrink-0"
+                className="text-indigo-600 hover:text-indigo-800:text-indigo-300 font-semibold hover:underline cursor-pointer outline-none flex-shrink-0"
               >
                 Download Template
               </button>
             </div>
-            <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-400 bg-slate-50/50 dark:bg-slate-950 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer transition-all">
+            <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-border hover:border-indigo-400 bg-slate-50/50 text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
               {uploading
                 ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-600" />
-                : <Upload size={12} className="text-slate-400 dark:text-slate-500" />}
+                : <Upload size={12} className="text-muted-foreground" />}
               <span>{uploading ? "Processing..." : `Choose ${type} CSV`}</span>
               <input
                 type="file"
@@ -391,41 +391,41 @@ export default function InventoryDashboardPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-550">Inventory Value (COGS)</p>
-            <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Inventory Value (COGS)</p>
+            <p className="text-3xl font-extrabold text-foreground mt-1">
               ${(data?.total_inventory_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
-          <div className="h-12 w-12 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450 rounded-full flex items-center justify-center">
+          <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
             <DollarSign size={22} />
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-550">Total Units Stocked</p>
-            <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 mt-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Units Stocked</p>
+            <p className="text-3xl font-extrabold text-foreground mt-1">
               {(data?.total_items_count || 0).toLocaleString()}
             </p>
           </div>
-          <div className="h-12 w-12 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center">
+          <div className="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
             <Package size={22} />
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-550">Low Stock SKUs</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock SKUs</p>
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-3xl font-extrabold text-slate-900 dark:text-slate-100">{alerts?.low_stock_count || 0}</p>
+              <p className="text-3xl font-extrabold text-foreground">{alerts?.low_stock_count || 0}</p>
               {(alerts?.low_stock_count || 0) > 0 && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-955/35 text-amber-700 dark:text-amber-400 animate-pulse">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 animate-pulse">
                   Reorder
                 </span>
               )}
             </div>
           </div>
-          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-50 dark:bg-amber-955/25 text-amber-600 dark:text-amber-450" : "bg-slate-50 dark:bg-slate-950 text-slate-400 dark:text-slate-500"}`}>
+          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-50 text-amber-600" : "bg-background text-muted-foreground"}`}>
             <AlertTriangle size={22} />
           </div>
         </div>
@@ -434,16 +434,16 @@ export default function InventoryDashboardPage() {
       {/* Best & Worst Sellers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Best Sellers */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="bg-slate-50 dark:bg-slate-950 px-4 py-3 border-b border-slate-200 dark:border-slate-850 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-sm font-semibold">
+        <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-background px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-emerald-700 text-sm font-semibold">
               <TrendingUp size={15} /> Best Sellers
             </span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold">By Units Sold</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
           <div className="overflow-x-auto w-full scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+              <thead className="bg-card border-b border-border text-muted-foreground text-xs uppercase font-semibold">
                 <tr>
                   <th className="px-4 py-2 text-left">SKU</th>
                   <th className="px-4 py-2 text-left">Name</th>
@@ -451,17 +451,17 @@ export default function InventoryDashboardPage() {
                   <th className="px-4 py-2 text-right">Revenue</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {data?.best_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/40">
-                    <td className="px-4 py-2.5 font-mono text-xs text-slate-500 dark:text-slate-400">{p.sku}</td>
-                    <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-slate-200">{p.name}</td>
-                    <td className="px-4 py-2.5 text-right font-bold text-slate-900 dark:text-slate-100">{p.qty_sold.toLocaleString()}</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-emerald-600 dark:text-emerald-450">${p.revenue.toLocaleString()}</td>
+                  <tr key={p.sku} className="hover:bg-slate-50/50:bg-slate-850/40">
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
+                    <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                    <td className="px-4 py-2.5 text-right font-bold text-foreground">{p.qty_sold.toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-emerald-600">${p.revenue.toLocaleString()}</td>
                   </tr>
                 ))}
                 {!data?.best_sellers?.length && (
-                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 dark:text-slate-550 italic">No sales data yet.</td></tr>
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No sales data yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -469,16 +469,16 @@ export default function InventoryDashboardPage() {
         </div>
 
         {/* Worst Sellers */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="bg-slate-50 dark:bg-slate-950 px-4 py-3 border-b border-slate-200 dark:border-slate-850 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-red-700 dark:text-red-400 text-sm font-semibold">
+        <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-background px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-red-700 text-sm font-semibold">
               <TrendingDown size={15} /> Lowest Sellers
             </span>
-            <span className="text-[10px] text-slate-400 dark:text-slate-550 uppercase tracking-wider font-semibold">By Units Sold</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
           <div className="overflow-x-auto w-full scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs uppercase font-semibold">
+              <thead className="bg-card border-b border-border text-muted-foreground text-xs uppercase font-semibold">
                 <tr>
                   <th className="px-4 py-2 text-left">SKU</th>
                   <th className="px-4 py-2 text-left">Name</th>
@@ -486,17 +486,17 @@ export default function InventoryDashboardPage() {
                   <th className="px-4 py-2 text-right">Stock</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {data?.worst_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/40">
-                    <td className="px-4 py-2.5 font-mono text-xs text-slate-500 dark:text-slate-400">{p.sku}</td>
-                    <td className="px-4 py-2.5 font-medium text-slate-800 dark:text-slate-200">{p.name}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-slate-700 dark:text-slate-350">{p.qty_sold}</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-slate-900 dark:text-slate-100">{p.stock_on_hand.toLocaleString()}</td>
+                  <tr key={p.sku} className="hover:bg-slate-50/50:bg-slate-850/40">
+                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
+                    <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold text-slate-700">{p.qty_sold}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-foreground">{p.stock_on_hand.toLocaleString()}</td>
                   </tr>
                 ))}
                 {!data?.worst_sellers?.length && (
-                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 dark:text-slate-550 italic">No products yet.</td></tr>
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No products yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -505,9 +505,9 @@ export default function InventoryDashboardPage() {
       </div>
 
       {/* Tabbed Product Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         {/* Tab Bar + Search */}
-        <div className="border-b border-slate-200 dark:border-slate-850 px-4 pt-3">
+        <div className="border-b border-slate-200 px-4 pt-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             {/* Tabs */}
             <div className="flex gap-1">
@@ -516,22 +516,22 @@ export default function InventoryDashboardPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === tab.id
-                      ? "border-indigo-500 text-indigo-700 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/30"
-                      : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-200"
-                  }`}
+ activeTab === tab.id
+ ? "border-indigo-500 text-indigo-700 bg-indigo-50/50"
+ : "border-transparent text-slate-500 hover:text-slate-700:text-slate-200"
+ }`}
                 >
                   {tab.label}
                   {tab.count !== undefined && (
                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                      activeTab === tab.id
-                        ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-400"
-                        : tab.id === "reorder" && (tab.count || 0) > 0
-                        ? "bg-amber-100 dark:bg-amber-955/40 text-amber-700 dark:text-amber-400"
-                        : tab.id === "dead" && (tab.count || 0) > 0
-                        ? "bg-red-100 dark:bg-red-955/40 text-red-700 dark:text-red-400"
-                        : "bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-450"
-                    }`}>
+ activeTab === tab.id
+ ? "bg-indigo-100 text-indigo-700"
+ : tab.id === "reorder" && (tab.count || 0) > 0
+ ? "bg-amber-100 text-amber-700"
+ : tab.id === "dead" && (tab.count || 0) > 0
+ ? "bg-red-100 text-red-700"
+ : "bg-slate-100 text-slate-500"
+ }`}>
                       {tab.count ?? 0}
                     </span>
                   )}
@@ -543,21 +543,21 @@ export default function InventoryDashboardPage() {
             {activeTab === "all" && (
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="text"
                     placeholder="Search SKU or name..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-400 w-48"
+                    className="pl-8 pr-3 py-1.5 border border-border bg-card rounded-lg text-sm text-foreground focus:outline-none focus:border-indigo-400 w-48"
                   />
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Filter size={13} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
+                  <Filter size={13} className="text-muted-foreground flex-shrink-0" />
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="pl-2 pr-6 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:border-indigo-400"
+                    className="pl-2 pr-6 py-1.5 border border-border bg-card rounded-lg text-sm text-foreground focus:outline-none focus:border-indigo-400"
                   >
                     {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -571,82 +571,82 @@ export default function InventoryDashboardPage() {
         {activeTab === "all" && (
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
+              <thead className="bg-background border-b border-border text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 text-left">SKU</th>
                   <th className="px-5 py-3 text-left">Product</th>
                   <th className="px-5 py-3 text-left">Category</th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
                     onClick={() => toggleSort("stock_on_hand")}
                   >
                     <span className="flex items-center justify-end gap-1">Stock <SortIcon field="stock_on_hand" /></span>
                   </th>
                   <th className="px-5 py-3 text-right">Cost</th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
                     onClick={() => toggleSort("qty_sold")}
                   >
                     <span className="flex items-center justify-end gap-1">Sold <SortIcon field="qty_sold" /></span>
                   </th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
                     onClick={() => toggleSort("revenue")}
                   >
                     <span className="flex items-center justify-end gap-1">Revenue <SortIcon field="revenue" /></span>
                   </th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
                     onClick={() => toggleSort("profit")}
                   >
                     <span className="flex items-center justify-end gap-1">Profit <SortIcon field="profit" /></span>
                   </th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
                     onClick={() => toggleSort("margin_percent")}
                   >
                     <span className="flex items-center justify-end gap-1">Margin <SortIcon field="margin_percent" /></span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {filteredAndSorted.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/40 transition-colors">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{p.sku}</td>
-                    <td className="px-5 py-3 font-semibold text-slate-900 dark:text-slate-205">{p.name}</td>
+                  <tr key={p.sku} className="hover:bg-slate-50/50:bg-slate-850/40 transition-colors">
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
+                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
                     <td className="px-5 py-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-350 uppercase">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-muted text-slate-600 uppercase">
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-slate-800 dark:text-slate-200">{p.stock_on_hand.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-slate-500 dark:text-slate-400">${p.unit_cost.toFixed(2)}</td>
-                    <td className="px-5 py-3 text-right text-slate-600 dark:text-slate-300">{p.qty_sold.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right font-bold text-slate-900 dark:text-slate-100">
+                    <td className="px-5 py-3 text-right font-bold text-slate-800">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right text-muted-foreground">${p.unit_cost.toFixed(2)}</td>
+                    <td className="px-5 py-3 text-right text-muted-foreground">{p.qty_sold.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-foreground">
                       ${p.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-emerald-600 dark:text-emerald-450">
+                    <td className="px-5 py-3 text-right font-bold text-emerald-600">
                       ${p.profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2 justify-end">
-                        <div className="w-16 bg-slate-100 dark:bg-slate-850 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              p.margin_percent >= 50 ? "bg-emerald-500"
-                              : p.margin_percent >= 25 ? "bg-blue-500"
-                              : p.margin_percent > 0 ? "bg-amber-500"
-                              : "bg-red-500"
-                            }`}
+ p.margin_percent >= 50 ? "bg-emerald-500"
+ : p.margin_percent >= 25 ? "bg-blue-500"
+ : p.margin_percent > 0 ? "bg-amber-500"
+ : "bg-red-500"
+ }`}
                             style={{ width: `${Math.min(100, Math.max(0, p.margin_percent))}%` }}
                           />
                         </div>
                         <span className={`text-xs font-bold ${
-                          p.margin_percent >= 50 ? "text-emerald-700 dark:text-emerald-400"
-                          : p.margin_percent >= 25 ? "text-blue-700 dark:text-blue-400"
-                          : p.margin_percent > 0 ? "text-amber-700 dark:text-amber-400"
-                          : "text-red-700 dark:text-red-400"
-                        }`}>
+ p.margin_percent >= 50 ? "text-emerald-700"
+ : p.margin_percent >= 25 ? "text-blue-700"
+ : p.margin_percent > 0 ? "text-amber-700"
+ : "text-red-700"
+ }`}>
                           {p.margin_percent.toFixed(1)}%
                         </span>
                       </div>
@@ -655,7 +655,7 @@ export default function InventoryDashboardPage() {
                 ))}
                 {filteredAndSorted.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-12 text-center text-slate-400 dark:text-slate-550 italic">
+                    <td colSpan={9} className="px-5 py-12 text-center text-slate-400 italic">
                       No products match your filters.
                     </td>
                   </tr>
@@ -669,7 +669,7 @@ export default function InventoryDashboardPage() {
         {activeTab === "reorder" && (
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-amber-50 dark:bg-amber-955/20 border-b border-amber-100 dark:border-amber-900 text-amber-800 dark:text-amber-400 text-xs font-semibold uppercase tracking-wider">
+              <thead className="bg-amber-50 border-b border-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 text-left">SKU</th>
                   <th className="px-5 py-3 text-left">Product</th>
@@ -679,20 +679,20 @@ export default function InventoryDashboardPage() {
                   <th className="px-5 py-3 text-right">Shortage</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-amber-50 dark:divide-amber-955/15">
+              <tbody className="divide-y divide-amber-50">
                 {alerts?.low_stock?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-amber-50/40 dark:hover:bg-amber-900/10 transition-colors">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{p.sku}</td>
-                    <td className="px-5 py-3 font-semibold text-slate-900 dark:text-slate-205">{p.name}</td>
+                  <tr key={p.sku} className="hover:bg-amber-50/40:bg-amber-900/10 transition-colors">
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
+                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
                     <td className="px-5 py-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-805 text-slate-600 dark:text-slate-350 uppercase">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-amber-700 dark:text-amber-400">{p.stock_on_hand.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-slate-600 dark:text-slate-355">{p.reorder_point.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-amber-700">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right text-slate-600">{p.reorder_point.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">
                         <AlertTriangle size={10} /> -{p.shortage}
                       </span>
                     </td>
@@ -700,7 +700,7 @@ export default function InventoryDashboardPage() {
                 ))}
                 {!alerts?.low_stock?.length && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-12 text-center text-slate-400 dark:text-slate-550 italic">
+                    <td colSpan={6} className="px-5 py-12 text-center text-slate-400 italic">
                       No reorder alerts. All stock levels are healthy. ✓
                     </td>
                   </tr>
@@ -714,7 +714,7 @@ export default function InventoryDashboardPage() {
         {activeTab === "dead" && (
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-red-50 dark:bg-red-955/20 border-b border-red-100 dark:border-red-900 text-red-800 dark:text-red-450 text-xs font-semibold uppercase tracking-wider">
+              <thead className="bg-red-50 border-b border-red-100 text-red-800 text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 text-left">SKU</th>
                   <th className="px-5 py-3 text-left">Product</th>
@@ -723,25 +723,25 @@ export default function InventoryDashboardPage() {
                   <th className="px-5 py-3 text-right">Estimated Value</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-red-50 dark:divide-red-955/15">
+              <tbody className="divide-y divide-red-50">
                 {alerts?.dead_stock?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-red-50/40 dark:hover:bg-red-900/10 transition-colors">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-500 dark:text-slate-400">{p.sku}</td>
-                    <td className="px-5 py-3 font-semibold text-slate-900 dark:text-slate-205">{p.name}</td>
+                  <tr key={p.sku} className="hover:bg-red-50/40:bg-red-900/10 transition-colors">
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
+                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
                     <td className="px-5 py-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-805 text-slate-600 dark:text-slate-350 uppercase">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-red-700 dark:text-red-400">{p.stock_on_hand.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right font-semibold text-slate-700 dark:text-slate-300">
+                    <td className="px-5 py-3 text-right font-bold text-red-700">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-semibold text-foreground">
                       ${p.estimated_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
                 {!alerts?.dead_stock?.length && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-slate-400 dark:text-slate-550 italic">
+                    <td colSpan={5} className="px-5 py-12 text-center text-slate-400 italic">
                       No dead stock detected. All products have recent sales activity. ✓
                     </td>
                   </tr>
@@ -758,12 +758,12 @@ export default function InventoryDashboardPage() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className={`px-6 py-4 border-b flex items-center justify-between ${
-              importSummary.status === "success" ? "bg-emerald-50/50 border-emerald-100" : "bg-rose-50/50 border-rose-100"
-            }`}>
+ importSummary.status === "success" ? "bg-emerald-50/50 border-emerald-100" : "bg-rose-50/50 border-rose-100"
+ }`}>
               <div className="flex items-center gap-2.5">
                 <div className={`p-2 rounded-lg ${
-                  importSummary.status === "success" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
-                }`}>
+ importSummary.status === "success" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+ }`}>
                   <Layers size={18} />
                 </div>
                 <div>
@@ -776,10 +776,10 @@ export default function InventoryDashboardPage() {
                 </div>
               </div>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
-                importSummary.status === "success"
-                  ? "bg-emerald-100 text-emerald-850 border-emerald-250"
-                  : "bg-rose-100 text-rose-850 border-rose-250"
-              }`}>
+ importSummary.status === "success"
+ ? "bg-emerald-100 text-emerald-850 border-emerald-250"
+ : "bg-rose-100 text-rose-850 border-rose-250"
+ }`}>
                 {importSummary.status === "success" ? "Success" : "Failed"}
               </span>
             </div>

@@ -133,10 +133,10 @@ export default function TraceabilityDashboard() {
                 <div 
                   onClick={() => setSelectedTrace(fallbackRecommendation)}
                   className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
-                    selectedTrace.id === fallbackRecommendation.id 
-                      ? "border-emerald-500 bg-emerald-950/10" 
-                      : "border-slate-800 bg-[#121620]/30 hover:border-slate-700"
-                  }`}
+ selectedTrace.id === fallbackRecommendation.id 
+ ? "border-emerald-500 bg-emerald-950/10" 
+ : "border-slate-800 bg-[#121620]/30 hover:border-slate-700"
+ }`}
                 >
                   <span className="block text-xs font-semibold text-emerald-400 uppercase tracking-wide">Pre-seeded Fallback</span>
                   <span className="block text-sm font-bold text-white mt-1">{fallbackRecommendation.action}</span>
@@ -150,10 +150,10 @@ export default function TraceabilityDashboard() {
                   key={trace.id}
                   onClick={() => setSelectedTrace(trace)}
                   className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
-                    selectedTrace.id === trace.id 
-                      ? "border-emerald-500 bg-emerald-950/10" 
-                      : "border-slate-800 bg-[#121620]/30 hover:border-slate-700"
-                  }`}
+ selectedTrace.id === trace.id 
+ ? "border-emerald-500 bg-emerald-950/10" 
+ : "border-slate-800 bg-[#121620]/30 hover:border-slate-700"
+ }`}
                 >
                   <span className="block text-xs font-semibold text-indigo-400 uppercase tracking-wide">
                     {trace.recommendation_type}

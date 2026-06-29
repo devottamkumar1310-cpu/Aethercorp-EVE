@@ -89,6 +89,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -106,11 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const activeTheme = localStorage.getItem("theme") || "dark";
     setTheme(activeTheme);
-    if (activeTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.setAttribute("data-theme", activeTheme);
   }, []);
 
   const getThemePreference = (profileData?: any): string => {
@@ -130,13 +127,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setTheme(newTheme);
     if (typeof window !== "undefined") {
       localStorage.setItem("theme", newTheme);
-      if (newTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      document.documentElement.setAttribute("data-theme", newTheme);
+      // Trigger event so other tabs/components sync theme immediately
+      window.dispatchEvent(new Event("theme-changed"));
     }
-    // Future integration point: update preferences table in backend if needed
   };
 
   const toggleSidebar = () => {
@@ -151,32 +145,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const loadWorkspacesAndProfile = async (token: string) => {
+    // Use AbortController to enforce a 15-second timeout per request.
+    // This prevents an unresponsive backend from trapping users on the
+    // loading screen indefinitely.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    let profileSettled: PromiseSettledResult<Response>;
+    let wsSettled: PromiseSettledResult<Response>;
+
     try {
-      const [profileRes, wsRes] = await Promise.all([
+      [profileSettled, wsSettled] = await Promise.allSettled([
         fetch(`${API_BASE_URL}/api/profile/me`, {
           headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
         }),
         fetch(`${API_BASE_URL}/api/organization/workspaces`, {
           headers: { Authorization: `Bearer ${token}` },
-        })
+          signal: controller.signal,
+        }),
       ]);
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
+    // --- Handle profile result independently ---
+    if (profileSettled.status === "fulfilled" && profileSettled.value.ok) {
+      try {
+        const profileData = await profileSettled.value.json();
         setProfile(profileData);
-        
-        // Sync theme preference if available in profile data
         const activeTheme = getThemePreference(profileData);
         setTheme(activeTheme);
-        if (activeTheme === "dark") {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
+        document.documentElement.setAttribute("data-theme", activeTheme);
+      } catch (e) {
+        console.warn("[EVE] Failed to parse profile response:", e);
       }
+    } else {
+      const reason =
+        profileSettled.status === "rejected"
+          ? profileSettled.reason?.name === "AbortError"
+            ? "Profile request timed out"
+            : String(profileSettled.reason)
+          : `Profile API returned ${profileSettled.value.status}`;
+      console.warn("[EVE] Profile load failed (non-fatal):", reason);
+      // Dashboard still loads — profile fields show fallback values
+    }
 
-      if (wsRes.ok) {
-        const wsData = await wsRes.json();
+    // --- Handle workspaces result independently ---
+    if (wsSettled.status === "fulfilled" && wsSettled.value.ok) {
+      try {
+        const wsData = await wsSettled.value.json();
         setWorkspaces(wsData);
         if (wsData.length === 0) {
           localStorage.removeItem("active_workspace_id");
@@ -194,9 +212,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           localStorage.removeItem("active_workspace_id");
           setActiveWorkspaceId(null);
         }
+      } catch (e) {
+        console.warn("[EVE] Failed to parse workspaces response:", e);
       }
-    } catch (e) {
-      console.error("Failed to load workspace/profile", e);
+    } else {
+      const reason =
+        wsSettled.status === "rejected"
+          ? wsSettled.reason?.name === "AbortError"
+            ? "Workspaces request timed out after 15 seconds"
+            : String(wsSettled.reason)
+          : `Workspaces API returned ${wsSettled.value.status}`;
+      console.error("[EVE] Workspaces load failed:", reason);
+      // Propagate as an initError so the user sees an actionable message
+      // instead of an infinite spinner.
+      throw new Error(`Failed to load workspaces: ${reason}`);
     }
   };
 
@@ -207,22 +236,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { router.push("/login"); return; }
       setSessionToken(session.access_token);
-      
-      const isAlreadyInitialized = typeof window !== "undefined" && sessionStorage.getItem("eve_initialized") === "true";
-      
-      if (isAlreadyInitialized) {
-        setLoading(false);
-        await loadWorkspacesAndProfile(session.access_token);
-      } else {
-        setLoadingStage(2); // Loading Workspace
-        await loadWorkspacesAndProfile(session.access_token);
-        
-        setLoadingStage(3); // Loading Business Data
-        setLoadingStage(4); // Preparing AI Executive
-        setLoading(false);
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("eve_initialized", "true");
+
+      const isAlreadyInitialized =
+        typeof window !== "undefined" &&
+        sessionStorage.getItem("eve_initialized") === "true";
+
+      try {
+        if (isAlreadyInitialized) {
+          setLoading(false);
+          await loadWorkspacesAndProfile(session.access_token);
+        } else {
+          setLoadingStage(2); // Loading Workspace
+          await loadWorkspacesAndProfile(session.access_token);
+          setLoadingStage(3); // Loading Business Data
+          setLoadingStage(4); // Preparing AI Executive
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("eve_initialized", "true");
+          }
         }
+        // Clear any prior error on success
+        setInitError(null);
+      } catch (err: any) {
+        // loadWorkspacesAndProfile threw — workspaces critically failed.
+        // Show the user an actionable error instead of the infinite spinner.
+        console.error("[EVE] Dashboard initialization failed:", err);
+        setInitError("We are currently optimizing the workspace index. Please try again in a moment.");
+      } finally {
+        // ALWAYS exit the loading state — never trap the user on the spinner.
+        setLoading(false);
       }
     }
     init();
@@ -260,7 +301,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setNewWorkspaceName("");
       window.location.reload();
     } catch (err: any) {
-      setCreateError(err.message);
+      setCreateError("Workspace creation is currently synchronizing. Please try again.");
     } finally {
       setCreateLoading(false);
     }
@@ -286,7 +327,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       window.location.reload();
     } catch (err: any) {
-      setCreateError(err.message);
+      setCreateError("Demo environment is currently initializing. Please try again shortly.");
     } finally {
       setDemoLoading(false);
     }
@@ -304,7 +345,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
 
-  if (loading || !activeWorkspaceId) {
+  if (loading || (!activeWorkspaceId && !initError)) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
         <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-8 shadow-2xl space-y-6 animate-fade-in">
@@ -319,7 +360,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           
           <div className="space-y-3 pt-2">
-            {/* Stage 1 */}
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage >= 2 ? (
                 <span className="text-indigo-400 font-bold">✓</span>
@@ -331,7 +371,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
             
-            {/* Stage 2 */}
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage >= 3 ? (
                 <span className="text-indigo-400 font-bold">✓</span>
@@ -345,7 +384,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
             
-            {/* Stage 3 */}
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage >= 4 ? (
                 <span className="text-indigo-400 font-bold">✓</span>
@@ -359,7 +397,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
             
-            {/* Stage 4 */}
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage === 4 ? (
                 <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
@@ -370,6 +407,49 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 Preparing AI Executive portal...
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (initError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
+        <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md rounded-2xl border border-red-900/40 p-8 shadow-2xl space-y-6 animate-fade-in">
+          <div className="flex justify-center mb-2">
+            <div className="h-14 w-14 bg-gradient-to-tr from-red-700 to-rose-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-red-500/20">
+              <AlertCircle size={28} />
+            </div>
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-bold tracking-tight text-red-400">Connection Failed</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">{initError}</p>
+          </div>
+          <div className="space-y-3 pt-2">
+            <button
+              onClick={() => {
+                setInitError(null);
+                setLoading(true);
+                setLoadingStage(1);
+                if (typeof window !== "undefined") {
+                  sessionStorage.removeItem("eve_initialized");
+                }
+                window.location.reload();
+              }}
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
+            >
+              Retry Connection
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full py-2.5 px-4 bg-transparent border border-slate-700 hover:border-slate-500 text-slate-400 hover:text-slate-200 rounded-xl text-sm font-medium transition-all cursor-pointer"
+            >
+              Sign Out
+            </button>
+            <p className="text-center text-[10px] text-slate-600 pt-1">
+              Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
+            </p>
           </div>
         </div>
       </div>
@@ -389,15 +469,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 flex flex-col transition-all duration-200 ${
-          isSidebarCollapsed ? "w-64 md:w-16" : "w-64"
-        } ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
+ isSidebarCollapsed ? "w-64 md:w-16" : "w-64"
+ } ${
+ sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+ }`}
       >
         {/* Sidebar Brand */}
         <div className={`flex items-center border-b border-sidebar-border transition-all ${
-          isSidebarCollapsed ? "px-5 py-5 md:px-3 md:py-5 md:justify-center" : "gap-3 px-5 py-5"
-        }`}>
+ isSidebarCollapsed ? "px-5 py-5 md:px-3 md:py-5 md:justify-center" : "gap-3 px-5 py-5"
+ }`}>
           <div
             onClick={() => router.push("/dashboard/eve")}
             className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
@@ -405,7 +485,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             EVE
           </div>
           <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
-            <span className="font-bold text-slate-100 dark:text-slate-200 text-xs tracking-tight leading-none">EVE PORTAL</span>
+            <span className="font-bold text-foreground text-xs tracking-tight leading-none">EVE PORTAL</span>
             <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
           </div>
           
@@ -429,7 +509,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
           {navItems.map((group) => (
             <div key={group.label}>
-              <p className={`text-[9px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest px-3 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+              <p className={`text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-3 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
                 {group.label}
               </p>
               <div className={`h-px bg-sidebar-border my-4 ${isSidebarCollapsed ? "md:block hidden" : "hidden"}`} />
@@ -451,18 +531,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       }}
                       title={isSidebarCollapsed ? item.label : undefined}
                       className={`flex items-center rounded-lg text-sm font-medium transition-all group relative ${
-                        isSidebarCollapsed ? "justify-start gap-3 px-3 py-2 md:justify-center md:p-2.5 md:mx-1" : "gap-3 px-3 py-2"
-                      } ${
-                        isItemDisabled
-                          ? "opacity-45 cursor-not-allowed text-slate-600"
-                          : active
-                          ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
-                          : "text-slate-400 hover:text-slate-100 hover:bg-sidebar-accent"
-                      } ${
-                        (item as any).isAI && !active && !isItemDisabled
-                          ? "hover:bg-indigo-900/30 hover:text-indigo-300"
-                          : ""
-                      }`}
+ isSidebarCollapsed ? "justify-start gap-3 px-3 py-2 md:justify-center md:p-2.5 md:mx-1" : "gap-3 px-3 py-2"
+ } ${
+ isItemDisabled
+ ? "opacity-45 cursor-not-allowed text-slate-600"
+ : active
+ ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
+ : "text-slate-400 hover:text-slate-100 hover:bg-sidebar-accent"
+ } ${
+ (item as any).isAI && !active && !isItemDisabled
+ ? "hover:bg-indigo-900/30 hover:text-indigo-300"
+ : ""
+ }`}
                     >
                       <Icon size={15} className={active && !isItemDisabled ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
                       <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>{item.label}</span>
@@ -481,8 +561,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-4 py-4 border-t border-sidebar-border space-y-2">
           <div 
             className={`flex items-center rounded-lg bg-sidebar-accent/60 transition-all ${
-              isSidebarCollapsed ? "justify-start gap-2 px-2 py-2 md:justify-center md:p-2" : "gap-2 px-2 py-2"
-            }`}
+ isSidebarCollapsed ? "justify-start gap-2 px-2 py-2 md:justify-center md:p-2" : "gap-2 px-2 py-2"
+ }`}
             title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
           >
             <Building2 size={14} className="text-indigo-400 flex-shrink-0" />
@@ -494,8 +574,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => window.open("https://forms.gle/qETMVJfDzHnF86xi7", "_blank")}
             title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
             className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
-              isSidebarCollapsed ? "justify-start gap-2 px-3 py-2 md:justify-center md:p-2" : "gap-2 px-3 py-2"
-            }`}
+ isSidebarCollapsed ? "justify-start gap-2 px-3 py-2 md:justify-center md:p-2" : "gap-2 px-3 py-2"
+ }`}
           >
             <MessageSquare size={13} className="text-indigo-400" />
             <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>Give Beta Feedback</span>
@@ -508,8 +588,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <div className={`flex-1 flex flex-col transition-all duration-200 ${
-        isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
-      }`}>
+ isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
+ }`}>
         {/* Top Header */}
         <header className="sticky top-0 z-20 w-full bg-sidebar border-b border-sidebar-border text-sidebar-foreground transition-colors duration-200">
           <div className="px-4 py-3 flex items-center justify-between">
@@ -559,8 +639,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             key={ws.id}
                             onClick={() => handleSwitchWorkspace(ws.id)}
                             className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-sidebar-accent transition-colors ${
-                              ws.id === activeWorkspaceId ? "text-indigo-400 font-bold" : "text-sidebar-foreground"
-                            }`}
+ ws.id === activeWorkspaceId ? "text-indigo-400 font-bold" : "text-sidebar-foreground"
+ }`}
                           >
                             <span className="truncate">{ws.name}</span>
                             {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />}
@@ -587,7 +667,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               {/* Profile */}
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-xs font-semibold text-slate-200 dark:text-slate-300 leading-none">{profile?.full_name || "Guest"}</span>
+                <span className="text-xs font-semibold text-foreground leading-none">{profile?.full_name || "Guest"}</span>
                 <span className="text-[10px] text-slate-500 mt-0.5">{profile?.email || ""}</span>
               </div>
 
@@ -606,7 +686,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 overflow-auto bg-background text-foreground transition-colors duration-200">
           {!activeWorkspaceId && pathname !== "/dashboard/settings" && pathname !== "/dashboard/help" ? (
             <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[85vh]">
-              <div className="bg-slate-900/60 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl border border-slate-800/80 shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-3xl mx-auto relative">
+              <div className="bg-card/80 backdrop-blur-md rounded-3xl border border-border shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-3xl mx-auto relative">
                 {/* Decorative background glow */}
                 <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />

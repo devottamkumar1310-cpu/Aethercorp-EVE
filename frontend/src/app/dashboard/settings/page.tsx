@@ -322,17 +322,17 @@ export default function SettingsPage() {
     <main className="p-6 max-w-4xl mx-auto w-full space-y-8 transition-colors duration-200">
 
       {/* Profile Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100 font-sans">
-            <User className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center text-foreground font-sans">
+            <User className="h-5 w-5 mr-2 text-indigo-650" />
             Profile Settings
           </h2>
         </div>
         <div className="p-6 space-y-6">
           
           {/* Avatar Upload block */}
-          <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-100 dark:border-slate-800 pb-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-border pb-6">
             <div className="relative h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl.startsWith("gs://") ? "/favicon.ico" : avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
@@ -341,11 +341,11 @@ export default function SettingsPage() {
               )}
             </div>
             <div>
-              <span className="block text-sm font-medium text-slate-700 dark:text-slate-350">Avatar Image</span>
+              <span className="block text-sm font-medium text-slate-700">Avatar Image</span>
               <p className="text-xs text-slate-400 mt-1">Accepts PNG, JPG, JPEG. Max size 2MB.</p>
               
               <div className="mt-3 flex items-center gap-3">
-                <label className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer text-slate-700 dark:text-slate-300">
+                <label className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-border rounded-lg hover:bg-muted transition cursor-pointer text-foreground">
                   <Upload className="h-3.5 w-3.5" />
                   Select File
                   <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
@@ -361,34 +361,34 @@ export default function SettingsPage() {
           {/* Form */}
           <form onSubmit={handleSaveProfile} className="space-y-4">
             {profileSuccess && (
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+              <div className="p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200 flex items-center gap-2">
                 <Check className="h-4 w-4" /> Profile options updated successfully.
               </div>
             )}
             {profileError && (
-              <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-800">
+              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
                 {profileError}
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-full text-foreground font-medium bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Timezone</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Timezone</label>
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-full text-foreground font-medium bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 >
                   <option value="UTC">UTC (Universal Time)</option>
                   <option value="America/New_York">EST (Eastern Standard Time)</option>
@@ -400,16 +400,43 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Language</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Language</label>
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-full text-foreground font-medium bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 >
                   <option value="en">English (US)</option>
                   <option value="es">Español (ES)</option>
                   <option value="fr">Français (FR)</option>
                   <option value="de">Deutsch (DE)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-500 mb-1">Premium Theme</label>
+                <select
+                  value={typeof window !== "undefined" ? localStorage.getItem("theme") || "dark" : "dark"}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    localStorage.setItem("theme", selected);
+                    document.documentElement.setAttribute("data-theme", selected);
+                    if (selected !== "executive-light") {
+                      document.documentElement.classList.add("dark");
+                    } else {
+                      document.documentElement.classList.remove("dark");
+                    }
+                    window.dispatchEvent(new Event("theme-changed"));
+                  }}
+                  className="w-full text-foreground font-medium bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none animate-pulse-once"
+                >
+                  <option value="dark">Executive Dark (Slate/Graphite)</option>
+                  <option value="executive-light">Executive Light (Minimalist Silver)</option>
+                  <option value="midnight-blue">Midnight Blue (Deep Navy/Cyan)</option>
+                  <option value="emerald-intelligence">Emerald Growth (Green/Emerald)</option>
+                  <option value="royal-purple">Royal Purple (Premium AI Indigo)</option>
+                  <option value="carbon-red">Carbon Red (Command Center Red)</option>
+                  <option value="aurora">Aurora (Nebula Gradients)</option>
                 </select>
               </div>
 
@@ -431,19 +458,19 @@ export default function SettingsPage() {
       </div>
 
       {/* Email Address Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100">
-            <Mail className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-slate-50/50 flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center text-foreground">
+            <Mail className="h-5 w-5 mr-2 text-indigo-650" />
             Email Management
           </h2>
           {profile?.email_verified ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-450">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
               <Check className="h-3 w-3" />
               Verified
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-450">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
               Verification Pending
             </span>
           )}
@@ -451,32 +478,32 @@ export default function SettingsPage() {
         <div className="p-6 space-y-4">
           <form onSubmit={handleSaveEmail} className="space-y-4">
             {emailSuccess && (
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+              <div className="p-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200 flex items-center gap-2">
                 <Check className="h-4 w-4" /> {emailSuccess}
               </div>
             )}
             {emailError && (
-              <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-800">
+              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
                 {emailError}
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Current Email</label>
-                <div className="text-slate-450 bg-slate-150/40 dark:bg-slate-950/40 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-850 cursor-not-allowed">
+                <label className="block text-sm font-medium text-slate-500 mb-1">Current Email</label>
+                <div className="text-slate-450 bg-slate-150/40 px-3 py-2 rounded-lg border border-slate-100 cursor-not-allowed">
                   {profile?.email}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">New Email Address</label>
+                <label className="block text-sm font-medium text-slate-500 mb-1">New Email Address</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="w-full text-foreground font-medium bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                 />
               </div>
             </div>
@@ -485,7 +512,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={updatingEmail || email === profile?.email}
-                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:bg-slate-100 dark:disabled:bg-slate-800/60 dark:disabled:text-slate-550 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:bg-slate-100:bg-slate-800/60:text-slate-550 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
               >
                 {updatingEmail && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Change Email Address
@@ -496,34 +523,34 @@ export default function SettingsPage() {
       </div>
 
       {/* Workspaces Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100">
-            <Building2 className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-slate-50/50">
+          <h2 className="text-lg font-semibold flex items-center text-foreground">
+            <Building2 className="h-5 w-5 mr-2 text-indigo-650" />
             Workspaces
           </h2>
         </div>
         <div className="p-6">
           {workspaces.length === 0 ? (
-            <p className="text-slate-500 dark:text-slate-400 text-sm">No workspaces found.</p>
+            <p className="text-muted-foreground text-sm">No workspaces found.</p>
           ) : (
             <div className="space-y-3">
               {workspaces.map((ws) => (
                 <div
                   key={ws.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/10 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border border-border bg-slate-50/30 hover:bg-muted/40 transition-colors"
                 >
                   <div className="space-y-1">
-                    <div className="font-medium text-slate-900 dark:text-slate-100">{ws.name}</div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400 font-mono">{ws.slug}</div>
+                    <div className="font-medium text-foreground">{ws.name}</div>
+                    <div className="text-sm text-muted-foreground font-mono">{ws.slug}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                        ws.role === "owner"
-                          ? "bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-400"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300"
-                      }`}
+ ws.role === "owner"
+ ? "bg-indigo-100 text-indigo-800"
+ : "bg-muted text-slate-800"
+ }`}
                     >
                       {ws.role}
                     </span>
@@ -534,7 +561,7 @@ export default function SettingsPage() {
                           setDeleteWsConfirmText("");
                           setDeleteWsError("");
                         }}
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-red-650 dark:text-red-400 hover:text-red-750 dark:hover:text-red-300 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-red-650 hover:text-red-750:text-red-300 px-3 py-1.5 rounded-md border border-red-200 hover:bg-red-50:bg-red-950/20 transition-colors cursor-pointer"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete Workspace
@@ -549,10 +576,10 @@ export default function SettingsPage() {
       </div>
 
       {/* Security Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100">
-            <Lock className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-slate-50/50">
+          <h2 className="text-lg font-semibold flex items-center text-foreground">
+            <Lock className="h-5 w-5 mr-2 text-indigo-650" />
             Security
           </h2>
         </div>
@@ -561,7 +588,7 @@ export default function SettingsPage() {
             onClick={() => supabase.auth.resetPasswordForEmail(profile?.email || "", {
               redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
             })}
-            className="text-sm font-medium bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+            className="text-sm font-medium bg-card border border-slate-300 text-foreground px-4 py-2 rounded-md hover:bg-slate-50:bg-slate-900 transition-colors cursor-pointer"
           >
             Reset Account Password
           </button>

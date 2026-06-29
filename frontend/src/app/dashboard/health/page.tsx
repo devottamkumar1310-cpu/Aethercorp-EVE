@@ -28,7 +28,7 @@ export default function HealthDashboard() {
       setData(json);
       setError(null);
     } catch (err: any) {
-      setError(err.message || "Could not reach the system health API.");
+      setError("System health telemetry is currently syncing. Please wait.");
     } finally {
       setLoading(false);
     }

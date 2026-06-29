@@ -14,6 +14,7 @@ from app.core.rate_limiter import rate_limit  # noqa: F401  # available for rout
 
 from app.config import settings
 from app.database import init_db
+from app.core.schema_validator import validate_schema, SchemaValidationError
 from app.core.logging import setup_logging
 from app.routes import inventory
 from app.routes import chat
@@ -37,6 +38,23 @@ import app.artifacts.artifact_manager
 
 logger = logging.getLogger("eve.main")
 
+# Build allowed origins BEFORE the lifespan function is defined,
+# so the startup log inside lifespan can reference this list without a NameError.
+# Order matters: put more-specific origins first.
+allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",    # Swagger UI self-requests
+    "http://127.0.0.1:8000",
+]
+if settings.FRONTEND_URL:
+    for _origin in settings.FRONTEND_URL.split(","):
+        _stripped = _origin.strip()
+        if _stripped and _stripped not in allowed_origins:
+            allowed_origins.append(_stripped)
+
+logger.info(f"[CORS] Allowed origins at module load: {allowed_origins}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,14 +64,25 @@ async def lifespan(app: FastAPI):
     # 1. Setup structured logging
     setup_logging(level="INFO")
     logger.info("Initializing EVE Platform services...")
+    logger.info(f"[CORS] Allowed origins active: {allowed_origins}")
 
     # 2. Setup database schema structures
     try:
         init_db()
         logger.info("EVE Platform database initialized successfully.")
-        logger.info(f"CORS allowed origins configured: {allowed_origins}")
     except Exception as e:
         logger.critical(f"Failed to bootstrap database schemas: {e}", exc_info=e)
+        raise
+
+    # 3. Validate live database schema matches SQLAlchemy models.
+    try:
+        validate_schema()
+    except SchemaValidationError as e:
+        logger.critical(
+            "Startup aborted: database schema mismatch detected. "
+            "Run 'alembic upgrade head' against production before deploying."
+        )
+        raise
 
     yield
     logger.info("Shutting down EVE Platform services...")
@@ -67,33 +96,32 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Parse FRONTEND_URL as a comma-separated list of origins
-allowed_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-if settings.FRONTEND_URL:
-    for origin in settings.FRONTEND_URL.split(","):
-        stripped = origin.strip()
-        if stripped and stripped not in allowed_origins:
-            allowed_origins.append(stripped)
+# ──────────────────────────────────────────────────────────────────────────────
+# MIDDLEWARE REGISTRATION ORDER NOTE
+# Starlette processes middleware in REVERSE registration order.
+# The LAST middleware added runs FIRST on incoming requests.
+#
+# Desired execution order (request in → response out):
+#   SecurityHeadersMiddleware  →  CORSMiddleware  →  Router
+#
+# To achieve this, CORSMiddleware must be added LAST (it runs first).
+# SecurityHeadersMiddleware must be added FIRST (it runs last, on the way out).
+# ──────────────────────────────────────────────────────────────────────────────
 
-# Configure CORS for Next.js frontend calls
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-# Security headers middleware
+# 1. Add SecurityHeadersMiddleware FIRST (executes LAST — on response out).
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Injects standard security headers into every HTTP response."""
+    """Injects standard security headers into every HTTP response.
+    Skips OPTIONS (preflight) requests so CORS headers are not overwritten.
+    """
     async def dispatch(self, request: StarletteRequest, call_next):
         response = await call_next(request)
+        # Do not inject headers on CORS preflight — CORSMiddleware owns these.
+        if request.method == "OPTIONS":
+            return response
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -102,6 +130,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(SecurityHeadersMiddleware)
+
+# 2. Add CORSMiddleware LAST (executes FIRST — intercepts OPTIONS preflights
+#    before any other middleware or router sees them).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Cache preflight for 10 minutes
+)
 
 
 # Global exception handlers for gateway error consistency
@@ -231,3 +272,68 @@ def health_check(db: Session = Depends(get_db)):
                 "detail": "Failed to connect to the database"
             }
         )
+
+
+@app.get("/api/debug/startup")
+def debug_startup(db: Session = Depends(get_db)):
+    """
+    Temporary diagnostic endpoint. Returns the health of each system component.
+    Call this unauthenticated from curl or browser to verify backend state.
+    Remove before final production hardening.
+    """
+    import traceback
+    results = {
+        "cors_allowed_origins": allowed_origins,
+        "database": "unknown",
+        "profile_table": "unknown",
+        "memberships_table": "unknown",
+        "organizations_table": "unknown",
+        "jwt_secret_configured": bool(settings.SUPABASE_JWT_SECRET),
+        "supabase_url_configured": bool(settings.SUPABASE_URL),
+        "frontend_url": settings.FRONTEND_URL,
+        "environment": settings.ENV,
+    }
+
+    # 1. Database connectivity
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        results["database"] = "ok"
+    except Exception as e:
+        results["database"] = f"FAILED: {type(e).__name__}: {e}"
+
+    # 2. profiles table — check for the three previously missing columns
+    try:
+        from sqlalchemy import text
+        row = db.execute(text(
+            "SELECT column_name FROM information_schema.columns "
+            "WHERE table_name='profiles' AND column_name IN ('timezone','language','avatar_url')"
+        )).fetchall()
+        found = [r[0] for r in row]
+        missing = [c for c in ["timezone", "language", "avatar_url"] if c not in found]
+        results["profile_table"] = "ok" if not missing else f"MISSING COLUMNS: {missing}"
+    except Exception as e:
+        results["profile_table"] = f"FAILED: {type(e).__name__}: {e}"
+
+    # 3. memberships table
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT COUNT(*) FROM memberships"))
+        results["memberships_table"] = "ok"
+    except Exception as e:
+        results["memberships_table"] = f"FAILED: {type(e).__name__}: {e}"
+
+    # 4. organizations table
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT COUNT(*) FROM organizations"))
+        results["organizations_table"] = "ok"
+    except Exception as e:
+        results["organizations_table"] = f"FAILED: {type(e).__name__}: {e}"
+
+    # Overall status
+    critical_failures = [k for k, v in results.items() if isinstance(v, str) and v.startswith("FAILED")]
+    results["status"] = "ok" if not critical_failures else f"degraded — failures: {critical_failures}"
+
+    logger.info(f"[DEBUG /api/debug/startup] results={results}")
+    return results

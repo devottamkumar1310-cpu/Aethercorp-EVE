@@ -64,50 +64,50 @@ export default function ProjectsPage() {
       toast.success("Project deleted successfully");
       loadData(sessionToken);
     } catch (error: any) {
-      toast.error(error.message || "Failed to delete project");
+      toast.error("Project data is currently syncing. Please try again.");
     }
   };
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6 transition-colors duration-200">
-      <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400 mb-4">
-        <Link href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
+      <div className="flex items-center gap-4 text-muted-foreground mb-4">
+        <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
       </div>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-slate-850 dark:text-slate-100 flex items-center gap-2"><Briefcase className="text-blue-600 dark:text-blue-400"/> Projects Portfolio</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 dark:bg-indigo-650 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-indigo-750 transition-colors">
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Briefcase className="text-blue-600"/> Projects Portfolio</h1>
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
           <Plus size={18}/> New Project
         </button>
       </div>
       
       {loading ? (
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden animate-pulse">
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden animate-pulse">
           <div className="overflow-x-auto w-full scrollbar-thin">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="px-6 py-3 font-medium text-slate-400 dark:text-slate-500">Project Name</th>
-                  <th className="px-6 py-3 font-medium text-slate-400 dark:text-slate-500">Budget</th>
-                  <th className="px-6 py-3 font-medium text-slate-400 dark:text-slate-500">Progress</th>
-                  <th className="px-6 py-3 font-medium text-slate-400 dark:text-slate-500">Status</th>
-                  <th className="px-6 py-3 font-medium text-slate-400 dark:text-slate-500">Deadline</th>
-                  <th className="px-6 py-3 font-medium text-slate-400 dark:text-slate-500 text-right">Actions</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Project Name</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Budget</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Progress</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Deadline</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {[...Array(4)].map((_, i) => (
                   <tr key={i}>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-2/3" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-1/4" /></td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-24 bg-slate-200 dark:bg-slate-800 rounded-full h-2" />
-                        <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-6" />
+                        <div className="w-24 bg-muted rounded-full h-2" />
+                        <div className="h-3 bg-muted rounded w-6" />
                       </div>
                     </td>
-                    <td className="px-6 py-4"><div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-full w-16" /></td>
-                    <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4" /></td>
-                    <td className="px-6 py-4 text-right"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-8 ml-auto" /></td>
+                    <td className="px-6 py-4"><div className="h-6 bg-muted rounded-full w-16" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted rounded w-1/4" /></td>
+                    <td className="px-6 py-4 text-right"><div className="h-4 bg-muted rounded w-8 ml-auto" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -115,48 +115,48 @@ export default function ProjectsPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           <div className="overflow-x-auto w-full scrollbar-thin">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="px-6 py-3 font-medium text-slate-600 dark:text-slate-400">Project Name</th>
-                  <th className="px-6 py-3 font-medium text-slate-600 dark:text-slate-400">Budget</th>
-                  <th className="px-6 py-3 font-medium text-slate-600 dark:text-slate-400">Progress</th>
-                  <th className="px-6 py-3 font-medium text-slate-600 dark:text-slate-400">Status</th>
-                  <th className="px-6 py-3 font-medium text-slate-600 dark:text-slate-400">Deadline</th>
-                  <th className="px-6 py-3 font-medium text-slate-600 dark:text-slate-400 text-right">Actions</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Project Name</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Budget</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Progress</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Deadline</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {projects.map(p => (
-                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 group">
-                    <td className="px-6 py-4 font-medium text-slate-850 dark:text-slate-200">{p.name}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-350">${p.budget.toLocaleString()}</td>
+                  <tr key={p.id} className="hover:bg-muted/40 group">
+                    <td className="px-6 py-4 font-medium text-slate-850">{p.name}</td>
+                    <td className="px-6 py-4 text-slate-600">${p.budget.toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2">
-                          <div className="bg-blue-600 dark:bg-indigo-600 h-2 rounded-full" style={{ width: `${p.completion_percentage}%` }}></div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${p.completion_percentage}%` }}></div>
                         </div>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{p.completion_percentage}%</span>
+                        <span className="text-xs text-muted-foreground">{p.completion_percentage}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.status === 'active' ? 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>{p.status}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-muted text-foreground'}`}>{p.status}</span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(p)} className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleEdit(p)} className="p-1.5 text-slate-400 hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-slate-400 hover:text-red-650 dark:hover:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
+                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-slate-400 hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>
                 ))}
                 {projects.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-12 text-slate-500 dark:text-slate-400">No projects found. Click "New Project" to get started.</td></tr>
+                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No projects found. Click "New Project" to get started.</td></tr>
                 )}
               </tbody>
             </table>
