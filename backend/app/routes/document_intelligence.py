@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, load_only
 from app.services.gcs_service import GCSService
 
 from app.database import get_db, SessionLocal
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 from app.models.document import ProcessedDocument
 from app.schemas.document import ProcessedDocumentResponse, ProcessedDocumentDetailResponse
@@ -118,6 +118,13 @@ async def process_document_in_background(
         if doc:
             doc.status = "failure"
             doc.error_message = str(e)
+            if doc.file_path:
+                try:
+                    from app.services.gcs_service import GCSService
+                    GCSService.delete_file(doc.file_path)
+                    doc.file_path = None
+                except Exception as del_err:
+                    logger.warning(f"Failed to delete file on processing failure: {del_err}")
             db.commit()
 
         from app.services.audit_logger import AuditLogger
@@ -135,7 +142,8 @@ async def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     filename = file.filename
     content_type = file.content_type
@@ -157,6 +165,20 @@ async def upload_document(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail=f"Unsupported file format '{file_ext}'."
         )
+
+    # 1. Magic byte file validation
+    from app.services.document_intelligence.upload_security_service import UploadSecurityService
+    if not UploadSecurityService.validate_magic_bytes(file_bytes, file_ext):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File content does not match its extension signature."
+        )
+
+    # 2. Quota enforcement
+    UploadSecurityService.enforce_quota(db, workspace_id, file_size)
+
+    # 3. Duplicate check and SHA-256 assignment
+    sha256_hash = UploadSecurityService.process_sha256_and_detect_duplicate(db, workspace_id, file_bytes)
 
     # Run synchronous classification to reject unsupported files before intelligence pipeline
     from app.services.document_intelligence.document_classifier import DocumentClassifier
@@ -198,7 +220,8 @@ async def upload_document(
         content_type=content_type,
         file_size=file_size,
         status="uploaded",
-        file_path=file_path
+        file_path=file_path,
+        sha256_hash=sha256_hash
     )
     db.add(processed_doc)
     db.commit()
@@ -264,7 +287,8 @@ def delete_document(
     document_id: uuid.UUID,
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("admin"))
 ):
     doc = db.query(ProcessedDocument).filter(
         ProcessedDocument.id == document_id,

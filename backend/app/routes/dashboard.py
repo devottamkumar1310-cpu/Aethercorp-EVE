@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models.profile import Profile
 from app.services.analytics_service import AnalyticsService
 from app.services.simulation_engine import SimulationEngine
-from app.core.security import get_current_user, get_active_workspace_id, get_required_workspace_id
+from app.core.security import get_current_user, get_active_workspace_id, get_required_workspace_id, require_workspace_role
 
 router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 
@@ -14,7 +14,8 @@ router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 def get_dashboard(
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: Optional[uuid.UUID] = Depends(get_active_workspace_id)
+    workspace_id: Optional[uuid.UUID] = Depends(get_active_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     Returns the overarching Business Intelligence dashboard metrics for the organization.
@@ -112,7 +113,8 @@ from app.services.dashboard_service import DashboardService
 def get_dashboard_kpis(
     db: Session = Depends(get_db), 
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     return DashboardService.get_kpis(db, workspace_id)
 
@@ -120,7 +122,8 @@ def get_dashboard_kpis(
 def get_dashboard_recent_clients(
     db: Session = Depends(get_db), 
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     return DashboardService.get_recent_clients(db, workspace_id)
 
@@ -128,7 +131,8 @@ def get_dashboard_recent_clients(
 def get_dashboard_recent_projects(
     db: Session = Depends(get_db), 
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     return DashboardService.get_recent_projects(db, workspace_id)
 
@@ -136,7 +140,8 @@ def get_dashboard_recent_projects(
 def get_dashboard_upcoming_deadlines(
     db: Session = Depends(get_db), 
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     return DashboardService.get_upcoming_deadlines(db, workspace_id)
 
@@ -144,6 +149,7 @@ def get_dashboard_upcoming_deadlines(
 def get_dashboard_summary(
     db: Session = Depends(get_db), 
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     return DashboardService.get_summary(db, workspace_id)

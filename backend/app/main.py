@@ -157,6 +157,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"[GLOBAL UNHANDLED EXCEPTION] path={request.url.path} error={exc}", exc_info=exc)
+    from app.services.alert_service import AlertService
+    AlertService.alert_http_5xx(str(exc), request.url.path, request.method)
     msg = "An unexpected error occurred."
     return JSONResponse(
         status_code=500,
@@ -169,11 +171,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability, document_intelligence
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability, document_intelligence, health, recommendation_trace
 app.include_router(auth.router)
+app.include_router(health.router)
+app.include_router(recommendation_trace.router)
 app.include_router(document_intelligence.router)
 app.include_router(profile.router)
 app.include_router(organization.router)

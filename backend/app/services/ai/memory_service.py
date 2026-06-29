@@ -108,6 +108,36 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
         actual_outcome=data.get("actual_outcome")
     )
     db.add(rec)
+    try:
+        from app.services.recommendation_trace_service import RecommendationTraceService
+        # Determine recommendation type based on source or keywords
+        rec_type = "inventory"
+        if "margin" in rec_text.lower() or "price" in rec_text.lower():
+            rec_type = "margin"
+        elif "forecast" in rec_text.lower() or "projection" in rec_text.lower():
+            rec_type = "forecasting"
+        elif "summary" in rec_text.lower() or agent_source == "coo_document_analyzer":
+            rec_type = "summary"
+        
+        # Build supporting metrics and reasoning chain
+        metrics_dict = data_used if isinstance(data_used, dict) else {"data": str(data_used)}
+        metrics_dict.update({
+            "expected_outcome": data.get("expected_outcome") or "Improve operations",
+            "agent_source": agent_source
+        })
+
+        RecommendationTraceService.create_trace(
+            db=db,
+            org_id=org_id,
+            rec_type=rec_type,
+            action=rec_text,
+            confidence=float(confidence_level) if confidence_level else 1.0,
+            sources=list(metrics_dict.keys()) if metrics_dict else ["AI Context"],
+            metrics=metrics_dict,
+            reasoning=[reasoning] if reasoning else ["EVE COO analyzed historical context and recommended action."]
+        )
+    except Exception as e:
+        logger.warning(f"Failed to generate RecommendationTrace in memory_service: {e}")
     db.commit()
     db.refresh(rec)
     return rec

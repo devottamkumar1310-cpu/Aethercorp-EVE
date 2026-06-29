@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
 from app.schemas.executive import (
@@ -41,7 +41,11 @@ logger = logging.getLogger("eve.routes.executive")
 
 from app.core.rate_limiter import rate_limit
 
-router = APIRouter(prefix="/api/executive", tags=["Executive"])
+router = APIRouter(
+    prefix="/api/executive",
+    tags=["Executive"],
+    dependencies=[Depends(require_workspace_role("manager"))]
+)
 
 @router.post("/chat", response_model=ExecutiveChatResponse)
 async def chat(

@@ -84,8 +84,13 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception as e:
+        from app.services.alert_service import AlertService
+        AlertService.alert_database_failure(str(e))
+        raise e
     finally:
         db.close()
+
 
 
 from sqlalchemy import event
@@ -119,6 +124,7 @@ def init_db():
         from app.models.system_error import SystemError
         from app.models.audit_log import AuditLog
         from app.models.document import ProcessedDocument
+        from app.models.recommendation_trace import RecommendationTrace
         
         # Check if pgvector is supported by the connection before building schemas
 

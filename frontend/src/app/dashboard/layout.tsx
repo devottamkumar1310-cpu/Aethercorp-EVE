@@ -47,6 +47,7 @@ const navItems = [
     items: [
       { href: "/dashboard/eve", label: "AI Command Center", icon: Brain, isAI: true },
       { href: "/dashboard/documents", label: "Document Hub", icon: FileText, isAI: true },
+      { href: "/dashboard/traceability", label: "Decision Traceability", icon: Sparkles, isAI: true },
     ],
   },
   {

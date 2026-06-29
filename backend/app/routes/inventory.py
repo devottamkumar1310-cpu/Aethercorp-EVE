@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
-from app.core.security import get_current_user_and_tenant
+from app.core.security import get_current_user_and_tenant, require_workspace_role
 from app.services.importer_service import ImporterService
 from app.core.rate_limiter import rate_limit
 
@@ -38,7 +38,8 @@ def upload_inventory_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
-    _: None = Depends(rate_limit(requests=10, window_seconds=60))
+    _: None = Depends(rate_limit(requests=10, window_seconds=60)),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     Uploads and parses inventory.csv.
@@ -84,7 +85,8 @@ def upload_sales_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
-    _: None = Depends(rate_limit(requests=10, window_seconds=60))
+    _: None = Depends(rate_limit(requests=10, window_seconds=60)),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     Uploads and parses sales.csv.
@@ -130,7 +132,8 @@ def upload_product_costs_csv(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
-    _: None = Depends(rate_limit(requests=10, window_seconds=60))
+    _: None = Depends(rate_limit(requests=10, window_seconds=60)),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     Uploads and parses product_cost.csv / costs.csv.
@@ -273,7 +276,8 @@ class StockUpdateRequest(BaseModel):
 def create_product(
     body: ProductCreateRequest,
     db: Session = Depends(get_db),
-    token_context: dict = Depends(get_current_user_and_tenant)
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     Manually create a product and its initial inventory record.
@@ -327,7 +331,8 @@ def update_product_stock(
     sku: str,
     body: StockUpdateRequest,
     db: Session = Depends(get_db),
-    token_context: dict = Depends(get_current_user_and_tenant)
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     Update stock level (and optionally reorder_point) for a specific SKU.

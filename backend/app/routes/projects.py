@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
 from app.services.project_service import ProjectService
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 
 router = APIRouter(prefix="/api/projects", tags=["Projects"])
@@ -39,8 +39,9 @@ def update_project(project_id: uuid.UUID, project_update: ProjectUpdate, db: Ses
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):
+def delete_project(project_id: uuid.UUID, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id), _ = Depends(require_workspace_role("manager"))):
     success = ProjectService.delete_project(db=db, project_id=project_id, user_id=current_user.id, workspace_id=workspace_id)
     if not success:
         raise HTTPException(status_code=404, detail="Project not found")
     return None
+

@@ -287,3 +287,19 @@ def get_analytics(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to compile analytics: {str(e)}")
+
+
+@router.post("/backup")
+def trigger_database_backup(
+    db: Session = Depends(get_db),
+    admin_check: Any = Depends(verify_workspace_admin)
+):
+    """
+    On-demand database backup. Requires Workspace Admin role.
+    """
+    from app.services.backup_service import BackupService
+    res = BackupService.run_backup(db)
+    if res["status"] == "failed":
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=res["error"])
+    return res
+
