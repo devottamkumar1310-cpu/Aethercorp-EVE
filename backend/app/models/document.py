@@ -24,6 +24,7 @@ class ProcessedDocument(Base):
     coo_insights = Column(JSON, nullable=True)
     error_message = Column(String, nullable=True)
     file_path = Column(String, nullable=True)
+    sha256_hash = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
 

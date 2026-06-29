@@ -1,9 +1,10 @@
 import re
-from fastapi import APIRouter, Depends, HTTPException
+import uuid as _uuid
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 
@@ -131,4 +132,105 @@ def delete_workspace(
         raise HTTPException(status_code=403, detail="Only workspace owners can delete workspaces")
 
     return {"status": "success", "message": "Workspace and all associated data deleted successfully"}
+
+
+class InviteRequest(BaseModel):
+    email: str
+    role: str
+
+
+@router.post("/invite", status_code=status.HTTP_201_CREATED)
+def invite_user(
+    body: InviteRequest,
+    db: Session = Depends(get_db),
+    workspace_id: _uuid.UUID = Depends(get_required_workspace_id),
+    current_membership: Membership = Depends(require_workspace_role("admin"))
+):
+    """
+    Invite a user to the workspace. Requires Admin+ role.
+    """
+    # 1. Resolve or create user profile
+    profile = db.query(Profile).filter(Profile.email == body.email).first()
+    if not profile:
+        profile = Profile(
+            id=_uuid.uuid4(),
+            email=body.email,
+            full_name=body.email.split("@")[0].capitalize(),
+            hashed_password="invited-temp-pw"
+        )
+        db.add(profile)
+        db.flush()
+
+    # 2. Check if already member
+    existing = db.query(Membership).filter(
+        Membership.organization_id == workspace_id,
+        Membership.user_id == profile.id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User is already a member of this workspace")
+
+    # 3. Create Membership
+    new_mem = Membership(
+        organization_id=workspace_id,
+        user_id=profile.id,
+        role=body.role.lower()
+    )
+    db.add(new_mem)
+    db.commit()
+    return {"status": "success", "message": f"Invited {body.email} successfully as {body.role}"}
+
+
+@router.delete("/members/{user_id}", status_code=status.HTTP_200_OK)
+def remove_user(
+    user_id: _uuid.UUID,
+    db: Session = Depends(get_db),
+    workspace_id: _uuid.UUID = Depends(get_required_workspace_id),
+    current_membership: Membership = Depends(require_workspace_role("admin"))
+):
+    """
+    Remove a user from the workspace. Requires Admin+ role.
+    Owner cannot be removed by Admin.
+    """
+    target_membership = db.query(Membership).filter(
+        Membership.organization_id == workspace_id,
+        Membership.user_id == user_id
+    ).first()
+
+    if not target_membership:
+        raise HTTPException(status_code=404, detail="Membership not found in this workspace")
+
+    # Guard: Owner cannot be removed by Admin
+    if target_membership.role.lower() == "owner" and current_membership.role.lower() == "admin":
+        raise HTTPException(status_code=403, detail="Owner cannot be removed by an Admin")
+
+    db.delete(target_membership)
+    db.commit()
+    return {"status": "success", "message": "User removed successfully"}
+
+
+@router.get("/storage-usage")
+def get_storage_usage(
+    db: Session = Depends(get_db),
+    workspace_id: _uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("employee"))
+):
+    """
+    Get organization-wide storage footprint and file metrics.
+    """
+    from app.services.document_intelligence.upload_security_service import UploadSecurityService
+    return UploadSecurityService.get_storage_usage(db, workspace_id)
+
+
+@router.post("/storage-cleanup")
+def trigger_storage_cleanup(
+    db: Session = Depends(get_db),
+    _role = Depends(require_workspace_role("admin"))
+):
+    """
+    Triggers cleanup of failed or orphaned files. Requires Admin+ role.
+    """
+    from app.services.document_intelligence.upload_security_service import UploadSecurityService
+    return UploadSecurityService.cleanup_orphaned_uploads(db)
+
+
 

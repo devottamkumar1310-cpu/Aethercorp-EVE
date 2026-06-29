@@ -11,7 +11,7 @@ from app.core.event_bus import event_bus, Event
 from app.orchestration.planner import Planner
 from app.orchestration.orchestrator import Orchestrator
 from app.agents.executive_orchestrator import ExecutiveOrchestrator
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 
 # Import specialized agents to trigger registration
@@ -51,7 +51,8 @@ async def chat_endpoint(
     request: ChatRequest, 
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user),
-    workspace_id: uuid.UUID = Depends(get_required_workspace_id)
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))
 ):
     """
     [DEPRECATED] Phase 2 inventory-focused verification endpoint.

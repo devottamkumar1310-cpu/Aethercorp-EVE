@@ -25,6 +25,8 @@ class Profile(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
     avatar_url = Column(String, nullable=True)
+    timezone = Column(String, default="UTC", nullable=False)
+    language = Column(String, default="en", nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 

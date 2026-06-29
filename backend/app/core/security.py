@@ -281,3 +281,52 @@ def get_current_user_and_tenant(
     Backwards compatible dependency returning standard tenant context.
     """
     return {"user_id": current_user.id, "organization_id": workspace_id}
+
+
+def require_workspace_role(minimum_role: str):
+    def dependency(
+        current_user: Profile = Depends(get_current_user),
+        workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+        db: Session = Depends(get_db)
+    ) -> Membership:
+        # Standardize role hierarchy: employee < manager/member < admin < owner
+        min_role_normalized = minimum_role.lower()
+        if min_role_normalized == "employee":
+            min_rank = 1
+        elif min_role_normalized in ["manager", "member"]:
+            min_rank = 2
+        elif min_role_normalized == "admin":
+            min_rank = 3
+        elif min_role_normalized == "owner":
+            min_rank = 4
+        else:
+            min_rank = 1
+
+        membership = db.query(Membership).filter(
+            Membership.user_id == current_user.id,
+            Membership.organization_id == workspace_id
+        ).first()
+
+        if not membership:
+            raise HTTPException(status_code=403, detail="Not a member of this workspace")
+
+        user_role = membership.role.lower()
+        if user_role == "employee":
+            user_rank = 1
+        elif user_role in ["manager", "member"]:
+            user_rank = 2
+        elif user_role == "admin":
+            user_rank = 3
+        elif user_role == "owner":
+            user_rank = 4
+        else:
+            user_rank = 1
+
+        if user_rank < min_rank:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient workspace permissions"
+            )
+        return membership
+    return dependency
+

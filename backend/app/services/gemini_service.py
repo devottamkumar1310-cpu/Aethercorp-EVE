@@ -30,6 +30,12 @@ class GeminiOutageError(Exception):
     def __init__(self, message: str, status_code: int = 503):
         super().__init__(message)
         self.status_code = status_code
+        try:
+            from app.services.alert_service import AlertService
+            AlertService.alert_ai_failure(message)
+        except Exception:
+            pass
+
 
 
 class GeminiService:

@@ -173,7 +173,7 @@ def test_purchase_order_ingestion(seeded_data):
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock Purchase Order PO image
-    file_payload = {"file": ("purchase_order.png", b"mock png content", "image/png")}
+    file_payload = {"file": ("purchase_order.png", b"\x89PNG\r\n\x1a\nmock png content", "image/png")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     
@@ -204,7 +204,7 @@ def test_expense_receipt_ingestion(seeded_data):
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock Receipt image
-    file_payload = {"file": ("rent_receipt.jpg", b"mock rent content", "image/jpeg")}
+    file_payload = {"file": ("rent_receipt.jpg", b"\xff\xd8\xffmock rent content", "image/jpeg")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     
@@ -234,7 +234,7 @@ def test_validation_duplicate_invoice(seeded_data):
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock duplicate Invoice PDF
-    file_payload = {"file": ("invoice_duplicate.pdf", b"%PDF-1.4 mock content", "application/pdf")}
+    file_payload = {"file": ("invoice_duplicate.pdf", b"%PDF-1.4 mock content duplicate file unique", "application/pdf")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     
@@ -249,7 +249,7 @@ def test_validation_negative_value(seeded_data):
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
     # Upload mock negative values invoice PDF
-    file_payload = {"file": ("invoice_negative.pdf", b"%PDF-1.4 mock content", "application/pdf")}
+    file_payload = {"file": ("invoice_negative.pdf", b"%PDF-1.4 mock content negative file unique", "application/pdf")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     

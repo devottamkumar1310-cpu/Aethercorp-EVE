@@ -290,6 +290,20 @@ async def run_evaluator():
                 created_at=datetime.datetime.utcnow()
             )
             db.add(rec)
+            try:
+                from app.services.recommendation_trace_service import RecommendationTraceService
+                RecommendationTraceService.create_trace(
+                    db=db,
+                    org_id=ORG_ID,
+                    rec_type="summary",
+                    action=synthesis.summary,
+                    confidence=float(synthesis.confidence_scores.get("Overall", 0.85)),
+                    sources=["benchmark_run", "evaluator"],
+                    metrics={"benchmark": RUN_TAG, "latency": latency},
+                    reasoning=[p.description for p in synthesis.priorities]
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate trace inside evaluator: {e}")
             
             act = ActivityLog(
                 id=uuid.uuid4(),

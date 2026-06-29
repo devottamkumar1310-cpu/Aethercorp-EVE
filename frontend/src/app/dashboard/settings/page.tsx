@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { User, Lock, Building2, Trash2, AlertTriangle, Shield } from "lucide-react";
+import { User, Lock, Building2, Trash2, AlertTriangle, Shield, Upload, Check, Loader2, Mail } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 interface Workspace {
@@ -19,16 +19,25 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [developerMode, setDeveloperMode] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setDeveloperMode(localStorage.getItem("developer_mode") === "true");
-    }
-  }, []);
+  const [fullName, setFullName] = useState("");
+  const [timezone, setTimezone] = useState("UTC");
+  const [language, setLanguage] = useState("en");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  
+  const [updatingProfile, setUpdatingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
-  const handleToggleDeveloperMode = (enabled: boolean) => {
-    setDeveloperMode(enabled);
-    localStorage.setItem("developer_mode", String(enabled));
-  };
+  // Email update states
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Avatar Upload states
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarSuccess, setAvatarSuccess] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   // Workspace deletion modal state
   const [deleteWsModal, setDeleteWsModal] = useState<Workspace | null>(null);
@@ -44,6 +53,17 @@ export default function SettingsPage() {
 
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setDeveloperMode(localStorage.getItem("developer_mode") === "true");
+    }
+  }, []);
+
+  const handleToggleDeveloperMode = (enabled: boolean) => {
+    setDeveloperMode(enabled);
+    localStorage.setItem("developer_mode", String(enabled));
+  };
 
   const getSession = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -88,7 +108,13 @@ export default function SettingsPage() {
         ]);
 
         if (profileRes.ok) {
-          setProfile(await profileRes.json());
+          const prof = await profileRes.json();
+          setProfile(prof);
+          setFullName(prof.full_name || "");
+          setTimezone(prof.timezone || "UTC");
+          setLanguage(prof.language || "en");
+          setAvatarUrl(prof.avatar_url || null);
+          setEmail(prof.email || "");
         }
         if (workspacesRes.ok) {
           setWorkspaces(await workspacesRes.json());
@@ -102,6 +128,123 @@ export default function SettingsPage() {
 
     fetchData();
   }, [getSession]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingProfile(true);
+    setProfileSuccess(false);
+    setProfileError(null);
+
+    const session = await getSession();
+    if (!session) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/profile/me`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          timezone,
+          language
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to update profile settings.");
+      }
+
+      setProfileSuccess(true);
+    } catch (err: any) {
+      setProfileError(err.message || "An error occurred.");
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
+  const handleSaveEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email === profile?.email) return;
+
+    setUpdatingEmail(true);
+    setEmailSuccess(null);
+    setEmailError(null);
+
+    const session = await getSession();
+    if (!session) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/profile/me/email`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ new_email: email })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to initiate email change.");
+      }
+
+      const data = await res.json();
+      setEmailSuccess(data.message || "Verification email sent.");
+    } catch (err: any) {
+      setEmailError(err.message || "An error occurred.");
+    } finally {
+      setUpdatingEmail(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    
+    // Front-end sanity check
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("File size cannot exceed 2MB.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setAvatarSuccess(false);
+    setAvatarError(null);
+
+    const session = await getSession();
+    if (!session) return;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${API_BASE_URL}/api/profile/me/avatar`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Failed to upload avatar.");
+      }
+
+      const data = await res.json();
+      setAvatarUrl(data.avatar_url);
+      setAvatarSuccess(true);
+    } catch (err: any) {
+      setAvatarError(err.message || "Upload error.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const handleDeleteWorkspace = async () => {
     if (!deleteWsModal || deleteWsConfirmText !== deleteWsModal.name) return;
@@ -125,7 +268,6 @@ export default function SettingsPage() {
         throw new Error(data.message || "Failed to delete workspace");
       }
 
-      // Close modal and refresh workspaces
       setDeleteWsModal(null);
       setDeleteWsConfirmText("");
       await fetchWorkspaces();
@@ -158,7 +300,6 @@ export default function SettingsPage() {
         throw new Error(data.message || "Failed to delete account");
       }
 
-      // Sign out and redirect to landing page
       await supabase.auth.signOut();
       router.push("/");
     } catch (e: any) {
@@ -171,33 +312,8 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <main className="p-6 max-w-4xl mx-auto w-full space-y-8 animate-pulse">
-        {/* Profile Card Skeleton */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-48 flex flex-col justify-between">
-          <div className="h-12 bg-slate-100 border-b border-slate-200" />
-          <div className="p-6 space-y-4 flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="h-10 bg-slate-100 rounded border border-slate-200" />
-              <div className="h-10 bg-slate-100 rounded border border-slate-200" />
-            </div>
-          </div>
-        </div>
-
-        {/* Workspaces Card Skeleton */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-52">
-          <div className="h-12 bg-slate-100 border-b border-slate-200" />
-          <div className="p-6 space-y-3">
-            <div className="h-14 bg-slate-50 border border-slate-200 rounded-lg w-full" />
-            <div className="h-14 bg-slate-50 border border-slate-200 rounded-lg w-full" />
-          </div>
-        </div>
-
-        {/* Security Skeleton */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-36">
-          <div className="h-12 bg-slate-100 border-b border-slate-200" />
-          <div className="p-6">
-            <div className="h-10 bg-slate-100 border border-slate-300 rounded w-44" />
-          </div>
-        </div>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-48 flex flex-col justify-between" />
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden h-52" />
       </main>
     );
   }
@@ -207,34 +323,182 @@ export default function SettingsPage() {
 
       {/* Profile Section */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-          <h2 className="text-lg font-semibold flex items-center text-slate-850 dark:text-slate-100">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100 font-sans">
             <User className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
-            Profile Information
+            Profile Settings
           </h2>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Full Name</label>
-              <div className="text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded border border-slate-100 dark:border-slate-850">
-                {profile?.full_name || "N/A"}
-              </div>
+        <div className="p-6 space-y-6">
+          
+          {/* Avatar Upload block */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-100 dark:border-slate-800 pb-6">
+            <div className="relative h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl.startsWith("gs://") ? "/favicon.ico" : avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                fullName ? fullName.slice(0, 2).toUpperCase() : "U"
+              )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Email Address</label>
-              <div className="text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded border border-slate-100 dark:border-slate-850">
-                {profile?.email || "N/A"}
+              <span className="block text-sm font-medium text-slate-700 dark:text-slate-350">Avatar Image</span>
+              <p className="text-xs text-slate-400 mt-1">Accepts PNG, JPG, JPEG. Max size 2MB.</p>
+              
+              <div className="mt-3 flex items-center gap-3">
+                <label className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition cursor-pointer text-slate-700 dark:text-slate-300">
+                  <Upload className="h-3.5 w-3.5" />
+                  Select File
+                  <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+                </label>
+                
+                {uploadingAvatar && <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />}
+                {avatarSuccess && <span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><Check className="h-3.5 w-3.5" /> Updated!</span>}
+                {avatarError && <span className="text-xs text-red-500 font-medium">{avatarError}</span>}
               </div>
             </div>
           </div>
+
+          {/* Form */}
+          <form onSubmit={handleSaveProfile} className="space-y-4">
+            {profileSuccess && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+                <Check className="h-4 w-4" /> Profile options updated successfully.
+              </div>
+            )}
+            {profileError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-800">
+                {profileError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Timezone</label>
+                <select
+                  value={timezone}
+                  onChange={(e) => setTimezone(e.target.value)}
+                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="UTC">UTC (Universal Time)</option>
+                  <option value="America/New_York">EST (Eastern Standard Time)</option>
+                  <option value="America/Chicago">CST (Central Standard Time)</option>
+                  <option value="America/Denver">MST (Mountain Standard Time)</option>
+                  <option value="America/Los_Angeles">PST (Pacific Standard Time)</option>
+                  <option value="Europe/London">GMT (Greenwich Mean Time)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Language</label>
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                >
+                  <option value="en">English (US)</option>
+                  <option value="es">Español (ES)</option>
+                  <option value="fr">Français (FR)</option>
+                  <option value="de">Deutsch (DE)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={updatingProfile}
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:bg-indigo-650"
+              >
+                {updatingProfile && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+      {/* Email Address Section */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
+          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100">
+            <Mail className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
+            Email Management
+          </h2>
+          {profile?.email_verified ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-450">
+              <Check className="h-3 w-3" />
+              Verified
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-450">
+              Verification Pending
+            </span>
+          )}
+        </div>
+        <div className="p-6 space-y-4">
+          <form onSubmit={handleSaveEmail} className="space-y-4">
+            {emailSuccess && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-sm rounded-lg border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
+                <Check className="h-4 w-4" /> {emailSuccess}
+              </div>
+            )}
+            {emailError && (
+              <div className="p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 text-sm rounded-lg border border-red-200 dark:border-red-800">
+                {emailError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">Current Email</label>
+                <div className="text-slate-450 bg-slate-150/40 dark:bg-slate-950/40 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-850 cursor-not-allowed">
+                  {profile?.email}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-500 dark:text-slate-450 mb-1">New Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full text-slate-900 dark:text-slate-100 font-medium bg-slate-50 dark:bg-slate-950 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="submit"
+                disabled={updatingEmail || email === profile?.email}
+                className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:bg-slate-100 dark:disabled:bg-slate-800/60 dark:disabled:text-slate-550 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {updatingEmail && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Change Email Address
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
       {/* Workspaces Section */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-          <h2 className="text-lg font-semibold flex items-center text-slate-850 dark:text-slate-100">
+          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100">
             <Building2 className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
             Workspaces
           </h2>
@@ -270,7 +534,7 @@ export default function SettingsPage() {
                           setDeleteWsConfirmText("");
                           setDeleteWsError("");
                         }}
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-750 dark:hover:text-red-300 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-red-650 dark:text-red-400 hover:text-red-750 dark:hover:text-red-300 px-3 py-1.5 rounded-md border border-red-200 dark:border-red-900/60 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         Delete Workspace
@@ -287,7 +551,7 @@ export default function SettingsPage() {
       {/* Security Section */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-          <h2 className="text-lg font-semibold flex items-center text-slate-850 dark:text-slate-100">
+          <h2 className="text-lg font-semibold flex items-center text-slate-800 dark:text-slate-100">
             <Lock className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
             Security
           </h2>
@@ -299,185 +563,10 @@ export default function SettingsPage() {
             })}
             className="text-sm font-medium bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-750 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
           >
-            Send Password Reset Email
+            Reset Account Password
           </button>
         </div>
       </div>
-
-      {/* Developer Settings Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-          <h2 className="text-lg font-semibold flex items-center text-slate-850 dark:text-slate-100">
-            <Lock className="h-5 w-5 mr-2 text-indigo-650 dark:text-indigo-400" />
-            Developer Settings
-          </h2>
-        </div>
-        <div className="p-6 flex items-center justify-between">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Developer Mode</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Enable advanced telemetry monitoring, sub-agent latency stats, routing classifications, and developer logs.
-            </p>
-          </div>
-          <button
-            onClick={() => handleToggleDeveloperMode(!developerMode)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
-              developerMode ? "bg-indigo-600" : "bg-slate-200 dark:bg-slate-800"
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-slate-950 transition-transform ${
-                developerMode ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Danger Zone Section */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-red-200 dark:border-red-900/60 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-red-200 dark:border-red-905 bg-red-50/50 dark:bg-red-955/15">
-          <h2 className="text-lg font-semibold flex items-center text-red-700 dark:text-red-400">
-            <Shield className="h-5 w-5 mr-2 text-red-650" />
-            Danger Zone
-          </h2>
-        </div>
-        <div className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Delete Account</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Deleting your account permanently removes all associated data and cannot be undone.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setShowDeleteAccountModal(true);
-                setDeleteAccountConfirmText("");
-                setDeleteAccountError("");
-              }}
-              className="inline-flex items-center gap-1.5 text-sm font-medium bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors shrink-0 cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete Account
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Delete Workspace Confirmation Modal */}
-      {deleteWsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20">
-              <h3 className="text-lg font-semibold flex items-center text-slate-850 dark:text-slate-100">
-                <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
-                Delete Workspace
-              </h3>
-            </div>
-            <div className="p-6 space-y-4 text-slate-800 dark:text-slate-200">
-              <p className="text-sm text-slate-600 dark:text-slate-350">
-                This will permanently delete the workspace{" "}
-                <span className="font-semibold text-slate-900 dark:text-slate-100">{deleteWsModal.name}</span>{" "}
-                and all of its data. This action cannot be undone.
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Type <span className="font-semibold text-red-650">{deleteWsModal.name}</span> to confirm
-                </label>
-                <input
-                  type="text"
-                  value={deleteWsConfirmText}
-                  onChange={(e) => setDeleteWsConfirmText(e.target.value)}
-                  placeholder={deleteWsModal.name}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-955 text-slate-900 dark:text-slate-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                />
-              </div>
-              {deleteWsError && (
-                <p className="text-sm text-red-600 bg-red-50 dark:bg-red-955/20 px-3 py-2 rounded-md border border-red-100 dark:border-red-900/60">
-                  {deleteWsError}
-                </p>
-              )}
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={() => setDeleteWsModal(null)}
-                  disabled={deleteWsLoading}
-                  className="text-sm font-medium bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteWorkspace}
-                  disabled={deleteWsConfirmText !== deleteWsModal.name || deleteWsLoading}
-                  className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-md transition-colors ${
-                    deleteWsConfirmText === deleteWsModal.name && !deleteWsLoading
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
-                  }`}
-                >
-                  {deleteWsLoading ? "Deleting..." : "Delete Workspace"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Account Confirmation Modal */}
-      {showDeleteAccountModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl w-full max-w-md mx-4 overflow-hidden">
-            <div className="px-6 py-4 border-b border-red-200 dark:border-red-900/60 bg-red-50/50 dark:bg-red-955/25">
-              <h3 className="text-lg font-semibold flex items-center text-red-700 dark:text-red-400">
-                <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
-                Delete Account
-              </h3>
-            </div>
-            <div className="p-6 space-y-4 text-slate-800 dark:text-slate-200">
-              <p className="text-sm text-slate-600 dark:text-slate-350">
-                Deleting your account permanently removes all associated data and cannot be undone. This will permanently delete your account, all workspaces you own, and all associated data. If you have any questions or require support before deletion, please email us at <a href="mailto:aethercorp.support@gmail.com" className="text-indigo-600 dark:text-indigo-400 hover:underline font-semibold">aethercorp.support@gmail.com</a>.
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Type <span className="font-semibold text-red-600">DELETE</span> to confirm
-                </label>
-                <input
-                  type="text"
-                  value={deleteAccountConfirmText}
-                  onChange={(e) => setDeleteAccountConfirmText(e.target.value)}
-                  placeholder="DELETE"
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-955 text-slate-900 dark:text-slate-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                />
-              </div>
-              {deleteAccountError && (
-                <p className="text-sm text-red-650 bg-red-50 dark:bg-red-955/20 px-3 py-2 rounded-md border border-red-100 dark:border-red-900/60">
-                  {deleteAccountError}
-                </p>
-              )}
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={() => setShowDeleteAccountModal(false)}
-                  disabled={deleteAccountLoading}
-                  className="text-sm font-medium bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={deleteAccountConfirmText !== "DELETE" || deleteAccountLoading}
-                  className={`inline-flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-md transition-colors ${
-                    deleteAccountConfirmText === "DELETE" && !deleteAccountLoading
-                      ? "bg-red-600 text-white hover:bg-red-700"
-                      : "bg-slate-300 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed"
-                  }`}
-                >
-                  {deleteAccountLoading ? "Deleting..." : "Delete My Account"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </main>
   );

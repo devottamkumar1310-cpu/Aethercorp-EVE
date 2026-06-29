@@ -34,6 +34,27 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     FOUNDER_MODE: bool = True
 
+    def __init__(self, **values):
+        super().__init__(**values)
+        if os.environ.get("GCP_PROJECT_ID") or self.ENVIRONMENT == "production":
+            from app.services.gcp_secret_manager import GCPSecretManagerService
+            
+            db_url = GCPSecretManagerService.get_secret("DATABASE_URL")
+            if db_url:
+                self.DATABASE_URL = db_url
+
+            gemini_key = GCPSecretManagerService.get_secret("GEMINI_API_KEY")
+            if gemini_key:
+                self.GEMINI_API_KEY = gemini_key
+
+            sec_key = GCPSecretManagerService.get_secret("SECRET_KEY")
+            if sec_key:
+                self.SECRET_KEY = sec_key
+
+            jwt_sec = GCPSecretManagerService.get_secret("SUPABASE_JWT_SECRET")
+            if jwt_sec:
+                self.SUPABASE_JWT_SECRET = jwt_sec
+
     # Pydantic Configuration
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),
@@ -44,3 +65,4 @@ class Settings(BaseSettings):
 
 # Instantiate settings container globally
 settings = Settings()
+

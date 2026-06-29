@@ -74,7 +74,7 @@ def seeded_data():
     
     profile = Profile(id=user_id, email="user@docintel.com", full_name="DocIntel User", hashed_password="pw")
     org = Organization(id=org_id, name="Test Doc Org", slug="test-doc-org")
-    membership = Membership(user_id=user_id, organization_id=org_id, role="member")
+    membership = Membership(user_id=user_id, organization_id=org_id, role="admin")
     
     db.add_all([profile, org, membership])
     db.commit()

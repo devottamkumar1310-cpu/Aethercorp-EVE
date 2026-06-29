@@ -59,6 +59,7 @@ class GCSService:
         upload_dir = "uploads"
         os.makedirs(upload_dir, exist_ok=True)
         local_path = os.path.join(upload_dir, filename)
+        os.makedirs(os.path.dirname(local_path), exist_ok=True)
         with open(local_path, "wb") as f:
             f.write(file_bytes)
         return local_path

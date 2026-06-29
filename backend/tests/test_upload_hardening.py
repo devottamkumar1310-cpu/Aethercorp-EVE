@@ -56,7 +56,7 @@ def seeded_data():
     
     profile = Profile(id=user_id, email="auditor@eve.com", full_name="Auditor User", hashed_password="pw")
     org = Organization(id=org_id, name="Audited Corp", slug="audited-corp")
-    membership = Membership(user_id=user_id, organization_id=org_id, role="member")
+    membership = Membership(user_id=user_id, organization_id=org_id, role="admin")
     
     db.add_all([profile, org, membership])
     db.commit()
@@ -97,7 +97,7 @@ def test_receipt_upload_allowed(seeded_data):
     client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    file_payload = {"file": ("office_receipt.png", b"mock png content", "image/png")}
+    file_payload = {"file": ("office_receipt.png", b"\x89PNG\r\n\x1a\nmock png content", "image/png")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_201_CREATED
     data = resp.json()
@@ -108,7 +108,7 @@ def test_selfie_rejected(seeded_data):
     client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    file_payload = {"file": ("my_selfie.png", b"mock selfie content", "image/png")}
+    file_payload = {"file": ("my_selfie.png", b"\x89PNG\r\n\x1a\nmock selfie content", "image/png")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert resp.json()["detail"] == "This file does not appear to be a supported business document."
@@ -117,7 +117,7 @@ def test_random_photo_rejected(seeded_data):
     client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    file_payload = {"file": ("vacation_photo.jpg", b"mock photo content", "image/jpeg")}
+    file_payload = {"file": ("vacation_photo.jpg", b"\xff\xd8\xffmock photo content", "image/jpeg")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert resp.json()["detail"] == "This file does not appear to be a supported business document."
@@ -126,7 +126,7 @@ def test_meme_rejected(seeded_data):
     client = TestClient(api_app)
     headers = get_headers(seeded_data["user_id"], seeded_data["email"], seeded_data["org_id"])
     
-    file_payload = {"file": ("funny_meme.jpg", b"mock meme content", "image/jpeg")}
+    file_payload = {"file": ("funny_meme.jpg", b"\xff\xd8\xffmock meme content", "image/jpeg")}
     resp = client.post("/api/documents/upload", files=file_payload, headers=headers)
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
     assert resp.json()["detail"] == "This file does not appear to be a supported business document."
