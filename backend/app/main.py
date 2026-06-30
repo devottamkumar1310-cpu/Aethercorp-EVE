@@ -110,24 +110,31 @@ app = FastAPI(
 # ──────────────────────────────────────────────────────────────────────────────
 
 # 1. Add SecurityHeadersMiddleware FIRST (executes LAST — on response out).
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request as StarletteRequest
-
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+class SecurityHeadersMiddleware:
     """Injects standard security headers into every HTTP response.
     Skips OPTIONS (preflight) requests so CORS headers are not overwritten.
+    Implemented as pure ASGI middleware to prevent disrupting FastAPI dependency teardown.
     """
-    async def dispatch(self, request: StarletteRequest, call_next):
-        response = await call_next(request)
-        # Do not inject headers on CORS preflight — CORSMiddleware owns these.
-        if request.method == "OPTIONS":
-            return response
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        return response
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        async def send_wrapper(message):
+            if message["type"] == "http.response.start":
+                if scope["method"] != "OPTIONS":
+                    headers = message.get("headers", [])
+                    # ASGI headers must be lowercased byte strings
+                    headers.append((b"x-content-type-options", b"nosniff"))
+                    headers.append((b"x-frame-options", b"DENY"))
+                    headers.append((b"referrer-policy", b"strict-origin-when-cross-origin"))
+                    headers.append((b"x-xss-protection", b"1; mode=block"))
+                    message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
 
 
 app.add_middleware(SecurityHeadersMiddleware)
