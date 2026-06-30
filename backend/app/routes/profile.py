@@ -263,17 +263,3 @@ def sync_profile(current_user: Profile = Depends(get_current_user)):
         "id": current_user.id,
         "email": current_user.email
     }
-
-
-@router.delete("/me")
-def delete_account(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Permanently delete the current user's account and all solely-owned workspaces."""
-    from app.services.account_service import AccountService
-    try:
-        success = AccountService.delete_account(db, current_user)
-        if not success:
-            raise HTTPException(status_code=500, detail="Account deletion failed")
-    except ValueError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    return {"status": "success", "message": "Account and all associated data deleted successfully"}
-

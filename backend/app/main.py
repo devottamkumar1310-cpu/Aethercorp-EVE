@@ -42,6 +42,7 @@ logger = logging.getLogger("eve.main")
 # so the startup log inside lifespan can reference this list without a NameError.
 # Order matters: put more-specific origins first.
 allowed_origins = [
+    "https://aethercorp-eve.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",    # Swagger UI self-requests

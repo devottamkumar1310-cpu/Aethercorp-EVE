@@ -127,6 +127,10 @@ def test_existing_account_linking():
     client = TestClient(app)
     headers = {"Authorization": "Bearer fake-google-token"}
 
+    # Trigger sync/account linking first
+    sync_resp = client.post("/api/auth/sync", headers=headers)
+    assert sync_resp.status_code == 200
+
     # Resolves user via get_current_user dependency triggering auto-sync linking checks
     resp = client.get("/api/profile/me", headers=headers)
     assert resp.status_code == 200
