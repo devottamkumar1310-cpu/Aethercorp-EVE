@@ -55,6 +55,19 @@ class Settings(BaseSettings):
             if jwt_sec:
                 self.SUPABASE_JWT_SECRET = jwt_sec
 
+            anon_key = GCPSecretManagerService.get_secret("SUPABASE_ANON_KEY")
+            if anon_key:
+                self.SUPABASE_ANON_KEY = anon_key
+
+            service_role_key = GCPSecretManagerService.get_secret("SUPABASE_SERVICE_ROLE_KEY")
+            if service_role_key:
+                self.SUPABASE_SERVICE_ROLE_KEY = service_role_key
+
+            frontend_url = GCPSecretManagerService.get_secret("FRONTEND_URL")
+            if frontend_url:
+                self.FRONTEND_URL = frontend_url
+
+
     # Pydantic Configuration
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"),

@@ -415,9 +415,10 @@ export default function EVECoocommandCenter() {
   const [editingTitle, setEditingTitle] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const hydrateDashboard = (token: string) => {
-    const tStart = performance.now();
-    console.log("[TELEMETRY][PERF] AI Workspace hydrateDashboard Start");
+  const hydrateDashboard = async (token: string) => {
+    try {
+      const tStart = performance.now();
+      console.log("[TELEMETRY][PERF] AI Workspace hydrateDashboard Start");
 
     // 1. Fetch Conversations (Critical for chat interactivity)
     listConversations(token)

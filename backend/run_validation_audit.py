@@ -152,7 +152,7 @@ def main():
     
     # --- TEST 3: CORRUPTED PDF ---
     print_result_header("3. Corrupted PDF Failure Case")
-    resp = client.post("/api/documents/upload", files={"file": ("supplier_invoice.pdf", b"corrupt bytes", "application/pdf")}, headers=headers)
+    resp = client.post("/api/documents/upload", files={"file": ("supplier_invoice.pdf", b"%PDF-1.4 corrupt bytes", "application/pdf")}, headers=headers)
     assert resp.status_code == 201
     bad_doc_id = resp.json()["id"]
     

@@ -61,7 +61,9 @@ def test_first_time_user_provisioning():
         "user_metadata": {"full_name": "First Time User"}
     }
     
-    user = get_current_user(payload=payload, db=db)
+    from app.routes.auth import sync_user
+    sync_user(payload=payload, db=db)
+    user = db.query(Profile).filter(Profile.id == new_uuid).first()
     assert user is not None
     assert user.id == new_uuid
     assert user.email == email
@@ -137,7 +139,9 @@ def test_legacy_profile_migration():
         "user_metadata": {"full_name": "Migrated Legacy User"}
     }
     
-    user = get_current_user(payload=payload, db=db)
+    from app.routes.auth import sync_user
+    sync_user(payload=payload, db=db)
+    user = db.query(Profile).filter(Profile.id == new_uuid).first()
     assert user is not None
     assert user.id == new_uuid
     assert user.email == email
@@ -191,7 +195,9 @@ def test_concurrent_profile_migrations():
         }
         barrier.wait()
         try:
-            user = get_current_user(payload=payload, db=local_db)
+            from app.routes.auth import sync_user
+            sync_user(payload=payload, db=local_db)
+            user = local_db.query(Profile).filter(Profile.id == new_uuid).first()
             results.append((thread_name, "SUCCESS", user.id))
         except Exception as e:
             results.append((thread_name, "ERROR", str(e)))
@@ -226,6 +232,8 @@ def test_user_without_workspace():
         "user_metadata": {"full_name": "No Workspace User"}
     }
     
+    from app.routes.auth import sync_user
+    sync_user(payload=payload, db=db)
     user = get_current_user(payload=payload, db=db)
     assert user is not None
     assert user.id == new_uuid

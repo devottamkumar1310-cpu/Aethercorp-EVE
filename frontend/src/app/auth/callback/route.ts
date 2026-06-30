@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/reset-password'
+  const next = searchParams.get('next') ?? '/dashboard/eve'
   const errorParam = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     try {
       const session = exchangeData?.session;
       if (session) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         await fetch(`${apiUrl}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${session.access_token}` }
