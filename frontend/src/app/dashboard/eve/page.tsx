@@ -415,51 +415,13 @@ export default function EVECoocommandCenter() {
   const [editingTitle, setEditingTitle] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Initial dashboard hydration
-  const hydrateDashboard = async (token: string) => {
-    try {
-      const [
-        healthRes,
-        riskRes,
-        oppRes,
-        trendRes,
-        goalsRes,
-        convsRes,
-        overviewRes
-      ] = await Promise.allSettled([
-        fetchHealth(token),
-        fetchRisks(token),
-        fetchOpportunities(token),
-        fetchTrends(token),
-        listGoals(token),
-        listConversations(token),
-        fetch(`${API_BASE_URL}/api/analytics/overview`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(r => r.ok ? r.json() : null)
-      ]);
+  const hydrateDashboard = (token: string) => {
+    const tStart = performance.now();
+    console.log("[TELEMETRY][PERF] AI Workspace hydrateDashboard Start");
 
-      if (healthRes.status === "fulfilled" && healthRes.value) {
-        setHealthScore(healthRes.value.score || 0);
-        setHealthStatus(healthRes.value.status || "Unknown");
-      }
-      if (riskRes.status === "fulfilled" && riskRes.value?.risks) {
-        setRisks(riskRes.value.risks.slice(0, 3));
-      }
-      if (oppRes.status === "fulfilled" && oppRes.value?.opportunities) {
-        setOpportunities(oppRes.value.opportunities.slice(0, 3));
-      }
-      if (trendRes.status === "fulfilled" && trendRes.value) {
-        setHealthTrends(trendRes.value);
-      }
-      if (goalsRes.status === "fulfilled" && goalsRes.value) {
-        setGoals(goalsRes.value);
-      }
-      if (overviewRes.status === "fulfilled" && overviewRes.value) {
-        setOverview(overviewRes.value);
-      }
-      
-      if (convsRes.status === "fulfilled" && convsRes.value) {
-        const convsData = convsRes.value;
+    // 1. Fetch Conversations (Critical for chat interactivity)
+    listConversations(token)
+      .then(async (convsData) => {
         setConversations(convsData);
         if (convsData.length > 0) {
           try {
@@ -477,19 +439,9 @@ export default function EVECoocommandCenter() {
           }
         } else {
           // No conversations; seed beautiful default initial state based on workspace metrics
-          const defaultEvidence: string[] = [];
-          const healthData = healthRes.status === "fulfilled" ? healthRes.value : null;
-          const riskData = riskRes.status === "fulfilled" ? riskRes.value : null;
-          const oppData = oppRes.status === "fulfilled" ? oppRes.value : null;
-          if (riskData && riskData.risks) {
-            riskData.risks.forEach((r: any) => defaultEvidence.push(`Risk: ${r.title} - ${r.description}`));
-          }
-          if (oppData && oppData.opportunities) {
-            oppData.opportunities.forEach((o: any) => defaultEvidence.push(`Opportunity: ${o.title} - ${o.description}`));
-          }
-          if (defaultEvidence.length === 0) {
-            defaultEvidence.push("Establish base ledger and inventory records to trace operational performance.");
-          }
+          const defaultEvidence: string[] = [
+            "Establish base ledger and inventory records to trace operational performance."
+          ];
 
           setSelectedReasoning({
             agent: "COO Lead",
@@ -504,13 +456,59 @@ export default function EVECoocommandCenter() {
               ]
             },
             confidence_scores: {
-              Overall: healthData ? (healthData.score / 100) : 0.85,
+              Overall: 0.85,
               "Finance Agent": 0.88,
               "Operations Agent": 0.85
             }
           } as any);
         }
-      }
+        const tChat = performance.now();
+        console.log(`[TELEMETRY][PERF] Time to Chat Interactive: ${(tChat - tStart).toFixed(2)}ms`);
+      })
+      .catch(err => console.error("Conversations load failed:", err));
+
+    // 2. Fetch Non-critical Analytics Independently
+    Promise.allSettled([
+      fetchHealth(token)
+        .then(val => {
+          if (val) {
+            setHealthScore(val.score || 0);
+            setHealthStatus(val.status || "Unknown");
+          }
+        }),
+      fetchRisks(token)
+        .then(val => {
+          if (val?.risks) setRisks(val.risks.slice(0, 3));
+        }),
+      fetchOpportunities(token)
+        .then(val => {
+          if (val?.opportunities) setOpportunities(val.opportunities.slice(0, 3));
+        })
+    ]).then(() => {
+      const tPanels = performance.now();
+      console.log(`[TELEMETRY][PERF] Time for Health/Risk/Opportunity Panels: ${(tPanels - tStart).toFixed(2)}ms`);
+    }).catch(err => console.error("Panel group load failed", err));
+
+    fetchTrends(token)
+      .then(val => {
+        if (val) setHealthTrends(val);
+      })
+      .catch(err => console.error("Trends load failed:", err));
+
+    listGoals(token)
+      .then(val => {
+        if (val) setGoals(val);
+      })
+      .catch(err => console.error("Goals load failed:", err));
+
+    fetch(`${API_BASE_URL}/api/analytics/overview`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(val => {
+        if (val) setOverview(val);
+      })
+      .catch(err => console.error("Overview load failed:", err));
 
       // Fetch suggested questions
       try {
@@ -553,11 +551,12 @@ export default function EVECoocommandCenter() {
           }
         }
 
-        await hydrateDashboard(session.access_token);
+        hydrateDashboard(session.access_token);
       } catch (err) {
         console.error("EVE setup error:", err);
       } finally {
         setLoading(false);
+        console.log(`[TELEMETRY][PERF] AI Workspace Time to First Render Triggered`);
       }
     }
     initialize();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
@@ -92,6 +92,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [initError, setInitError] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const sessionTokenRef = useRef(sessionToken);
+
+  useEffect(() => {
+    sessionTokenRef.current = sessionToken;
+  }, [sessionToken]);
 
   // Load sidebar state on mount
   useEffect(() => {
@@ -230,43 +235,70 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   useEffect(() => {
+    let mounted = true;
     async function init() {
+      console.log("[TELEMETRY][PERF] Dashboard Layout Init Start");
+      const tStart = performance.now();
       const supabase = createClient();
       setLoadingStage(1); // Authenticating
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.push("/login"); return; }
-      setSessionToken(session.access_token);
+      
+      const proceedWithSession = async (token: string) => {
+        const tHydrate = performance.now();
+        console.log(`[TELEMETRY][PERF] Session Hydration Duration: ${(tHydrate - tStart).toFixed(2)}ms`);
+        setSessionToken(token);
+        const isAlreadyInitialized =
+          typeof window !== "undefined" &&
+          sessionStorage.getItem("eve_initialized") === "true";
 
-      const isAlreadyInitialized =
-        typeof window !== "undefined" &&
-        sessionStorage.getItem("eve_initialized") === "true";
-
-      try {
-        if (isAlreadyInitialized) {
-          setLoading(false);
-          await loadWorkspacesAndProfile(session.access_token);
-        } else {
-          setLoadingStage(2); // Loading Workspace
-          await loadWorkspacesAndProfile(session.access_token);
-          setLoadingStage(3); // Loading Business Data
-          setLoadingStage(4); // Preparing AI Executive
-          if (typeof window !== "undefined") {
-            sessionStorage.setItem("eve_initialized", "true");
+        try {
+          if (isAlreadyInitialized) {
+            if (mounted) setLoading(false);
+            await loadWorkspacesAndProfile(token);
+          } else {
+            if (mounted) setLoadingStage(2); // Loading Workspace
+            await loadWorkspacesAndProfile(token);
+            if (mounted) setLoadingStage(3); // Loading Business Data
+            if (mounted) setLoadingStage(4); // Preparing AI Executive
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem("eve_initialized", "true");
+            }
           }
+          if (mounted) setInitError(null);
+        } catch (err: any) {
+          console.error("[EVE] Dashboard initialization failed:", err);
+          if (mounted) setInitError("We are currently optimizing the workspace index. Please try again in a moment.");
+        } finally {
+          const tFinish = performance.now();
+          console.log(`[TELEMETRY][PERF] Workspace/Profile Load Duration: ${(tFinish - tHydrate).toFixed(2)}ms`);
+          console.log(`[TELEMETRY][PERF] Time to Dashboard Interactive: ${(tFinish - tStart).toFixed(2)}ms`);
+          if (mounted) setLoading(false);
         }
-        // Clear any prior error on success
-        setInitError(null);
-      } catch (err: any) {
-        // loadWorkspacesAndProfile threw — workspaces critically failed.
-        // Show the user an actionable error instead of the infinite spinner.
-        console.error("[EVE] Dashboard initialization failed:", err);
-        setInitError("We are currently optimizing the workspace index. Please try again in a moment.");
-      } finally {
-        // ALWAYS exit the loading state — never trap the user on the spinner.
-        setLoading(false);
+      };
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        proceedWithSession(session.access_token);
       }
+      
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        if (newSession && (!sessionTokenRef.current || sessionTokenRef.current !== newSession.access_token)) {
+          proceedWithSession(newSession.access_token);
+        } else if (!newSession && event === 'SIGNED_OUT') {
+          router.push("/login");
+        }
+      });
+      
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
     }
-    init();
+    
+    const cleanup = init();
+    return () => {
+      cleanup.then(clean => clean && clean());
+    };
   }, [router]);
 
   const handleSwitchWorkspace = (id: string) => {

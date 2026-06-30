@@ -216,8 +216,9 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability, document_intelligence, health, recommendation_trace
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability, document_intelligence, health, recommendation_trace, account
 app.include_router(auth.router)
+app.include_router(account.router)
 app.include_router(health.router)
 app.include_router(recommendation_trace.router)
 app.include_router(document_intelligence.router)

@@ -45,11 +45,30 @@ export async function GET(request: Request) {
     )
     
     console.log(`[AUTH CALLBACK] Exchanging code for session...`)
-    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+    const t0 = performance.now();
+    
+    // We can extract session directly from the exchange result instead of calling getSession() again.
+    const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
     
     if (exchangeError) {
       console.error(`[AUTH CALLBACK] exchangeCodeForSession failed:`, exchangeError)
       return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message)}`)
+    }
+
+    // Sync with backend immediately after OAuth code exchange
+    try {
+      const session = exchangeData?.session;
+      if (session) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+        await fetch(`${apiUrl}/api/auth/sync`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        const t1 = performance.now();
+        console.log(`[TELEMETRY][PERF] OAuth Callback & Backend Sync Duration: ${(t1 - t0).toFixed(2)}ms`);
+      }
+    } catch (syncError) {
+      console.error(`[AUTH CALLBACK] Backend sync failed:`, syncError);
     }
 
     console.log(`[AUTH CALLBACK] Exchange successful. Redirecting to: ${next}`)
