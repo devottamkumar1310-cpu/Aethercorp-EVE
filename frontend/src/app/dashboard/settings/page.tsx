@@ -595,6 +595,112 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Danger Zone Section */}
+      <div className="bg-red-50/30 rounded-xl border border-red-200 shadow-sm overflow-hidden mt-8">
+        <div className="px-6 py-4 border-b border-red-200 bg-red-50/80">
+          <h2 className="text-lg font-semibold flex items-center text-red-700">
+            <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
+            Danger Zone
+          </h2>
+        </div>
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-foreground font-medium">Delete Account</h3>
+              <p className="text-muted-foreground text-sm mt-1">
+                Permanently remove your account, data, and workspace memberships. This action cannot be undone.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowDeleteAccountModal(true);
+                setDeleteAccountConfirmText("");
+                setDeleteAccountError("");
+              }}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors cursor-pointer"
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteAccountModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-card w-full max-w-md rounded-xl shadow-xl border border-border overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-foreground flex items-center gap-2 mb-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                Delete Account
+              </h3>
+              <p className="text-slate-500 text-sm mb-4">
+                This will permanently delete your account, remove your workspace memberships, and wipe your data. If you are the sole owner of a workspace, you must delete or transfer it first.
+              </p>
+              
+              {deleteAccountError && (
+                <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
+                  {deleteAccountError}
+                </div>
+              )}
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Type <strong>DELETE</strong> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={deleteAccountConfirmText}
+                  onChange={(e) => setDeleteAccountConfirmText(e.target.value)}
+                  className="w-full text-foreground bg-background px-3 py-2 rounded-lg border border-border focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none"
+                  placeholder="DELETE"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end mt-6">
+                <button
+                  onClick={() => setShowDeleteAccountModal(false)}
+                  disabled={deleteAccountLoading}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    setDeleteAccountLoading(true);
+                    setDeleteAccountError("");
+                    try {
+                      const session = await getSession();
+                      const res = await fetch(`${API_BASE_URL}/api/account/delete`, {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${session?.access_token}` }
+                      });
+                      if (!res.ok) {
+                        const data = await res.json();
+                        throw new Error(data.detail || "Failed to delete account");
+                      }
+                      
+                      // Sign out on success
+                      await supabase.auth.signOut();
+                      localStorage.clear();
+                      window.location.href = "/login";
+                    } catch (err: any) {
+                      setDeleteAccountError(err.message);
+                      setDeleteAccountLoading(false);
+                    }
+                  }}
+                  disabled={deleteAccountConfirmText !== "DELETE" || deleteAccountLoading}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                >
+                  {deleteAccountLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Delete Account
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
