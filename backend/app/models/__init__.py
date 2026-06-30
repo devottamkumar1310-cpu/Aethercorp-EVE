@@ -19,6 +19,6 @@ from .executive_memory import BusinessGoal
 from .executive_conversation import ExecutiveConversation, ExecutiveMessage
 from .ai_recommendation import AIRecommendation
 from .system_error import SystemError
+from .recommendation_trace import RecommendationTrace
 
 # This ensures all models are imported and registered with SQLAlchemy's Base.metadata
-

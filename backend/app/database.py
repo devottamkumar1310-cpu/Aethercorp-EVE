@@ -75,7 +75,7 @@ from sqlalchemy import event
 
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
-    if "sqlite" in str(dbapi_connection.__class__.__name__).lower() or hasattr(dbapi_connection, "cursor"):
+    if "sqlite" in str(dbapi_connection.__class__.__name__).lower():
         cursor = dbapi_connection.cursor()
         try:
             cursor.execute("PRAGMA foreign_keys=ON")
@@ -94,10 +94,17 @@ def get_db():
     try:
         yield db
     except Exception as e:
+        db.rollback()
         from app.services.alert_service import AlertService
         AlertService.alert_database_failure(str(e))
         raise e
     finally:
+        # We also add a safe rollback in finally just in case it wasn't caught
+        # (e.g., GeneratorExit / CancelledError). SQLAlchemy ignores rollback if no transaction is active.
+        try:
+            db.rollback()
+        except:
+            pass
         db.close()
 
 

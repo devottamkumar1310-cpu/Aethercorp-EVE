@@ -1,5 +1,5 @@
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import uuid
@@ -28,7 +28,13 @@ if settings.SUPABASE_URL:
     except ImportError:
         logger.warning("cryptography or PyJWKClient not available")
 
-def verify_supabase_token(credentials: HTTPAuthorizationCredentials | None = Depends(security)):
+def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizationCredentials | None = Depends(security)):
+    path = request.url.path if request else ""
+    if path.endswith("/api/profile/me"):
+        logger.info("START profile/me")
+    elif path.endswith("/api/organization/workspaces"):
+        logger.info("START organization/workspaces")
+
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,6 +62,8 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials | None = Dep
                     audience="authenticated"
                 )
                 logger.info(f"JWT Validation Success (JWKS) for user: {payload.get('sub')}")
+                if path.endswith("/api/profile/me"):
+                    logger.info("JWT verified")
                 return payload
             except Exception as e:
                 logger.warning(f"JWKS validation failed, falling back to HS256: {e}")
@@ -80,6 +88,8 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials | None = Dep
             )
             
         logger.info(f"JWT Validation Success (HS256) for user: {payload.get('sub')}")
+        if path.endswith("/api/profile/me"):
+            logger.info("JWT verified")
         return payload
     except jwt.ExpiredSignatureError as e:
         logger.warning(f"JWT Validation Failed: Session expired - {e}")
@@ -97,6 +107,7 @@ def verify_supabase_token(credentials: HTTPAuthorizationCredentials | None = Dep
         )
 
 def get_current_user(
+    request: Request = None,
     payload: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
@@ -109,7 +120,13 @@ def get_current_user(
     except ValueError:
         raise HTTPException(status_code=401, detail="Invalid user ID format")
         
+    path = request.url.path if request else ""
+    if path.endswith("/api/profile/me"):
+        logger.info("DB query start")
     profile = db.query(Profile).filter(Profile.id == user_id).first()
+    if path.endswith("/api/profile/me"):
+        logger.info("DB query finish")
+        
     if not profile:
         raise HTTPException(status_code=401, detail="User profile not found. Please log in again to provision your account.")
             

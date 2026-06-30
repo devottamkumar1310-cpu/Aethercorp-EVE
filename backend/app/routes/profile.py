@@ -62,6 +62,7 @@ def get_my_profile(
         "role": membership.role if membership else None
     }
     logger.info(f"[TRACE /api/profile/me] STEP 5: Response ready — returning 200")
+    logger.info("END profile/me")
     return response
 
 

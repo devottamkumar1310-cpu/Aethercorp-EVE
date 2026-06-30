@@ -20,6 +20,7 @@ def get_workspaces(current_user: Profile = Depends(get_current_user), db: Sessio
     logger.info(f"[TRACE /api/organization/workspaces] STEP 1: Request received — user_id={current_user.id}")
 
     logger.info(f"[TRACE /api/organization/workspaces] STEP 2: Querying memberships")
+    logger.info("DB query start")
     try:
         memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()
         logger.info(f"[TRACE /api/organization/workspaces] STEP 2a: Found {len(memberships)} membership(s)")
@@ -46,7 +47,9 @@ def get_workspaces(current_user: Profile = Depends(get_current_user), db: Sessio
             logger.error(f"[TRACE /api/organization/workspaces] STEP 3.{i} FAILED: {type(exc).__name__}: {exc}", exc_info=True)
             raise
 
+    logger.info("DB query finish")
     logger.info(f"[TRACE /api/organization/workspaces] STEP 4: Returning {len(result)} workspace(s)")
+    logger.info("END organization/workspaces")
     return result
 
 @router.post("/onboard")
