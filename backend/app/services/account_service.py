@@ -84,33 +84,36 @@ class AccountService:
         Deletes a user account and all solely-owned workspaces.
         For workspaces with other owners, just removes the user's membership.
         """
+        logger.info("[DELETE] Start")
+
         if not settings.SUPABASE_SERVICE_ROLE_KEY or not settings.SUPABASE_URL:
             logger.error("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL is not configured. Account deletion aborted to prevent orphaned auth records.")
             raise ValueError("SUPABASE_SERVICE_ROLE_KEY or SUPABASE_URL is not configured. Account deletion aborted to prevent orphaned auth records.")
 
-        import time
-        t_start = time.perf_counter()
         user_id = user_profile.id
-        logger.info(f"[TIMING] delete_account() started for user {user_id}")
+
+        logger.info("[DELETE] Loading profile")
+        db.refresh(user_profile)
+        logger.info("[DELETE] Loading profile complete")
 
         # Step 3: Avatar deletion
-        logger.info("[AUDIT-STAGE-START] Step 3: Avatar deletion started")
+        logger.info("[DELETE] Avatar cleanup")
         if user_profile.avatar_url:
             try:
                 logger.info(f"Purging user avatar file: {user_profile.avatar_url}")
                 GCSService.delete_file(user_profile.avatar_url)
             except Exception as e:
                 logger.warning(f"Failed to delete user avatar file {user_profile.avatar_url}: {e}")
-        logger.info("[AUDIT-STAGE-COMPLETE] Step 3: Avatar deletion completed")
+        logger.info("[DELETE] Avatar cleanup complete")
 
         # Step 2: Workspace lookup
-        logger.info("[AUDIT-STAGE-START] Step 2: Workspace lookup started")
         memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
         logger.info(f"Found {len(memberships)} memberships to process.")
-        logger.info("[AUDIT-STAGE-COMPLETE] Step 2: Workspace lookup completed")
 
         deleted_org_ids = []
 
+        logger.info("[DELETE] Membership cleanup")
+        logger.info("[DELETE] Workspace deletion")
         for membership in memberships:
             org_id = membership.organization_id
 
@@ -121,7 +124,6 @@ class AccountService:
 
             if owner_count <= 1:
                 # User is sole owner — delete GCS documents first
-                logger.info(f"[AUDIT-STAGE-START] Step 4: GCS document deletion started for org {org_id}")
                 documents = db.query(ProcessedDocument).filter(
                     ProcessedDocument.organization_id == org_id
                 ).all()
@@ -132,23 +134,20 @@ class AccountService:
                             GCSService.delete_file(doc.file_path)
                         except Exception as e:
                             logger.warning(f"Failed to delete file {doc.file_path}: {e}")
-                logger.info(f"[AUDIT-STAGE-COMPLETE] Step 4: GCS document deletion completed for org {org_id}")
 
-                # Step 6: Workspace deletion
-                logger.info(f"[AUDIT-STAGE-START] Step 6: Workspace deletion started for org {org_id}")
+                # Delete Organization
                 org = db.query(Organization).filter(Organization.id == org_id).first()
                 if org:
                     db.delete(org)
                     deleted_org_ids.append(org_id)
-                logger.info(f"[AUDIT-STAGE-COMPLETE] Step 6: Workspace deletion completed for org {org_id}")
             else:
-                # Step 5: Membership cleanup
-                logger.info(f"[AUDIT-STAGE-START] Step 5: Membership cleanup started for membership {membership.id}")
                 db.delete(membership)
-                logger.info(f"[AUDIT-STAGE-COMPLETE] Step 5: Membership cleanup completed for membership {membership.id}")
+
+        logger.info("[DELETE] Membership cleanup complete")
+        logger.info("[DELETE] Workspace deletion complete")
 
         # Step 8: Supabase Admin deletion
-        logger.info("[AUDIT-STAGE-START] Step 8: Supabase Admin deletion started")
+        logger.info("[DELETE] Supabase admin delete")
         if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_URL:
             import httpx
             try:
@@ -168,17 +167,17 @@ class AccountService:
                 logger.error(f"Error calling Supabase user delete API: {e}", exc_info=True)
         else:
             logger.warning("SUPABASE_SERVICE_ROLE_KEY not configured. Skipping Supabase Auth user deletion.")
-        logger.info("[AUDIT-STAGE-COMPLETE] Step 8: Supabase Admin deletion completed")
+        logger.info("[DELETE] Supabase admin delete complete")
 
         # Step 7: Profile deletion
-        logger.info("[AUDIT-STAGE-START] Step 7: Profile deletion started")
+        logger.info("[DELETE] Profile deletion")
         db.delete(user_profile)
-        logger.info("[AUDIT-STAGE-COMPLETE] Step 7: Profile deletion completed")
+        logger.info("[DELETE] Profile deletion complete")
 
         # Step 9: Commit transaction
-        logger.info("[AUDIT-STAGE-START] Step 9: Commit transaction started")
+        logger.info("[DELETE] Commit")
         db.commit()
-        logger.info("[AUDIT-STAGE-COMPLETE] Step 9: Commit transaction completed")
+        logger.info("[DELETE] Commit complete")
 
         # Invalidate caches
         from app.core.cache import invalidate_workspace
@@ -188,7 +187,6 @@ class AccountService:
             except Exception as ce:
                 logger.warning(f"Failed to invalidate cache for workspace {oid}: {ce}")
 
-        logger.info(f"[TIMING] delete_account() completed successfully in {(time.perf_counter() - t_start) * 1000:.2f} ms")
         return True
 
     @staticmethod
