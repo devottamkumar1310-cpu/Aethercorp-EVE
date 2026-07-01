@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { getHeaders } from "./businessService";
 import { ProcessedDocument, ProcessedDocumentDetail } from "@/types/document";
 
@@ -32,7 +32,7 @@ export async function uploadDocument(file: File, token: string): Promise<Process
   // Remove content-type so the browser automatically sets boundary for multipart/form-data
   delete headers["Content-Type"];
 
-  const res = await fetch(`${API_BASE_URL}/api/documents/upload`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/documents/upload`, {
     method: "POST",
     headers,
     body: formData
@@ -46,7 +46,7 @@ export async function uploadDocument(file: File, token: string): Promise<Process
 }
 
 export async function listDocuments(token: string): Promise<ProcessedDocument[]> {
-  const res = await fetch(`${API_BASE_URL}/api/documents`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/documents`, {
     headers: getHeaders(token)
   });
 
@@ -58,7 +58,7 @@ export async function listDocuments(token: string): Promise<ProcessedDocument[]>
 }
 
 export async function getDocumentDetails(documentId: string, token: string): Promise<ProcessedDocumentDetail> {
-  const res = await fetch(`${API_BASE_URL}/api/documents/${documentId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/documents/${documentId}`, {
     headers: getHeaders(token)
   });
 
@@ -70,7 +70,7 @@ export async function getDocumentDetails(documentId: string, token: string): Pro
 }
 
 export async function deleteDocument(documentId: string, token: string): Promise<{ status: string; message: string }> {
-  const res = await fetch(`${API_BASE_URL}/api/documents/${documentId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/documents/${documentId}`, {
     method: "DELETE",
     headers: getHeaders(token)
   });
@@ -94,7 +94,7 @@ export function getDocumentPreviewUrl(documentId: string, token: string): string
 }
 
 export async function fetchDocumentPreviewBlob(documentId: string, token: string): Promise<Blob> {
-  const res = await fetch(`${API_BASE_URL}/api/documents/${documentId}/preview`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/documents/${documentId}/preview`, {
     headers: getHeaders(token)
   });
 

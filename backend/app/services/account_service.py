@@ -67,6 +67,12 @@ class AccountService:
             db.commit()
             logger.info(f"[TIMING] Finished database commit for organization deletion in {(time.perf_counter() - t_commit) * 1000:.2f} ms")
             
+            try:
+                from app.core.cache import invalidate_workspace
+                invalidate_workspace(str(organization_id))
+            except Exception as ce:
+                logger.warning(f"Failed to invalidate cache for workspace {organization_id}: {ce}")
+            
             logger.info(f"[TIMING] delete_workspace() completed successfully in {(time.perf_counter() - t_start) * 1000:.2f} ms")
             return True
 
@@ -91,6 +97,8 @@ class AccountService:
         t_memberships = time.perf_counter()
         memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
         logger.info(f"[TIMING] Fetch memberships took {(time.perf_counter() - t_memberships) * 1000:.2f} ms. Found {len(memberships)} memberships.")
+
+        deleted_org_ids = []
 
         for membership in memberships:
             org_id = membership.organization_id
@@ -126,6 +134,7 @@ class AccountService:
                 if org:
                     logger.info(f"[TIMING] Queueing organization deletion in SQLAlchemy...")
                     db.delete(org)
+                    deleted_org_ids.append(org_id)
                     logger.info(f"[TIMING] Finished queueing organization deletion in {(time.perf_counter() - t_org) * 1000:.2f} ms")
             else:
                 t_mem = time.perf_counter()
@@ -164,6 +173,14 @@ class AccountService:
         logger.info(f"[TIMING] Starting database commit for account deletion...")
         db.commit()
         logger.info(f"[TIMING] Finished database commit for account deletion in {(time.perf_counter() - t_commit) * 1000:.2f} ms")
+        
+        # Invalidate in-memory caches for deleted workspaces
+        from app.core.cache import invalidate_workspace
+        for oid in deleted_org_ids:
+            try:
+                invalidate_workspace(str(oid))
+            except Exception as ce:
+                logger.warning(f"Failed to invalidate cache for workspace {oid}: {ce}")
         
         logger.info(f"[TIMING] delete_account() completed successfully in {(time.perf_counter() - t_start) * 1000:.2f} ms")
         return True

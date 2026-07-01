@@ -102,8 +102,20 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
 
 @router.post("/onboard-demo")
 def onboard_demo(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
-    # Generate unique slug for demo workspace
     name = "NovaWear Fashion"
+
+    # Idempotency guard: return existing demo workspace if the user already owns one.
+    # This prevents duplicate workspaces from double-click or concurrent POST requests.
+    existing_membership = db.query(Membership).join(Organization).filter(
+        Membership.user_id == current_user.id,
+        Organization.name == name
+    ).first()
+    if existing_membership:
+        org = existing_membership.organization
+        logger.info(f"Returning existing demo workspace {org.id} for user {current_user.id}")
+        return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
+
+    # Generate unique slug for demo workspace
     slug = "novawear-fashion"
     base_slug = slug
     counter = 1
@@ -135,6 +147,7 @@ def onboard_demo(current_user: Profile = Depends(get_current_user), db: Session 
         logger.error(f"Seeding demo workspace data failed: {e}", exc_info=True)
 
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
+
 
 
 @router.delete("/{org_id}")

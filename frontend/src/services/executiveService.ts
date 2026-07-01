@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { getHeaders } from "./businessService";
 import { 
   ExecutiveChatResponse, 
@@ -60,7 +60,7 @@ export async function sendExecutiveChat(
   language?: string,
   documentId?: string
 ): Promise<ExecutiveChatResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/chat`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/chat`, {
     method: "POST",
     headers: getHeaders(token, "application/json"),
     body: JSON.stringify({
@@ -88,7 +88,7 @@ export async function sendExecutiveChatStream(
   language?: string,
   documentId?: string
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/executive/chat/stream`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/executive/chat/stream`, {
     method: "POST",
     headers: getHeaders(token, "application/json"),
     body: JSON.stringify({
@@ -131,7 +131,7 @@ export async function sendExecutiveChatStream(
 }
 
 export async function getDailyBrief(token: string): Promise<DailyBriefResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/daily-brief`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/daily-brief`, {
     method: "GET",
     headers: getHeaders(token)
   });
@@ -142,7 +142,7 @@ export async function getDailyBrief(token: string): Promise<DailyBriefResponse> 
 }
 
 export async function listGoals(token: string): Promise<BusinessGoalResponse[]> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/goals`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/goals`, {
     method: "GET",
     headers: getHeaders(token)
   });
@@ -156,7 +156,7 @@ export async function addGoal(
   goal: { goal_type: string; description: string; target_value?: number }, 
   token: string
 ): Promise<BusinessGoalResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/goals`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/goals`, {
     method: "POST",
     headers: getHeaders(token, "application/json"),
     body: JSON.stringify(goal)
@@ -168,7 +168,7 @@ export async function addGoal(
 }
 
 export async function deleteGoal(goalId: string, token: string): Promise<{ success: boolean }> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/goals/${goalId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/goals/${goalId}`, {
     method: "DELETE",
     headers: getHeaders(token)
   });
@@ -183,7 +183,7 @@ export async function updateGoal(
   goal: { goal_type?: string; description?: string; target_value?: number; is_active?: boolean },
   token: string
 ): Promise<BusinessGoalResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/goals/${goalId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/goals/${goalId}`, {
     method: "PUT",
     headers: getHeaders(token, "application/json"),
     body: JSON.stringify(goal)
@@ -198,7 +198,7 @@ export async function getRecommendations(
   token: string, 
   limit: number = 10
 ): Promise<AIRecommendationResponse[]> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/recommendations?limit=${limit}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/recommendations?limit=${limit}`, {
     method: "GET",
     headers: getHeaders(token)
   });
@@ -209,7 +209,7 @@ export async function getRecommendations(
 }
 
 export async function listConversations(token: string): Promise<any[]> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/conversations`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/conversations`, {
     method: "GET",
     headers: getHeaders(token)
   });
@@ -220,7 +220,7 @@ export async function listConversations(token: string): Promise<any[]> {
 }
 
 export async function getConversation(conversationId: string, token: string): Promise<any> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
     method: "GET",
     headers: getHeaders(token)
   });
@@ -231,7 +231,7 @@ export async function getConversation(conversationId: string, token: string): Pr
 }
 
 export async function renameConversation(conversationId: string, title: string, token: string): Promise<any> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
     method: "PATCH",
     headers: getHeaders(token, "application/json"),
     body: JSON.stringify({ title })
@@ -243,7 +243,7 @@ export async function renameConversation(conversationId: string, title: string, 
 }
 
 export async function deleteConversation(conversationId: string, token: string): Promise<any> {
-  const res = await fetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/executive/conversations/${conversationId}`, {
     method: "DELETE",
     headers: getHeaders(token)
   });
