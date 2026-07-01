@@ -35,11 +35,13 @@ def get_workspaces(current_user: Profile = Depends(get_current_user), db: Sessio
             org = db.query(Organization).filter(Organization.id == m.organization_id).first()
             if org:
                 logger.info(f"[TRACE /api/organization/workspaces] STEP 3.{i}a: Found org name={org.name!r} slug={org.slug!r}")
+                member_count = db.query(Membership).filter(Membership.organization_id == org.id).count()
                 result.append({
                     "id": str(org.id),
                     "name": org.name,
                     "slug": org.slug,
-                    "role": m.role
+                    "role": m.role,
+                    "member_count": member_count
                 })
             else:
                 logger.warning(f"[TRACE /api/organization/workspaces] STEP 3.{i}: Org not found for org_id={m.organization_id} — skipping orphaned membership")
