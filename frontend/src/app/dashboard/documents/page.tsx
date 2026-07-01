@@ -159,14 +159,14 @@ export default function DocumentHubPage() {
   };
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto text-slate-100">
+    <div className="space-y-8 p-6 max-w-7xl mx-auto text-foreground">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800/60 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             <Brain className="h-8 w-8 text-indigo-400" /> Unified Document Hub
           </h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Upload company invoices, supplier receipts, and purchase orders. EVE classifies, extracts, and integrates them automatically.
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function DocumentHubPage() {
         className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
  dragActive 
  ? "border-indigo-400 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]" 
- : "border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60"
+ : "border-border bg-card hover:border-foreground/20 hover:bg-muted"
  }`}
       >
         <input 
@@ -204,7 +204,7 @@ export default function DocumentHubPage() {
             </div>
             <div>
               <p className="text-lg font-bold">Drag and drop file here, or click to browse</p>
-              <p className="text-xs text-slate-500 mt-1.5">
+              <p className="text-xs text-muted-foreground mt-1.5">
                 Supported formats: PDF, CSV, XLSX, PNG, JPG, JPEG (Max 10MB)
               </p>
               <p className="text-xs text-indigo-400 mt-2.5 font-medium max-w-md mx-auto">
@@ -216,12 +216,12 @@ export default function DocumentHubPage() {
       </div>
 
       {/* Recent Documents Table */}
-      <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
+      <div className="bg-card backdrop-blur-md border border-border rounded-2xl overflow-hidden shadow-xl">
+        <div className="p-5 border-b border-border flex items-center justify-between">
           <h2 className="text-xl font-bold flex items-center gap-2.5">
             <FileText className="h-5 w-5 text-indigo-400" /> Recent Documents
           </h2>
-          <span className="text-xs font-semibold px-2.5 py-1 bg-slate-800 text-slate-400 rounded-full">
+          <span className="text-xs font-semibold px-2.5 py-1 bg-muted text-muted-foreground rounded-full">
             {documents.length} Total
           </span>
         </div>
@@ -230,7 +230,7 @@ export default function DocumentHubPage() {
           <div className="overflow-x-auto animate-pulse">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800/80 bg-slate-950/20 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <tr className="border-b border-border bg-muted/50 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                   <th className="p-4 pl-6">Filename</th>
                   <th className="p-4">Doc Type</th>
                   <th className="p-4">File Size</th>
@@ -239,7 +239,7 @@ export default function DocumentHubPage() {
                   <th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-850/40">
+              <tbody className="divide-y divide-border">
                 {[...Array(3)].map((_, i) => (
                   <tr key={i}>
                     <td className="p-4 pl-6"><div className="h-4 bg-muted rounded w-2/3" /></td>
@@ -254,16 +254,16 @@ export default function DocumentHubPage() {
             </table>
           </div>
         ) : documents.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
-            <File className="h-12 w-12 mx-auto text-slate-700 mb-3" />
-            <p className="font-medium text-slate-400">No documents processed yet.</p>
-            <p className="text-sm text-slate-500 mt-1">Upload an operational file above to begin.</p>
+          <div className="p-12 text-center text-muted-foreground">
+            <File className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+            <p className="font-medium text-muted-foreground">No documents processed yet.</p>
+            <p className="text-sm text-muted-foreground mt-1">Upload an operational file above to begin.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800/80 bg-slate-950/20 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                <tr className="border-b border-border bg-muted/50 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
                   <th className="p-4 pl-6">Filename</th>
                   <th className="p-4">Doc Type</th>
                   <th className="p-4">File Size</th>
@@ -272,19 +272,19 @@ export default function DocumentHubPage() {
                   <th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/40 text-sm">
+              <tbody className="divide-y divide-border text-sm">
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-slate-800/20 transition-colors group">
-                    <td className="p-4 pl-6 font-medium text-slate-200 max-w-xs truncate">
+                  <tr key={doc.id} className="hover:bg-muted transition-colors group">
+                    <td className="p-4 pl-6 font-medium text-foreground max-w-xs truncate">
                       {doc.filename}
                     </td>
-                    <td className="p-4 text-slate-300">
-                      {doc.document_type || <span className="text-slate-600">—</span>}
+                    <td className="p-4 text-foreground">
+                      {doc.document_type || <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className="p-4 text-slate-400">
+                    <td className="p-4 text-muted-foreground">
                       {formatBytes(doc.file_size)}
                     </td>
-                    <td className="p-4 text-slate-400">
+                    <td className="p-4 text-muted-foreground">
                       {new Date(doc.created_at).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
@@ -331,13 +331,13 @@ export default function DocumentHubPage() {
                       <div className="flex items-center justify-end gap-3 opacity-80 group-hover:opacity-100 transition-opacity">
                         <Link 
                           href={`/dashboard/documents/${doc.id}`}
-                          className="p-1.5 bg-slate-800 hover:bg-indigo-600/20 text-slate-400 hover:text-indigo-400 border border-slate-700 hover:border-indigo-500/30 rounded-lg transition-all"
+                          className="p-1.5 bg-card hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-400 border border-border rounded-lg transition-all"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
                         <button 
                           onClick={() => handleDelete(doc.id, doc.filename)}
-                          className="p-1.5 bg-slate-800 hover:bg-red-600/20 text-slate-400 hover:text-red-400 border border-slate-700 hover:border-red-500/30 rounded-lg transition-all"
+                          className="p-1.5 bg-card hover:bg-red-500/10 text-muted-foreground hover:text-red-400 border border-border rounded-lg transition-all"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

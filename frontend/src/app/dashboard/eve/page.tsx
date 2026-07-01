@@ -99,7 +99,7 @@ function renderMarkdown(text: string) {
       if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
         const content = trimmed.replace(/^[-*]\s+/, "");
         return (
-          <li key={idx} className="ml-4 list-disc text-slate-300 text-sm mb-1 leading-relaxed">
+          <li key={idx} className="ml-4 list-disc text-muted-foreground text-sm mb-1 leading-relaxed">
             {renderFormattedText(content)}
           </li>
         );
@@ -113,14 +113,14 @@ function renderMarkdown(text: string) {
       }
       if (trimmed.startsWith("## ")) {
         return (
-          <h3 key={idx} className="text-base font-bold text-slate-100 mt-4 mb-2">
+          <h3 key={idx} className="text-base font-bold text-foreground mt-4 mb-2">
             {renderFormattedText(trimmed.substring(3))}
           </h3>
         );
       }
       if (trimmed.startsWith("# ")) {
         return (
-          <h2 key={idx} className="text-lg font-extrabold text-white mt-5 mb-2.5">
+          <h2 key={idx} className="text-lg font-extrabold text-foreground mt-5 mb-2.5">
             {renderFormattedText(trimmed.substring(2))}
           </h2>
         );
@@ -129,7 +129,7 @@ function renderMarkdown(text: string) {
         return <div key={idx} className="h-1.5" />;
       }
       return (
-        <p key={idx} className="text-slate-305 text-sm mb-1.5 leading-relaxed">
+        <p key={idx} className="text-muted-foreground text-sm mb-1.5 leading-relaxed">
           {renderFormattedText(line)}
         </p>
       );
@@ -140,12 +140,12 @@ function renderMarkdown(text: string) {
     <>
       <div className="space-y-1">{renderLines(normalLines)}</div>
       {evidenceLines.length > 0 && (
-        <details className="mt-3 border border-slate-800 bg-slate-950/40 rounded-xl overflow-hidden group">
-          <summary className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer list-none flex items-center justify-between select-none bg-slate-900/40 hover:bg-slate-900/60">
+        <details className="mt-3 border border-border bg-background/40 rounded-xl overflow-hidden group">
+          <summary className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer list-none flex items-center justify-between select-none bg-card/40 hover:bg-card/60">
             <span className="flex items-center gap-1.5">📊 Supporting Evidence</span>
             <span className="text-[10px] text-indigo-405 group-open:rotate-185 transition-transform">▼</span>
           </summary>
-          <div className="px-4 pb-3.5 pt-2 border-t border-slate-850 text-xs space-y-1">
+          <div className="px-4 pb-3.5 pt-2 border-t border-border text-xs space-y-1">
             {renderLines(evidenceLines)}
           </div>
         </details>
@@ -868,39 +868,39 @@ export default function EVECoocommandCenter() {
 
   if (loading) {
     return (
-      <div className="bg-slate-950 text-slate-100 min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans animate-pulse">
+      <div className="bg-background text-foreground min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans animate-pulse">
         {/* Column 0: Conversation History Sidebar Skeleton */}
-        <div className="hidden xl:flex xl:flex-col xl:gap-3 xl:w-64 border border-slate-800 rounded-2xl p-4 bg-slate-900/50" />
+        <div className="hidden xl:flex xl:flex-col xl:gap-3 xl:w-64 border border-border rounded-2xl p-4 bg-card/50" />
 
         {/* Column 1: Active Chat Panel Skeleton */}
-        <div className="flex-1 border border-slate-800 rounded-2xl p-5 bg-slate-900/20 flex flex-col justify-between h-[80vh]">
+        <div className="flex-1 border border-border rounded-2xl p-5 bg-card/20 flex flex-col justify-between h-[80vh]">
           <div className="space-y-4">
-            <div className="h-6 bg-slate-800 rounded w-1/4" />
-            <div className="h-px bg-slate-800" />
+            <div className="h-6 bg-muted rounded w-1/4" />
+            <div className="h-px bg-muted" />
             <div className="flex gap-3">
-              <div className="h-8 w-8 bg-slate-800 rounded-full" />
+              <div className="h-8 w-8 bg-muted rounded-full" />
               <div className="space-y-2 flex-1">
-                <div className="h-4 bg-slate-800 rounded w-3/4" />
-                <div className="h-4 bg-slate-800 rounded w-1/2" />
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-1/2" />
               </div>
             </div>
           </div>
-          <div className="h-14 bg-slate-950 border border-slate-850 rounded-xl w-full" />
+          <div className="h-14 bg-background border border-border rounded-xl w-full" />
         </div>
 
         {/* Column 2: Right-hand Executive Reasoning Panel Skeleton */}
-        <div className="w-96 border border-slate-800 rounded-2xl p-5 bg-slate-900/40 hidden xl:block space-y-6">
-          <div className="h-6 bg-slate-800 rounded w-1/2" />
-          <div className="h-px bg-slate-800" />
-          <div className="h-28 bg-slate-950 border border-slate-850 rounded-xl w-full" />
-          <div className="h-28 bg-slate-950 border border-slate-850 rounded-xl w-full" />
+        <div className="w-96 border border-border rounded-2xl p-5 bg-card/40 hidden xl:block space-y-6">
+          <div className="h-6 bg-muted rounded w-1/2" />
+          <div className="h-px bg-muted" />
+          <div className="h-28 bg-background border border-border rounded-xl w-full" />
+          <div className="h-28 bg-background border border-border rounded-xl w-full" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-y-auto xl:overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans">
+    <div className="bg-background text-foreground min-h-screen xl:min-h-0 xl:h-[calc(100vh-57px)] w-full overflow-y-auto xl:overflow-hidden flex flex-col xl:flex-row p-4 xl:p-5 gap-4 font-sans">
       {/* Mobile Sidebar Backdrop */}
       {isHistoryOpen && (
         <div 
@@ -910,26 +910,26 @@ export default function EVECoocommandCenter() {
       )}
 
       {/* Column 0: Conversation History Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 h-full w-64 border-r border-slate-800 bg-slate-900 rounded-r-2xl rounded-l-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-3 xl:flex-shrink-0 xl:overflow-hidden ${
+      <div className={`fixed inset-y-0 left-0 z-50 h-full w-64 border-r border-border bg-card rounded-r-2xl rounded-l-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-3 xl:flex-shrink-0 xl:overflow-hidden ${
  isHistoryOpen 
  ? "translate-x-0 p-4 opacity-100" 
  : "-translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
  }`}>
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="flex items-center justify-between border-b border-border pb-3 flex-shrink-0">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <MessageSquare size={14} className="text-indigo-400" /> Chat History
           </h3>
           <div className="flex items-center gap-1.5">
             <button
               onClick={handleStartNewChat}
-              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold border border-slate-800 hover:border-slate-700 cursor-pointer"
+              className="p-1 hover:bg-muted text-muted-foreground hover:text-indigo-400 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold border border-border hover:border-border cursor-pointer"
               title="Start New Chat"
             >
               <Plus size={12} /> New Chat
             </button>
             <button
               onClick={() => setIsHistoryOpen(false)}
-              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-[10px]"
+              className="p-1 hover:bg-muted text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-[10px]"
               title="Collapse Panel"
             >
               &lt;&lt;
@@ -940,7 +940,7 @@ export default function EVECoocommandCenter() {
         <div className="flex-grow overflow-y-auto space-y-4 pr-0.5 scrollbar-none">
           {Object.entries(groupConversationsByDate(conversations)).map(([groupName, groupConvs]) => (
             <div key={groupName} className="space-y-1.5">
-              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block px-1 mb-1">
+              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block px-1 mb-1">
                 {groupName}
               </span>
               {groupConvs.map((c) => {
@@ -952,7 +952,7 @@ export default function EVECoocommandCenter() {
                     className={`group w-full p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between relative ${
  isActive
  ? "bg-indigo-600/10 text-indigo-200 border-indigo-500/30"
- : "bg-slate-950/45 text-slate-400 border-slate-800/60 hover:bg-slate-800/40 hover:text-slate-200"
+ : "bg-background/45 text-muted-foreground border-border/60 hover:bg-muted/40 hover:text-foreground"
  }`}
                   >
                     <div className="flex items-start justify-between gap-1 w-full">
@@ -966,7 +966,7 @@ export default function EVECoocommandCenter() {
                             if (e.key === "Enter") handleRenameSession(c.id);
                             if (e.key === "Escape") setEditingSessionId(null);
                           }}
-                          className="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs px-1.5 py-0.5 rounded outline-none"
+                          className="w-full bg-background border border-border text-foreground text-xs px-1.5 py-0.5 rounded outline-none"
                           autoFocus
                         />
                       ) : (
@@ -980,14 +980,14 @@ export default function EVECoocommandCenter() {
                       
                       {/* Actions (visible on hover/active) */}
                       {!isEditing && (
-                        <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-1 bg-slate-900/95 p-0.5 rounded border border-slate-800">
+                        <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-1 bg-card/95 p-0.5 rounded border border-border">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setEditingSessionId(c.id);
                               setEditingTitle(c.title || "");
                             }}
-                            className="p-1 hover:text-indigo-400 text-slate-400 hover:bg-slate-800 rounded transition-all cursor-pointer"
+                            className="p-1 hover:text-indigo-400 text-muted-foreground hover:bg-muted rounded transition-all cursor-pointer"
                             title="Rename Chat"
                           >
                             <Edit size={10} />
@@ -997,7 +997,7 @@ export default function EVECoocommandCenter() {
                               e.stopPropagation();
                               setDeleteConfirmId(c.id);
                             }}
-                            className="p-1 hover:text-rose-400 text-slate-400 hover:bg-slate-800 rounded transition-all cursor-pointer"
+                            className="p-1 hover:text-rose-400 text-muted-foreground hover:bg-muted rounded transition-all cursor-pointer"
                             title="Delete Chat"
                           >
                             <Trash2 size={10} />
@@ -1006,12 +1006,12 @@ export default function EVECoocommandCenter() {
                       )}
                     </div>
 
-                    <div className="text-[8px] text-slate-500 mt-1 flex justify-between items-center">
+                    <div className="text-[8px] text-muted-foreground mt-1 flex justify-between items-center">
                       <span>
                         {getRelativeTimeString(c.updated_at || c.created_at)}
                       </span>
                       {c.message_count !== undefined && c.message_count > 0 && (
-                        <span className="bg-slate-800 text-slate-450 px-1 py-0.2 rounded text-[7px] font-bold">
+                        <span className="bg-muted text-slate-450 px-1 py-0.2 rounded text-[7px] font-bold">
                           {c.message_count} {c.message_count === 1 ? "msg" : "msgs"}
                         </span>
                       )}
@@ -1028,26 +1028,26 @@ export default function EVECoocommandCenter() {
       </div>
           {/* Middle Column - Multi-Turn EVE Command Center Chat */}
       <div 
-        className="w-full xl:h-full flex flex-col bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl relative flex-1 min-w-[320px] transition-all duration-300"
+        className="w-full xl:h-full flex flex-col bg-card border border-border rounded-2xl overflow-hidden shadow-2xl relative flex-1 min-w-[320px] transition-all duration-300"
       >
         
         {/* Conversational Header */}
-        <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/60 backdrop-blur-md flex items-center justify-between z-10 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-border bg-card/60 backdrop-blur-md flex items-center justify-between z-10 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             {!isHistoryOpen && (
               <button
                 onClick={() => setIsHistoryOpen(true)}
-                className="p-1 hover:bg-slate-800 text-slate-450 hover:text-indigo-400 rounded-lg transition-all border border-slate-800 cursor-pointer flex items-center gap-1 text-[10px]"
+                className="p-1 hover:bg-muted text-slate-450 hover:text-indigo-400 rounded-lg transition-all border border-border cursor-pointer flex items-center gap-1 text-[10px]"
                 title="Show Chat History"
               >
                 <MessageSquare size={12} /> History
               </button>
             )}
-            <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/30">
+            <div className="p-2 bg-indigo-600 rounded-xl text-foreground shadow-md shadow-indigo-600/30">
               <Brain size={18} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
                 EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Active</span>
               </h2>
               <p className="text-[10px] text-slate-405">Queries route automatically to COO, Finance & Operations agents</p>
@@ -1056,11 +1056,11 @@ export default function EVECoocommandCenter() {
 
           <div className="flex items-center gap-3">
             {/* Relocated Quick Actions */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800/80 mr-1.5">
+            <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-border/80 mr-1.5">
               <button
                 type="button"
                 onClick={() => setIsDailyBriefOpen(true)}
-                className="py-1 px-2.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-md text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                className="py-1 px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-md text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                 title="Daily Brief"
               >
                 <BookOpen size={11} className="text-indigo-400" />
@@ -1069,7 +1069,7 @@ export default function EVECoocommandCenter() {
               <button
                 type="button"
                 onClick={() => setIsMemoryOpen(true)}
-                className="py-1 px-2.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-md text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                className="py-1 px-2.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded-md text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer"
                 title="Strategic Goals"
               >
                 <Target size={11} className="text-indigo-400" />
@@ -1078,14 +1078,14 @@ export default function EVECoocommandCenter() {
             </div>
 
             {/* Panel Toggles */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800 mr-2">
+            <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-border mr-2">
               <button
                 type="button"
                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
                 className={`p-1.5 rounded-md transition-all cursor-pointer ${
  isHistoryOpen 
- ? "bg-slate-800 text-indigo-400 font-bold" 
- : "text-slate-500 hover:text-slate-300"
+ ? "bg-muted text-indigo-400 font-bold" 
+ : "text-muted-foreground hover:text-muted-foreground"
  }`}
                 title={isHistoryOpen ? "Hide Chat History" : "Show Chat History"}
               >
@@ -1096,8 +1096,8 @@ export default function EVECoocommandCenter() {
                 onClick={() => setIsInsightsOpen(!isInsightsOpen)}
                 className={`p-1.5 rounded-md transition-all cursor-pointer ${
  isInsightsOpen 
- ? "bg-slate-800 text-indigo-400 font-bold" 
- : "text-slate-500 hover:text-slate-300"
+ ? "bg-muted text-indigo-400 font-bold" 
+ : "text-muted-foreground hover:text-muted-foreground"
  }`}
                 title={isInsightsOpen ? "Hide Executive Insights" : "Show Executive Insights"}
               >
@@ -1105,14 +1105,14 @@ export default function EVECoocommandCenter() {
               </button>
             </div>
             {/* Language Selector */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+            <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-border">
               <button
                 type="button"
                 onClick={() => setLanguage("en")}
                 className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  language === "en" 
- ? "bg-indigo-600 text-white shadow-md" 
- : "text-slate-400 hover:text-slate-200"
+ ? "bg-indigo-600 text-foreground shadow-md" 
+ : "text-muted-foreground hover:text-foreground"
  }`}
                 title="English Language"
               >
@@ -1123,8 +1123,8 @@ export default function EVECoocommandCenter() {
                 onClick={() => setLanguage("hi")}
                 className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  language === "hi" 
- ? "bg-indigo-600 text-white shadow-md" 
- : "text-slate-400 hover:text-slate-200"
+ ? "bg-indigo-600 text-foreground shadow-md" 
+ : "text-muted-foreground hover:text-foreground"
  }`}
                 title="Hindi Translation"
               >
@@ -1141,8 +1141,8 @@ export default function EVECoocommandCenter() {
                 onClick={() => setShowTelemetry(!showTelemetry)}
                 className={`text-[10px] font-bold px-2 py-1.5 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
  showTelemetry 
- ? "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/20" 
- : "bg-slate-950 text-slate-400 border-slate-800 hover:text-slate-200 hover:border-slate-700"
+ ? "bg-indigo-600 text-foreground border-indigo-500 shadow-md shadow-indigo-600/20" 
+ : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-border"
  }`}
                 title="Toggle Advanced Telemetry"
               >
@@ -1153,14 +1153,14 @@ export default function EVECoocommandCenter() {
 
             {/* Mode Selector */}
             {developerMode && (
-              <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
+              <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-border">
                 <button
                   type="button"
                   onClick={() => setChatMode("smart")}
                   className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  chatMode === "smart" 
- ? "bg-indigo-600 text-white shadow-md" 
- : "text-slate-400 hover:text-slate-200"
+ ? "bg-indigo-600 text-foreground shadow-md" 
+ : "text-muted-foreground hover:text-foreground"
  }`}
                   title="Fast query routing"
                 >
@@ -1171,8 +1171,8 @@ export default function EVECoocommandCenter() {
                   onClick={() => setChatMode("full")}
                   className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  chatMode === "full" 
- ? "bg-indigo-600 text-white shadow-md" 
- : "text-slate-400 hover:text-slate-200"
+ ? "bg-indigo-600 text-foreground shadow-md" 
+ : "text-muted-foreground hover:text-foreground"
  }`}
                   title="Deep sub-agent aggregation"
                 >
@@ -1184,7 +1184,7 @@ export default function EVECoocommandCenter() {
         </div>
 
         {/* Conversation history area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-950/20 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-background/20 scrollbar-thin">
             {messages.map((msg) => {
               const isAssistant = msg.role === "assistant";
               const agentData = msg.agent_data as any;
@@ -1197,8 +1197,8 @@ export default function EVECoocommandCenter() {
                 >
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
  isAssistant 
- ? "bg-indigo-600 text-white border border-indigo-500/20" 
- : "bg-slate-800 text-slate-300 border border-slate-700"
+ ? "bg-indigo-600 text-foreground border border-indigo-500/20" 
+ : "bg-muted text-muted-foreground border border-border"
  }`}>
                     {isAssistant ? <Brain size={14} /> : <User size={14} />}
                   </div>
@@ -1224,7 +1224,7 @@ export default function EVECoocommandCenter() {
                         {developerMode && (
                           agentData?.confidence_scores ? (
                             Object.entries(agentData.confidence_scores).map(([name, score]: [string, any]) => (
-                              <span key={name} className="text-[8px] font-bold bg-slate-800 text-slate-450 border border-slate-700/60 px-1.5 py-0.2 rounded-md uppercase tracking-wide">
+                              <span key={name} className="text-[8px] font-bold bg-muted text-slate-450 border border-border/60 px-1.5 py-0.2 rounded-md uppercase tracking-wide">
                                 {name.replace(" Agent", "").replace(" Intelligence Agent", "")}: {Math.round(score * 100)}%
                               </span>
                             ))
@@ -1235,7 +1235,7 @@ export default function EVECoocommandCenter() {
  
                     <div className={`text-sm leading-relaxed space-y-2.5 ${
  isAssistant 
- ? "bg-transparent text-slate-100 border-none shadow-none px-1 py-0" 
+ ? "bg-transparent text-foreground border-none shadow-none px-1 py-0" 
  : "bg-indigo-600/10 text-indigo-100 border border-indigo-500/15 px-4.5 py-3 rounded-2xl shadow-sm"
  }`}>
                       {isAssistant ? (
@@ -1250,27 +1250,27 @@ export default function EVECoocommandCenter() {
                               <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
                                 <Database size={13} className="text-amber-400" /> Guided Onboarding Pathway
                               </span>
-                              <p className="text-[11px] text-slate-300 leading-relaxed font-normal">
+                              <p className="text-[11px] text-muted-foreground leading-relaxed font-normal">
                                 EVE needs active data to run its advanced COO logic. Upload CSV sheets or create entries:
                               </p>
                               <div className="flex flex-wrap gap-2 pt-0.5">
                                 <a 
                                   href="/dashboard/inventory"
-                                  className="text-[10px] font-bold px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-all flex items-center gap-1"
+                                  className="text-[10px] font-bold px-2.5 py-1.5 bg-card border border-border hover:border-indigo-500/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all flex items-center gap-1"
                                 >
                                   <span>📦 Setup Inventory Catalog</span>
                                   <ArrowRight size={10} />
                                 </a>
                                 <a 
                                   href="/dashboard/finance"
-                                  className="text-[10px] font-bold px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-all flex items-center gap-1"
+                                  className="text-[10px] font-bold px-2.5 py-1.5 bg-card border border-border hover:border-indigo-500/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all flex items-center gap-1"
                                 >
                                   <span>💰 Import Sales & Costs</span>
                                   <ArrowRight size={10} />
                                 </a>
                                 <a 
                                   href="/dashboard/projects"
-                                  className="text-[10px] font-bold px-2.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg transition-all flex items-center gap-1"
+                                  className="text-[10px] font-bold px-2.5 py-1.5 bg-card border border-border hover:border-indigo-500/40 hover:bg-muted text-muted-foreground hover:text-foreground rounded-lg transition-all flex items-center gap-1"
                                 >
                                   <span>💼 Create Client Project</span>
                                   <ArrowRight size={10} />
@@ -1281,13 +1281,13 @@ export default function EVECoocommandCenter() {
                           
                           {/* findings by agent */}
                           {developerMode && agentData?.findings_by_agent && Object.keys(agentData.findings_by_agent).length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Agent Findings</span>
+                            <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Agent Findings</span>
                               <div className="space-y-2">
                                 {Object.entries(agentData.findings_by_agent).map(([agentName, list]: [string, any]) => (
                                   <div key={agentName} className="text-xs">
                                     <span className="font-semibold text-indigo-300 block mb-0.5">{agentName}:</span>
-                                    <ul className="list-disc pl-4 space-y-0.5 text-slate-300">
+                                    <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
                                       {list.map((item: string, idx: number) => (
                                         <li key={idx} className="leading-relaxed">{item}</li>
                                       ))}
@@ -1300,9 +1300,9 @@ export default function EVECoocommandCenter() {
 
                           {/* legacy findings */}
                           {developerMode && !agentData?.findings_by_agent && agentData?.findings && agentData.findings.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-1">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Findings</span>
-                              <ul className="list-disc pl-4 space-y-0.5 text-xs text-slate-300">
+                            <div className="mt-3 pt-3 border-t border-border/60 space-y-1">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Findings</span>
+                              <ul className="list-disc pl-4 space-y-0.5 text-xs text-muted-foreground">
                                 {agentData.findings.map((item: string, idx: number) => (
                                   <li key={idx} className="leading-relaxed">{item}</li>
                                 ))}
@@ -1312,13 +1312,13 @@ export default function EVECoocommandCenter() {
 
                           {/* Priorities */}
                           {agentData?.priorities && agentData.priorities.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-2">
+                            <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
                               <span className="text-[10px] font-bold text-slate-405 uppercase tracking-widest block">Strategic Priorities</span>
                               <div className="grid grid-cols-1 gap-2">
                                 {agentData.priorities.map((pri: any, idx: number) => (
-                                  <div key={idx} className="py-2.5 px-3 bg-slate-950/30 border-l-2 border-indigo-500 rounded-r-xl space-y-0.5 animate-fade-in">
+                                  <div key={idx} className="py-2.5 px-3 bg-background/30 border-l-2 border-indigo-500 rounded-r-xl space-y-0.5 animate-fade-in">
                                     <span className="text-xs font-bold text-indigo-300 block">Priority {idx + 1}: {pri.title}</span>
-                                    <p className="text-[11px] text-slate-300 leading-relaxed font-normal">{pri.description}</p>
+                                    <p className="text-[11px] text-muted-foreground leading-relaxed font-normal">{pri.description}</p>
                                   </div>
                                 ))}
                               </div>
@@ -1331,21 +1331,21 @@ export default function EVECoocommandCenter() {
                            agentData.expected_impact.trim().toUpperCase() !== "N/A" && (
                             <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-xs space-y-0.5">
                               <span className="font-semibold text-emerald-400 block text-[10px] uppercase tracking-wider">Expected Business Impact</span>
-                              <p className="text-slate-300 font-normal leading-relaxed">{agentData.expected_impact}</p>
+                              <p className="text-muted-foreground font-normal leading-relaxed">{agentData.expected_impact}</p>
                             </div>
                           )}
 
                           {/* Recommendations by agent */}
                           {developerMode && agentData?.recommendations_by_agent && Object.keys(agentData.recommendations_by_agent).length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-2">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Recommendations by Agent</span>
+                            <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Recommendations by Agent</span>
                               <div className="space-y-2">
                                 {Object.entries(agentData.recommendations_by_agent).map(([agentName, list]: [string, any]) => (
                                   <div key={agentName} className="text-xs space-y-1">
                                     <span className="font-semibold text-indigo-300 block">{agentName}:</span>
                                     <div className="grid grid-cols-1 gap-1.5 pl-2">
                                       {list.map((item: string, idx: number) => (
-                                        <div key={idx} className="p-2 bg-slate-950 border border-slate-800/50 rounded-lg text-slate-300">
+                                        <div key={idx} className="p-2 bg-background border border-border/50 rounded-lg text-muted-foreground">
                                           {item}
                                         </div>
                                       ))}
@@ -1358,11 +1358,11 @@ export default function EVECoocommandCenter() {
 
                           {/* legacy recommendations */}
                           {developerMode && !agentData?.recommendations_by_agent && agentData?.recommendations && agentData.recommendations.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-slate-800/60 space-y-1.5">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Recommendations</span>
+                            <div className="mt-3 pt-3 border-t border-border/60 space-y-1.5">
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Recommendations</span>
                               <div className="grid grid-cols-1 gap-1.5">
                                 {agentData.recommendations.map((item: string, idx: number) => (
-                                  <div key={idx} className="p-2 bg-slate-950 border border-slate-800/50 rounded-lg text-xs text-slate-300">
+                                  <div key={idx} className="p-2 bg-background border border-border/50 rounded-lg text-xs text-muted-foreground">
                                     {item}
                                   </div>
                                 ))}
@@ -1373,35 +1373,35 @@ export default function EVECoocommandCenter() {
                           {/* Telemetry metadata */}
                           {developerMode && agentData?.telemetry && (
                             showTelemetry ? (
-                              <div className="mt-4 pt-3 border-t border-slate-850 space-y-2">
-                                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Execution Telemetry</span>
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-slate-400">
-                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                    <span className="block text-slate-500">Total Latency</span>
+                              <div className="mt-4 pt-3 border-t border-border space-y-2">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Execution Telemetry</span>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-[10px] text-muted-foreground">
+                                  <div className="p-2 bg-background/80 border border-border rounded-lg">
+                                    <span className="block text-muted-foreground">Total Latency</span>
                                     <span className="font-semibold text-indigo-400">{agentData.telemetry.latency_ms} ms</span>
                                   </div>
-                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                    <span className="block text-slate-500">Token Cost</span>
+                                  <div className="p-2 bg-background/80 border border-border rounded-lg">
+                                    <span className="block text-muted-foreground">Token Cost</span>
                                     <span className="font-semibold text-emerald-400">${agentData.telemetry.estimated_cost?.toFixed(6) || "0.000000"}</span>
                                   </div>
-                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                    <span className="block text-slate-500">Prompt Tokens</span>
-                                    <span className="font-semibold text-slate-300">{agentData.telemetry.prompt_tokens}</span>
+                                  <div className="p-2 bg-background/80 border border-border rounded-lg">
+                                    <span className="block text-muted-foreground">Prompt Tokens</span>
+                                    <span className="font-semibold text-muted-foreground">{agentData.telemetry.prompt_tokens}</span>
                                   </div>
-                                  <div className="p-2 bg-slate-950/80 border border-slate-800 rounded-lg">
-                                    <span className="block text-slate-500">Completion Tokens</span>
-                                    <span className="font-semibold text-slate-300">{agentData.telemetry.completion_tokens}</span>
+                                  <div className="p-2 bg-background/80 border border-border rounded-lg">
+                                    <span className="block text-muted-foreground">Completion Tokens</span>
+                                    <span className="font-semibold text-muted-foreground">{agentData.telemetry.completion_tokens}</span>
                                   </div>
                                 </div>
                                 {/* Agent execution details */}
                                 {agentData.telemetry.agents && Object.keys(agentData.telemetry.agents).length > 0 && (
-                                  <div className="p-2 bg-slate-950/40 border border-slate-800 rounded-lg text-[9px] text-slate-500 space-y-1">
-                                    <span className="font-semibold text-slate-400 block mb-1">Agent Pipeline Breakdown:</span>
+                                  <div className="p-2 bg-background/40 border border-border rounded-lg text-[9px] text-muted-foreground space-y-1">
+                                    <span className="font-semibold text-muted-foreground block mb-1">Agent Pipeline Breakdown:</span>
                                     <div className="flex flex-wrap gap-x-4 gap-y-1">
                                       {Object.entries(agentData.telemetry.agents).map(([agentName, data]: [string, any]) => (
                                         <div key={agentName} className="flex items-center gap-1.5">
-                                          <span className="capitalize text-slate-400 font-medium">{agentName}:</span>
-                                          <span className="text-slate-300">{data.latency_ms}ms</span>
+                                          <span className="capitalize text-muted-foreground font-medium">{agentName}:</span>
+                                          <span className="text-muted-foreground">{data.latency_ms}ms</span>
                                           <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
                                             {data.status}
                                           </span>
@@ -1412,7 +1412,7 @@ export default function EVECoocommandCenter() {
                                 )}
                               </div>
                             ) : (
-                              <div className="mt-3 pt-2 border-t border-slate-800/40 flex items-center justify-between text-[10px] text-slate-450">
+                              <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-slate-450">
                                 <div className="flex items-center gap-1.5 text-emerald-400/90 font-medium">
                                   <span className="text-emerald-400 font-bold">✓</span>
                                   <span>Processed in {((agentData.telemetry.latency_ms || 0) / 1000).toFixed(2)}s</span>
@@ -1433,7 +1433,7 @@ export default function EVECoocommandCenter() {
                       )}
                     </div>
  
-                    <span className="text-[9px] text-slate-500 block px-1">
+                    <span className="text-[9px] text-muted-foreground block px-1">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -1443,11 +1443,11 @@ export default function EVECoocommandCenter() {
 
             {messages.length <= 1 && (
               <div className="max-w-2xl mx-auto py-24 text-center space-y-4 animate-fade-in px-4">
-                <div className="h-12 w-12 bg-indigo-650 rounded-2xl flex items-center justify-center text-white shadow-lg mx-auto">
+                <div className="h-12 w-12 bg-indigo-650 rounded-2xl flex items-center justify-center text-foreground shadow-lg mx-auto">
                   <Brain size={22} />
                 </div>
                 <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-slate-100 tracking-tight">EVE</h2>
+                  <h2 className="text-lg font-bold text-foreground tracking-tight">EVE</h2>
                   <p className="text-xs text-slate-450 leading-relaxed max-w-sm mx-auto">
                     Executive Operating System. Ask anything regarding margins, inventory forecasting, client projects, or health features.
                   </p>
@@ -1457,12 +1457,12 @@ export default function EVECoocommandCenter() {
  
             {chatLoading && (
               <div className="flex gap-3 max-w-[80%] mr-auto animate-fade-in">
-                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white border border-indigo-500/20 flex items-center justify-center flex-shrink-0 animate-pulse">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-foreground border border-indigo-500/20 flex items-center justify-center flex-shrink-0 animate-pulse">
                   <Brain size={14} />
                 </div>
                 <div className="space-y-1.5 flex-1">
                   {isGreeting ? (
-                    <div className="bg-slate-900 border border-slate-800/80 rounded-2xl px-4 py-3 shadow-lg w-20 flex items-center justify-center space-x-1">
+                    <div className="bg-card border border-border/80 rounded-2xl px-4 py-3 shadow-lg w-20 flex items-center justify-center space-x-1">
                       <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
                       <div className="w-2 h-2 bg-indigo-450 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                       <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce"></div>
@@ -1474,10 +1474,10 @@ export default function EVECoocommandCenter() {
                           EVE COO Executing...
                         </span>
                       </div>
-                      <div className="bg-slate-900 border border-slate-800/80 rounded-2xl px-4 py-3 text-xs flex flex-col gap-3 shadow-lg w-full max-w-[340px]">
+                      <div className="bg-card border border-border/80 rounded-2xl px-4 py-3 text-xs flex flex-col gap-3 shadow-lg w-full max-w-[340px]">
                         {developerMode ? (
                           <>
-                            <div className="flex items-center gap-2 text-slate-355 font-semibold text-[11px] border-b border-slate-800 pb-2 mb-0.5">
+                            <div className="flex items-center gap-2 text-slate-355 font-semibold text-[11px] border-b border-border pb-2 mb-0.5">
                               <Loader2 className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
                               <span>EVE Analysis Pipeline running...</span>
                             </div>
@@ -1489,9 +1489,9 @@ export default function EVECoocommandCenter() {
                                 ) : loadingStage === 1 ? (
                                   <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
                                 ) : (
-                                  <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
+                                  <div className="w-2.5 h-2.5 rounded-full border border-border" />
                                 )}
-                                <span className={loadingStage > 1 ? "text-slate-400" : loadingStage === 1 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
+                                <span className={loadingStage > 1 ? "text-muted-foreground" : loadingStage === 1 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
                                   Intent routing classifier
                                 </span>
                               </div>
@@ -1503,9 +1503,9 @@ export default function EVECoocommandCenter() {
                                 ) : loadingStage === 2 ? (
                                   <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
                                 ) : (
-                                  <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
+                                  <div className="w-2.5 h-2.5 rounded-full border border-border" />
                                 )}
-                                <span className={loadingStage > 2 ? "text-slate-400" : loadingStage === 2 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
+                                <span className={loadingStage > 2 ? "text-muted-foreground" : loadingStage === 2 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
                                   Spawn sub-agent queries
                                 </span>
                               </div>
@@ -1515,7 +1515,7 @@ export default function EVECoocommandCenter() {
                                 {loadingStage === 3 ? (
                                   <Loader2 className="w-3 h-3 text-indigo-405 animate-spin" />
                                 ) : (
-                                  <div className="w-2.5 h-2.5 rounded-full border border-slate-700" />
+                                  <div className="w-2.5 h-2.5 rounded-full border border-border" />
                                 )}
                                 <span className={loadingStage === 3 ? "text-indigo-400 font-semibold animate-pulse" : "text-slate-600"}>
                                   Synthesize recommendations
@@ -1542,14 +1542,14 @@ export default function EVECoocommandCenter() {
           </div>
  
           {/* Quick chip selector & Input Form footer */}
-          <div className="p-4 bg-slate-900 border-t border-slate-800 space-y-3 flex-shrink-0">
+          <div className="p-4 bg-card border-t border-border space-y-3 flex-shrink-0">
  
             {documentId && (
               <div className="flex items-center justify-between p-2.5 bg-indigo-950/20 border border-indigo-900/30 rounded-xl text-xs text-indigo-300">
                 <div className="flex items-center gap-2">
                   <FileText size={14} className="text-indigo-400" />
                   <span>
-                    Context: <strong className="font-semibold text-slate-200">{documentName || "Loading file details..."}</strong>
+                    Context: <strong className="font-semibold text-foreground">{documentName || "Loading file details..."}</strong>
                   </span>
                 </div>
                 <button
@@ -1558,7 +1558,7 @@ export default function EVECoocommandCenter() {
                     setDocumentId(null);
                     setDocumentName(null);
                   }}
-                  className="text-slate-500 hover:text-slate-350 transition-colors cursor-pointer"
+                  className="text-muted-foreground hover:text-slate-350 transition-colors cursor-pointer"
                   title="Remove document context"
                 >
                   <X size={14} />
@@ -1586,7 +1586,7 @@ export default function EVECoocommandCenter() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Query agent network (e.g. 'Should we adjust price for item XYZ?')..."
                 disabled={chatLoading}
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-500"
+                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-muted-foreground"
               />
               <button
                 type="button"
@@ -1594,8 +1594,8 @@ export default function EVECoocommandCenter() {
                 disabled={chatLoading}
                 className={`p-3 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
  isListening 
- ? "bg-rose-600 hover:bg-rose-500 text-white animate-pulse" 
- : "bg-slate-800 hover:bg-slate-700 text-slate-350 hover:text-slate-200 border border-slate-700"
+ ? "bg-rose-600 hover:bg-rose-500 text-foreground animate-pulse" 
+ : "bg-muted hover:bg-slate-700 text-slate-350 hover:text-foreground border border-border"
  }`}
                 title={isListening ? "Listening... Click to stop" : "Start Voice Input"}
               >
@@ -1604,12 +1604,12 @@ export default function EVECoocommandCenter() {
               <button
                 type="submit"
                 disabled={chatLoading || !inputMessage.trim()}
-                className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-slate-500 text-white rounded-xl transition-all shadow-lg flex items-center justify-center flex-shrink-0 cursor-pointer"
+                className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground text-foreground rounded-xl transition-all shadow-lg flex items-center justify-center flex-shrink-0 cursor-pointer"
               >
                 <Send size={16} />
               </button>
             </form>
-            <p className="text-[10px] text-slate-500 text-center leading-normal select-none">
+            <p className="text-[10px] text-muted-foreground text-center leading-normal select-none">
               EVE provides AI-generated business recommendations. Always verify information before making financial or operational decisions.
             </p>
           </div>
@@ -1624,18 +1624,18 @@ export default function EVECoocommandCenter() {
       )}
 
       {/* Column 2: Right-hand Executive Snapshot Panel */}
-      <div className={`fixed inset-y-0 right-0 z-50 h-full w-72 border-l border-slate-800 bg-slate-900 rounded-l-2xl rounded-r-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-4 xl:flex-shrink-0 xl:overflow-hidden ${
+      <div className={`fixed inset-y-0 right-0 z-50 h-full w-72 border-l border-border bg-card rounded-l-2xl rounded-r-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-4 xl:flex-shrink-0 xl:overflow-hidden ${
  isInsightsOpen 
  ? "translate-x-0 p-4 opacity-100" 
  : "translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
  }`}>
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 flex-shrink-0">
-          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="flex items-center justify-between border-b border-border pb-3 flex-shrink-0">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles size={14} className="text-indigo-400 animate-pulse" /> Executive Snapshot
           </h3>
           <button
             onClick={() => setIsInsightsOpen(false)}
-            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-xs"
+            className="p-1 hover:bg-muted text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-xs"
             title="Collapse Panel"
           >
             <X size={14} />
@@ -1644,30 +1644,30 @@ export default function EVECoocommandCenter() {
 
         <div className="flex-grow overflow-y-auto space-y-5 pr-0.5 scrollbar-none pb-8">
           {/* Working Capital & Profit Buffer */}
-          <div className="bg-slate-950/40 border border-slate-850 p-4 rounded-xl space-y-3">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block flex items-center gap-1.5">
+          <div className="bg-background/40 border border-border p-4 rounded-xl space-y-3">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block flex items-center gap-1.5">
               <Coins size={11} className="text-indigo-400" /> Capital & Profit Buffer
             </span>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="text-[10px] text-slate-500 block">Total Profit</span>
-                <span className="text-sm font-bold text-slate-200">${overview?.kpis?.profit?.toLocaleString() || "0"}</span>
+                <span className="text-[10px] text-muted-foreground block">Total Profit</span>
+                <span className="text-sm font-bold text-foreground">${overview?.kpis?.profit?.toLocaleString() || "0"}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-500 block">Gross Revenue</span>
-                <span className="text-sm font-bold text-slate-200">${overview?.kpis?.revenue?.toLocaleString() || "0"}</span>
+                <span className="text-[10px] text-muted-foreground block">Gross Revenue</span>
+                <span className="text-sm font-bold text-foreground">${overview?.kpis?.revenue?.toLocaleString() || "0"}</span>
               </div>
             </div>
           </div>
 
           {/* Decision Center Header */}
-          <div className="pt-2 border-t border-slate-800/80">
+          <div className="pt-2 border-t border-border/80">
             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Decision Center</span>
           </div>
 
           {/* Active Risks */}
           <div className="space-y-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Active Risks</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Active Risks</span>
             <div className="space-y-2">
               {risks.length > 0 ? (
                 risks.map((risk, idx) => (
@@ -1678,7 +1678,7 @@ export default function EVECoocommandCenter() {
                     </div>
                     <button
                       onClick={() => handleSendChat(`Address and mitigate this risk: ${risk.description}`)}
-                      className="w-full py-1 px-2.5 bg-rose-950/50 hover:bg-rose-900/60 text-rose-350 hover:text-white rounded border border-rose-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                      className="w-full py-1 px-2.5 bg-rose-950/50 hover:bg-rose-900/60 text-rose-350 hover:text-foreground rounded border border-rose-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Play size={10} /> Mitigate Risk
                     </button>
@@ -1692,7 +1692,7 @@ export default function EVECoocommandCenter() {
 
           {/* Active Opportunities */}
           <div className="space-y-2">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Opportunities</span>
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Opportunities</span>
             <div className="space-y-2">
               {opportunities.length > 0 ? (
                 opportunities.map((opp, idx) => (
@@ -1703,7 +1703,7 @@ export default function EVECoocommandCenter() {
                     </div>
                     <button
                       onClick={() => handleSendChat(`Analyze and execute opportunity: ${opp.description}`)}
-                      className="w-full py-1 px-2.5 bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-350 hover:text-white rounded border border-emerald-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                      className="w-full py-1 px-2.5 bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-350 hover:text-foreground rounded border border-emerald-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <Play size={10} /> Capture Opportunity
                     </button>
@@ -1716,33 +1716,33 @@ export default function EVECoocommandCenter() {
           </div>
 
           {/* Recommended Actions (Action Triggers) */}
-          <div className="space-y-2 pt-1 border-t border-slate-800/80">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Recommended Actions</span>
+          <div className="space-y-2 pt-1 border-t border-border/80">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Recommended Actions</span>
             <div className="flex flex-col gap-2">
               <button
                 onClick={() => handleSendChat("Run replenishment analysis for out-of-stock items and check safety stock levels")}
-                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
               >
                 <span>Run Replenishment Analysis</span>
                 <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <button
                 onClick={() => handleSendChat("Analyze margin risk and trace operational profit leaks")}
-                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
               >
                 <span>Analyze Margin Risk</span>
                 <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <button
                 onClick={() => handleSendChat("Review dead stock inventory and outline liquidation path")}
-                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
               >
                 <span>Review Dead Stock</span>
                 <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <button
                 onClick={() => handleSendChat("Generate pricing recommendations based on inventory turnover rates")}
-                className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 border border-slate-700/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
+                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
               >
                 <span>Generate Pricing Recommendations</span>
                 <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
@@ -1751,8 +1751,8 @@ export default function EVECoocommandCenter() {
           </div>
 
           {/* Dynamic Suggested Queries */}
-          <div className="space-y-4 pt-3 border-t border-slate-800/80">
-            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block">Suggested Context Queries</span>
+          <div className="space-y-4 pt-3 border-t border-border/80">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Suggested Context Queries</span>
             {getDynamicSuggestions().map((group, gIdx) => (
               <div key={gIdx} className="space-y-1.5">
                 <span className="text-[9px] font-bold text-indigo-400/90 uppercase tracking-wider block">{group.category}</span>
@@ -1762,7 +1762,7 @@ export default function EVECoocommandCenter() {
                       key={qIdx}
                       onClick={() => handleSendChat(q)}
                       disabled={chatLoading}
-                      className="text-left text-[11px] bg-slate-950/80 hover:bg-slate-950 border border-slate-850 p-2.5 rounded-lg text-slate-400 hover:text-slate-200 transition-all cursor-pointer disabled:opacity-50"
+                      className="text-left text-[11px] bg-background/80 hover:bg-background border border-border p-2.5 rounded-lg text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
                     >
                       {q}
                     </button>
@@ -1804,26 +1804,26 @@ export default function EVECoocommandCenter() {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center space-y-4">
+          <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-2">
               <Trash2 size={24} />
             </div>
-            <h3 className="text-base font-bold text-slate-100">Delete Conversation?</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h3 className="text-base font-bold text-foreground">Delete Conversation?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Are you sure you want to delete this conversation? This will permanently erase the chat history and context.
             </p>
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setDeleteConfirmId(null)}
-                className="flex-1 py-2 bg-slate-800 hover:bg-slate-750 text-slate-350 rounded-xl text-xs font-semibold cursor-pointer border border-slate-700"
+                className="flex-1 py-2 bg-muted hover:bg-slate-750 text-slate-350 rounded-xl text-xs font-semibold cursor-pointer border border-border"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleDeleteSession(deleteConfirmId)}
-                className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md shadow-rose-600/20"
+                className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-foreground rounded-xl text-xs font-semibold cursor-pointer shadow-md shadow-rose-600/20"
               >
                 Delete
               </button>

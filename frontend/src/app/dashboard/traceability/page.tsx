@@ -90,24 +90,24 @@ export default function TraceabilityDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#090b10] p-6 text-white lg:p-10">
+    <div className="min-h-screen bg-background p-6 text-foreground lg:p-10">
       <div className="mx-auto max-w-6xl">
         
         {/* Breadcrumb / Back */}
         <Link 
           href="/dashboard" 
-          className="inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Dashboard
         </Link>
 
         {/* Title */}
-        <div className="mt-6 border-b border-slate-800/80 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mt-6 border-b border-border pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-muted-foreground bg-clip-text text-transparent">
               Decision Traceability Audit
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               Audit the calculations, data integrity sources, and AI reasoning chain behind EVE recommendations.
             </p>
           </div>
@@ -125,7 +125,7 @@ export default function TraceabilityDashboard() {
           
           {/* Sidebar Recommendation list (Col-Span-1) */}
           <div className="lg:col-span-1 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Generated Decisions</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Decisions</h3>
             <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
               
               {/* Fallback item when empty */}
@@ -135,12 +135,12 @@ export default function TraceabilityDashboard() {
                   className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
  selectedTrace.id === fallbackRecommendation.id 
  ? "border-emerald-500 bg-emerald-950/10" 
- : "border-slate-800 bg-[#121620]/30 hover:border-slate-700"
+ : "border-border bg-card/30 hover:border-foreground/20"
  }`}
                 >
                   <span className="block text-xs font-semibold text-emerald-400 uppercase tracking-wide">Pre-seeded Fallback</span>
-                  <span className="block text-sm font-bold text-white mt-1">{fallbackRecommendation.action}</span>
-                  <span className="block text-[10px] text-slate-500 mt-2">{fallbackRecommendation.created_at}</span>
+                  <span className="block text-sm font-bold text-foreground mt-1">{fallbackRecommendation.action}</span>
+                  <span className="block text-[10px] text-muted-foreground mt-2">{fallbackRecommendation.created_at}</span>
                 </div>
               )}
 
@@ -152,14 +152,14 @@ export default function TraceabilityDashboard() {
                   className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
  selectedTrace.id === trace.id 
  ? "border-emerald-500 bg-emerald-950/10" 
- : "border-slate-800 bg-[#121620]/30 hover:border-slate-700"
+ : "border-border bg-card/30 hover:border-foreground/20"
  }`}
                 >
                   <span className="block text-xs font-semibold text-indigo-400 uppercase tracking-wide">
                     {trace.recommendation_type}
                   </span>
-                  <span className="block text-sm font-bold text-white mt-1 truncate">{trace.action}</span>
-                  <span className="block text-[10px] text-slate-500 mt-2">{trace.created_at}</span>
+                  <span className="block text-sm font-bold text-foreground mt-1 truncate">{trace.action}</span>
+                  <span className="block text-[10px] text-muted-foreground mt-2">{trace.created_at}</span>
                 </div>
               ))}
 
@@ -186,26 +186,26 @@ export default function TraceabilityDashboard() {
                   </div>
                 </div>
                 
-                <h2 className="mt-4 text-3xl font-bold tracking-tight text-white">
+                <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground">
                   {selectedTrace.action}
                 </h2>
-                <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                   {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
                 </p>
               </div>
 
               {/* Reasoning Chain Timeline */}
-              <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/40 p-6 backdrop-blur-md">
-                <h3 className="text-lg font-bold tracking-tight text-white flex items-center gap-2 mb-6">
+              <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
+                <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2 mb-6">
                   <Compass className="h-4 w-4 text-indigo-400" /> Explainable Reasoning Steps
                 </h3>
                 
-                <div className="relative border-l-2 border-slate-800 pl-4 ml-2 space-y-6">
+                <div className="relative border-l-2 border-border pl-4 ml-2 space-y-6">
                   {selectedTrace.reasoning_chain.map((step, idx) => (
                     <div key={idx} className="relative">
-                      <div className="absolute -left-[25px] mt-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-slate-900"></div>
-                      <h4 className="text-sm font-semibold text-slate-200">Step {idx + 1}</h4>
-                      <p className="mt-1 text-xs text-slate-400 leading-relaxed">{step}</p>
+                      <div className="absolute -left-[25px] mt-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-background"></div>
+                      <h4 className="text-sm font-semibold text-foreground">Step {idx + 1}</h4>
+                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{step}</p>
                     </div>
                   ))}
                 </div>
@@ -217,43 +217,43 @@ export default function TraceabilityDashboard() {
             <div className="space-y-6">
               
               {/* Confidence Score Card */}
-              <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/60 p-6 backdrop-blur-md text-center">
-                <span className="text-sm font-medium text-slate-400">Certainty Index</span>
+              <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
+                <span className="text-sm font-medium text-muted-foreground">Certainty Index</span>
                 <p className="mt-3 text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                   {(selectedTrace.confidence_score * 100).toFixed(0)}%
                 </p>
-                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
+                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-muted-foreground">
                   <Cpu className="h-3.5 w-3.5" /> High Certainty Logic
                 </div>
               </div>
 
               {/* Metrics Checklist */}
-              <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/60 p-6 backdrop-blur-md">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+              <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
                   <HardDrive className="h-4 w-4 text-indigo-400" /> Supporting Metrics
                 </h3>
                 <div className="space-y-3">
                   {Object.entries(selectedTrace.supporting_metrics).map(([key, value]) => (
-                    <div key={key} className="flex justify-between border-b border-slate-800 pb-2 text-sm">
-                      <span className="text-slate-400 capitalize">{key.replace(/_/g, " ")}</span>
-                      <span className="font-semibold text-slate-200">{String(value)}</span>
+                    <div key={key} className="flex justify-between border-b border-border pb-2 text-sm">
+                      <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                      <span className="font-semibold text-foreground">{String(value)}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Source Database Records */}
-              <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/60 p-6 backdrop-blur-md">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+              <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
                   <HelpCircle className="h-4 w-4 text-indigo-400" /> Verified Data Sources
                 </h3>
                 <div className="space-y-2.5">
                   {selectedTrace.source_datasets.map((source, index) => (
-                    <div key={index} className="rounded-lg bg-slate-900/60 p-2.5 border border-slate-800/40 text-xs">
-                      <span className="block font-semibold text-slate-300">{source}</span>
+                    <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs">
+                      <span className="block font-semibold text-foreground">{source}</span>
                     </div>
                   ))}
-                  <span className="block text-[10px] text-slate-500 mt-2 text-center">
+                  <span className="block text-[10px] text-muted-foreground mt-2 text-center">
                     Audited: {selectedTrace.created_at}
                   </span>
                 </div>
