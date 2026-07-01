@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 import logging
 
@@ -13,6 +13,7 @@ router = APIRouter(prefix="/api/account", tags=["account"])
 
 @router.delete("/delete")
 def delete_account(
+    background_tasks: BackgroundTasks,
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -66,7 +67,7 @@ def delete_account(
 
     # 2. Delegate full deletion (DB records, GCS files, Supabase Auth) to AccountService
     try:
-        success = AccountService.delete_account(db, current_user)
+        success = AccountService.delete_account(db, current_user, background_tasks)
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
