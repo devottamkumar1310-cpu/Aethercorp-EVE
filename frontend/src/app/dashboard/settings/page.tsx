@@ -15,7 +15,10 @@ import {
   Mail,
   Palette,
   ShieldCheck,
-  Menu
+  Menu,
+  Monitor,
+  Sun,
+  Moon
 } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 
@@ -24,6 +27,7 @@ interface Workspace {
   name: string;
   slug: string;
   role: string;
+  member_count?: number;
 }
 
 export default function SettingsPage() {
@@ -70,6 +74,9 @@ export default function SettingsPage() {
   // Sidebar navigation tracking state
   const [activeSection, setActiveSection] = useState("profile");
 
+  // Theme states
+  const [themeState, setThemeState] = useState("dark");
+
   const router = useRouter();
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +84,15 @@ export default function SettingsPage() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       setDeveloperMode(localStorage.getItem("developer_mode") === "true");
+      
+      let activeTheme = localStorage.getItem("theme") || "dark";
+      if (!["system", "executive-light", "dark"].includes(activeTheme)) {
+        activeTheme = "dark";
+        localStorage.setItem("theme", "dark");
+        document.documentElement.setAttribute("data-theme", "dark");
+        window.dispatchEvent(new Event("theme-changed"));
+      }
+      setThemeState(activeTheme);
     }
   }, []);
 
@@ -160,29 +176,45 @@ export default function SettingsPage() {
     fetchData();
   }, [getSession]);
 
-  // Sidebar Intersection Observer to highlight current active section automatically on scroll
+  // Robust Captured Scroll Spy for settings sections
   useEffect(() => {
+    if (loading) return;
+
     const sections = ["profile", "appearance", "email", "workspaces", "security", "danger-zone"];
-    const observerOptions = {
-      root: null,
-      rootMargin: "-20% 0px -60% 0px",
-      threshold: 0
+
+    const handleScroll = () => {
+      const container = document.querySelector("main") || document.documentElement;
+      const containerHeight = container.clientHeight;
+      const scrollHeight = container.scrollHeight;
+      const scrollTop = container.scrollTop;
+
+      // Force danger-zone active when near the bottom of the scroll area
+      if (scrollTop + containerHeight >= scrollHeight - 30) {
+        setActiveSection("danger-zone");
+        return;
+      }
+
+      let active = "profile";
+      for (const id of sections) {
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // If the top of the section is scrolled above 150px threshold from top of viewport
+          if (rect.top <= 150) {
+            active = id;
+          }
+        }
+      }
+      setActiveSection(active);
     };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-        }
-      });
-    }, observerOptions);
+    // capture: true intercepts scroll events from overflow-auto elements
+    document.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    handleScroll();
 
-    sections.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
+    return () => {
+      document.removeEventListener("scroll", handleScroll, { capture: true });
+    };
   }, [loading]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -348,29 +380,46 @@ export default function SettingsPage() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
+      // Smooth scroll
       element.scrollIntoView({ behavior: "smooth", block: "start" });
+      
+      // Accessibility focus helper
+      element.setAttribute("tabindex", "-1");
+      element.focus({ preventScroll: true });
+      element.addEventListener("blur", () => element.removeAttribute("tabindex"), { once: true });
     }
+  };
+
+  const handleThemeChange = (newTheme: string) => {
+    setThemeState(newTheme);
+    localStorage.setItem("theme", newTheme);
+    
+    // Resolve system preference
+    const resolved = newTheme === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "executive-light")
+      : newTheme;
+      
+    document.documentElement.setAttribute("data-theme", resolved);
+    window.dispatchEvent(new Event("theme-changed"));
   };
 
   if (loading) {
     return (
-      <main className="p-6 max-w-6xl mx-auto w-full space-y-8 animate-pulse">
+      <main className="p-6 max-w-5xl mx-auto w-full space-y-8 animate-pulse">
         <div className="bg-card rounded-xl border border-border h-48 flex flex-col justify-between" />
         <div className="bg-card rounded-xl border border-border h-52" />
       </main>
     );
   }
 
-  const userTheme = typeof window !== "undefined" ? localStorage.getItem("theme") || "dark" : "dark";
-
   return (
-    <div className="max-w-6xl mx-auto w-full px-4 py-8 flex flex-col lg:flex-row gap-8">
+    <div className="max-w-5xl mx-auto w-full px-4 py-6 flex flex-col lg:flex-row gap-6">
       
-      {/* P2-C Sticky Sidebar Navigation */}
-      <aside className="lg:w-64 lg:shrink-0 lg:sticky lg:top-24 h-fit">
-        <div className="bg-card border border-border rounded-xl p-4 shadow-sm space-y-1">
-          <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2 mb-2">
-            <Menu className="h-3.5 w-3.5" />
+      {/* Sticky Sidebar Navigation */}
+      <aside className="lg:w-60 lg:shrink-0 lg:sticky lg:top-24 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none">
+        <div className="bg-card border border-border rounded-xl p-3 shadow-sm space-y-1">
+          <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-2">
+            <Menu size={12} className="text-slate-500" />
             System settings
           </div>
           {[
@@ -378,7 +427,7 @@ export default function SettingsPage() {
             { id: "appearance", label: "Appearance", icon: Palette },
             { id: "email", label: "Email Management", icon: Mail },
             { id: "workspaces", label: "Workspaces", icon: Building2 },
-            { id: "security", label: "Security & Keys", icon: Lock },
+            ...(!isGoogleUser ? [{ id: "security", label: "Security & Keys", icon: Lock }] : []),
             { id: "danger-zone", label: "Danger Zone", icon: AlertTriangle }
           ].map((sec) => {
             const IconComponent = sec.icon;
@@ -387,36 +436,35 @@ export default function SettingsPage() {
               <button
                 key={sec.id}
                 onClick={() => scrollToSection(sec.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-left ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left cursor-pointer group ${
                   active
-                    ? "bg-indigo-600/10 text-indigo-500 border-l-4 border-indigo-600"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-sidebar-accent pl-3"
                 }`}
               >
-                <IconComponent className={`h-4.5 w-4.5 ${active ? "text-indigo-500" : "text-slate-400"}`} />
+                <IconComponent size={15} className={active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
                 {sec.label}
               </button>
             );
           })}
         </div>
       </aside>
-
       {/* Main Settings Form Scroll Area */}
-      <main className="flex-1 space-y-10 pb-20">
+      <main className="flex-1 space-y-8 pb-20">
         
         {/* Profile Section */}
         <section id="profile" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
           <div className="px-6 py-4 border-b border-border bg-slate-50/10 flex items-center justify-between">
-            <h2 className="text-base font-semibold flex items-center text-foreground font-sans">
-              <User className="h-5 w-5 mr-2 text-indigo-500" />
+            <h2 className="text-sm font-semibold flex items-center text-foreground tracking-wide font-sans">
+              <User className="h-4 w-4 mr-2.5 text-indigo-500" />
               Profile Settings
             </h2>
           </div>
           <div className="p-6 space-y-6">
             
-            {/* P2-B Avatar Upload UI with interactive preview and local draft review */}
+            {/* Avatar Upload UI with interactive preview and local draft review */}
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-border pb-6">
-              <div className="relative h-20 w-20 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border border-border group">
+              <div className="relative h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-2 border-border shadow-md group">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Preview avatar" className="h-full w-full object-cover" />
                 ) : avatarUrl ? (
@@ -432,7 +480,7 @@ export default function SettingsPage() {
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <label className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-border rounded-lg hover:bg-muted/50 transition cursor-pointer text-foreground">
                     <Upload className="h-3.5 w-3.5" />
-                    Select Image
+                    {avatarPreview || avatarUrl ? "Change Image" : "Select Image"}
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -443,14 +491,29 @@ export default function SettingsPage() {
                   </label>
 
                   {avatarPreview && (
-                    <button
-                      onClick={handleAvatarUpload}
-                      disabled={uploadingAvatar}
-                      className="flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-                    >
-                      {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                      Save Upload
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={handleAvatarUpload}
+                        disabled={uploadingAvatar}
+                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition cursor-pointer"
+                      >
+                        {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                        Save Upload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatarPreview(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = "";
+                          }
+                        }}
+                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-red-500/30 hover:bg-red-500/10 text-red-500 rounded-lg transition cursor-pointer"
+                      >
+                        Remove Avatar
+                      </button>
+                    </>
                   )}
                   
                   {avatarSuccess && <span className="text-xs text-emerald-500 font-medium flex items-center gap-1"><Check className="h-3.5 w-3.5" /> Updated!</span>}
@@ -488,7 +551,7 @@ export default function SettingsPage() {
                   <select
                     value={timezone}
                     onChange={(e) => setTimezone(e.target.value)}
-                    className="w-full text-foreground bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                    className="w-full text-foreground bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
                   >
                     <option value="UTC">UTC (Universal Time)</option>
                     <option value="America/New_York">EST (Eastern Standard Time)</option>
@@ -504,7 +567,7 @@ export default function SettingsPage() {
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full text-foreground bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
+                    className="w-full text-foreground bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none cursor-pointer"
                   >
                     <option value="en">English (US)</option>
                     <option value="es">Español (ES)</option>
@@ -518,7 +581,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={updatingProfile}
-                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition"
+                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition cursor-pointer"
                 >
                   {updatingProfile && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Save Changes
@@ -528,55 +591,65 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* P1-A Appearance / Themes Section */}
+        {/* Appearance / Themes Section */}
         <section id="appearance" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
           <div className="px-6 py-4 border-b border-border bg-slate-50/10">
-            <h2 className="text-base font-semibold flex items-center text-foreground">
-              <Palette className="h-5 w-5 mr-2 text-indigo-500" />
+            <h2 className="text-sm font-semibold flex items-center text-foreground tracking-wide font-sans">
+              <Palette className="h-4 w-4 mr-2.5 text-indigo-500" />
               Theme Appearance
             </h2>
           </div>
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-6">
             <div className="max-w-md">
-              <label className="block text-sm font-medium text-muted-foreground mb-1">Interface Mode</label>
-              <select
-                value={userTheme}
-                onChange={(e) => {
-                  const selected = e.target.value;
-                  localStorage.setItem("theme", selected);
-                  document.documentElement.setAttribute("data-theme", selected);
-                  if (selected === "system") {
-                    const resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "executive-light";
-                    document.documentElement.setAttribute("data-theme", resolved);
-                  }
-                  window.dispatchEvent(new Event("theme-changed"));
-                }}
-                className="w-full text-foreground bg-background px-3 py-2 rounded-lg border border-border focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
-              >
-                <option value="system">🖥️ System Preference</option>
-                <option value="dark">🌙 Executive Dark (Slate/Graphite)</option>
-                <option value="executive-light">☀️ Executive Light (Minimalist Silver)</option>
-                <option value="midnight-blue">🌌 Midnight Blue (Deep Navy/Cyan)</option>
-                <option value="emerald-intelligence">🌲 Emerald Growth (Green/Emerald)</option>
-                <option value="royal-purple">🔮 Royal Purple (Premium AI Indigo)</option>
-                <option value="carbon-red">🚨 Carbon Red (Command Center Red)</option>
-                <option value="aurora">🌈 Aurora (Nebula Gradients)</option>
-              </select>
-              <p className="text-xs text-muted-foreground mt-2">
-                Selecting System Mode coordinates automatically with your desktop dark or light configuration preferences.
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Interface Mode</label>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: "system", label: "System", icon: Monitor },
+                  { value: "executive-light", label: "Light", icon: Sun },
+                  { value: "dark", label: "Dark", icon: Moon }
+                ].map((t) => {
+                  const Icon = t.icon;
+                  const active = themeState === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => handleThemeChange(t.value)}
+                      className={`flex flex-col items-center justify-center p-3.5 rounded-xl border text-sm font-medium transition-all gap-1.5 cursor-pointer ${
+                        active
+                          ? "bg-indigo-600/15 text-indigo-400 border-indigo-500/80 shadow-xs"
+                          : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                      }`}
+                    >
+                      <Icon size={16} className={active ? "text-indigo-400" : "text-slate-500"} />
+                      <span>{t.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Selecting System Mode coordinates automatically with your system dark or light configuration preferences.
               </p>
             </div>
+
+
           </div>
         </section>
 
         {/* Email Address Section */}
         <section id="email" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
           <div className="px-6 py-4 border-b border-border bg-slate-50/10 flex items-center justify-between">
-            <h2 className="text-base font-semibold flex items-center text-foreground">
-              <Mail className="h-5 w-5 mr-2 text-indigo-500" />
+            <h2 className="text-sm font-semibold flex items-center text-foreground tracking-wide font-sans">
+              <Mail className="h-4 w-4 mr-2.5 text-indigo-500" />
               Email Management
             </h2>
-            {profile?.email_verified ? (
+            {isGoogleUser ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500">
+                <Check className="h-3 w-3" />
+                Managed by Google
+              </span>
+            ) : profile?.email_verified ? (
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500">
                 <Check className="h-3 w-3" />
                 Verified
@@ -589,14 +662,19 @@ export default function SettingsPage() {
           </div>
           <div className="p-6">
             {isGoogleUser ? (
-              // P2-A Managed Google OAuth Banner instead of modification inputs
-              <div className="p-4 bg-muted/30 border border-border rounded-lg flex items-center gap-3">
-                <ShieldCheck className="h-6 w-6 text-indigo-500 shrink-0" />
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground">Google Managed Account</h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Your account is securely managed by Google Auth ({email}). Primary account email changes must be requested through your identity provider.
-                  </p>
+              <div className="p-4 bg-muted/30 border border-border rounded-lg flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 text-indigo-500 shrink-0 mt-0.5" />
+                <div className="space-y-2.5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-foreground">Managed by Google</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      This email is controlled by your Google account ({email}).
+                    </p>
+                  </div>
+                  <div className="text-xs border-t border-border/50 pt-2 text-slate-400">
+                    <p className="font-semibold text-foreground mb-0.5">Need to switch to another Google account?</p>
+                    <p className="leading-relaxed">During beta, contact support and we can help migrate your login credentials.</p>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -636,7 +714,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={updatingEmail || email === profile?.email}
-                    className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {updatingEmail && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     Change Email Address
@@ -650,8 +728,8 @@ export default function SettingsPage() {
         {/* Workspaces Section */}
         <section id="workspaces" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
           <div className="px-6 py-4 border-b border-border bg-slate-50/10">
-            <h2 className="text-base font-semibold flex items-center text-foreground">
-              <Building2 className="h-5 w-5 mr-2 text-indigo-500" />
+            <h2 className="text-sm font-semibold flex items-center text-foreground tracking-wide font-sans">
+              <Building2 className="h-4 w-4 mr-2.5 text-indigo-500" />
               Workspaces
             </h2>
           </div>
@@ -701,30 +779,32 @@ export default function SettingsPage() {
         </section>
 
         {/* Security Section */}
-        <section id="security" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
-          <div className="px-6 py-4 border-b border-border bg-slate-50/10">
-            <h2 className="text-base font-semibold flex items-center text-foreground">
-              <Lock className="h-5 w-5 mr-2 text-indigo-500" />
-              Security
-            </h2>
-          </div>
-          <div className="p-6">
-            <button
-              onClick={() => supabase.auth.resetPasswordForEmail(profile?.email || "", {
-                redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-              })}
-              className="text-xs font-semibold uppercase tracking-wider bg-card border border-border text-foreground px-4 py-2.5 rounded-lg hover:bg-muted/50 transition-all cursor-pointer"
-            >
-              Reset Account Password
-            </button>
-          </div>
-        </section>
+        {!isGoogleUser && (
+          <section id="security" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
+            <div className="px-6 py-4 border-b border-border bg-slate-50/10">
+              <h2 className="text-sm font-semibold flex items-center text-foreground tracking-wide font-sans">
+                <Lock className="h-4 w-4 mr-2.5 text-indigo-500" />
+                Security
+              </h2>
+            </div>
+            <div className="p-6">
+              <button
+                onClick={() => supabase.auth.resetPasswordForEmail(profile?.email || "", {
+                  redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+                })}
+                className="text-xs font-semibold uppercase tracking-wider bg-card border border-border text-foreground px-4 py-2.5 rounded-lg hover:bg-muted/50 transition-all cursor-pointer"
+              >
+                Reset Account Password
+              </button>
+            </div>
+          </section>
+        )}
 
         {/* Danger Zone Section */}
         <section id="danger-zone" className="scroll-mt-24 bg-red-500/5 rounded-xl border border-red-500/20 shadow-sm overflow-hidden transition-all">
           <div className="px-6 py-4 border-b border-red-500/20 bg-red-500/10">
-            <h2 className="text-base font-semibold flex items-center text-red-500">
-              <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+            <h2 className="text-sm font-semibold flex items-center text-red-500 tracking-wide font-sans">
+              <AlertTriangle className="h-4 w-4 mr-2.5 text-red-500" />
               Danger Zone
             </h2>
           </div>
@@ -752,7 +832,7 @@ export default function SettingsPage() {
 
       </main>
 
-      {/* P1-C Workspace Deletion Confirmation Modal */}
+      {/* Workspace Deletion Confirmation Modal */}
       {deleteWsModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-card w-full max-w-md rounded-xl shadow-xl border border-border overflow-hidden">
@@ -795,7 +875,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleDeleteWorkspace}
                   disabled={deleteWsConfirmText !== deleteWsModal.name || deleteWsLoading}
-                  className="px-4 py-2 bg-red-650 hover:bg-red-755 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   {deleteWsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Delete Workspace
@@ -806,7 +886,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* P1-C Account Deletion Confirmation Modal */}
+      {/* Account Deletion Confirmation Modal */}
       {showDeleteAccountModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-card w-full max-w-md rounded-xl shadow-xl border border-border overflow-hidden">
@@ -816,56 +896,60 @@ export default function SettingsPage() {
                 Delete Account
               </h3>
               
-              {/* Check if user is the owner of any workspace */}
-              {workspaces.some(w => w.role === "owner") ? (
-                <div className="space-y-4">
-                  <div className="p-3 bg-red-500/10 text-red-500 text-sm rounded-lg border border-red-500/20 font-medium">
-                    Account deletion is currently unavailable.
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <p className="text-sm text-foreground font-semibold">You own the following workspace(s):</p>
-                    <ul className="text-sm text-foreground space-y-1 pl-1">
-                      {workspaces
-                        .filter(w => w.role === "owner")
-                        .map(w => (
+              {/* Check if user is the sole owner of any workspace with other members */}
+              {(() => {
+                const blockedWorkspaces = workspaces.filter(
+                  (w) => w.role === "owner" && w.member_count !== undefined && w.member_count > 1
+                );
+                const isBlocked = blockedWorkspaces.length > 0;
+
+                return isBlocked ? (
+                  <div className="space-y-4">
+                    <div className="p-3 bg-red-500/10 text-red-500 text-sm rounded-lg border border-red-500/20 font-medium">
+                      Account deletion is currently unavailable.
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-sm text-foreground font-semibold">You own workspace(s) with other active members:</p>
+                      <ul className="text-sm text-foreground space-y-1 pl-1">
+                        {blockedWorkspaces.map((w) => (
                           <li key={w.id} className="font-semibold text-foreground">• {w.name}</li>
                         ))}
-                    </ul>
-                  </div>
+                      </ul>
+                    </div>
 
-                  <div className="space-y-2">
-                    <p className="text-sm text-foreground font-semibold">Before deleting your account you must:</p>
-                    <div className="text-sm text-muted-foreground space-y-1 pl-1">
-                      <p className="text-foreground">1. Transfer ownership to another member</p>
-                      <p className="text-xs font-bold text-slate-500 pl-4 py-0.5">OR</p>
-                      <p className="text-foreground">2. Delete the workspace and its data</p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-foreground font-semibold">Before deleting your account you must:</p>
+                      <div className="text-sm text-muted-foreground space-y-1 pl-1">
+                        <p className="text-foreground">1. Transfer ownership to another member</p>
+                        <p className="text-xs font-bold text-slate-500 pl-4 py-0.5">OR</p>
+                        <p className="text-foreground">2. Remove all members from the workspace</p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      Once ownership is transferred or the workspaces have no other members, account deletion will become available.
+                    </p>
+
+                    <div className="flex gap-3 justify-end mt-6 border-t border-border pt-4">
+                      <button
+                        onClick={() => setShowDeleteAccountModal(false)}
+                        className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                      >
+                        Close
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowDeleteAccountModal(false);
+                          scrollToSection("workspaces");
+                        }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        Manage Workspace
+                      </button>
                     </div>
                   </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Once you no longer own any workspaces, account deletion will become available.
-                  </p>
-
-                  <div className="flex gap-3 justify-end mt-6 border-t border-border pt-4">
-                    <button
-                      onClick={() => setShowDeleteAccountModal(false)}
-                      className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    >
-                      Close
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowDeleteAccountModal(false);
-                        scrollToSection("workspaces");
-                      }}
-                      className="px-4 py-2 bg-indigo-650 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      Manage Workspaces
-                    </button>
-                  </div>
-                </div>
-              ) : (
+                ) : (
                 <>
                   <p className="text-muted-foreground text-sm mb-4">
                     This will permanently delete your account, remove your workspace memberships, and wipe your data.
@@ -923,19 +1007,18 @@ export default function SettingsPage() {
                         }
                       }}
                       disabled={deleteAccountConfirmText !== "DELETE" || deleteAccountLoading}
-                      className="px-4 py-2 bg-red-650 hover:bg-red-755 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                     >
                       {deleteAccountLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                       Delete Account
                     </button>
                   </div>
                 </>
-              )}
+              ) })()}
             </div>
           </div>
         </div>
       )}
-
 
     </div>
   );
