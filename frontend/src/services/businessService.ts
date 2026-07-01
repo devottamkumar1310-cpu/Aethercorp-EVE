@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { DashboardSummary, Client, Project, Task, Revenue, Expense, ActivityLog, BusinessKPIs } from "@/types/business";
 
 export function getHeaders(token: string, contentType?: string): Record<string, string> {
@@ -18,7 +18,7 @@ export function getHeaders(token: string, contentType?: string): Record<string, 
 }
 
 export async function fetchDashboardSummary(token: string): Promise<DashboardSummary> {
-  const res = await fetch(`${API_BASE_URL}/api/dashboard/summary`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/dashboard/summary`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch dashboard summary");
@@ -26,7 +26,7 @@ export async function fetchDashboardSummary(token: string): Promise<DashboardSum
 }
 
 export async function fetchBusinessKPIs(token: string): Promise<BusinessKPIs> {
-  const res = await fetch(`${API_BASE_URL}/api/dashboard/kpis`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/dashboard/kpis`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch KPIs");
@@ -34,7 +34,7 @@ export async function fetchBusinessKPIs(token: string): Promise<BusinessKPIs> {
 }
 
 export async function fetchClients(token: string): Promise<Client[]> {
-  const res = await fetch(`${API_BASE_URL}/api/clients/`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/clients/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch clients");
@@ -42,7 +42,7 @@ export async function fetchClients(token: string): Promise<Client[]> {
 }
 
 export async function fetchProjects(token: string): Promise<Project[]> {
-  const res = await fetch(`${API_BASE_URL}/api/projects/`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/projects/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch projects");
@@ -50,7 +50,7 @@ export async function fetchProjects(token: string): Promise<Project[]> {
 }
 
 export async function fetchTasks(token: string): Promise<Task[]> {
-  const res = await fetch(`${API_BASE_URL}/api/tasks/`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/tasks/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch tasks");
@@ -58,7 +58,7 @@ export async function fetchTasks(token: string): Promise<Task[]> {
 }
 
 export async function fetchRevenues(token: string): Promise<Revenue[]> {
-  const res = await fetch(`${API_BASE_URL}/api/finance/revenue`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/finance/revenue`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch revenues");
@@ -66,7 +66,7 @@ export async function fetchRevenues(token: string): Promise<Revenue[]> {
 }
 
 export async function fetchExpenses(token: string): Promise<Expense[]> {
-  const res = await fetch(`${API_BASE_URL}/api/finance/expenses`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/finance/expenses`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch expenses");
@@ -74,7 +74,7 @@ export async function fetchExpenses(token: string): Promise<Expense[]> {
 }
 
 export async function fetchActivityLogs(token: string): Promise<ActivityLog[]> {
-  const res = await fetch(`${API_BASE_URL}/api/activity/`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/activity/`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch activity logs");
@@ -83,7 +83,7 @@ export async function fetchActivityLogs(token: string): Promise<ActivityLog[]> {
 
 // Mutations
 async function apiCall(url: string, method: string, token: string, body?: any) {
-  const res = await fetch(`${API_BASE_URL}${url}`, {
+  const res = await apiFetch(`${API_BASE_URL}${url}`, {
     method,
     headers: getHeaders(token, "application/json"),
     body: body ? JSON.stringify(body) : undefined
@@ -121,7 +121,7 @@ export const createExpenseAPI = (token: string, data: any) => apiCall('/api/fina
 
 // Inventory
 export async function fetchInventoryDashboard(token: string): Promise<any> {
-  const res = await fetch(`${API_BASE_URL}/api/inventory/dashboard`, {
+  const res = await apiFetch(`${API_BASE_URL}/api/inventory/dashboard`, {
     headers: getHeaders(token)
   });
   if (!res.ok) throw new Error("Failed to fetch inventory dashboard");
@@ -134,7 +134,7 @@ async function uploadCSVFile(url: string, token: string, file: File) {
   
   const headers = getHeaders(token);
   
-  const res = await fetch(`${API_BASE_URL}${url}`, {
+  const res = await apiFetch(`${API_BASE_URL}${url}`, {
     method: "POST",
     headers,
     body: formData

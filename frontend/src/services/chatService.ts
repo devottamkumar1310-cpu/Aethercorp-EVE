@@ -1,9 +1,9 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { ChatResponse } from "@/types/chat";
 import { getHeaders } from "./businessService";
 
 export async function sendChatMessage(message: string, token: string): Promise<ChatResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/chat`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: getHeaders(token, "application/json"),
     body: JSON.stringify({ message }),

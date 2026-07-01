@@ -1,8 +1,8 @@
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { DashboardMetrics } from "@/types/dashboard";
 
 export async function fetchDashboardMetrics(token: string): Promise<DashboardMetrics> {
-  const response = await fetch(`${API_BASE_URL}/api/dashboard`, {
+  const response = await apiFetch(`${API_BASE_URL}/api/dashboard`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

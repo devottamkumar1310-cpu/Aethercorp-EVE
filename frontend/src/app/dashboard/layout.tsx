@@ -108,11 +108,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, []);
 
-  // Theme Sync on Mount
+  // Theme Sync on Mount — resolves 'system' to the actual OS preference.
   useEffect(() => {
-    const activeTheme = localStorage.getItem("theme") || "dark";
-    setTheme(activeTheme);
-    document.documentElement.setAttribute("data-theme", activeTheme);
+    const resolveTheme = (stored: string): string => {
+      if (stored === "system") {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "executive-light";
+      }
+      return stored;
+    };
+
+    const stored = localStorage.getItem("theme") || "dark";
+    const active = resolveTheme(stored);
+    setTheme(stored); // store the raw value ("system" etc.)
+    document.documentElement.setAttribute("data-theme", active);
+
+    // Listen for OS preference changes when theme is set to 'system'
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+    const onOSChange = () => {
+      if (localStorage.getItem("theme") === "system") {
+        const resolved = mql.matches ? "dark" : "executive-light";
+        document.documentElement.setAttribute("data-theme", resolved);
+      }
+    };
+    mql.addEventListener("change", onOSChange);
+    return () => mql.removeEventListener("change", onOSChange);
   }, []);
 
   const getThemePreference = (profileData?: any): string => {
@@ -132,7 +153,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setTheme(newTheme);
     if (typeof window !== "undefined") {
       localStorage.setItem("theme", newTheme);
-      document.documentElement.setAttribute("data-theme", newTheme);
+      // Resolve 'system' to the actual OS preference before applying to DOM
+      const resolved =
+        newTheme === "system"
+          ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "executive-light"
+          : newTheme;
+      document.documentElement.setAttribute("data-theme", resolved);
       // Trigger event so other tabs/components sync theme immediately
       window.dispatchEvent(new Event("theme-changed"));
     }
@@ -202,6 +230,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const wsData = await wsSettled.value.json();
         setWorkspaces(wsData);
         if (wsData.length === 0) {
+          // Single retry after a brief delay to absorb async provisioning lag
+          // (e.g. demo workspace DB commit not yet visible at query time).
+          // One attempt only — no polling, no loops.
+          console.log("[EVE] Workspaces empty on first fetch — retrying once after 1500ms");
+          await new Promise<void>((resolve) => setTimeout(resolve, 1500));
+          try {
+            const retryRes = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (retryRes.ok) {
+              const retryData: Workspace[] = await retryRes.json();
+              if (retryData.length > 0) {
+                console.log("[EVE] Retry succeeded — workspaces found:", retryData.length);
+                setWorkspaces(retryData);
+                const storedId = localStorage.getItem("active_workspace_id");
+                if (storedId && retryData.some((w) => w.id === storedId)) {
+                  setActiveWorkspaceId(storedId);
+                } else {
+                  localStorage.setItem("active_workspace_id", retryData[0].id);
+                  setActiveWorkspaceId(retryData[0].id);
+                }
+                return;
+              }
+            }
+          } catch (retryErr) {
+            console.warn("[EVE] Workspace retry fetch failed:", retryErr);
+          }
+          // Still empty after retry — user genuinely has no workspace.
           localStorage.removeItem("active_workspace_id");
           setActiveWorkspaceId(null);
           router.push("/onboarding");
@@ -246,13 +302,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const tHydrate = performance.now();
         console.log(`[TELEMETRY][PERF] Session Hydration Duration: ${(tHydrate - tStart).toFixed(2)}ms`);
         setSessionToken(token);
+        sessionTokenRef.current = token; // Eagerly sync ref so onAuthStateChange guard works before React re-render
         const isAlreadyInitialized =
           typeof window !== "undefined" &&
           sessionStorage.getItem("eve_initialized") === "true";
 
         try {
           if (isAlreadyInitialized) {
-            if (mounted) setLoading(false);
+            // Sprint 1 Fix #2: Do NOT setLoading(false) here before workspaces resolve.
+            // The finally block handles setLoading(false) after the fetch completes.
+            // Sprint 2 UX: advance stage so animation doesn't freeze at stage 1 for returning users.
+            if (mounted) setLoadingStage(2);
             await loadWorkspacesAndProfile(token);
           } else {
             if (mounted) setLoadingStage(2); // Loading Workspace
@@ -266,7 +326,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (mounted) setInitError(null);
         } catch (err: any) {
           console.error("[EVE] Dashboard initialization failed:", err);
-          if (mounted) setInitError("We are currently optimizing the workspace index. Please try again in a moment.");
+          if (mounted) {
+            const msg: string = err?.message ?? "";
+            let userMessage: string;
+            if (msg.includes("timed out")) {
+              userMessage = "Connection timed out. Please check your network and try again.";
+            } else if (msg.includes("401") || msg.includes("403")) {
+              userMessage = "Your session has expired. Please sign out and sign back in.";
+            } else if (
+              msg.includes("Failed to fetch") ||
+              msg.includes("NetworkError") ||
+              msg.includes("TypeError")
+            ) {
+              userMessage = "Cannot reach the server. Please check your internet connection.";
+            } else {
+              userMessage = "Workspace initialization failed. Please retry or contact support.";
+            }
+            setInitError(userMessage);
+          }
         } finally {
           const tFinish = performance.now();
           console.log(`[TELEMETRY][PERF] Workspace/Profile Load Duration: ${(tFinish - tHydrate).toFixed(2)}ms`);
@@ -278,10 +355,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        proceedWithSession(session.access_token);
+        // Sprint 1 Fix #1: await so onAuthStateChange is registered only AFTER
+        // the first init completes. This eliminates the double-invocation race
+        // where both getSession() and the INITIAL_SESSION event trigger concurrent
+        // loadWorkspacesAndProfile calls.
+        await proceedWithSession(session.access_token);
       }
       
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        // P2-A: TOKEN_REFRESHED is Supabase rotating the access token (typically every 60 min).
+        // The workspace and profile data hasn't changed — only the token value.
+        // Update the token references directly and skip the full workspace re-fetch.
+        if (event === 'TOKEN_REFRESHED' && newSession) {
+          sessionTokenRef.current = newSession.access_token;
+          setSessionToken(newSession.access_token);
+          return;
+        }
         if (newSession && (!sessionTokenRef.current || sessionTokenRef.current !== newSession.access_token)) {
           proceedWithSession(newSession.access_token);
         } else if (!newSession && event === 'SIGNED_OUT') {
