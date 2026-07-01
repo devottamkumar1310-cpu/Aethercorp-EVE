@@ -119,7 +119,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return stored;
     };
 
-    const stored = localStorage.getItem("theme") || "dark";
+    let stored = localStorage.getItem("theme") || "dark";
+    if (!["system", "executive-light", "dark"].includes(stored)) {
+      stored = "dark";
+      localStorage.setItem("theme", "dark");
+    }
+
     const active = resolveTheme(stored);
     setTheme(stored); // store the raw value ("system" etc.)
     document.documentElement.setAttribute("data-theme", active);
