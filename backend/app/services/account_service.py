@@ -1,5 +1,7 @@
 import logging
 import uuid
+import sys
+from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
@@ -79,7 +81,46 @@ class AccountService:
         return False
 
     @staticmethod
-    def delete_account(db: Session, user_profile: Profile) -> bool:
+    def _background_cleanup(user_id: uuid.UUID, avatar_url: str, doc_file_paths: list[str]):
+        """
+        Background task to perform slow HTTP-bound operations:
+        - GCS avatar deletion
+        - GCS document deletion
+        - Supabase Auth deletion
+        """
+        logger.info(f"[BACKGROUND CLEANUP] Starting for user {user_id}", extra={"flush": True})
+        
+        if avatar_url:
+            try:
+                GCSService.delete_file(avatar_url)
+            except Exception as e:
+                logger.warning(f"[BACKGROUND CLEANUP] Failed to delete avatar {avatar_url}: {e}")
+                
+        for file_path in doc_file_paths:
+            try:
+                GCSService.delete_file(file_path)
+            except Exception as e:
+                logger.warning(f"[BACKGROUND CLEANUP] Failed to delete document {file_path}: {e}")
+                
+        if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_URL:
+            import httpx
+            try:
+                url = f"{settings.SUPABASE_URL}/auth/v1/admin/users/{user_id}"
+                headers = {
+                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}"
+                }
+                with httpx.Client(timeout=10.0) as client:
+                    resp = client.delete(url, headers=headers)
+                    if resp.status_code not in (200, 204):
+                        logger.error(f"[BACKGROUND CLEANUP] Failed Supabase delete: {resp.status_code} {resp.text}")
+                    else:
+                        logger.info(f"[BACKGROUND CLEANUP] Supabase Auth user deleted.")
+            except Exception as e:
+                logger.error(f"[BACKGROUND CLEANUP] Supabase error: {e}")
+
+    @staticmethod
+    def delete_account(db: Session, user_profile: Profile, background_tasks: BackgroundTasks) -> bool:
         """
         Deletes a user account and all solely-owned workspaces.
         For workspaces with other owners, just removes the user's membership.
@@ -96,15 +137,9 @@ class AccountService:
         db.refresh(user_profile)
         logger.info("[DELETE] Loading profile complete")
 
-        # Step 3: Avatar deletion
-        logger.info("[DELETE] Avatar cleanup")
-        if user_profile.avatar_url:
-            try:
-                logger.info(f"Purging user avatar file: {user_profile.avatar_url}")
-                GCSService.delete_file(user_profile.avatar_url)
-            except Exception as e:
-                logger.warning(f"Failed to delete user avatar file {user_profile.avatar_url}: {e}")
-        logger.info("[DELETE] Avatar cleanup complete")
+        logger.info("[DELETE] Avatar cleanup scheduled")
+        avatar_url = user_profile.avatar_url
+        logger.info("[DELETE] Avatar cleanup scheduled complete")
 
         # Step 2: Workspace lookup
         memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
@@ -114,6 +149,9 @@ class AccountService:
 
         logger.info("[DELETE] Membership cleanup")
         logger.info("[DELETE] Workspace deletion")
+        sys.stdout.flush()
+        
+        doc_file_paths = []
         for membership in memberships:
             org_id = membership.organization_id
 
@@ -123,55 +161,30 @@ class AccountService:
             ).count()
 
             if owner_count <= 1:
-                # User is sole owner — delete GCS documents first
+                # Collect document paths for background deletion
                 documents = db.query(ProcessedDocument).filter(
                     ProcessedDocument.organization_id == org_id
                 ).all()
                 for doc in documents:
                     if doc.file_path:
-                        try:
-                            logger.info(f"Starting GCS deletion for {doc.file_path}")
-                            GCSService.delete_file(doc.file_path)
-                        except Exception as e:
-                            logger.warning(f"Failed to delete file {doc.file_path}: {e}")
+                        doc_file_paths.append(doc.file_path)
 
-                # Delete Organization
-                org = db.query(Organization).filter(Organization.id == org_id).first()
-                if org:
-                    db.delete(org)
-                    deleted_org_ids.append(org_id)
+                # Delete Organization via raw SQL to prevent massive ORM cascade loading
+                deleted_org_ids.append(org_id)
+                db.query(Organization).filter(Organization.id == org_id).delete(synchronize_session=False)
             else:
                 db.delete(membership)
 
         logger.info("[DELETE] Membership cleanup complete")
         logger.info("[DELETE] Workspace deletion complete")
 
-        # Step 8: Supabase Admin deletion
-        logger.info("[DELETE] Supabase admin delete")
-        if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_URL:
-            import httpx
-            try:
-                logger.info(f"Triggering Supabase Auth deletion for user {user_id}")
-                url = f"{settings.SUPABASE_URL}/auth/v1/admin/users/{user_id}"
-                headers = {
-                    "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
-                    "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}"
-                }
-                with httpx.Client(timeout=5.0) as client:
-                    resp = client.delete(url, headers=headers)
-                    if resp.status_code not in (200, 204):
-                        logger.error(f"Failed to delete Supabase user: status={resp.status_code} response={resp.text}")
-                    else:
-                        logger.info(f"Supabase Auth user {user_id} deleted successfully.")
-            except Exception as e:
-                logger.error(f"Error calling Supabase user delete API: {e}", exc_info=True)
-        else:
-            logger.warning("SUPABASE_SERVICE_ROLE_KEY not configured. Skipping Supabase Auth user deletion.")
-        logger.info("[DELETE] Supabase admin delete complete")
-
-        # Step 7: Profile deletion
+        # Queue background cleanup for GCS and Supabase
+        logger.info("[DELETE] Queueing background tasks")
+        background_tasks.add_task(AccountService._background_cleanup, user_id, avatar_url, doc_file_paths)
+        
+        # Step 7: Profile deletion (raw SQL delete to prevent ORM hydration)
         logger.info("[DELETE] Profile deletion")
-        db.delete(user_profile)
+        db.query(Profile).filter(Profile.id == user_id).delete(synchronize_session=False)
         logger.info("[DELETE] Profile deletion complete")
 
         # Step 9: Commit transaction
