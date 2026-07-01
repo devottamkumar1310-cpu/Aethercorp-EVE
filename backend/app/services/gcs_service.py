@@ -102,7 +102,7 @@ class GCSService:
                 try:
                     bucket = client.bucket(bucket_name)
                     blob = bucket.blob(blob_name)
-                    blob.delete()
+                    blob.delete(timeout=3.0)
                 except Exception as e:
                     logger.warning(f"Failed to delete GCS file {file_path}: {e}")
             return

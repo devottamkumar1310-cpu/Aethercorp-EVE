@@ -29,6 +29,7 @@ def delete_account(
     user_id = current_user.id
 
     # 1. Check workspace ownership constraints before attempting deletion
+    logger.info("[AUDIT-STAGE-START] Step 1: Ownership validation started")
     user_memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
     blocked_workspaces = []
 
@@ -50,6 +51,8 @@ def delete_account(
                     org = db.query(Organization).filter(Organization.id == membership.organization_id).first()
                     org_name = org.name if org else "Workspace"
                     blocked_workspaces.append(f"{org_name} (ID: {membership.organization_id})")
+
+    logger.info("[AUDIT-STAGE-COMPLETE] Step 1: Ownership validation completed")
 
     if blocked_workspaces:
         raise HTTPException(

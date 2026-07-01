@@ -93,64 +93,62 @@ class AccountService:
         user_id = user_profile.id
         logger.info(f"[TIMING] delete_account() started for user {user_id}")
 
-        # Delete user avatar file from GCS / local storage
+        # Step 3: Avatar deletion
+        logger.info("[AUDIT-STAGE-START] Step 3: Avatar deletion started")
         if user_profile.avatar_url:
             try:
                 logger.info(f"Purging user avatar file: {user_profile.avatar_url}")
                 GCSService.delete_file(user_profile.avatar_url)
             except Exception as e:
                 logger.warning(f"Failed to delete user avatar file {user_profile.avatar_url}: {e}")
+        logger.info("[AUDIT-STAGE-COMPLETE] Step 3: Avatar deletion completed")
 
-        # Find all memberships
-        t_memberships = time.perf_counter()
+        # Step 2: Workspace lookup
+        logger.info("[AUDIT-STAGE-START] Step 2: Workspace lookup started")
         memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
-        logger.info(f"[TIMING] Fetch memberships took {(time.perf_counter() - t_memberships) * 1000:.2f} ms. Found {len(memberships)} memberships.")
+        logger.info(f"Found {len(memberships)} memberships to process.")
+        logger.info("[AUDIT-STAGE-COMPLETE] Step 2: Workspace lookup completed")
 
         deleted_org_ids = []
 
         for membership in memberships:
             org_id = membership.organization_id
 
-            # Check if user is the sole owner
-            t_owner = time.perf_counter()
             owner_count = db.query(Membership).filter(
                 Membership.organization_id == org_id,
                 Membership.role == "owner"
             ).count()
-            logger.info(f"[TIMING] Check owner count for org {org_id} took {(time.perf_counter() - t_owner) * 1000:.2f} ms. Count: {owner_count}")
 
             if owner_count <= 1:
-                # User is sole owner — delete the entire workspace
-                t_doc = time.perf_counter()
+                # User is sole owner — delete GCS documents first
+                logger.info(f"[AUDIT-STAGE-START] Step 4: GCS document deletion started for org {org_id}")
                 documents = db.query(ProcessedDocument).filter(
                     ProcessedDocument.organization_id == org_id
                 ).all()
-                logger.info(f"[TIMING] Document query for org {org_id} took {(time.perf_counter() - t_doc) * 1000:.2f} ms. Found {len(documents)} docs.")
-                
                 for doc in documents:
                     if doc.file_path:
-                        t_gcs = time.perf_counter()
                         try:
-                            logger.info(f"[TIMING] Starting GCS deletion for {doc.file_path} in delete_account")
+                            logger.info(f"Starting GCS deletion for {doc.file_path}")
                             GCSService.delete_file(doc.file_path)
-                            logger.info(f"[TIMING] Finished GCS deletion for {doc.file_path} in {(time.perf_counter() - t_gcs) * 1000:.2f} ms")
                         except Exception as e:
                             logger.warning(f"Failed to delete file {doc.file_path}: {e}")
+                logger.info(f"[AUDIT-STAGE-COMPLETE] Step 4: GCS document deletion completed for org {org_id}")
 
-                t_org = time.perf_counter()
+                # Step 6: Workspace deletion
+                logger.info(f"[AUDIT-STAGE-START] Step 6: Workspace deletion started for org {org_id}")
                 org = db.query(Organization).filter(Organization.id == org_id).first()
                 if org:
-                    logger.info(f"[TIMING] Queueing organization deletion in SQLAlchemy...")
                     db.delete(org)
                     deleted_org_ids.append(org_id)
-                    logger.info(f"[TIMING] Finished queueing organization deletion in {(time.perf_counter() - t_org) * 1000:.2f} ms")
+                logger.info(f"[AUDIT-STAGE-COMPLETE] Step 6: Workspace deletion completed for org {org_id}")
             else:
-                t_mem = time.perf_counter()
-                logger.info(f"[TIMING] Queueing membership deletion in SQLAlchemy...")
+                # Step 5: Membership cleanup
+                logger.info(f"[AUDIT-STAGE-START] Step 5: Membership cleanup started for membership {membership.id}")
                 db.delete(membership)
-                logger.info(f"[TIMING] Finished queueing membership deletion in {(time.perf_counter() - t_mem) * 1000:.2f} ms")
+                logger.info(f"[AUDIT-STAGE-COMPLETE] Step 5: Membership cleanup completed for membership {membership.id}")
 
-        # Delete user from Supabase auth if service role key is present
+        # Step 8: Supabase Admin deletion
+        logger.info("[AUDIT-STAGE-START] Step 8: Supabase Admin deletion started")
         if settings.SUPABASE_SERVICE_ROLE_KEY and settings.SUPABASE_URL:
             import httpx
             try:
@@ -160,7 +158,7 @@ class AccountService:
                     "apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
                     "Authorization": f"Bearer {settings.SUPABASE_SERVICE_ROLE_KEY}"
                 }
-                with httpx.Client() as client:
+                with httpx.Client(timeout=5.0) as client:
                     resp = client.delete(url, headers=headers)
                     if resp.status_code not in (200, 204):
                         logger.error(f"Failed to delete Supabase user: status={resp.status_code} response={resp.text}")
@@ -170,26 +168,26 @@ class AccountService:
                 logger.error(f"Error calling Supabase user delete API: {e}", exc_info=True)
         else:
             logger.warning("SUPABASE_SERVICE_ROLE_KEY not configured. Skipping Supabase Auth user deletion.")
+        logger.info("[AUDIT-STAGE-COMPLETE] Step 8: Supabase Admin deletion completed")
 
-        # Delete the profile (cascades to remaining memberships and activity logs)
-        t_profile = time.perf_counter()
-        logger.info(f"[TIMING] Queueing profile deletion in SQLAlchemy...")
+        # Step 7: Profile deletion
+        logger.info("[AUDIT-STAGE-START] Step 7: Profile deletion started")
         db.delete(user_profile)
-        logger.info(f"[TIMING] Finished queueing profile deletion in {(time.perf_counter() - t_profile) * 1000:.2f} ms")
-        
-        t_commit = time.perf_counter()
-        logger.info(f"[TIMING] Starting database commit for account deletion...")
+        logger.info("[AUDIT-STAGE-COMPLETE] Step 7: Profile deletion completed")
+
+        # Step 9: Commit transaction
+        logger.info("[AUDIT-STAGE-START] Step 9: Commit transaction started")
         db.commit()
-        logger.info(f"[TIMING] Finished database commit for account deletion in {(time.perf_counter() - t_commit) * 1000:.2f} ms")
-        
-        # Invalidate in-memory caches for deleted workspaces
+        logger.info("[AUDIT-STAGE-COMPLETE] Step 9: Commit transaction completed")
+
+        # Invalidate caches
         from app.core.cache import invalidate_workspace
         for oid in deleted_org_ids:
             try:
                 invalidate_workspace(str(oid))
             except Exception as ce:
                 logger.warning(f"Failed to invalidate cache for workspace {oid}: {ce}")
-        
+
         logger.info(f"[TIMING] delete_account() completed successfully in {(time.perf_counter() - t_start) * 1000:.2f} ms")
         return True
 
