@@ -93,6 +93,14 @@ class AccountService:
         user_id = user_profile.id
         logger.info(f"[TIMING] delete_account() started for user {user_id}")
 
+        # Delete user avatar file from GCS / local storage
+        if user_profile.avatar_url:
+            try:
+                logger.info(f"Purging user avatar file: {user_profile.avatar_url}")
+                GCSService.delete_file(user_profile.avatar_url)
+            except Exception as e:
+                logger.warning(f"Failed to delete user avatar file {user_profile.avatar_url}: {e}")
+
         # Find all memberships
         t_memberships = time.perf_counter()
         memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
@@ -196,6 +204,14 @@ class AccountService:
             return
 
         logger.info(f"Purging orphaned profile {existing.id} for email {email}")
+
+        # Delete user avatar file from GCS / local storage
+        if existing.avatar_url:
+            try:
+                logger.info(f"Purging orphaned user avatar file: {existing.avatar_url}")
+                GCSService.delete_file(existing.avatar_url)
+            except Exception as e:
+                logger.warning(f"Failed to delete orphaned user avatar file {existing.avatar_url}: {e}")
 
         # Find and delete all solely-owned workspaces
         memberships = db.query(Membership).filter(Membership.user_id == existing.id).all()

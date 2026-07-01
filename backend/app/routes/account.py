@@ -5,7 +5,7 @@ import logging
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.profile import Profile
-from app.models.organization import Membership
+from app.models.organization import Organization, Membership
 
 logger = logging.getLogger("eve.routes.account")
 router = APIRouter(prefix="/api/account", tags=["account"])
@@ -20,8 +20,8 @@ def delete_account(
     Permanently deletes the current user's account and all data in workspaces
     where they are the sole owner.
 
-    Ownership constraint: if the user is the sole owner of any workspace, deletion
-    is blocked with a 400 until they transfer ownership or delete the workspace first.
+    Ownership constraint: if the user is the sole owner of any workspace with other active members,
+    deletion is blocked with a 400 until they transfer ownership or remove members first.
     Delegates all cleanup (GCS files, Supabase Auth, DB records) to AccountService.
     """
     from app.services.account_service import AccountService
@@ -30,7 +30,7 @@ def delete_account(
 
     # 1. Check workspace ownership constraints before attempting deletion
     user_memberships = db.query(Membership).filter(Membership.user_id == user_id).all()
-    sole_owner_workspaces = []
+    blocked_workspaces = []
 
     for membership in user_memberships:
         if membership.role == "owner":
@@ -40,14 +40,24 @@ def delete_account(
             ).count()
 
             if owner_count == 1:
-                sole_owner_workspaces.append(str(membership.organization_id))
+                # If they are the sole owner, check if there are other members
+                total_member_count = db.query(Membership).filter(
+                    Membership.organization_id == membership.organization_id
+                ).count()
 
-    if sole_owner_workspaces:
+                if total_member_count > 1:
+                    # Other members exist, block deletion until they transfer ownership
+                    org = db.query(Organization).filter(Organization.id == membership.organization_id).first()
+                    org_name = org.name if org else "Workspace"
+                    blocked_workspaces.append(f"{org_name} (ID: {membership.organization_id})")
+
+    if blocked_workspaces:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "You are the sole owner of one or more workspaces. "
-                "Please transfer ownership or delete the workspaces first."
+                "Account deletion is unavailable because you are the sole owner of workspace(s) "
+                f"with other active members: {', '.join(blocked_workspaces)}. "
+                "Please transfer ownership or remove members first."
             )
         )
 
