@@ -119,23 +119,23 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
       {/* Decorative Radial Glows */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="w-full max-w-xl bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800/80 overflow-hidden z-10">
+      <div className="w-full max-w-xl bg-slate-900/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-800/80 overflow-hidden z-10">
         <div className="p-8 md:p-10">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-slate-900 dark:text-slate-100 dark:text-white font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/20">
+            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/20">
               EVE
             </div>
           </div>
           
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-100 dark:text-white text-center tracking-tight mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold text-white text-center tracking-tight mb-2">
             Welcome to EVE AI COO
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-center mb-8 text-sm md:text-base">
+          <p className="text-slate-400 text-center mb-8 text-sm md:text-base">
             Set up your brand's intelligence hub to begin forecasting and optimizing operations.
           </p>
 
@@ -156,19 +156,19 @@ export default function OnboardingPage() {
                 <Sparkles size={10} /> Recommended
               </div>
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-lg group-hover:bg-indigo-500 group-hover:text-slate-900 dark:text-slate-100 dark:text-white transition-colors">
+                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-lg group-hover:bg-indigo-500 group-hover:text-white transition-colors">
                   <Brain size={24} />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 dark:text-white group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                  <h3 className="text-base font-semibold text-white group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
                     Explore with Demo Workspace
                   </h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                     Instantly load a model apparel brand preloaded with inventory ledger items, client projects, sample purchase invoices, and chat history.
                   </p>
                 </div>
               </div>
-              <div className="flex items-center justify-end text-xs font-bold text-indigo-400 group-hover:text-indigo-300 pt-3 border-t border-slate-200 dark:border-slate-800/40 mt-3">
+              <div className="flex items-center justify-end text-xs font-bold text-indigo-400 group-hover:text-indigo-300 pt-3 border-t border-slate-800/40 mt-3">
                 {loadingDemo ? "Provisioning Sandbox..." : "Get Started Instantly"}
                 <ArrowRight size={14} className="ml-1.5 transform group-hover:translate-x-1 transition-transform" />
               </div>
@@ -179,39 +179,39 @@ export default function OnboardingPage() {
               <button
                 onClick={() => setShowManualForm(true)}
                 disabled={loading || loadingDemo}
-                className="w-full text-left p-5 bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 rounded-xl transition-all group"
+                className="w-full text-left p-5 bg-slate-900/40 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg group-hover:bg-slate-700 group-hover:text-slate-800 dark:text-slate-200 transition-colors">
+                  <div className="p-3 bg-slate-800 text-slate-400 rounded-lg group-hover:bg-slate-700 group-hover:text-slate-200 transition-colors">
                     <Building2 size={24} />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 dark:text-white group-hover:text-slate-700 dark:text-slate-300 transition-colors">
+                    <h3 className="text-base font-semibold text-white group-hover:text-slate-300 transition-colors">
                       Configure Clean Workspace
                     </h3>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                       Start fresh. Create a blank organization database and upload your own sales spreadsheets and supplier invoices.
                     </p>
                   </div>
                 </div>
               </button>
             ) : (
-              <form onSubmit={handleCreateWorkspace} className="p-5 bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4 animate-in slide-in-from-bottom-2 duration-200">
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 dark:text-white flex items-center gap-1.5">
+              <form onSubmit={handleCreateWorkspace} className="p-5 bg-slate-900/40 border border-slate-800 rounded-xl space-y-4 animate-in slide-in-from-bottom-2 duration-200">
+                <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
                   <Building2 size={16} className="text-indigo-400" /> Enter Workspace Details
                 </h3>
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Brand / Company Name</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Brand / Company Name</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building2 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                      <Building2 className="h-4 w-4 text-slate-500" />
                     </div>
                     <input
                       type="text"
                       required
                       value={workspaceName}
                       onChange={(e) => setWorkspaceName(e.target.value)}
-                      className="pl-10 block w-full bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 dark:text-white placeholder-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm outline-none transition-all"
+                      className="pl-10 block w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-white placeholder-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm outline-none transition-all"
                       placeholder="Acme Wearables"
                     />
                   </div>
@@ -221,7 +221,7 @@ export default function OnboardingPage() {
                   <button
                     type="submit"
                     disabled={loading || !workspaceName.trim()}
-                    className="flex-1 flex justify-center items-center py-2 px-4 border border-transparent rounded-lg text-sm font-semibold text-slate-900 dark:text-slate-100 dark:text-white bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50"
+                    className="flex-1 flex justify-center items-center py-2 px-4 border border-transparent rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50"
                   >
                     {loading ? "Creating..." : "Create Workspace"}
                     {!loading && <ArrowRight size={14} className="ml-1.5" />}
@@ -229,7 +229,7 @@ export default function OnboardingPage() {
                   <button
                     type="button"
                     onClick={() => setShowManualForm(false)}
-                    className="py-2 px-4 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:bg-slate-800 transition-all"
+                    className="py-2 px-4 border border-slate-800 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 transition-all"
                   >
                     Back
                   </button>
@@ -239,7 +239,7 @@ export default function OnboardingPage() {
             
             <button
               onClick={handleSkip}
-              className="w-full text-center py-2.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-600 dark:text-slate-400 transition-colors"
+              className="w-full text-center py-2.5 text-xs font-medium text-slate-500 hover:text-slate-400 transition-colors"
             >
               Skip to Command Center
             </button>

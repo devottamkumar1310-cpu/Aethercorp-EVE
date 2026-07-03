@@ -419,7 +419,7 @@ export default function SettingsPage() {
       <aside className="lg:w-60 lg:shrink-0 lg:sticky lg:top-24 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none">
         <div className="bg-card border border-border rounded-xl p-3 shadow-sm space-y-1">
           <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2 mb-2">
-            <Menu size={12} className="text-slate-500 dark:text-slate-400" />
+            <Menu size={12} className="text-slate-500" />
             System settings
           </div>
           {[
@@ -439,10 +439,10 @@ export default function SettingsPage() {
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left cursor-pointer group ${
                   active
                     ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100 hover:bg-sidebar-accent pl-3"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-sidebar-accent pl-3"
                 }`}
               >
-                <IconComponent size={15} className={active ? "text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:text-slate-300"} />
+                <IconComponent size={15} className={active ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
                 {sec.label}
               </button>
             );
@@ -464,7 +464,7 @@ export default function SettingsPage() {
             
             {/* Avatar Upload UI with interactive preview and local draft review */}
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-border pb-6">
-              <div className="relative h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-slate-900 dark:text-slate-100 dark:text-white text-2xl font-bold overflow-hidden border-2 border-border shadow-md group">
+              <div className="relative h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden border-2 border-border shadow-md group">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Preview avatar" className="h-full w-full object-cover" />
                 ) : avatarUrl ? (
@@ -496,7 +496,7 @@ export default function SettingsPage() {
                         type="button"
                         onClick={handleAvatarUpload}
                         disabled={uploadingAvatar}
-                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-indigo-600 text-slate-900 dark:text-slate-100 dark:text-white rounded-lg hover:bg-indigo-700 transition cursor-pointer"
+                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition cursor-pointer"
                       >
                         {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                         Save Upload
@@ -581,7 +581,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={updatingProfile}
-                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-100 dark:text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition cursor-pointer"
+                  className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition cursor-pointer"
                 >
                   {updatingProfile && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                   Save Changes
@@ -622,7 +622,7 @@ export default function SettingsPage() {
                           : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/30"
                       }`}
                     >
-                      <Icon size={16} className={active ? "text-indigo-400" : "text-slate-500 dark:text-slate-400"} />
+                      <Icon size={16} className={active ? "text-indigo-400" : "text-slate-500"} />
                       <span>{t.label}</span>
                     </button>
                   );
@@ -671,7 +671,7 @@ export default function SettingsPage() {
                       This email is controlled by your Google account ({email}).
                     </p>
                   </div>
-                  <div className="text-xs border-t border-border/50 pt-2 text-slate-600 dark:text-slate-400">
+                  <div className="text-xs border-t border-border/50 pt-2 text-slate-400">
                     <p className="font-semibold text-foreground mb-0.5">Need to switch to another Google account?</p>
                     <p className="leading-relaxed">During beta, contact support and we can help migrate your login credentials.</p>
                   </div>
@@ -714,7 +714,7 @@ export default function SettingsPage() {
                   <button
                     type="submit"
                     disabled={updatingEmail || email === profile?.email}
-                    className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-slate-100 dark:text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {updatingEmail && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                     Change Email Address
@@ -822,7 +822,7 @@ export default function SettingsPage() {
                   setDeleteAccountConfirmText("");
                   setDeleteAccountError("");
                 }}
-                className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-slate-900 dark:text-slate-100 dark:text-white text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer shrink-0"
+                className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold uppercase tracking-wider rounded-lg transition-colors cursor-pointer shrink-0"
               >
                 Delete Account
               </button>
@@ -875,7 +875,7 @@ export default function SettingsPage() {
                 <button
                   onClick={handleDeleteWorkspace}
                   disabled={deleteWsConfirmText !== deleteWsModal.name || deleteWsLoading}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-slate-900 dark:text-slate-100 dark:text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   {deleteWsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                   Delete Workspace
@@ -922,7 +922,7 @@ export default function SettingsPage() {
                       <p className="text-sm text-foreground font-semibold">Before deleting your account you must:</p>
                       <div className="text-sm text-muted-foreground space-y-1 pl-1">
                         <p className="text-foreground">1. Transfer ownership to another member</p>
-                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 pl-4 py-0.5">OR</p>
+                        <p className="text-xs font-bold text-slate-500 pl-4 py-0.5">OR</p>
                         <p className="text-foreground">2. Remove all members from the workspace</p>
                       </div>
                     </div>
@@ -943,7 +943,7 @@ export default function SettingsPage() {
                           setShowDeleteAccountModal(false);
                           scrollToSection("workspaces");
                         }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 dark:text-slate-100 dark:text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         Manage Workspace
                       </button>
@@ -1007,7 +1007,7 @@ export default function SettingsPage() {
                         }
                       }}
                       disabled={deleteAccountConfirmText !== "DELETE" || deleteAccountLoading}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-slate-900 dark:text-slate-100 dark:text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                     >
                       {deleteAccountLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                       Delete Account

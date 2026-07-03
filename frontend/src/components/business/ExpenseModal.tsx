@@ -95,8 +95,8 @@ export function ExpenseModal({ isOpen, onClose, token, onSuccess }: ExpenseModal
             />
           </div>
           <div className="pt-4 flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors" disabled={isSubmitting}>Cancel</button>
-            <button type="submit" className="px-4 py-2 text-slate-900 dark:text-slate-100 dark:text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors flex items-center gap-2" disabled={isSubmitting}>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors" disabled={isSubmitting}>Cancel</button>
+            <button type="submit" className="px-4 py-2 text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors flex items-center gap-2" disabled={isSubmitting}>
               {isSubmitting ? "Saving..." : "Save Expense"}
             </button>
           </div>
