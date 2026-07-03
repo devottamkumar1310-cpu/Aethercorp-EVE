@@ -43,16 +43,16 @@ export function ExecutiveScenarioPlannerCard({ actions, loading }: Props) {
       <CardContent>
         <div className="space-y-3">
           {actions.map((action, idx) => (
-            <div key={idx} className="flex items-start bg-white dark:bg-slate-900 p-3 rounded-md border border-indigo-100 shadow-sm">
+            <div key={idx} className="flex items-start bg-white p-3 rounded-md border border-indigo-100 shadow-sm">
               <div className="mr-3 mt-0.5">
                 <CheckCircle2 className="h-5 w-5 text-indigo-500" />
               </div>
               <div className="flex-1">
-                <p className="font-medium text-sm text-slate-800 dark:text-slate-200">{action.action}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{action.impact}</p>
+                <p className="font-medium text-sm text-slate-800">{action.action}</p>
+                <p className="text-xs text-slate-500 mt-1">{action.impact}</p>
               </div>
               <div className="ml-3 flex flex-col items-end">
-                <Badge variant="outline" className="text-[10px] bg-slate-50 dark:bg-slate-900/80">
+                <Badge variant="outline" className="text-[10px] bg-slate-50">
                   Confidence
                 </Badge>
                 <span className="text-sm font-bold text-indigo-700 mt-1">{action.confidence_score}%</span>

@@ -57,7 +57,7 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
     }
   };
 
-  if (loading) return <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 animate-pulse h-64"></div>;
+  if (loading) return <div className="bg-white p-6 rounded-xl border border-slate-200 animate-pulse h-64"></div>;
 
   const getHealthColor = (status: string) => {
     if (status === "excellent") return "text-green-600";
@@ -67,13 +67,13 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-6 flex flex-col">
-      <div className="bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-900 px-6 py-4 flex justify-between items-center text-slate-900 dark:text-slate-100 dark:text-white">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6 flex flex-col">
+      <div className="bg-slate-900 px-6 py-4 flex justify-between items-center text-white">
         <div className="flex items-center gap-2">
           <Zap className="text-yellow-400" size={20} />
           <h2 className="font-bold text-lg">Business Intelligence Engine</h2>
         </div>
-        <button onClick={handleCaptureSnapshot} className="text-xs bg-slate-200 dark:bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md transition-colors border border-slate-300 dark:border-slate-700">
+        <button onClick={handleCaptureSnapshot} className="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md transition-colors border border-slate-700">
           Capture Snapshot
         </button>
       </div>
@@ -82,15 +82,15 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
         {/* Left Col: Health & Summary */}
         <div className="lg:col-span-1 border-r border-slate-100 pr-6 flex flex-col gap-6">
           <div>
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Business Health</p>
+            <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Business Health</p>
             <div className="flex items-end gap-2">
               <span className={`text-5xl font-black ${getHealthColor(health?.status)}`}>{health?.score}</span>
-              <span className="text-slate-600 dark:text-slate-400 mb-1">/100</span>
+              <span className="text-slate-400 mb-1">/100</span>
             </div>
             <p className="text-sm font-medium mt-1 capitalize text-slate-700">Status: {health?.status}</p>
           </div>
           <div>
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Executive Summary</p>
+            <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Executive Summary</p>
             <p className="text-slate-700 text-sm leading-relaxed">{summary?.summary}</p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="text-amber-500" size={16} />
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Top Risks</p>
+              <p className="text-sm font-semibold text-slate-800">Top Risks</p>
             </div>
             <div className="space-y-3">
               {risks.slice(0, 3).map((r, i) => (
@@ -110,13 +110,13 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
                   <p className="text-xs text-amber-700 mt-1">{r.description}</p>
                 </div>
               ))}
-              {risks.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400 italic">No significant risks detected.</p>}
+              {risks.length === 0 && <p className="text-sm text-slate-500 italic">No significant risks detected.</p>}
             </div>
           </div>
           <div>
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="text-blue-500" size={16} />
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Top Opportunities</p>
+              <p className="text-sm font-semibold text-slate-800">Top Opportunities</p>
             </div>
             <div className="space-y-3">
               {opportunities.slice(0, 3).map((o, i) => (
@@ -125,7 +125,7 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
                   <p className="text-xs text-blue-700 mt-1">{o.description}</p>
                 </div>
               ))}
-              {opportunities.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400 italic">Tracking baseline metrics for opportunities.</p>}
+              {opportunities.length === 0 && <p className="text-sm text-slate-500 italic">Tracking baseline metrics for opportunities.</p>}
             </div>
           </div>
         </div>
@@ -134,7 +134,7 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
         <div className="lg:col-span-1 pl-0 lg:pl-6 border-t lg:border-t-0 lg:border-l border-slate-100 pt-6 lg:pt-0">
           <div className="flex items-center gap-2 mb-3">
             <Target className="text-indigo-500" size={16} />
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Recommended Actions</p>
+            <p className="text-sm font-semibold text-slate-800">Recommended Actions</p>
           </div>
           <div className="space-y-3">
             {actions.slice(0, 4).map((a, i) => (
@@ -142,11 +142,11 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
                 <CheckCircle size={14} className="text-indigo-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm text-slate-700">{a.action}</p>
-                  <p className={`text-[10px] font-bold uppercase mt-1 ${a.priority === 'high' ? 'text-red-500' : 'text-slate-600 dark:text-slate-400'}`}>{a.priority} Priority</p>
+                  <p className={`text-[10px] font-bold uppercase mt-1 ${a.priority === 'high' ? 'text-red-500' : 'text-slate-400'}`}>{a.priority} Priority</p>
                 </div>
               </div>
             ))}
-            {actions.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400 italic">Operations are fully optimized.</p>}
+            {actions.length === 0 && <p className="text-sm text-slate-500 italic">Operations are fully optimized.</p>}
           </div>
         </div>
       </div>

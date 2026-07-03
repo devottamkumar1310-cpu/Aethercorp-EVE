@@ -36,7 +36,7 @@ export default function SignupPage() {
   ].filter(Boolean).length;
 
   const getStrengthText = (score: number) => {
-    if (password.length === 0) return { label: "", color: "bg-slate-200", text: "text-slate-600 dark:text-slate-400" };
+    if (password.length === 0) return { label: "", color: "bg-slate-200", text: "text-slate-400" };
     if (score <= 2) return { label: "Weak", color: "bg-rose-500", text: "text-rose-500" };
     if (score <= 4) return { label: "Fair", color: "bg-amber-500", text: "text-amber-500" };
     return { label: "Strong", color: "bg-emerald-500", text: "text-emerald-500" };
@@ -94,16 +94,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200">
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center text-slate-900 dark:text-slate-100 dark:text-white font-bold text-xl tracking-tighter">
+            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl tracking-tighter">
               EVE
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-2">Create Account</h2>
-          <p className="text-slate-500 dark:text-slate-400 text-center mb-8 text-sm">Start making deterministic decisions</p>
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Create Account</h2>
+          <p className="text-slate-500 text-center mb-8 text-sm">Start making deterministic decisions</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (
@@ -121,14 +121,14 @@ export default function SignupPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                  <User className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 block w-full rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm outline-none transition-all"
+                  className="pl-10 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm outline-none transition-all"
                   placeholder="John Doe"
                 />
               </div>
@@ -138,14 +138,14 @@ export default function SignupPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                  <Mail className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 block w-full rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm outline-none transition-all"
+                  className="pl-10 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm outline-none transition-all"
                   placeholder="founder@acmefashion.com"
                 />
               </div>
@@ -155,14 +155,14 @@ export default function SignupPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                  <Lock className="h-4 w-4 text-slate-400" />
                 </div>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 block w-full rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-slate-900 dark:text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm outline-none transition-all"
+                  className="pl-10 block w-full rounded-md border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 sm:text-sm outline-none transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -171,12 +171,12 @@ export default function SignupPage() {
               {password.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Password Strength:</span>
+                    <span className="text-slate-500">Password Strength:</span>
                     <span className={`font-semibold ${strength.text}`}>{strength.label}</span>
                   </div>
                   
                   {/* Strength Bar */}
-                  <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-900/50 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div 
                       className={`h-full ${strength.color} transition-all duration-300`} 
                       style={{ width: `${(strengthScore / 5) * 100}%` }}
@@ -184,33 +184,33 @@ export default function SignupPage() {
                   </div>
 
                   {/* Rules Checklist */}
-                  <ul className="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 mt-2">
+                  <ul className="space-y-1.5 text-xs text-slate-500 mt-2">
                     <li className="flex items-center gap-1.5">
-                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasMinLength ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 dark:bg-slate-900/50 text-slate-450"}`}>
+                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasMinLength ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-450"}`}>
                         {hasMinLength ? "✓" : "✕"}
                       </span>
                       <span>At least 8 characters</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasUppercase ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 dark:bg-slate-900/50 text-slate-450"}`}>
+                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasUppercase ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-450"}`}>
                         {hasUppercase ? "✓" : "✕"}
                       </span>
                       <span>At least one uppercase letter (A-Z)</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasLowercase ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 dark:bg-slate-900/50 text-slate-450"}`}>
+                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasLowercase ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-450"}`}>
                         {hasLowercase ? "✓" : "✕"}
                       </span>
                       <span>At least one lowercase letter (a-z)</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasNumber ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 dark:bg-slate-900/50 text-slate-450"}`}>
+                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasNumber ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-450"}`}>
                         {hasNumber ? "✓" : "✕"}
                       </span>
                       <span>At least one number (0-9)</span>
                     </li>
                     <li className="flex items-center gap-1.5">
-                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasSpecialChar ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 dark:bg-slate-900/50 text-slate-450"}`}>
+                      <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[10px] font-bold ${hasSpecialChar ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-450"}`}>
                         {hasSpecialChar ? "✓" : "✕"}
                       </span>
                       <span>At least one special character (!@#$%^&*)</span>
@@ -226,7 +226,7 @@ export default function SignupPage() {
                 type="checkbox"
                 checked={agree}
                 onChange={(e) => setAgree(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                 required
               />
               <label htmlFor="agree-checkbox" className="text-xs text-slate-600 cursor-pointer leading-normal select-none">
@@ -245,13 +245,13 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading || !isPasswordValid || !agree}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-slate-900 dark:text-slate-100 dark:text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               {loading ? "Creating account..." : "Sign Up"}
             </button>
           </form>
         </div>
-        <div className="px-8 py-4 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 text-center">
+        <div className="px-8 py-4 bg-slate-50 border-t border-slate-200 text-center">
           <p className="text-sm text-slate-600">
             Already have an account?{" "}
             <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
@@ -260,7 +260,7 @@ export default function SignupPage() {
           </p>
         </div>
       </div>
-      <footer className="mt-8 text-center text-xs text-slate-500 dark:text-slate-400 space-x-4">
+      <footer className="mt-8 text-center text-xs text-slate-500 space-x-4">
         <Link href="/privacy" className="hover:text-slate-700 transition-colors">
           Privacy Policy
         </Link>
