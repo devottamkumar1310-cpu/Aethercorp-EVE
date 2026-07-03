@@ -473,16 +473,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || (!activeWorkspaceId && !initError)) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
-        <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-8 shadow-2xl space-y-6 animate-fade-in">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-slate-100 dark:text-white font-sans">
+        <div className="w-full max-w-sm bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-2xl space-y-6 animate-fade-in">
           <div className="flex justify-center mb-2">
-            <div className="h-14 w-14 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl animate-pulse shadow-lg shadow-indigo-500/30">
+            <div className="h-14 w-14 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-2xl flex items-center justify-center text-slate-900 dark:text-slate-100 dark:text-white font-bold text-2xl animate-pulse shadow-lg shadow-indigo-500/30">
               EVE
             </div>
           </div>
           <div className="text-center space-y-1">
             <h3 className="text-lg font-bold tracking-tight">Initializing EVE AI OS</h3>
-            <p className="text-xs text-slate-400">Setting up executive operations context</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400">Setting up executive operations context</p>
           </div>
           
           <div className="space-y-3 pt-2">
@@ -492,7 +492,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ) : (
                 <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
               )}
-              <span className={loadingStage >= 2 ? "text-slate-400 line-through decoration-indigo-500/50" : "text-white font-medium"}>
+              <span className={loadingStage >= 2 ? "text-slate-600 dark:text-slate-400 line-through decoration-indigo-500/50" : "text-slate-900 dark:text-slate-100 dark:text-white font-medium"}>
                 Authenticating session
               </span>
             </div>
@@ -503,9 +503,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ) : loadingStage === 2 ? (
                 <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
               ) : (
-                <div className="h-2 w-2 rounded-full bg-slate-800 ml-1" />
+                <div className="h-2 w-2 rounded-full bg-slate-200 dark:bg-slate-800 ml-1" />
               )}
-              <span className={loadingStage >= 3 ? "text-slate-400 line-through decoration-indigo-500/50" : loadingStage === 2 ? "text-white font-medium animate-pulse" : "text-slate-500"}>
+              <span className={loadingStage >= 3 ? "text-slate-600 dark:text-slate-400 line-through decoration-indigo-500/50" : loadingStage === 2 ? "text-slate-900 dark:text-slate-100 dark:text-white font-medium animate-pulse" : "text-slate-500 dark:text-slate-400"}>
                 Loading active workspace
               </span>
             </div>
@@ -516,9 +516,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               ) : loadingStage === 3 ? (
                 <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
               ) : (
-                <div className="h-2 w-2 rounded-full bg-slate-800 ml-1" />
+                <div className="h-2 w-2 rounded-full bg-slate-200 dark:bg-slate-800 ml-1" />
               )}
-              <span className={loadingStage >= 4 ? "text-slate-400 line-through decoration-indigo-500/50" : loadingStage === 3 ? "text-white font-medium animate-pulse" : "text-slate-500"}>
+              <span className={loadingStage >= 4 ? "text-slate-600 dark:text-slate-400 line-through decoration-indigo-500/50" : loadingStage === 3 ? "text-slate-900 dark:text-slate-100 dark:text-white font-medium animate-pulse" : "text-slate-500 dark:text-slate-400"}>
                 Loading business metrics & datasets
               </span>
             </div>
@@ -527,9 +527,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {loadingStage === 4 ? (
                 <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
               ) : (
-                <div className="h-2 w-2 rounded-full bg-slate-800 ml-1" />
+                <div className="h-2 w-2 rounded-full bg-slate-200 dark:bg-slate-800 ml-1" />
               )}
-              <span className={loadingStage === 4 ? "text-indigo-300 font-semibold animate-pulse" : "text-slate-500"}>
+              <span className={loadingStage === 4 ? "text-indigo-300 font-semibold animate-pulse" : "text-slate-500 dark:text-slate-400"}>
                 Preparing AI Executive portal...
               </span>
             </div>
@@ -541,16 +541,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (initError) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
-        <div className="w-full max-w-sm bg-slate-900/80 backdrop-blur-md rounded-2xl border border-red-900/40 p-8 shadow-2xl space-y-6 animate-fade-in">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-slate-900 dark:text-slate-100 dark:text-white font-sans">
+        <div className="w-full max-w-sm bg-slate-100 dark:bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-red-900/40 p-8 shadow-2xl space-y-6 animate-fade-in">
           <div className="flex justify-center mb-2">
-            <div className="h-14 w-14 bg-gradient-to-tr from-red-700 to-rose-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-red-500/20">
+            <div className="h-14 w-14 bg-gradient-to-tr from-red-700 to-rose-600 rounded-2xl flex items-center justify-center text-slate-900 dark:text-slate-100 dark:text-white font-bold text-2xl shadow-lg shadow-red-500/20">
               <AlertCircle size={28} />
             </div>
           </div>
           <div className="text-center space-y-2">
             <h3 className="text-lg font-bold tracking-tight text-red-400">Connection Failed</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">{initError}</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{initError}</p>
           </div>
           <div className="space-y-3 pt-2">
             <button
@@ -563,13 +563,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }
                 window.location.reload();
               }}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-slate-900 dark:text-slate-100 dark:text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
             >
               Retry Connection
             </button>
             <button
               onClick={handleLogout}
-              className="w-full py-2.5 px-4 bg-transparent border border-slate-700 hover:border-slate-500 text-slate-400 hover:text-slate-200 rounded-xl text-sm font-medium transition-all cursor-pointer"
+              className="w-full py-2.5 px-4 bg-transparent border border-slate-300 dark:border-slate-700 hover:border-slate-500 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 rounded-xl text-sm font-medium transition-all cursor-pointer"
             >
               Sign Out
             </button>
@@ -606,18 +606,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  }`}>
           <div
             onClick={() => router.push("/dashboard/eve")}
-            className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
+            className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-slate-900 dark:text-slate-100 dark:text-white font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
           >
             EVE
           </div>
           <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             <span className="font-bold text-foreground text-xs tracking-tight leading-none">EVE PORTAL</span>
-            <span className="text-[9px] text-slate-500 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
+            <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
           </div>
           
           <button
             onClick={toggleSidebar}
-            className="ml-auto p-1 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-sidebar-accent transition-colors hidden md:block"
+            className="ml-auto p-1 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200 rounded-lg hover:bg-sidebar-accent transition-colors hidden md:block"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
             {isSidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
@@ -625,7 +625,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <button
             onClick={() => setSidebarOpen(false)}
-            className="ml-auto text-slate-600 hover:text-slate-400 md:hidden"
+            className="ml-auto text-slate-600 hover:text-slate-600 dark:text-slate-400 md:hidden"
           >
             <X size={16} />
           </button>
@@ -663,17 +663,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  ? "opacity-45 cursor-not-allowed text-slate-600"
  : active
  ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
- : "text-slate-400 hover:text-slate-100 hover:bg-sidebar-accent"
+ : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100 hover:bg-sidebar-accent"
  } ${
  (item as any).isAI && !active && !isItemDisabled
  ? "hover:bg-indigo-900/30 hover:text-indigo-300"
  : ""
  }`}
                     >
-                      <Icon size={15} className={active && !isItemDisabled ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-300"} />
+                      <Icon size={15} className={active && !isItemDisabled ? "text-indigo-400" : "text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:text-slate-300"} />
                       <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>{item.label}</span>
                       {(item as any).isAI && (
-                        <span className={`ml-auto text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full tracking-wide ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
+                        <span className={`ml-auto text-[9px] font-bold bg-indigo-600 text-slate-900 dark:text-slate-100 dark:text-white px-1.5 py-0.5 rounded-full tracking-wide ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
                       )}
                     </Link>
                   );
@@ -692,14 +692,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
           >
             <Building2 size={14} className="text-indigo-400 flex-shrink-0" />
-            <span className={`text-xs text-slate-300 font-medium truncate animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+            <span className={`text-xs text-slate-700 dark:text-slate-300 font-medium truncate animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
               {activeWorkspace?.name || "No workspace"}
             </span>
           </div>
           <button
             onClick={() => window.open("https://forms.gle/qETMVJfDzHnF86xi7", "_blank")}
             title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
-            className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
+            className={`w-full flex items-center rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
  isSidebarCollapsed ? "justify-start gap-2 px-3 py-2 md:justify-center md:p-2" : "gap-2 px-3 py-2"
  }`}
           >
@@ -722,7 +722,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Mobile hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-sidebar-accent rounded-lg transition-colors"
+              className="md:hidden p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100 dark:text-white hover:bg-sidebar-accent rounded-lg transition-colors"
             >
               <Menu size={18} />
             </button>
@@ -735,7 +735,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Theme Toggler */}
               <button
                 onClick={() => setThemePreference(theme === "dark" ? "light" : "dark")}
-                className="p-2 text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent rounded-lg transition-all"
+                className="p-2 text-slate-600 dark:text-slate-400 hover:text-indigo-400 hover:bg-sidebar-accent rounded-lg transition-all"
                 title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
               >
                 {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -749,7 +749,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 >
                   <Building2 size={14} className="text-indigo-400" />
                   <span className="max-w-[140px] truncate">{activeWorkspace?.name || "Select Workspace"}</span>
-                  <ChevronDown size={12} className="text-slate-400" />
+                  <ChevronDown size={12} className="text-slate-600 dark:text-slate-400" />
                 </button>
 
                 {isDropdownOpen && (
@@ -757,7 +757,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
                     <div className="absolute right-0 mt-2 w-60 bg-sidebar border border-sidebar-border rounded-xl shadow-xl z-50 overflow-hidden text-sidebar-foreground">
                       <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
-                        <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">My Workspaces</span>
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-semibold tracking-wider uppercase">My Workspaces</span>
                       </div>
                       <div className="py-1 max-h-48 overflow-y-auto">
                         {workspaces.map((ws) => (
@@ -773,13 +773,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           </button>
                         ))}
                         {workspaces.length === 0 && (
-                          <div className="px-4 py-3 text-sm text-slate-500 italic">No active workspaces</div>
+                          <div className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 italic">No active workspaces</div>
                         )}
                       </div>
                       <div className="p-2 border-t border-sidebar-border">
                         <button
                           onClick={() => { setIsDropdownOpen(false); setIsCreateModalOpen(true); }}
-                          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all"
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-slate-900 dark:text-slate-100 dark:text-white rounded-lg text-xs font-semibold transition-all"
                         >
                           <Plus size={12} /> Create Workspace
                         </button>
@@ -794,12 +794,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Profile */}
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-xs font-semibold text-foreground leading-none">{profile?.full_name || "Guest"}</span>
-                <span className="text-[10px] text-slate-500 mt-0.5">{profile?.email || ""}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{profile?.email || ""}</span>
               </div>
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-red-400 hover:bg-sidebar-accent rounded-lg transition-all"
+                className="p-2 text-slate-600 dark:text-slate-400 hover:text-red-400 hover:bg-sidebar-accent rounded-lg transition-all"
                 title="Sign Out"
               >
                 <LogOut size={16} />
@@ -818,14 +818,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
                 
                 <div className="flex justify-center">
-                  <div className="h-20 w-20 bg-gradient-to-tr from-indigo-600 to-violet-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 animate-pulse">
+                  <div className="h-20 w-20 bg-gradient-to-tr from-indigo-600 to-violet-500 text-slate-900 dark:text-slate-100 dark:text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 animate-pulse">
                     <Sparkles size={38} />
                   </div>
                 </div>
                 
                 <div className="space-y-3">
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-slate-100 tracking-tight">Welcome to EVE</h2>
-                  <p className="text-slate-400 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+                  <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Welcome to EVE</h2>
+                  <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
                     Enterprise Virtual Executive AI OS. Choose how you would like to begin exploring the platform.
                   </p>
                 </div>
@@ -843,10 +843,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <button
                       onClick={handleCreateDemoWorkspace}
                       disabled={demoLoading || createLoading}
-                      className="group relative flex flex-col text-left p-6 bg-slate-950/60 hover:bg-slate-950/90 border border-slate-800 hover:border-indigo-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-indigo-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
+                      className="group relative flex flex-col text-left p-6 bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950/60 hover:bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 hover:border-indigo-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-indigo-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
                     >
                       {demoLoading && (
-                        <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center z-10">
+                        <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950/75 backdrop-blur-xs flex items-center justify-center z-10">
                           <div className="flex flex-col items-center gap-3">
                             <div className="h-8 w-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
                             <span className="text-xs text-indigo-400 font-semibold animate-pulse">Launching demo...</span>
@@ -856,8 +856,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div className="h-10 w-10 bg-indigo-900/30 group-hover:bg-indigo-600/20 text-indigo-400 rounded-lg flex items-center justify-center mb-4 transition-all">
                         <Sparkles size={20} />
                       </div>
-                      <h4 className="text-base font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">Option A: Launch Demo Workspace</h4>
-                      <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                      <h4 className="text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-400 transition-colors">Option A: Launch Demo Workspace</h4>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs mt-2 leading-relaxed">
                         Explore EVE using a realistic fashion business (<strong>NovaWear Fashion</strong>) with preloaded sales, inventory, customers, expenses, risks, and executive insights.
                       </p>
                       <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-indigo-400 group-hover:text-indigo-300">
@@ -869,13 +869,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <button
                       onClick={() => setShowManualForm(true)}
                       disabled={demoLoading || createLoading}
-                      className="group flex flex-col text-left p-6 bg-slate-950/60 hover:bg-slate-950/90 border border-slate-800 hover:border-violet-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/5 cursor-pointer disabled:opacity-50"
+                      className="group flex flex-col text-left p-6 bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950/60 hover:bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 hover:border-violet-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/5 cursor-pointer disabled:opacity-50"
                     >
                       <div className="h-10 w-10 bg-purple-900/30 group-hover:bg-purple-600/20 text-purple-400 rounded-lg flex items-center justify-center mb-4 transition-all">
                         <Plus size={20} />
                       </div>
-                      <h4 className="text-base font-bold text-slate-200 group-hover:text-purple-400 transition-colors">Option B: Create My Own</h4>
-                      <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                      <h4 className="text-base font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-400 transition-colors">Option B: Create My Own</h4>
+                      <p className="text-slate-600 dark:text-slate-400 text-xs mt-2 leading-relaxed">
                         Start fresh with your own brand details, upload your own business datasets/documents, and construct a custom operations workspace.
                       </p>
                       <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-purple-400 group-hover:text-purple-300">
@@ -888,27 +888,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="text-left mb-2">
                       <button
                         onClick={() => setShowManualForm(false)}
-                        className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
+                        className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-300 flex items-center gap-1 transition-colors"
                       >
                         &larr; Back to options
                       </button>
                     </div>
                     <form onSubmit={handleCreateWorkspace} className="space-y-4 text-left">
                       <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Workspace / Brand Name</label>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Workspace / Brand Name</label>
                         <input
                           type="text"
                           required
                           value={newWorkspaceName}
                           onChange={(e) => setNewWorkspaceName(e.target.value)}
                           placeholder="e.g. Acme Clothing"
-                          className="w-full px-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm placeholder-slate-600"
+                          className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/80 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm placeholder-slate-600"
                         />
                       </div>
                       <button
                         type="submit"
                         disabled={createLoading || !newWorkspaceName.trim()}
-                        className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
+                        className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-slate-900 dark:text-slate-100 dark:text-white rounded-xl text-sm font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
                       >
                         {createLoading ? "Creating Workspace..." : "Create Workspace"}
                       </button>
@@ -931,7 +931,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Building2 className="text-indigo-600" size={20} /> Create New Workspace
               </h3>
-              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 rounded-lg hover:bg-sidebar-accent text-slate-400">
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 rounded-lg hover:bg-sidebar-accent text-slate-600 dark:text-slate-400">
                 <X size={18} />
               </button>
             </div>
@@ -943,7 +943,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
               )}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Workspace / Brand Name</label>
+                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Workspace / Brand Name</label>
                 <input
                   type="text"
                   required
@@ -957,7 +957,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 border border-border text-foreground hover:bg-sidebar-accent rounded-lg text-sm font-semibold">
                   Cancel
                 </button>
-                <button type="submit" disabled={createLoading || !newWorkspaceName.trim()} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
+                <button type="submit" disabled={createLoading || !newWorkspaceName.trim()} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-slate-900 dark:text-slate-100 dark:text-white rounded-lg text-sm font-semibold disabled:opacity-50">
                   {createLoading ? "Creating..." : "Create Workspace"}
                 </button>
               </div>

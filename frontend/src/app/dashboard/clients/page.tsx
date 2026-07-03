@@ -70,7 +70,7 @@ export default function ClientsPage() {
       </div>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Users className="text-blue-600"/> Client Management</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-slate-900 dark:text-slate-100 dark:text-white px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
           <Plus size={18}/> New Client
         </button>
       </div>
@@ -125,10 +125,10 @@ export default function ClientsPage() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(c)} className="p-1.5 text-slate-400 hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleEdit(c)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(c.id)} className="p-1.5 text-slate-400 hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
+                      <button onClick={() => handleDelete(c.id)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>

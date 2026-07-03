@@ -75,7 +75,7 @@ export default function TasksPage() {
       </div>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><CheckSquare className="text-blue-600"/> Tasks</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-slate-900 dark:text-slate-100 dark:text-white px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
           <Plus size={18}/> New Task
         </button>
       </div>
@@ -132,10 +132,10 @@ export default function TasksPage() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{t.due_date ? new Date(t.due_date).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(t)} className="p-1.5 text-slate-400 hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleEdit(t)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate-400 hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
+                      <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>
