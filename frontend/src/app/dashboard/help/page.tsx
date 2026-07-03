@@ -20,13 +20,13 @@ export default function HelpPage() {
       icon: BookOpen,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">Welcome to EVE AI OS</h3>
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Welcome to EVE AI OS</h3>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
             EVE (Enterprise Virtual Executive) is your autonomous Chief Operating Officer. EVE continuously monitors your sales, expenses, and inventory data, and automates executive analysis so you can focus on scaling your brand.
           </p>
-          <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-4 rounded-xl space-y-2 shadow-sm">
+          <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl space-y-2 shadow-sm">
             <h4 className="text-xs font-bold text-indigo-400 uppercase">First Steps:</h4>
-            <ul className="list-decimal list-inside text-xs text-slate-300 space-y-2 leading-relaxed">
+            <ul className="list-decimal list-inside text-xs text-muted-foreground space-y-2 leading-relaxed">
               <li>Explore the preloaded <strong>NovaWear Fashion</strong> demo workspace or create your own.</li>
               <li>Go to the <strong>Document Hub</strong> to upload supplier invoices, contracts, or marketing plans.</li>
               <li>Open the <strong>AI Command Center</strong> to run queries and get strategic recommendations.</li>
@@ -41,26 +41,26 @@ export default function HelpPage() {
       icon: TrendingUp,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">Key Performance Indicators</h3>
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Key Performance Indicators</h3>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
             EVE tracks real-time business performance on your Operations Dashboard:
           </p>
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-4 rounded-xl shadow-sm">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Net Profit</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Calculated as Net Revenues minus Total Expenses. A rising trend indicates healthy operational margins.</p>
+            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl shadow-sm">
+              <h4 className="text-sm font-bold text-foreground dark:text-foreground">Net Profit</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">Calculated as Net Revenues minus Total Expenses. A rising trend indicates healthy operational margins.</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-4 rounded-xl shadow-sm">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Total Clients</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">The total volume of business clients. Keep track of customer retention and active relationship rates.</p>
+            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl shadow-sm">
+              <h4 className="text-sm font-bold text-foreground dark:text-foreground">Total Clients</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">The total volume of business clients. Keep track of customer retention and active relationship rates.</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-4 rounded-xl shadow-sm">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Tasks Completion</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">A metric showing operational velocity by comparing completed tasks versus total open actions.</p>
+            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl shadow-sm">
+              <h4 className="text-sm font-bold text-foreground dark:text-foreground">Tasks Completion</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">A metric showing operational velocity by comparing completed tasks versus total open actions.</p>
             </div>
-            <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-4 rounded-xl shadow-sm">
-              <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200">Revenue Trends</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Visualized directional trends indicating whether sales volumes are scaling up or down over time.</p>
+            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl shadow-sm">
+              <h4 className="text-sm font-bold text-foreground dark:text-foreground">Revenue Trends</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">Visualized directional trends indicating whether sales volumes are scaling up or down over time.</p>
             </div>
           </div>
         </div>
@@ -72,16 +72,16 @@ export default function HelpPage() {
       icon: Brain,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">AI Command Center (AI COO)</h3>
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">AI Command Center (AI COO)</h3>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
             Your conversational control room. Chat with EVE using normal text to command deep operational audits.
           </p>
-          <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-4 rounded-xl space-y-3 shadow-sm">
+          <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl space-y-3 shadow-sm">
             <h4 className="text-xs font-bold text-indigo-400 uppercase">Suggested Prompts:</h4>
             <div className="space-y-2">
-              <p className="text-xs text-slate-600 dark:text-slate-300">💡 <em>"Give me an executive summary of this week."</em></p>
-              <p className="text-xs text-slate-600 dark:text-slate-300">💡 <em>"Which products are hurting our profitability?"</em></p>
-              <p className="text-xs text-slate-600 dark:text-slate-300">💡 <em>"Detail our dead stock inventory and how to liquidate it."</em></p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">💡 <em>"Give me an executive summary of this week."</em></p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">💡 <em>"Which products are hurting our profitability?"</em></p>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">💡 <em>"Detail our dead stock inventory and how to liquidate it."</em></p>
             </div>
           </div>
         </div>
@@ -93,30 +93,30 @@ export default function HelpPage() {
       icon: Package,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">Inventory & Safety Stock</h3>
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Inventory & Safety Stock</h3>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
             EVE prevents money from being locked up in low-demand inventory, and prevents sales loss from out-of-stock events.
           </p>
           <div className="space-y-3">
-            <div className="flex gap-3 items-start bg-white dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex gap-3 items-start bg-card dark:bg-card p-3 rounded-lg border border-border dark:border-border shadow-sm">
               <div className="h-2 w-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
               <div>
-                <strong className="text-xs text-slate-900 dark:text-slate-200">Dead Stock Detection</strong>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Identifies items that have low inventory turnover or haven't sold in the past 90 days.</p>
+                <strong className="text-xs text-foreground dark:text-foreground">Dead Stock Detection</strong>
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">Identifies items that have low inventory turnover or haven't sold in the past 90 days.</p>
               </div>
             </div>
-            <div className="flex gap-3 items-start bg-white dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex gap-3 items-start bg-card dark:bg-card p-3 rounded-lg border border-border dark:border-border shadow-sm">
               <div className="h-2 w-2 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
               <div>
-                <strong className="text-xs text-slate-900 dark:text-slate-200">Stockout Predictions</strong>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Uses linear run-rates to predict exactly how many days of inventory remain before a SKU runs out.</p>
+                <strong className="text-xs text-foreground dark:text-foreground">Stockout Predictions</strong>
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">Uses linear run-rates to predict exactly how many days of inventory remain before a SKU runs out.</p>
               </div>
             </div>
-            <div className="flex gap-3 items-start bg-white dark:bg-slate-900/40 p-3 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div className="flex gap-3 items-start bg-card dark:bg-card p-3 rounded-lg border border-border dark:border-border shadow-sm">
               <div className="h-2 w-2 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
               <div>
-                <strong className="text-xs text-slate-900 dark:text-slate-200">Reorder Recommendations</strong>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">Calculates safety stock thresholds and recommends order volumes based on supplier lead times.</p>
+                <strong className="text-xs text-foreground dark:text-foreground">Reorder Recommendations</strong>
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">Calculates safety stock thresholds and recommends order volumes based on supplier lead times.</p>
               </div>
             </div>
           </div>
@@ -129,15 +129,15 @@ export default function HelpPage() {
       icon: Database,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">Multi-Agent Executive Board</h3>
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Multi-Agent Executive Board</h3>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
             EVE features specialized sub-agents that collaborate behind the scenes to analyze issues from multiple business angles:
           </p>
-          <div className="space-y-2 text-xs text-slate-300">
-            <p>📊 <strong className="text-slate-200">Finance Agent:</strong> Evaluates costs, pricing strategy, margin degradation, and cash-flow health.</p>
-            <p>⚙️ <strong className="text-slate-200">Operations Agent:</strong> Inspects supplier constraints, lead times, and shipping performance.</p>
-            <p>📈 <strong className="text-slate-200">Growth Agent:</strong> Focuses on customer lifetime value, market opportunities, and demand patterns.</p>
-            <p>🤝 <strong className="text-slate-200">Executive Synthesis:</strong> Cross-references all agent reports to deliver unified, conflict-free recommendations.</p>
+          <div className="space-y-2 text-xs text-muted-foreground">
+            <p>📊 <strong className="text-foreground">Finance Agent:</strong> Evaluates costs, pricing strategy, margin degradation, and cash-flow health.</p>
+            <p>⚙️ <strong className="text-foreground">Operations Agent:</strong> Inspects supplier constraints, lead times, and shipping performance.</p>
+            <p>📈 <strong className="text-foreground">Growth Agent:</strong> Focuses on customer lifetime value, market opportunities, and demand patterns.</p>
+            <p>🤝 <strong className="text-foreground">Executive Synthesis:</strong> Cross-references all agent reports to deliver unified, conflict-free recommendations.</p>
           </div>
         </div>
       )
@@ -148,19 +148,19 @@ export default function HelpPage() {
       icon: HelpIcon,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">Frequently Asked Questions</h3>
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Frequently Asked Questions</h3>
           <div className="space-y-4 text-sm">
             <div className="space-y-1">
-              <h4 className="font-bold text-slate-900 dark:text-slate-200">How do I restart the interactive guided tour?</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400">Click the "Restart Product Tour" button below at any time to walk through the dashboard step-by-step.</p>
+              <h4 className="font-bold text-foreground dark:text-foreground">How do I restart the interactive guided tour?</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">Click the "Restart Product Tour" button below at any time to walk through the dashboard step-by-step.</p>
             </div>
             <div className="space-y-1">
-              <h4 className="font-bold text-slate-900 dark:text-slate-200">Where does the AI get its business data?</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400">EVE reads from the central database schema (Clients, Projects, Finances, and Inventory tables) plus any documents uploaded to the Document Hub.</p>
+              <h4 className="font-bold text-foreground dark:text-foreground">Where does the AI get its business data?</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">EVE reads from the central database schema (Clients, Projects, Finances, and Inventory tables) plus any documents uploaded to the Document Hub.</p>
             </div>
             <div className="space-y-1">
-              <h4 className="font-bold text-slate-900 dark:text-slate-200">Is my company data kept secure?</h4>
-              <p className="text-xs text-slate-600 dark:text-slate-400">Yes. All uploaded files are stored securely in encrypted buckets, and database access is locked at the workspace boundary.</p>
+              <h4 className="font-bold text-foreground dark:text-foreground">Is my company data kept secure?</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">Yes. All uploaded files are stored securely in encrypted buckets, and database access is locked at the workspace boundary.</p>
             </div>
           </div>
         </div>
@@ -172,35 +172,35 @@ export default function HelpPage() {
       icon: HelpCircle,
       content: (
         <div className="space-y-6">
-          <h3 className="text-xl font-extrabold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700/80 pb-3">Official Support & Beta Feedback</h3>
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Official Support & Beta Feedback</h3>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
             We are dedicated to building a refined, reliable virtual executive system. If you run into issues, need assistance, or want to share feedback, we are here to help.
           </p>
           
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-5 rounded-xl flex flex-col justify-between shadow-sm">
+            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-5 rounded-xl flex flex-col justify-between shadow-sm">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-foreground dark:text-foreground flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-indigo-500" /> Support Email
                 </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-2 leading-relaxed">
                   Have a question, encountered a bug, or need account assistance? Send us an email and our team will get back to you promptly.
                 </p>
               </div>
               <a 
                 href="mailto:aethercorp.support@gmail.com" 
-                className="mt-4 inline-block text-center text-xs font-bold bg-indigo-600/20 hover:bg-indigo-650 text-indigo-400 hover:text-white px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
+                className="mt-4 inline-block text-center text-xs font-bold bg-indigo-600/20 hover:bg-indigo-650 text-indigo-400 hover:text-foreground px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
               >
                 aethercorp.support@gmail.com
               </a>
             </div>
             
-            <div className="bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700 p-5 rounded-xl flex flex-col justify-between shadow-sm">
+            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-5 rounded-xl flex flex-col justify-between shadow-sm">
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-foreground dark:text-foreground flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" /> Beta Feedback Form
                 </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-2 leading-relaxed">
                   Your insights shape EVE's roadmap. Use our quick Google Form to submit feedback, request features, or report UI bugs.
                 </p>
               </div>
@@ -208,7 +208,7 @@ export default function HelpPage() {
                 href="https://forms.gle/qETMVJfDzHnF86xi7" 
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-block text-center text-xs font-bold bg-emerald-600/20 hover:bg-emerald-650 text-emerald-400 hover:text-white px-4 py-2.5 rounded-lg border border-emerald-500/20 transition-all cursor-pointer"
+                className="mt-4 inline-block text-center text-xs font-bold bg-emerald-600/20 hover:bg-emerald-650 text-emerald-400 hover:text-foreground px-4 py-2.5 rounded-lg border border-emerald-500/20 transition-all cursor-pointer"
               >
                 Open Feedback Form
               </a>
@@ -228,19 +228,19 @@ export default function HelpPage() {
   const activeTopic = topics.find(t => t.id === activeTab) || topics[0];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8 font-sans animate-fade-in text-slate-900 dark:text-slate-100">
+    <div className="p-6 max-w-5xl mx-auto space-y-8 font-sans animate-fade-in text-foreground dark:text-foreground">
       {/* Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border dark:border-border pb-6">
         <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground dark:text-foreground flex items-center gap-2">
             <HelpCircle className="text-indigo-400" size={32} /> Help & Learning Center
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm">Find answers, learn how to use EVE COO, and restart the product tour.</p>
+          <p className="text-muted-foreground dark:text-muted-foreground text-sm">Find answers, learn how to use EVE COO, and restart the product tour.</p>
         </div>
         
         <button
           onClick={restartTour}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer"
         >
           <Play size={16} /> Restart Product Tour
         </button>
@@ -248,8 +248,8 @@ export default function HelpPage() {
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Sidebar Nav */}
-        <div className="md:col-span-1 space-y-1 bg-slate-100/80 dark:bg-slate-950/60 backdrop-blur-md border border-slate-300 dark:border-slate-700 p-4 rounded-2xl shadow-sm">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2 block">Topics</span>
+        <div className="md:col-span-1 space-y-1 bg-secondary dark:bg-background backdrop-blur-md border border-border dark:border-border p-4 rounded-2xl shadow-sm">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 mb-2 block">Topics</span>
           {topics.map(t => {
             const TopicIcon = t.icon;
             return (
@@ -259,7 +259,7 @@ export default function HelpPage() {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left ${
  activeTab === t.id
  ? "bg-indigo-50 dark:bg-indigo-600/15 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20"
- : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-900/60"
+ : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-secondary dark:hover:bg-background/80"
  }`}
               >
                 <TopicIcon size={18} />
@@ -270,7 +270,7 @@ export default function HelpPage() {
         </div>
 
         {/* Content Panel */}
-        <div className="md:col-span-2 bg-white/90 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-700/80 backdrop-blur-xl rounded-3xl p-8 shadow-lg min-h-[400px]">
+        <div className="md:col-span-2 bg-card dark:bg-background border border-border dark:border-border backdrop-blur-xl rounded-3xl p-8 shadow-lg min-h-[400px]">
           {activeTopic.content}
         </div>
       </div>

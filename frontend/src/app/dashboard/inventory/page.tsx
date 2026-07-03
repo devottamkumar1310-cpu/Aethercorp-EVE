@@ -233,7 +233,7 @@ export default function InventoryDashboardPage() {
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ChevronDown size={12} className="text-slate-400 opacity-40" />;
+    if (sortField !== field) return <ChevronDown size={12} className="text-muted-foreground opacity-40" />;
     return sortDir === "desc"
       ? <ChevronDown size={12} className="text-indigo-500" />
       : <ChevronUp size={12} className="text-indigo-500" />;
@@ -248,18 +248,18 @@ export default function InventoryDashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2 w-full md:w-1/3">
             <div className="h-7 bg-slate-250 rounded w-3/4" />
-            <div className="h-4 bg-slate-200 rounded w-1/2" />
+            <div className="h-4 bg-secondary rounded w-1/2" />
           </div>
-          <div className="h-10 bg-slate-200 rounded-lg w-32" />
+          <div className="h-10 bg-secondary rounded-lg w-32" />
         </div>
 
         {/* CSV Import Grid Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm h-36 flex flex-col justify-between">
-              <div className="h-8 w-8 bg-slate-100 rounded-lg" />
-              <div className="h-4 bg-slate-200 rounded w-3/4" />
-              <div className="h-8 bg-slate-50 border border-slate-200 rounded-lg w-full" />
+            <div key={i} className="bg-card p-4 rounded-xl border border-border shadow-sm h-36 flex flex-col justify-between">
+              <div className="h-8 w-8 bg-secondary rounded-lg" />
+              <div className="h-4 bg-secondary rounded w-3/4" />
+              <div className="h-8 bg-secondary border border-border rounded-lg w-full" />
             </div>
           ))}
         </div>
@@ -267,36 +267,36 @@ export default function InventoryDashboardPage() {
         {/* KPI Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-28 flex items-center justify-between">
+            <div key={i} className="bg-card p-5 rounded-xl border border-border shadow-sm h-28 flex items-center justify-between">
               <div className="space-y-3 w-1/2">
-                <div className="h-3 bg-slate-200 rounded w-3/4" />
+                <div className="h-3 bg-secondary rounded w-3/4" />
                 <div className="h-8 bg-slate-300 rounded w-full" />
               </div>
-              <div className="h-12 w-12 bg-slate-100 rounded-full" />
+              <div className="h-12 w-12 bg-secondary rounded-full" />
             </div>
           ))}
         </div>
 
         {/* Best & Worst Sellers Tables Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="h-60 bg-white rounded-xl border border-slate-200 shadow-sm" />
-          <div className="h-60 bg-white rounded-xl border border-slate-200 shadow-sm" />
+          <div className="h-60 bg-card rounded-xl border border-border shadow-sm" />
+          <div className="h-60 bg-card rounded-xl border border-border shadow-sm" />
         </div>
 
         {/* Main Product Table Skeleton */}
-        <div className="h-96 bg-white rounded-xl border border-slate-200 shadow-sm" />
+        <div className="h-96 bg-card rounded-xl border border-border shadow-sm" />
       </main>
     );
   }
 
   if (!activeWorkspace) {
     return (
-      <div className="p-6 max-w-2xl mx-auto text-center space-y-6 mt-12 bg-white rounded-xl border border-slate-200 shadow-md">
+      <div className="p-6 max-w-2xl mx-auto text-center space-y-6 mt-12 bg-card rounded-xl border border-border shadow-md">
         <div className="h-12 w-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto">
           <AlertTriangle size={24} />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">No Active Workspace</h2>
-        <p className="text-slate-500 text-sm">Please select or create a workspace first.</p>
+        <h2 className="text-xl font-bold text-foreground">No Active Workspace</h2>
+        <p className="text-muted-foreground text-sm">Please select or create a workspace first.</p>
       </div>
     );
   }
@@ -322,7 +322,7 @@ export default function InventoryDashboardPage() {
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-white rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-foreground rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer"
         >
           <Plus size={16} /> Add Product
         </button>
@@ -372,7 +372,7 @@ export default function InventoryDashboardPage() {
                 Download Template
               </button>
             </div>
-            <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-border hover:border-indigo-400 bg-slate-50/50 text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
+            <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-border hover:border-indigo-400 bg-secondary text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
               {uploading
                 ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-600" />
                 : <Upload size={12} className="text-muted-foreground" />}
@@ -393,7 +393,7 @@ export default function InventoryDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Inventory Value (COGS)</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inventory Value (COGS)</p>
             <p className="text-3xl font-extrabold text-foreground mt-1">
               ${(data?.total_inventory_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
@@ -404,7 +404,7 @@ export default function InventoryDashboardPage() {
         </div>
         <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Units Stocked</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Units Stocked</p>
             <p className="text-3xl font-extrabold text-foreground mt-1">
               {(data?.total_items_count || 0).toLocaleString()}
             </p>
@@ -415,7 +415,7 @@ export default function InventoryDashboardPage() {
         </div>
         <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Low Stock SKUs</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Low Stock SKUs</p>
             <div className="flex items-center gap-2 mt-1">
               <p className="text-3xl font-extrabold text-foreground">{alerts?.low_stock_count || 0}</p>
               {(alerts?.low_stock_count || 0) > 0 && (
@@ -435,7 +435,7 @@ export default function InventoryDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Best Sellers */}
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-          <div className="bg-background px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-background px-4 py-3 border-b border-border flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-emerald-700 text-sm font-semibold">
               <TrendingUp size={15} /> Best Sellers
             </span>
@@ -453,15 +453,15 @@ export default function InventoryDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {data?.best_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50:bg-slate-850/40">
+                  <tr key={p.sku} className="hover:bg-secondary:bg-slate-850/40">
                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
-                    <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
+                    <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
                     <td className="px-4 py-2.5 text-right font-bold text-foreground">{p.qty_sold.toLocaleString()}</td>
                     <td className="px-4 py-2.5 text-right font-medium text-emerald-600">${p.revenue.toLocaleString()}</td>
                   </tr>
                 ))}
                 {!data?.best_sellers?.length && (
-                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No sales data yet.</td></tr>
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">No sales data yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -470,11 +470,11 @@ export default function InventoryDashboardPage() {
 
         {/* Worst Sellers */}
         <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-          <div className="bg-background px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-background px-4 py-3 border-b border-border flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-red-700 text-sm font-semibold">
               <TrendingDown size={15} /> Lowest Sellers
             </span>
-            <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">By Units Sold</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">By Units Sold</span>
           </div>
           <div className="overflow-x-auto w-full scrollbar-thin">
             <table className="w-full text-sm">
@@ -488,15 +488,15 @@ export default function InventoryDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {data?.worst_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50:bg-slate-850/40">
+                  <tr key={p.sku} className="hover:bg-secondary:bg-slate-850/40">
                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
-                    <td className="px-4 py-2.5 font-medium text-slate-800">{p.name}</td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-slate-700">{p.qty_sold}</td>
+                    <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
+                    <td className="px-4 py-2.5 text-right font-semibold text-foreground">{p.qty_sold}</td>
                     <td className="px-4 py-2.5 text-right font-medium text-foreground">{p.stock_on_hand.toLocaleString()}</td>
                   </tr>
                 ))}
                 {!data?.worst_sellers?.length && (
-                  <tr><td colSpan={4} className="px-4 py-8 text-center text-slate-400 italic">No products yet.</td></tr>
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">No products yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -507,7 +507,7 @@ export default function InventoryDashboardPage() {
       {/* Tabbed Product Table */}
       <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         {/* Tab Bar + Search */}
-        <div className="border-b border-slate-200 px-4 pt-3">
+        <div className="border-b border-border px-4 pt-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             {/* Tabs */}
             <div className="flex gap-1">
@@ -518,7 +518,7 @@ export default function InventoryDashboardPage() {
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
  activeTab === tab.id
  ? "border-indigo-500 text-indigo-700 bg-indigo-50/50"
- : "border-transparent text-slate-500 hover:text-slate-700:text-slate-200"
+ : "border-transparent text-muted-foreground hover:text-foreground:text-foreground"
  }`}
                 >
                   {tab.label}
@@ -530,7 +530,7 @@ export default function InventoryDashboardPage() {
  ? "bg-amber-100 text-amber-700"
  : tab.id === "dead" && (tab.count || 0) > 0
  ? "bg-red-100 text-red-700"
- : "bg-slate-100 text-slate-500"
+ : "bg-secondary text-muted-foreground"
  }`}>
                       {tab.count ?? 0}
                     </span>
@@ -611,15 +611,15 @@ export default function InventoryDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredAndSorted.map((p) => (
-                  <tr key={p.sku} className="hover:bg-slate-50/50:bg-slate-850/40 transition-colors">
+                  <tr key={p.sku} className="hover:bg-secondary:bg-slate-850/40 transition-colors">
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
-                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
+                    <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-muted text-slate-600 uppercase">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-muted text-muted-foreground uppercase">
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-slate-800">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-foreground">{p.stock_on_hand.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right text-muted-foreground">${p.unit_cost.toFixed(2)}</td>
                     <td className="px-5 py-3 text-right text-muted-foreground">{p.qty_sold.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right font-bold text-foreground">
@@ -630,7 +630,7 @@ export default function InventoryDashboardPage() {
                     </td>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2 justify-end">
-                        <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-16 bg-secondary rounded-full h-1.5 overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
  p.margin_percent >= 50 ? "bg-emerald-500"
@@ -655,7 +655,7 @@ export default function InventoryDashboardPage() {
                 ))}
                 {filteredAndSorted.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-12 text-center text-slate-400 italic">
+                    <td colSpan={9} className="px-5 py-12 text-center text-muted-foreground italic">
                       No products match your filters.
                     </td>
                   </tr>
@@ -683,14 +683,14 @@ export default function InventoryDashboardPage() {
                 {alerts?.low_stock?.map((p) => (
                   <tr key={p.sku} className="hover:bg-amber-50/40:bg-amber-900/10 transition-colors">
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
-                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
+                    <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-secondary text-muted-foreground uppercase">
                         {p.category}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right font-bold text-amber-700">{p.stock_on_hand.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-slate-600">{p.reorder_point.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right text-muted-foreground">{p.reorder_point.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">
                         <AlertTriangle size={10} /> -{p.shortage}
@@ -700,7 +700,7 @@ export default function InventoryDashboardPage() {
                 ))}
                 {!alerts?.low_stock?.length && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-12 text-center text-slate-400 italic">
+                    <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground italic">
                       No reorder alerts. All stock levels are healthy. ✓
                     </td>
                   </tr>
@@ -727,9 +727,9 @@ export default function InventoryDashboardPage() {
                 {alerts?.dead_stock?.map((p) => (
                   <tr key={p.sku} className="hover:bg-red-50/40:bg-red-900/10 transition-colors">
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
-                    <td className="px-5 py-3 font-semibold text-slate-900">{p.name}</td>
+                    <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3">
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase">
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-secondary text-muted-foreground uppercase">
                         {p.category}
                       </span>
                     </td>
@@ -741,7 +741,7 @@ export default function InventoryDashboardPage() {
                 ))}
                 {!alerts?.dead_stock?.length && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-slate-400 italic">
+                    <td colSpan={5} className="px-5 py-12 text-center text-muted-foreground italic">
                       No dead stock detected. All products have recent sales activity. ✓
                     </td>
                   </tr>
@@ -754,8 +754,8 @@ export default function InventoryDashboardPage() {
 
       {/* CSV Import Validation Summary Modal */}
       {showImportSummary && importSummary && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-card rounded-2xl border border-border shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className={`px-6 py-4 border-b flex items-center justify-between ${
  importSummary.status === "success" ? "bg-emerald-50/50 border-emerald-100" : "bg-rose-50/50 border-rose-100"
@@ -767,10 +767,10 @@ export default function InventoryDashboardPage() {
                   <Layers size={18} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 text-sm">
+                  <h3 className="font-bold text-foreground text-sm">
                     CSV Import Summary: {importSummary.type.toUpperCase()}
                   </h3>
-                  <p className="text-[10px] text-slate-500 mt-0.5">
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
                     Data validation and Ingestion audit log report
                   </p>
                 </div>
@@ -785,12 +785,12 @@ export default function InventoryDashboardPage() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-5 flex-1 text-slate-800">
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 text-foreground">
               {/* Counters Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <span className="block text-[9px] uppercase font-bold text-slate-400">Total Rows</span>
-                  <span className="block text-lg font-black text-slate-800 mt-0.5">{importSummary.total_rows}</span>
+                <div className="p-3 bg-secondary border border-border rounded-xl text-center">
+                  <span className="block text-[9px] uppercase font-bold text-muted-foreground">Total Rows</span>
+                  <span className="block text-lg font-black text-foreground mt-0.5">{importSummary.total_rows}</span>
                 </div>
                 <div className="p-3 bg-emerald-50/50 border border-emerald-100/55 rounded-xl text-center">
                   <span className="block text-[9px] uppercase font-bold text-emerald-600">Valid Rows</span>
@@ -825,9 +825,9 @@ export default function InventoryDashboardPage() {
                   <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
                     Validation Violations Log
                   </h4>
-                  <div className="border border-slate-100 rounded-xl overflow-hidden max-h-52 overflow-y-auto">
+                  <div className="border border-border rounded-xl overflow-hidden max-h-52 overflow-y-auto">
                     <table className="w-full text-left border-collapse text-xs">
-                      <thead className="bg-slate-50 border-b border-slate-100 font-semibold text-slate-500">
+                      <thead className="bg-secondary border-b border-border font-semibold text-muted-foreground">
                         <tr>
                           <th className="px-4 py-2 text-center w-12">Row</th>
                           <th className="px-4 py-2 w-28">Column</th>
@@ -835,12 +835,12 @@ export default function InventoryDashboardPage() {
                           <th className="px-4 py-2">Failure Reason</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 text-slate-600">
+                      <tbody className="divide-y divide-slate-100 text-muted-foreground">
                         {importSummary.errors.map((err, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/50 font-normal">
-                            <td className="px-4 py-2 font-mono text-slate-400 text-center">{err.row || "-"}</td>
-                            <td className="px-4 py-2 font-semibold text-slate-700">{err.column || "-"}</td>
-                            <td className="px-4 py-2 font-mono text-[11px] text-slate-500 truncate max-w-[95px]">{err.value !== null ? String(err.value) : <span className="text-slate-350 italic">null</span>}</td>
+                          <tr key={idx} className="hover:bg-secondary font-normal">
+                            <td className="px-4 py-2 font-mono text-muted-foreground text-center">{err.row || "-"}</td>
+                            <td className="px-4 py-2 font-semibold text-foreground">{err.column || "-"}</td>
+                            <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground truncate max-w-[95px]">{err.value !== null ? String(err.value) : <span className="text-slate-350 italic">null</span>}</td>
                             <td className="px-4 py-2 text-rose-650">{err.message}</td>
                           </tr>
                         ))}
@@ -864,14 +864,14 @@ export default function InventoryDashboardPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t bg-slate-50/50 flex justify-end">
+            <div className="px-6 py-4 border-t bg-secondary flex justify-end">
               <button
                 type="button"
                 onClick={() => {
                   setShowImportSummary(false);
                   setImportSummary(null);
                 }}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
+                className="px-4 py-2 bg-card hover:bg-secondary text-foreground rounded-lg text-xs font-semibold cursor-pointer transition-colors shadow-sm"
               >
                 Close Summary
               </button>

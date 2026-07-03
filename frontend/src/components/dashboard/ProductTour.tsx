@@ -130,18 +130,18 @@ export function ProductTour() {
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] w-full max-w-md p-1 animate-fade-in">
-      <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-lg border border-slate-800 rounded-2xl shadow-2xl p-6 text-slate-100 flex flex-col space-y-4 font-sans">
+      <div className="bg-card dark:bg-background backdrop-blur-lg border border-border rounded-2xl shadow-2xl p-6 text-foreground flex flex-col space-y-4 font-sans">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
               <Sparkles size={16} />
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">EVE Platform Tour</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">EVE Platform Tour</span>
           </div>
           <button
             onClick={handleComplete}
-            className="text-slate-500 hover:text-slate-300 rounded-lg p-1 hover:bg-slate-800 transition-colors"
+            className="text-muted-foreground hover:text-muted-foreground rounded-lg p-1 hover:bg-secondary transition-colors"
           >
             <X size={16} />
           </button>
@@ -150,17 +150,17 @@ export function ProductTour() {
         {/* Content */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600 text-white rounded-xl">
+            <div className="p-2.5 bg-indigo-600 text-foreground rounded-xl">
               <Icon size={20} />
             </div>
-            <h3 className="text-base font-bold text-slate-100">{step.title}</h3>
+            <h3 className="text-base font-bold text-foreground">{step.title}</h3>
           </div>
           
-          <p className="text-slate-300 text-xs leading-relaxed">
+          <p className="text-muted-foreground text-xs leading-relaxed">
             {step.explanation}
           </p>
 
-          <ul className="space-y-2 pt-2 border-t border-slate-800/50">
+          <ul className="space-y-2 pt-2 border-t border-border">
             {step.bullets.map((b, i) => {
               const parts = b.split(":");
               const label = parts[0];
@@ -168,8 +168,8 @@ export function ProductTour() {
               return (
                 <li key={i} className="flex items-start gap-2 text-xs">
                   <span className="text-indigo-400 font-bold mt-0.5">&bull;</span>
-                  <span className="text-slate-300">
-                    <strong className="text-slate-200">{label}:</strong>{desc}
+                  <span className="text-muted-foreground">
+                    <strong className="text-foreground">{label}:</strong>{desc}
                   </span>
                 </li>
               );
@@ -178,14 +178,14 @@ export function ProductTour() {
         </div>
 
         {/* Progress and Footer Nav */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+        <div className="flex items-center justify-between pt-4 border-t border-border">
           {/* Progress dots */}
           <div className="flex gap-1.5">
             {tourSteps.map((_, i) => (
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === currentStep ? "w-6 bg-indigo-500" : "w-1.5 bg-slate-700"
+                  i === currentStep ? "w-6 bg-indigo-500" : "w-1.5 bg-secondary"
                 }`}
               />
             ))}
@@ -195,7 +195,7 @@ export function ProductTour() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleComplete}
-              className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               Skip
             </button>
@@ -203,7 +203,7 @@ export function ProductTour() {
             {currentStep > 0 && (
               <button
                 onClick={handleBack}
-                className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-all cursor-pointer"
+                className="p-1.5 bg-secondary hover:bg-secondary text-foreground rounded-lg transition-all cursor-pointer"
                 title="Previous step"
               >
                 <ChevronLeft size={16} />
@@ -212,7 +212,7 @@ export function ProductTour() {
             
             <button
               onClick={handleNext}
-              className="flex items-center gap-1 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              className="flex items-center gap-1 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-xs font-semibold transition-all cursor-pointer"
             >
               {currentStep === tourSteps.length - 1 ? "Finish" : "Next"}
               <ChevronRight size={14} />

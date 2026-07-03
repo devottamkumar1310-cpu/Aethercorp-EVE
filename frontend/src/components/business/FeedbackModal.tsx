@@ -49,17 +49,17 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background backdrop-blur-sm p-4">
+      <div className="w-full max-w-md bg-card dark:bg-card border border-border dark:border-border rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-250 dark:border-slate-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-250 dark:border-border">
           <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
             <MessageSquare size={18} />
-            <h3 className="font-semibold text-slate-900 dark:text-slate-100">Submit Beta Feedback</h3>
+            <h3 className="font-semibold text-foreground dark:text-foreground">Submit Beta Feedback</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            className="text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground transition-colors"
           >
             <X size={18} />
           </button>
@@ -67,13 +67,13 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          <div className="text-[11px] text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-slate-200 dark:border-slate-850 space-y-1">
+          <div className="text-[11px] text-muted-foreground dark:text-muted-foreground bg-secondary dark:bg-background p-3 rounded-lg border border-border dark:border-slate-850 space-y-1">
             <p>Prefer our feedback form? <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-455 hover:underline font-semibold">Open Google Forms</a>.</p>
             <p>Or email us at: <a href="mailto:aethercorp.support@gmail.com" className="text-indigo-600 dark:text-indigo-455 hover:underline font-semibold">aethercorp.support@gmail.com</a></p>
           </div>
           {/* Rating */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground mb-2">
               How is your experience with EVE?
             </label>
             <div className="flex gap-2 items-center">
@@ -91,12 +91,12 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
                     className={`${
                       star <= (hoverRating ?? rating)
                         ? "fill-amber-400 text-amber-400"
-                        : "text-slate-350 dark:text-slate-600"
+                        : "text-slate-350 dark:text-muted-foreground"
                     }`}
                   />
                 </button>
               ))}
-              <span className="ml-3 text-sm font-semibold text-slate-600 dark:text-slate-300">
+              <span className="ml-3 text-sm font-semibold text-muted-foreground dark:text-muted-foreground">
                 {rating === 5 && "Excellent"}
                 {rating === 4 && "Very Good"}
                 {rating === 3 && "Good"}
@@ -108,13 +108,13 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
 
           {/* Category */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground mb-2">
               Category
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-card dark:bg-background border border-slate-250 dark:border-border rounded-lg px-3 py-2 text-sm text-foreground dark:text-foreground outline-none focus:border-indigo-500 transition-colors"
             >
               <option value="AI Response">AI Response / Accuracy</option>
               <option value="UI Bug">UI Bug / Layout Issue</option>
@@ -125,7 +125,7 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground dark:text-muted-foreground mb-2">
               Details
             </label>
             <textarea
@@ -134,7 +134,7 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
               rows={4}
               required
               placeholder="Tell us what went well, what failed, or what we can improve..."
-              className="w-full bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-800 dark:text-slate-200 outline-none focus:border-indigo-500 transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none"
+              className="w-full bg-card dark:bg-background border border-slate-250 dark:border-border rounded-lg px-3 py-2 text-sm text-foreground dark:text-foreground outline-none focus:border-indigo-500 transition-colors placeholder:text-muted-foreground dark:placeholder:text-muted-foreground resize-none"
             />
           </div>
 
@@ -143,14 +143,14 @@ export default function FeedbackModal({ isOpen, onClose, sessionToken }: Feedbac
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || description.trim().length < 5}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-sm font-semibold text-white rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-sm font-semibold text-foreground rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20"
             >
               {loading ? (
                 <>

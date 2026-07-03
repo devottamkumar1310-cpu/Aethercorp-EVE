@@ -11,14 +11,14 @@ interface Props {
 export function AgentActivityMonitor({ chatData }: Props) {
   if (!chatData) {
     return (
-      <Card className="h-full bg-slate-950 text-slate-300 border-slate-800">
-        <CardHeader className="pb-2 border-b border-slate-800">
-          <CardTitle className="text-sm font-medium flex items-center text-slate-100">
+      <Card className="h-full bg-background text-muted-foreground border-border">
+        <CardHeader className="pb-2 border-b border-border">
+          <CardTitle className="text-sm font-medium flex items-center text-foreground">
             <Terminal className="h-4 w-4 mr-2" />
             Agent Activity Monitor
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 text-sm text-slate-500 italic">
+        <CardContent className="p-4 text-sm text-muted-foreground italic">
           No agent activity. Submit a request to the CEO Agent to view traces.
         </CardContent>
       </Card>
@@ -26,9 +26,9 @@ export function AgentActivityMonitor({ chatData }: Props) {
   }
 
   return (
-    <Card className="h-full bg-slate-950 text-slate-300 border-slate-800 overflow-hidden flex flex-col">
-      <CardHeader className="pb-2 border-b border-slate-800 bg-slate-900/50">
-        <CardTitle className="text-sm font-medium flex items-center text-slate-100">
+    <Card className="h-full bg-background text-muted-foreground border-border overflow-hidden flex flex-col">
+      <CardHeader className="pb-2 border-b border-border bg-card">
+        <CardTitle className="text-sm font-medium flex items-center text-foreground">
           <Terminal className="h-4 w-4 mr-2 text-emerald-400" />
           Agent Activity Monitor
         </CardTitle>
@@ -37,10 +37,10 @@ export function AgentActivityMonitor({ chatData }: Props) {
         <div className="space-y-4">
           
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Network Discovery</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Network Discovery</h4>
             <div className="flex flex-wrap gap-1">
               {chatData.discovered_agents.map((agent) => (
-                <Badge key={agent} variant="outline" className="border-slate-700 bg-slate-800 text-slate-300">
+                <Badge key={agent} variant="outline" className="border-border bg-secondary text-muted-foreground">
                   {agent}
                 </Badge>
               ))}
@@ -48,30 +48,30 @@ export function AgentActivityMonitor({ chatData }: Props) {
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Executed Agents</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Executed Agents</h4>
             <div className="flex flex-wrap gap-1">
               {chatData.executed_agents.length > 0 ? (
                 chatData.executed_agents.map((agent) => (
-                  <Badge key={agent} className="bg-blue-600 hover:bg-blue-500 text-white">
+                  <Badge key={agent} className="bg-blue-600 hover:bg-blue-500 text-foreground">
                     {agent}
                   </Badge>
                 ))
               ) : (
-                <span className="text-xs text-slate-500">None</span>
+                <span className="text-xs text-muted-foreground">None</span>
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Event Bus Traces</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Event Bus Traces</h4>
             <div className="space-y-2">
               {chatData.event_bus_messages.map((msg, idx) => (
-                <div key={idx} className="bg-slate-900 border border-slate-800 rounded p-2 text-xs font-mono">
+                <div key={idx} className="bg-card border border-border rounded p-2 text-xs font-mono">
                   <div className="flex justify-between mb-1">
                     <span className="text-emerald-400">[{msg.topic}]</span>
-                    <span className="text-slate-500">Sender: {msg.sender}</span>
+                    <span className="text-muted-foreground">Sender: {msg.sender}</span>
                   </div>
-                  <pre className="text-slate-400 whitespace-pre-wrap overflow-x-auto">
+                  <pre className="text-muted-foreground whitespace-pre-wrap overflow-x-auto">
                     {JSON.stringify(msg.data, null, 2)}
                   </pre>
                 </div>
