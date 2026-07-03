@@ -82,32 +82,32 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
     }
     return {
       icon: Sparkles,
-      iconClass: "bg-slate-500/10 text-slate-400 border-slate-700/20",
+      iconClass: "bg-slate-500/10 text-muted-foreground border-border",
       badgeVariant: "outline" as const,
-      badgeClass: "border-slate-700 text-slate-400 bg-slate-800/30",
+      badgeClass: "border-border text-muted-foreground bg-secondary",
       label: "System"
     };
   };
 
   return (
-    <Card className="bg-white border-slate-200 shadow-sm rounded-xl overflow-hidden">
-      <CardHeader className="bg-slate-50 border-b border-slate-200/60 px-6 py-4 flex flex-row items-center justify-between">
-        <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
+    <Card className="bg-card border-border shadow-sm rounded-xl overflow-hidden">
+      <CardHeader className="bg-secondary border-b border-border px-6 py-4 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
           <Compass className="h-4 w-4 text-indigo-500" />
           Executive Operations & Activity Timeline
         </CardTitle>
-        <span className="text-[10px] text-slate-500 font-semibold bg-slate-200/50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+        <span className="text-[10px] text-muted-foreground font-semibold bg-secondary px-2 py-0.5 rounded-full uppercase tracking-wider">
           Real-time Audit Feed
         </span>
       </CardHeader>
       <CardContent className="p-6">
-        <div className="relative border-l border-slate-200 ml-4 pl-6 space-y-6">
+        <div className="relative border-l border-border ml-4 pl-6 space-y-6">
           {loading ? (
             [...Array(3)].map((_, i) => (
               <div key={i} className="relative animate-pulse flex flex-col gap-2">
-                <div className="absolute -left-[35px] top-0.5 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800" />
-                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
-                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3" />
+                <div className="absolute -left-[35px] top-0.5 w-6 h-6 rounded-full bg-secondary dark:bg-secondary" />
+                <div className="h-4 bg-secondary dark:bg-secondary rounded w-1/3" />
+                <div className="h-3 bg-secondary dark:bg-secondary rounded w-2/3" />
               </div>
             ))
           ) : (
@@ -125,21 +125,21 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-slate-800 tracking-tight">
+                        <span className="text-sm font-bold text-foreground tracking-tight">
                           {log.action}
                         </span>
                         <Badge variant={meta.badgeVariant} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.2 rounded ${meta.badgeClass}`}>
                           {meta.label}
                         </Badge>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed font-normal max-w-2xl">
+                      <p className="text-xs text-muted-foreground leading-relaxed font-normal max-w-2xl">
                         {log.description}
                       </p>
                     </div>
                     
                     {/* Timestamp */}
-                    <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
-                      <Clock size={11} className="text-slate-300" />
+                    <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 whitespace-nowrap">
+                      <Clock size={11} className="text-muted-foreground" />
                       {new Date(log.created_at).toLocaleString([], {
                         month: "short",
                         day: "numeric",
@@ -154,7 +154,7 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
           )}
           
           {!loading && logs.length === 0 && (
-            <div className="text-slate-400 italic text-center py-8 text-sm">
+            <div className="text-muted-foreground italic text-center py-8 text-sm">
               No recent activity recorded in this workspace. Create clients or run AI checks to populate the feed.
             </div>
           )}

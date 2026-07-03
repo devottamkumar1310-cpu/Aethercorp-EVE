@@ -126,7 +126,7 @@ export default function ActivityPage() {
                 </div>
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-bold text-slate-800">[{log.entity_type}]</span>
+                    <span className="font-bold text-foreground">[{log.entity_type}]</span>
                     <span className="text-foreground font-medium">{log.action}</span>
                   </div>
                   <p className="text-muted-foreground text-sm">{log.description}</p>

@@ -904,7 +904,7 @@ export default function EVECoocommandCenter() {
       {/* Mobile Sidebar Backdrop */}
       {isHistoryOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-40 xl:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-background z-40 xl:hidden transition-opacity duration-300"
           onClick={() => setIsHistoryOpen(false)}
         />
       )}
@@ -1491,7 +1491,7 @@ export default function EVECoocommandCenter() {
                                 ) : (
                                   <div className="w-2.5 h-2.5 rounded-full border border-border" />
                                 )}
-                                <span className={loadingStage > 1 ? "text-muted-foreground" : loadingStage === 1 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
+                                <span className={loadingStage > 1 ? "text-muted-foreground" : loadingStage === 1 ? "text-indigo-400 font-semibold" : "text-muted-foreground"}>
                                   Intent routing classifier
                                 </span>
                               </div>
@@ -1505,7 +1505,7 @@ export default function EVECoocommandCenter() {
                                 ) : (
                                   <div className="w-2.5 h-2.5 rounded-full border border-border" />
                                 )}
-                                <span className={loadingStage > 2 ? "text-muted-foreground" : loadingStage === 2 ? "text-indigo-400 font-semibold" : "text-slate-600"}>
+                                <span className={loadingStage > 2 ? "text-muted-foreground" : loadingStage === 2 ? "text-indigo-400 font-semibold" : "text-muted-foreground"}>
                                   Spawn sub-agent queries
                                 </span>
                               </div>
@@ -1517,7 +1517,7 @@ export default function EVECoocommandCenter() {
                                 ) : (
                                   <div className="w-2.5 h-2.5 rounded-full border border-border" />
                                 )}
-                                <span className={loadingStage === 3 ? "text-indigo-400 font-semibold animate-pulse" : "text-slate-600"}>
+                                <span className={loadingStage === 3 ? "text-indigo-400 font-semibold animate-pulse" : "text-muted-foreground"}>
                                   Synthesize recommendations
                                 </span>
                               </div>
@@ -1595,7 +1595,7 @@ export default function EVECoocommandCenter() {
                 className={`p-3 rounded-xl transition-all flex items-center justify-center flex-shrink-0 cursor-pointer ${
  isListening 
  ? "bg-rose-600 hover:bg-rose-500 text-foreground animate-pulse" 
- : "bg-muted hover:bg-slate-700 text-slate-350 hover:text-foreground border border-border"
+ : "bg-muted hover:bg-secondary text-slate-350 hover:text-foreground border border-border"
  }`}
                 title={isListening ? "Listening... Click to stop" : "Start Voice Input"}
               >
@@ -1618,7 +1618,7 @@ export default function EVECoocommandCenter() {
       {/* Mobile Insights Backdrop */}
       {isInsightsOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-40 xl:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-background z-40 xl:hidden transition-opacity duration-300"
           onClick={() => setIsInsightsOpen(false)}
         />
       )}
@@ -1803,7 +1803,7 @@ export default function EVECoocommandCenter() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-background backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-sm bg-card border border-border rounded-2xl p-6 shadow-2xl text-center space-y-4">
             <div className="w-12 h-12 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto mb-2">
               <Trash2 size={24} />

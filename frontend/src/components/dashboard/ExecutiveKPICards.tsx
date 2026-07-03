@@ -49,7 +49,7 @@ export function ExecutiveKPICards({ metrics, loading }: Props) {
           <Activity className="h-4 w-4 text-orange-500" />
         </CardHeader>
         <CardContent>
-          <div className="text-base font-bold text-slate-800">
+          <div className="text-base font-bold text-foreground">
             {metrics.stockout_predictions.length > 0
               ? `${metrics.stockout_predictions.length} product${metrics.stockout_predictions.length > 1 ? 's' : ''} require attention.`
               : "3 products require attention."}

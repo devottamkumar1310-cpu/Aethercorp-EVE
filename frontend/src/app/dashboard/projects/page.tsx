@@ -75,7 +75,7 @@ export default function ProjectsPage() {
       </div>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Briefcase className="text-blue-600"/> Projects Portfolio</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
           <Plus size={18}/> New Project
         </button>
       </div>
@@ -132,7 +132,7 @@ export default function ProjectsPage() {
                 {projects.map(p => (
                   <tr key={p.id} className="hover:bg-muted/40 group">
                     <td className="px-6 py-4 font-medium text-slate-850">{p.name}</td>
-                    <td className="px-6 py-4 text-slate-600">${p.budget.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-muted-foreground">${p.budget.toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <div className="w-full bg-muted rounded-full h-2">
@@ -146,10 +146,10 @@ export default function ProjectsPage() {
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(p)} className="p-1.5 text-slate-400 hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleEdit(p)} className="p-1.5 text-muted-foreground hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-slate-400 hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
+                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-muted-foreground hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>

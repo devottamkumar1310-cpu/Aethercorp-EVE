@@ -66,7 +66,7 @@ export function CEOChatConsole({ onChatResponse, token }: Props) {
                 <div
                   className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
                     msg.role === "user"
-                      ? "bg-slate-200 text-slate-800"
+                      ? "bg-secondary text-foreground"
                       : "bg-primary text-primary-foreground"
                   }`}
                 >

@@ -42,10 +42,10 @@ export default function HealthDashboard() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#090b10] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#090b10] text-foreground">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="text-sm font-medium text-slate-400">Loading system metrics...</p>
+          <p className="text-sm font-medium text-muted-foreground">Loading system metrics...</p>
         </div>
       </div>
     );
@@ -53,16 +53,16 @@ export default function HealthDashboard() {
 
   if (error || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#090b10] text-white p-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#090b10] text-foreground p-6">
         <div className="max-w-md rounded-2xl border border-red-500/20 bg-red-950/10 p-6 text-center backdrop-blur-xl">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500">
             ⚠️
           </div>
-          <h3 className="text-lg font-semibold text-white">Health Monitor Offline</h3>
+          <h3 className="text-lg font-semibold text-foreground">Health Monitor Offline</h3>
           <p className="mt-2 text-sm text-red-200/80">{error || "Check backend API connection."}</p>
           <button
             onClick={fetchHealth}
-            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500"
+            className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-red-500"
           >
             Retry Connection
           </button>
@@ -74,16 +74,16 @@ export default function HealthDashboard() {
   const isHealthy = data.status === "healthy";
 
   return (
-    <div className="min-h-screen bg-[#090b10] p-6 font-sans text-white lg:p-10">
+    <div className="min-h-screen bg-[#090b10] p-6 font-sans text-foreground lg:p-10">
       <div className="mx-auto max-w-6xl">
         
         {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-800/60 pb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
               System Operations Health
             </h1>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-muted-foreground">
               Real-time platform diagnostics, cluster workloads, and connection states.
             </p>
           </div>
@@ -102,55 +102,55 @@ export default function HealthDashboard() {
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           
           {/* Database Card */}
-          <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/60 p-6 backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-[#121620]/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-400">Database Connection</span>
+              <span className="text-sm font-medium text-muted-foreground">Database Connection</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.database === "healthy" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
                 {data.database}
               </span>
             </div>
             <p className="mt-4 text-2xl font-bold tracking-tight">PostgreSQL</p>
-            <p className="mt-1 text-xs text-slate-500">Supabase DB cluster, pooling, and vector capabilities verified.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Supabase DB cluster, pooling, and vector capabilities verified.</p>
           </div>
 
           {/* Storage Card */}
-          <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/60 p-6 backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-[#121620]/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-400">Storage Ingestion API</span>
+              <span className="text-sm font-medium text-muted-foreground">Storage Ingestion API</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.storage === "healthy" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
                 {data.storage}
               </span>
             </div>
             <p className="mt-4 text-2xl font-bold tracking-tight">Local / GCS</p>
-            <p className="mt-1 text-xs text-slate-500">Read, write, and directory permission operations fully verified.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Read, write, and directory permission operations fully verified.</p>
           </div>
 
           {/* Alerting Metric */}
-          <div className="rounded-2xl border border-slate-800/80 bg-[#121620]/60 p-6 backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-[#121620]/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-400">Error Telemetry Gateway</span>
+              <span className="text-sm font-medium text-muted-foreground">Error Telemetry Gateway</span>
               <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
                 active
               </span>
             </div>
             <p className="mt-4 text-2xl font-bold tracking-tight">GCP Alerting</p>
-            <p className="mt-1 text-xs text-slate-500">Structured telemetry enabled for HTTP 5xx, database, and AI failures.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Structured telemetry enabled for HTTP 5xx, database, and AI failures.</p>
           </div>
         </div>
 
         {/* Resources Section */}
-        <div className="mt-8 rounded-2xl border border-slate-800/80 bg-[#121620]/40 p-6 backdrop-blur-md lg:p-8">
-          <h2 className="text-xl font-bold tracking-tight text-white">System Resource Usage</h2>
+        <div className="mt-8 rounded-2xl border border-border bg-[#121620]/40 p-6 backdrop-blur-md lg:p-8">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">System Resource Usage</h2>
           
           <div className="mt-6 grid gap-6 md:grid-cols-3">
             
             {/* CPU usage */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400 font-medium">CPU Load</span>
-                <span className="font-semibold text-slate-200">{data.system.cpu_usage_percent.toFixed(1)}%</span>
+                <span className="text-muted-foreground font-medium">CPU Load</span>
+                <span className="font-semibold text-foreground">{data.system.cpu_usage_percent.toFixed(1)}%</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-slate-800">
+              <div className="h-2 w-full rounded-full bg-secondary">
                 <div 
                   className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
                   style={{ width: `${data.system.cpu_usage_percent}%` }}
@@ -161,10 +161,10 @@ export default function HealthDashboard() {
             {/* Memory Usage */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400 font-medium">Memory Allocation</span>
-                <span className="font-semibold text-slate-200">{data.system.memory_usage_percent.toFixed(1)}%</span>
+                <span className="text-muted-foreground font-medium">Memory Allocation</span>
+                <span className="font-semibold text-foreground">{data.system.memory_usage_percent.toFixed(1)}%</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-slate-800">
+              <div className="h-2 w-full rounded-full bg-secondary">
                 <div 
                   className="h-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
                   style={{ width: `${data.system.memory_usage_percent}%` }}
@@ -175,10 +175,10 @@ export default function HealthDashboard() {
             {/* Disk space */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400 font-medium">Disk Footprint</span>
-                <span className="font-semibold text-slate-200">{data.system.disk_usage_percent.toFixed(1)}%</span>
+                <span className="text-muted-foreground font-medium">Disk Footprint</span>
+                <span className="font-semibold text-foreground">{data.system.disk_usage_percent.toFixed(1)}%</span>
               </div>
-              <div className="h-2 w-full rounded-full bg-slate-800">
+              <div className="h-2 w-full rounded-full bg-secondary">
                 <div 
                   className="h-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-500"
                   style={{ width: `${data.system.disk_usage_percent}%` }}

@@ -145,17 +145,17 @@ export default function DashboardPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 p-6 max-w-[1600px] mx-auto w-full space-y-6 animate-pulse">
+      <div className="min-h-screen bg-secondary p-6 max-w-[1600px] mx-auto w-full space-y-6 animate-pulse">
         {/* CTAs Toolbar Skeleton */}
-        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300" />
+        <div className="h-14 bg-secondary rounded-xl border border-border" />
         
         {/* Navigation Toolbar Skeleton */}
-        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300" />
+        <div className="h-14 bg-secondary rounded-xl border border-border" />
 
         {/* KPI Cards Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-slate-200 rounded-xl border border-slate-300 p-5 space-y-3">
+            <div key={i} className="h-28 bg-secondary rounded-xl border border-border p-5 space-y-3">
               <div className="h-4 bg-slate-300 rounded w-1/2" />
               <div className="h-8 bg-slate-300 rounded w-3/4" />
             </div>
@@ -164,12 +164,12 @@ export default function DashboardPage() {
 
         {/* Tables Grid Skeleton */}
         <div className="grid lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300" />
-          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300" />
+          <div className="h-64 bg-secondary rounded-xl border border-border" />
+          <div className="h-64 bg-secondary rounded-xl border border-border" />
         </div>
 
         {/* Timeline Skeleton */}
-        <div className="h-80 bg-slate-200 rounded-xl border border-slate-300" />
+        <div className="h-80 bg-secondary rounded-xl border border-border" />
       </div>
     );
   }
@@ -206,12 +206,12 @@ export default function DashboardPage() {
           {/* Quick Navigation Links */}
           <div className="flex items-center gap-4 bg-card p-4 rounded-xl border border-border shadow-sm overflow-x-auto scrollbar-thin">
             <span className="font-medium text-foreground px-2 whitespace-nowrap">Manage Modules:</span>
-            <Link href="/dashboard/clients" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Users size={16}/> Clients</Link>
-            <Link href="/dashboard/projects" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Briefcase size={16}/> Projects</Link>
-            <Link href="/dashboard/tasks" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><CheckSquare size={16}/> Tasks</Link>
-            <Link href="/dashboard/finance" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><DollarSign size={16}/> Finances</Link>
-            <Link href="/dashboard/inventory" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Package size={16}/> Inventory</Link>
-            <Link href="/dashboard/activity" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-slate-200:bg-slate-700 rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Activity size={16}/> Activity Feed</Link>
+            <Link href="/dashboard/clients" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary:bg-secondary rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Users size={16}/> Clients</Link>
+            <Link href="/dashboard/projects" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary:bg-secondary rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Briefcase size={16}/> Projects</Link>
+            <Link href="/dashboard/tasks" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary:bg-secondary rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><CheckSquare size={16}/> Tasks</Link>
+            <Link href="/dashboard/finance" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary:bg-secondary rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><DollarSign size={16}/> Finances</Link>
+            <Link href="/dashboard/inventory" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary:bg-secondary rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Package size={16}/> Inventory</Link>
+            <Link href="/dashboard/activity" className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary:bg-secondary rounded-md text-sm font-medium transition-colors text-foreground whitespace-nowrap"><Activity size={16}/> Activity Feed</Link>
           </div>
 
           {/* KPI Cards */}
@@ -282,7 +282,7 @@ export default function DashboardPage() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Clients */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-foreground flex justify-between items-center">
+              <div className="bg-secondary px-4 py-3 border-b border-border font-semibold text-foreground flex justify-between items-center">
                 Recent Clients
                 <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Client</button>
               </div>
@@ -319,7 +319,7 @@ export default function DashboardPage() {
 
             {/* Upcoming Deadlines */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-foreground flex justify-between items-center">
+              <div className="bg-secondary px-4 py-3 border-b border-border font-semibold text-foreground flex justify-between items-center">
                 Upcoming Deadlines
                 <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Project</button>
               </div>

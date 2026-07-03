@@ -3,21 +3,21 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      <header className="w-full bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-secondary flex flex-col font-sans">
+      <header className="w-full bg-card border-b border-border px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter">
+          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-foreground font-bold tracking-tighter">
             EVE
           </div>
-          <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Enterprise Virtual Executive</h1>
+          <h1 className="text-xl font-semibold text-foreground tracking-tight">Enterprise Virtual Executive</h1>
         </div>
         <div className="space-x-4">
-          <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
             Sign In
           </Link>
           <Link 
             href="/signup" 
-            className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+            className="text-sm font-medium bg-indigo-600 text-foreground px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
           >
             Get Started
           </Link>
@@ -30,16 +30,16 @@ export default function LandingPage() {
             <Sparkles className="mr-2 h-4 w-4" />
             The AI COO for D2C Fashion Brands
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-slate-900 leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-foreground leading-tight">
             Stop Guessing. <br /> Start Forecasting.
           </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             EVE analyzes your inventory, predicts stockouts, and simulates pricing strategies so you can scale your fashion brand with deterministic confidence.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link 
               href="/signup" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-foreground bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md"
             >
               Start Free Trial
               <ArrowRight className="ml-2 h-4 w-4" />
