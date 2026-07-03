@@ -145,17 +145,17 @@ export default function DashboardPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 p-6 max-w-[1600px] mx-auto w-full space-y-6 animate-pulse">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 p-6 max-w-[1600px] mx-auto w-full space-y-6 animate-pulse">
         {/* CTAs Toolbar Skeleton */}
-        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300" />
+        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300 dark:border-slate-700" />
         
         {/* Navigation Toolbar Skeleton */}
-        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300" />
+        <div className="h-14 bg-slate-200 rounded-xl border border-slate-300 dark:border-slate-700" />
 
         {/* KPI Cards Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-slate-200 rounded-xl border border-slate-300 p-5 space-y-3">
+            <div key={i} className="h-28 bg-slate-200 rounded-xl border border-slate-300 dark:border-slate-700 p-5 space-y-3">
               <div className="h-4 bg-slate-300 rounded w-1/2" />
               <div className="h-8 bg-slate-300 rounded w-3/4" />
             </div>
@@ -164,12 +164,12 @@ export default function DashboardPage() {
 
         {/* Tables Grid Skeleton */}
         <div className="grid lg:grid-cols-2 gap-6">
-          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300" />
-          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300" />
+          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300 dark:border-slate-700" />
+          <div className="h-64 bg-slate-200 rounded-xl border border-slate-300 dark:border-slate-700" />
         </div>
 
         {/* Timeline Skeleton */}
-        <div className="h-80 bg-slate-200 rounded-xl border border-slate-300" />
+        <div className="h-80 bg-slate-200 rounded-xl border border-slate-300 dark:border-slate-700" />
       </div>
     );
   }
@@ -282,7 +282,7 @@ export default function DashboardPage() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Clients */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-foreground flex justify-between items-center">
+              <div className="bg-slate-50 dark:bg-slate-900/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 font-semibold text-foreground flex justify-between items-center">
                 Recent Clients
                 <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Client</button>
               </div>
@@ -319,7 +319,7 @@ export default function DashboardPage() {
 
             {/* Upcoming Deadlines */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 font-semibold text-foreground flex justify-between items-center">
+              <div className="bg-slate-50 dark:bg-slate-900/80 px-4 py-3 border-b border-slate-200 dark:border-slate-800 font-semibold text-foreground flex justify-between items-center">
                 Upcoming Deadlines
                 <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Project</button>
               </div>

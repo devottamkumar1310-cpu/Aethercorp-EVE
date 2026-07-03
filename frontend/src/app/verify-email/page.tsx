@@ -74,8 +74,8 @@ function VerifyEmailForm() {
 
   if (isChecking) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-        <div className="flex flex-col items-center justify-center gap-3 text-slate-500">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 flex flex-col justify-center items-center p-4">
+        <div className="flex flex-col items-center justify-center gap-3 text-slate-500 dark:text-slate-400">
           <RefreshCw size={24} className="animate-spin text-indigo-600" />
           <span className="text-sm font-medium">Verifying session...</span>
         </div>
@@ -84,8 +84,8 @@ function VerifyEmailForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 flex flex-col justify-center items-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="p-8">
           <div className="flex justify-center mb-6">
             <div className="h-12 w-12 bg-indigo-50/80 rounded-full flex items-center justify-center text-indigo-600">
@@ -93,8 +93,8 @@ function VerifyEmailForm() {
             </div>
           </div>
 
-          <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Verify Your Email</h2>
-          <p className="text-slate-500 text-center mb-6 text-sm">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 text-center mb-2">Verify Your Email</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-center mb-6 text-sm">
             We sent a verification link to <span className="font-semibold text-slate-700">{email || "your registered email"}</span>. Please check your inbox and confirm.
           </p>
 
@@ -116,7 +116,7 @@ function VerifyEmailForm() {
             <button
               onClick={handleResend}
               disabled={loading || cooldown > 0}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-300 text-white rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-300 text-slate-900 dark:text-slate-100 dark:text-white rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
             >
               {loading ? (
                 <>
@@ -133,7 +133,7 @@ function VerifyEmailForm() {
             <div className="pt-4 border-t border-slate-100 flex flex-col gap-2.5">
               <Link 
                 href="/login" 
-                className="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-4 bg-slate-100 dark:bg-slate-900/50 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-1.5"
               >
                 <ArrowLeft size={14} /> Back to Login
               </Link>
@@ -148,7 +148,7 @@ function VerifyEmailForm() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900/80 flex flex-col justify-center items-center p-4">
         <RefreshCw size={24} className="animate-spin text-indigo-600" />
       </div>
     }>
