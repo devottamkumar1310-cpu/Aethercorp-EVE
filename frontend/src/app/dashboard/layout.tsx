@@ -48,6 +48,7 @@ const navItems = [
       { href: "/dashboard/eve", label: "AI Command Center", icon: Brain, isAI: true },
       { href: "/dashboard/documents", label: "Document Hub", icon: FileText, isAI: true },
       { href: "/dashboard/traceability", label: "Decision Traceability", icon: Sparkles, isAI: true },
+      { href: "/dashboard/inventory", label: "Inventory Intelligence", icon: Package },
     ],
   },
   {
@@ -58,7 +59,6 @@ const navItems = [
       { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
       { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
       { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
-      { href: "/dashboard/inventory", label: "Inventory", icon: Package },
       { href: "/dashboard/activity", label: "Activity", icon: Activity },
     ],
   },
