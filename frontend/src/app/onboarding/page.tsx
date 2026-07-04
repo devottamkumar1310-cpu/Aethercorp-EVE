@@ -34,7 +34,7 @@ export default function OnboardingPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.organization_id) {
-            router.push("/dashboard/eve");
+            router.push("/dashboard/inventory");
           }
         }
       } catch (e) {
@@ -75,7 +75,7 @@ export default function OnboardingPage() {
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
 
-      router.push("/dashboard/eve");
+      router.push("/dashboard/inventory");
     } catch (e: any) {
       setError(e.message);
       setLoading(false);
@@ -107,7 +107,7 @@ export default function OnboardingPage() {
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
 
-      router.push("/dashboard/eve");
+      router.push("/dashboard/inventory");
     } catch (e: any) {
       setError(e.message);
       setLoadingDemo(false);
@@ -131,7 +131,7 @@ export default function OnboardingPage() {
           </div>
           
           <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center tracking-tight mb-2">
-            Welcome to EVE AI COO
+            Welcome to EVE
           </h2>
           <p className="text-muted-foreground text-center mb-8 text-sm md:text-base">
             Set up your brand's intelligence hub to begin forecasting and optimizing operations.

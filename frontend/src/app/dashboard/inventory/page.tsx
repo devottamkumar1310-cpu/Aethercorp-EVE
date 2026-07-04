@@ -17,11 +17,13 @@ import {
   TrendingDown,
   Layers,
   ArrowLeft,
+  ArrowRight,
   Plus,
   Search,
   ChevronUp,
   ChevronDown,
   Filter,
+  Brain,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -275,6 +277,87 @@ export default function InventoryDashboardPage() {
     );
   }
 
+  const noData = !data || !data.product_metrics || data.product_metrics.length === 0;
+
+  if (noData) {
+    return (
+      <main className="p-6 max-w-[1600px] mx-auto w-full space-y-8 transition-colors duration-200">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black tracking-tight text-foreground">Inventory Intelligence</h1>
+            <p className="text-muted-foreground text-sm">Optimize safety stock, predict run-out periods, and protect margins.</p>
+          </div>
+        </div>
+
+        {/* Empty Onboarding State */}
+        <div className="bg-card/40 backdrop-blur-md rounded-3xl border border-border shadow-xl p-8 md:p-12 text-center max-w-4xl mx-auto space-y-8 relative overflow-hidden">
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="flex justify-center">
+            <div className="h-16 w-16 bg-indigo-650/15 text-indigo-500 rounded-2xl flex items-center justify-center">
+              <Package size={32} />
+            </div>
+          </div>
+
+          <div className="space-y-3 max-w-xl mx-auto">
+            <h2 className="text-2xl font-bold text-foreground">Set Up Your Inventory Dashboard</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              We need inventory data to track stock levels, calculate dead stock, and suggest safety reorders. Start by uploading a master CSV or explore with a preloaded demo workspace.
+            </p>
+          </div>
+
+          {/* Three-step visual onboarding guide */}
+          <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-4 text-left">
+            <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
+              <div className="h-8 w-8 bg-indigo-500/10 text-indigo-400 rounded-lg flex items-center justify-center font-bold text-sm">1</div>
+              <h4 className="font-bold text-foreground text-sm">Upload Stock Data</h4>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Export your products from Shopify or download our template, and upload the CSV here.
+              </p>
+            </div>
+            <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
+              <div className="h-8 w-8 bg-violet-500/10 text-violet-400 rounded-lg flex items-center justify-center font-bold text-sm">2</div>
+              <h4 className="font-bold text-foreground text-sm">Get Live Insights</h4>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                See stockout risks, capital tied up in dead stock, best sellers, and gross margins instantly.
+              </p>
+            </div>
+            <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
+              <div className="h-8 w-8 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center justify-center font-bold text-sm">3</div>
+              <h4 className="font-bold text-foreground text-sm">Take Smart Action</h4>
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Let EVE generate restocking purchase orders, price adjustments, and supplier requests.
+              </p>
+            </div>
+          </div>
+
+          {/* Call to Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 max-w-md mx-auto">
+            <label className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-indigo-550/40 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-550/10 text-indigo-400 hover:text-indigo-300 rounded-xl text-sm font-semibold cursor-pointer transition-all text-center">
+              {uploadingMaster ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload size={16} />}
+              <span>{uploadingMaster ? "Uploading..." : "Upload Master CSV"}</span>
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                disabled={uploadingMaster}
+                onChange={(e) => handleFileUpload(e)}
+              />
+            </label>
+            <button
+              onClick={downloadTemplate}
+              className="w-full py-3 px-4 border border-border hover:bg-secondary rounded-xl text-sm font-semibold transition-colors text-muted-foreground hover:text-foreground"
+            >
+              Download Template
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   const tabs: { id: TabId; label: string; count?: number }[] = [
     { id: "all", label: "All Products", count: data?.product_metrics?.length },
     { id: "reorder", label: "Reorder Alerts", count: alerts?.low_stock_count },
@@ -287,7 +370,7 @@ export default function InventoryDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/dashboard" className="hover:text-indigo-600:text-indigo-400 transition-colors flex items-center gap-1">
+            <Link href="/dashboard" className="hover:text-indigo-650:text-indigo-400 transition-colors flex items-center gap-1">
               <ArrowLeft size={14} /> Dashboard
             </Link>
           </div>
@@ -302,26 +385,138 @@ export default function InventoryDashboardPage() {
         </button>
       </div>
 
-      {/* CSV Import Grid */}
-      <div className="grid grid-cols-1 gap-4">
-          <div className={`bg-card p-4 rounded-xl border border-border shadow-sm transition-colors`}>
-            <div className={`h-8 w-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-2`}><Layers size={18} /></div>
-            <h3 className="font-semibold text-foreground text-sm">Upload Master Spreadsheet</h3>
-            <div className="flex items-center justify-between mt-1 mb-3 text-[10px]">
-              <span className="text-muted-foreground truncate max-w-[75%]">Required: sku. Optional: name, quantity, cost, price, date, sales_quantity</span>
+      {/* Executive Summary KPI Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Inventory Value */}
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Inventory Value (COGS)</p>
+            <p className="text-2xl font-black text-foreground mt-1">
+              ${(data?.total_inventory_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">Total cost of stock on hand</p>
+          </div>
+          <div className="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
+            <DollarSign size={20} />
+          </div>
+        </div>
+
+        {/* Card 2: Low Stock SKUs */}
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Low Stock SKUs</p>
+            <p className="text-2xl font-black text-foreground mt-1">
+              {alerts?.low_stock_count || 0}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {(alerts?.low_stock_count || 0) > 0 ? `${alerts?.low_stock?.filter(item => item.shortage > 0).length || 0} SKUs below safety limit` : "All stock levels healthy"}
+            </p>
+          </div>
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-500/15 text-amber-500" : "bg-muted text-muted-foreground"}`}>
+            <AlertTriangle size={20} />
+          </div>
+        </div>
+
+        {/* Card 3: Dead Stock Candidates */}
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dead Stock Candidates</p>
+            <p className="text-2xl font-black text-foreground mt-1">
+              {alerts?.dead_stock_count || 0}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Est. ${(alerts?.dead_stock?.reduce((sum, item) => sum + item.estimated_value, 0) || 0).toLocaleString()} tied up
+            </p>
+          </div>
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${(alerts?.dead_stock_count || 0) > 0 ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground"}`}>
+            <Package size={20} />
+          </div>
+        </div>
+
+        {/* Card 4: Reorder Recommendations */}
+        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reorder Recommendations</p>
+            <p className="text-2xl font-black text-foreground mt-1">
+              {alerts?.low_stock?.length || 0}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Purchase {alerts?.low_stock?.reduce((sum, item) => sum + item.shortage, 0).toLocaleString() || 0} units suggested
+            </p>
+          </div>
+          <div className="h-10 w-10 bg-indigo-500/10 text-indigo-500 rounded-xl flex items-center justify-center">
+            <TrendingUp size={20} />
+          </div>
+        </div>
+      </div>
+
+      {/* Executive Summary Cards & Data Upload Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: Summary Insights */}
+        <div className="lg:col-span-2 bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Brain size={16} className="text-indigo-500" /> Executive Insights
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="p-3 bg-secondary/60 rounded-lg space-y-1">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  ⚠️ Stockout Risk
+                </span>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {(alerts?.low_stock_count || 0) > 0 
+                    ? `There are ${alerts?.low_stock_count} SKUs below their safety stock levels. Total replenishment shortage is ${alerts?.low_stock?.reduce((sum, item) => sum + item.shortage, 0).toLocaleString()} units.`
+                    : "No stockout risks detected. Safety stock levels are currently compliant."
+                  }
+                </p>
+              </div>
+              <div className="p-3 bg-secondary/60 rounded-lg space-y-1">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  ❄️ Capital Lockup
+                </span>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {(alerts?.dead_stock_count || 0) > 0
+                    ? `We have detected ${alerts?.dead_stock_count} dead stock candidates, locking up an estimated $${(alerts?.dead_stock?.reduce((sum, item) => sum + item.estimated_value, 0) || 0).toLocaleString()} in capital.`
+                    : "No dead stock detected. Inventory turnover is within normal operating parameters."
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="pt-4 border-t border-border flex items-center justify-between text-xs mt-4">
+            <span className="text-muted-foreground">Ask EVE AI for detailed mitigation plans:</span>
+            <Link href="/dashboard/eve" className="font-bold text-indigo-500 hover:text-indigo-400 flex items-center gap-1 transition-colors">
+              Open Chat Assistant <ArrowRight size={12} />
+            </Link>
+          </div>
+        </div>
+
+        {/* Right: Spreadsheet Integration */}
+        <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div className="space-y-2">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <Upload size={16} className="text-indigo-500" /> Spreadsheet Integration
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Upload your catalog, inventory ledger, or Shopify export sheet. EVE will dynamically reconcile columns and run quality checks.
+            </p>
+          </div>
+          <div className="space-y-3 pt-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Shopify or custom CSV formats:</span>
               <button
                 type="button"
                 onClick={downloadTemplate}
-                className="text-indigo-600 font-semibold hover:underline cursor-pointer outline-none flex-shrink-0"
+                className="text-indigo-500 font-bold hover:underline cursor-pointer outline-none"
               >
                 Download Template
               </button>
             </div>
-            <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-border hover:border-indigo-400 bg-secondary text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
+            <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 border border-dashed border-border hover:border-indigo-500 bg-secondary hover:bg-secondary/80 rounded-lg text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
               {uploadingMaster
-                ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-600" />
-                : <Upload size={12} className="text-muted-foreground" />}
-              <span>{uploadingMaster ? "Processing..." : `Choose Master CSV`}</span>
+                ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-500" />
+                : <Upload size={14} className="text-muted-foreground" />}
+              <span>{uploadingMaster ? "Processing spreadsheet..." : "Upload Master CSV"}</span>
               <input
                 type="file"
                 accept=".csv"
@@ -330,47 +525,6 @@ export default function InventoryDashboardPage() {
                 onChange={(e) => handleFileUpload(e)}
               />
             </label>
-          </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inventory Value (COGS)</p>
-            <p className="text-3xl font-extrabold text-foreground mt-1">
-              ${(data?.total_inventory_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </div>
-          <div className="h-12 w-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center">
-            <DollarSign size={22} />
-          </div>
-        </div>
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Units Stocked</p>
-            <p className="text-3xl font-extrabold text-foreground mt-1">
-              {(data?.total_items_count || 0).toLocaleString()}
-            </p>
-          </div>
-          <div className="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
-            <Package size={22} />
-          </div>
-        </div>
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Low Stock SKUs</p>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-3xl font-extrabold text-foreground">{alerts?.low_stock_count || 0}</p>
-              {(alerts?.low_stock_count || 0) > 0 && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 animate-pulse">
-                  Reorder
-                </span>
-              )}
-            </div>
-          </div>
-          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-50 text-amber-600" : "bg-background text-muted-foreground"}`}>
-            <AlertTriangle size={22} />
           </div>
         </div>
       </div>

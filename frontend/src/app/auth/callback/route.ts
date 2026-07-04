@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard/eve'
+  const next = searchParams.get('next') ?? '/dashboard/inventory'
   const errorParam = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 

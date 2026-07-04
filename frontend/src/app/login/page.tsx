@@ -24,7 +24,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/eve`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/inventory`,
       }
     });
 
@@ -60,7 +60,7 @@ function LoginForm() {
       } catch (e) {
         console.error("Sync failed", e);
       }
-      router.push("/dashboard/eve");
+      router.push("/dashboard/inventory");
     }
   };
 
@@ -74,7 +74,7 @@ function LoginForm() {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-foreground text-center mb-2">Welcome Back</h2>
-          <p className="text-muted-foreground text-center mb-8 text-sm">Sign in to your AI COO dashboard</p>
+          <p className="text-muted-foreground text-center mb-8 text-sm">Sign in to your Inventory Intelligence dashboard</p>
 
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (

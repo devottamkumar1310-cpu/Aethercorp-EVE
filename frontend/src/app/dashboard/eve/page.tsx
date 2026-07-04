@@ -350,7 +350,7 @@ export default function EVECoocommandCenter() {
     {
       id: "welcome-msg",
       role: "assistant",
-      content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Strategic Goals Manager or request a Daily Brief. What analysis shall we run?",
+      content: "Welcome to your EVE Inventory Intelligence assistant. I can help analyze stockout risks, identify dead inventory, generate replenishment plans, and explain inventory recommendations. What shall we analyze today?",
       created_at: new Date().toISOString()
     }
   ]);
@@ -396,10 +396,11 @@ export default function EVECoocommandCenter() {
 
   // Quick prompt chips
   const promptChips = [
-    "What needs my attention?",
-    "Finance summary",
-    "Identify overstock risks",
-    "Pricing optimizations"
+    "Analyze Stockout Risk",
+    "Review Dead Inventory",
+    "Generate Replenishment Plan",
+    "Explain Reorder Recommendation",
+    "Show Lowest Performing SKUs"
   ];
 
   const scrollChatToBottom = () => {
@@ -612,7 +613,7 @@ export default function EVECoocommandCenter() {
       {
         id: "welcome-msg",
         role: "assistant",
-        content: "Welcome to the EVE AI COO Command Center. I am analyzing real-time finance, inventory, and operations parameters. You can set long-term strategic goals in the Strategic Goals Manager or request a Daily Brief. What analysis shall we run?",
+        content: "Welcome to your EVE Inventory Intelligence assistant. I can help analyze stockout risks, identify dead inventory, generate replenishment plans, and explain inventory recommendations. What shall we analyze today?",
         created_at: new Date().toISOString()
       }
     ]);

@@ -48,14 +48,14 @@ export async function updateSession(request: NextRequest) {
     // Redirect verified users away from verify-email
     if (isConfirmed && isVerifyRoute) {
       const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
+      url.pathname = '/dashboard/inventory'
       return NextResponse.redirect(url)
     }
 
     // Redirect authenticated users away from auth routes
     if (isConfirmed && isAuthRoute) {
       const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
+      url.pathname = '/dashboard/inventory'
       return NextResponse.redirect(url)
     }
   } else {
