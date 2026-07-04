@@ -1,3 +1,30 @@
+# EVE v1.1.0 Release Notes — Inventory Intelligence Repositioning
+
+## Overview
+This release repositions EVE from an AI COO-first platform to an **Inventory Intelligence-first** platform with a supporting AI assistant, aligning the user experience with our strongest product wedge for founder validation.
+
+## Key Improvements
+
+### 1. Default Post-Login Routing
+- Default post-login, signup, callback, and email verification redirects updated from `/dashboard/eve` to `/dashboard/inventory`.
+- Supabase session middleware updated to default to the inventory intelligence homepage.
+
+### 2. Sidebar Navigation Reordering
+- Reordered navigation priority: Inventory Intelligence -> Document Intelligence -> Decision Traceability -> AI Assistant -> Operations Dashboard -> Finance -> Activity Feed.
+- Updated sidebar brand logo click to redirect directly to the inventory dashboard.
+- Product tour steps updated to highlight Inventory Intelligence first.
+
+### 3. Inventory Dashboard Redesign
+- Implemented high-visibility **Executive Summary KPI Strip** (Inventory Value, Low Stock SKUs, Dead Stock Candidates, Reorder Recommendations).
+- Rearranged top layout placing **Executive Insights** next to the **Spreadsheet Integration** panel.
+- Added a 3-step visual empty state onboarding guide (`Upload Data` -> `Get Insights` -> `Take Action`) for clean workspaces.
+
+### 4. AI Assistant Contextualization
+- Changed welcome message and quick action prompt chips in the chat assistant to focus on inventory tasks (stockout risks, dead stock, replenishment plans).
+- Aligned landing page taglines to showcase the "Inventory Intelligence Platform".
+
+---
+
 # EVE v1.0.0-beta Release Notes
 
 ## Overview
