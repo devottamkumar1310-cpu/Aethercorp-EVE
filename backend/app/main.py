@@ -43,6 +43,8 @@ logger = logging.getLogger("eve.main")
 # Order matters: put more-specific origins first.
 allowed_origins = [
     "https://aethercorp-eve.vercel.app",
+    "https://eveinventory.in",
+    "https://www.eveinventory.in",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",    # Swagger UI self-requests
