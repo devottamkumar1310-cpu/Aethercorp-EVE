@@ -1,4 +1,3 @@
-import pytest
 from app.fashion.dead_stock import detect_dead_stock
 from app.fashion.stockout_prediction import predict_stockout
 from app.fashion.reorder_engine import calculate_reorder_quantity

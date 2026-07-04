@@ -52,7 +52,6 @@ class BusinessAnalyticsService:
         """
         Calculates category breakdown, dead stock items, and low-margin alerts for D2C apparel.
         """
-        from app.models.product import Product
         from app.models.inventory import InventoryItem, SalesRecord
         from sqlalchemy import func
         from sqlalchemy.orm import joinedload

@@ -14,9 +14,6 @@ from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
-from app.models.executive_memory import BusinessGoal
-from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
-from app.models.ai_recommendation import AIRecommendation
 from app.core.security import get_current_user, get_required_workspace_id
 from app.config import settings
 from app.core.dependency_container import container

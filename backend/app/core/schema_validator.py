@@ -20,7 +20,7 @@
 import logging
 from typing import Dict, Set
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect
 from sqlalchemy.exc import OperationalError, ProgrammingError
 
 logger = logging.getLogger("eve.schema_validator")

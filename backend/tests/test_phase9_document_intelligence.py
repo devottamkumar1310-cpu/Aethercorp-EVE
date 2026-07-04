@@ -2,7 +2,6 @@ import pytest
 import uuid
 import datetime
 import jwt
-import io
 import time
 from fastapi import status
 from fastapi.testclient import TestClient
@@ -15,9 +14,8 @@ from app.database import Base, get_db
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 from app.models.product import Product
-from app.models.inventory import InventoryItem, SalesRecord
-from app.models.finance import Revenue, Expense
-from app.models.audit_log import AuditLog
+from app.models.inventory import InventoryItem
+from app.models.finance import Expense
 from app.config import settings
 
 # Setup isolated in-memory database for testing

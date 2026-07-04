@@ -1,7 +1,5 @@
 import pytest
 import uuid
-import datetime
-import pandas as pd
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -12,10 +10,10 @@ from app.database import Base, get_db
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 from app.models.product import Product
-from app.models.inventory import InventoryItem, SalesRecord
+from app.models.inventory import InventoryItem
 from app.models.audit_log import AuditLog
 from app.services.analytics_service import AnalyticsService
-from app.services.data_quality_service import DataQualityService, DataQualityError
+from app.services.data_quality_service import DataQualityError
 from app.services.gemini_service import GeminiService, GeminiOutageError
 from app.services.audit_logger import AuditLogger
 from app.orchestration.orchestrator import Orchestrator

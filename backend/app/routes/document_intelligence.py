@@ -3,7 +3,6 @@ import uuid
 import logging
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, BackgroundTasks, Response
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session, load_only
 from app.services.gcs_service import GCSService
 

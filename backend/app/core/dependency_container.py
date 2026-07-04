@@ -10,7 +10,7 @@
 # ==============================================================================
 
 import logging
-from typing import Dict, Any, Type, Optional, Callable
+from typing import Dict, Any, Optional, Callable
 
 logger = logging.getLogger("eve.core.dependency_container")
 

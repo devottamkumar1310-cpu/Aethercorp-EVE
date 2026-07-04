@@ -1,6 +1,5 @@
 import os
 import logging
-from typing import Optional
 from app.config import settings
 
 logger = logging.getLogger("eve.services.gcs_service")

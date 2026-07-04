@@ -10,7 +10,7 @@ import uuid
 # ==============================================================================
 
 import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UUID
+from sqlalchemy import Column, String, ForeignKey, UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
 

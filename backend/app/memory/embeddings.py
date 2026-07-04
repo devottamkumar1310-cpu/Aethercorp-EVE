@@ -9,7 +9,7 @@
 
 import logging
 import hashlib
-from typing import List, Optional
+from typing import List
 from app.core.dependency_container import container
 
 logger = logging.getLogger("eve.memory.embeddings")

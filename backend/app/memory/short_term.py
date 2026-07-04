@@ -7,7 +7,7 @@
 # ==============================================================================
 
 import logging
-from typing import List, Dict, Any
+from typing import Any
 from sqlalchemy.orm import Session
 from app.models.memory import ConversationSession, ChatMessage
 

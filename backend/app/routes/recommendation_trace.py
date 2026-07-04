@@ -6,8 +6,7 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.recommendation_trace import RecommendationTrace
-from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
-from app.models.profile import Profile
+from app.core.security import get_required_workspace_id, require_workspace_role
 
 router = APIRouter(prefix="/api/recommendations", tags=["Recommendation Traceability"])
 

@@ -1,8 +1,8 @@
 import re
 import logging
 import datetime
-from typing import List, Dict, Any, Optional
-from app.schemas.executive import ExecutiveSynthesisResult, ExecutiveRecommendation, StrategicPriority
+from typing import List, Optional
+from app.schemas.executive import ExecutiveSynthesisResult, ExecutiveRecommendation
 
 logger = logging.getLogger("eve.services.ai.executive_formatter")
 
@@ -1297,7 +1297,7 @@ class ExecutiveFormatter:
 
         # Construct structured markdown output separating facts, interpretation, and recommendations
         exec_summary = clean_summary[:180] + "..." if len(clean_summary) > 180 else clean_summary
-        reason_text = f"Synthesized from executive board analysis across queried database records."
+        reason_text = "Synthesized from executive board analysis across queried database records."
         impact_text = synthesis.expected_impact or "Optimized operational efficiency and risk mitigation."
 
         formatted = (

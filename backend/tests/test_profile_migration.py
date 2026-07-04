@@ -11,7 +11,6 @@ from app.database import Base, get_db
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 from app.core.security import get_current_user
-from sqlalchemy.exc import IntegrityError
 
 # Setup in-memory SQLite database
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

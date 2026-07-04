@@ -263,7 +263,7 @@ class SimulationEngine:
                 "method": "Safety stock capital mapping",
                 "factors": [
                     f"Expansion quantity: {quantity} units",
-                    f"Average unit cost: $25.00"
+                    "Average unit cost: $25.00"
                 ]
             },
             "provenance": {

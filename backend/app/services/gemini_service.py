@@ -13,7 +13,7 @@ import time
 import logging
 import asyncio
 import random
-from typing import List, Dict, Any, Optional, Type
+from typing import List, Optional, Type
 from pydantic import BaseModel
 from google import genai
 from google.genai import types
@@ -759,6 +759,5 @@ class GeminiService:
 
 
 import inspect
-import asyncio
 from app.core.dependency_container import container
 container.register_singleton("gemini_service", GeminiService())

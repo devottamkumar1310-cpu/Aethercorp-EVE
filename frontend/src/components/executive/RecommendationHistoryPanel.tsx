@@ -31,6 +31,7 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line
       fetchRecommendations();
     }
   }, [isOpen, token]);

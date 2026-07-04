@@ -1,9 +1,7 @@
 import sys
 import os
-import uuid
 import time
 import requests
-import subprocess
 import threading
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   fetchInventoryDashboard,
-  uploadInventoryCSVAPI,
-  uploadSalesCSVAPI,
-  uploadCostsCSVAPI,
+  uploadMasterCSVAPI,
 } from "@/services/businessService";
 import {
   Package,
@@ -80,9 +78,7 @@ export default function InventoryDashboardPage() {
   const [alerts, setAlerts] = useState<AlertData | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string>("");
-  const [uploadingInventory, setUploadingInventory] = useState(false);
-  const [uploadingSales, setUploadingSales] = useState(false);
-  const [uploadingCosts, setUploadingCosts] = useState(false);
+  const [uploadingMaster, setUploadingMaster] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortField, setSortField] = useState<SortField>("revenue");
@@ -92,7 +88,7 @@ export default function InventoryDashboardPage() {
   const [showImportSummary, setShowImportSummary] = useState(false);
   const [importSummary, setImportSummary] = useState<{
     status: "success" | "error";
-    type: "inventory" | "sales" | "costs";
+    type: "inventory" | "sales" | "costs" | "master";
     total_rows: number;
     valid_rows: number;
     invalid_rows: number;
@@ -138,25 +134,16 @@ export default function InventoryDashboardPage() {
     init();
   }, [router]);
 
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "inventory" | "sales" | "costs"
-  ) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.endsWith(".csv")) { toast.error("Only CSV files are supported."); return; }
-    const toastId = toast.loading(`Uploading ${type} CSV...`);
-    if (type === "inventory") setUploadingInventory(true);
-    if (type === "sales") setUploadingSales(true);
-    if (type === "costs") setUploadingCosts(true);
+    const toastId = toast.loading(`Uploading Master CSV...`);
+    setUploadingMaster(true);
     try {
-      let result;
-      if (type === "inventory") result = await uploadInventoryCSVAPI(sessionToken, file);
-      else if (type === "sales") result = await uploadSalesCSVAPI(sessionToken, file);
-      else if (type === "costs") result = await uploadCostsCSVAPI(sessionToken, file);
-      
-      toast.success(`${type.toUpperCase()} file processed!`, { id: toastId });
-      setImportSummary({ ...result, type });
+      const result = await uploadMasterCSVAPI(sessionToken, file);
+      toast.success(`Master file processed!`, { id: toastId });
+      setImportSummary({ ...result, type: "master" });
       setShowImportSummary(true);
       await loadData(sessionToken);
     } catch (err: any) {
@@ -166,34 +153,21 @@ export default function InventoryDashboardPage() {
       } catch {}
       
       if (parsedSummary && parsedSummary.status === "error") {
-        setImportSummary({ ...parsedSummary, type });
+        setImportSummary({ ...parsedSummary, type: "master" });
         setShowImportSummary(true);
         toast.dismiss(toastId);
       } else {
         toast.error("Data synchronization failed. Please review your CSV structure.", { id: toastId });
       }
     } finally {
-      if (type === "inventory") setUploadingInventory(false);
-      if (type === "sales") setUploadingSales(false);
-      if (type === "costs") setUploadingCosts(false);
+      setUploadingMaster(false);
       e.target.value = "";
     }
   };
 
-  const downloadTemplate = (type: "inventory" | "sales" | "costs") => {
-    let headers = "";
-    let filename = "";
-    if (type === "inventory") {
-      headers = "sku,name,category,stock_on_hand,lead_time_days\nSKU-TEST-001,Premium Top,Tops,80,10\nSKU-TEST-002,Cozy Hoodie,Tops,10,14\n";
-      filename = "inventory_template.csv";
-    } else if (type === "costs") {
-      headers = "sku,unit_cost,selling_price,supplier_name\nSKU-TEST-001,15.50,45.00,GarmentFactory\nSKU-TEST-002,22.00,TexSuppliers\n";
-      filename = "costs_template.csv";
-    } else if (type === "sales") {
-      headers = "sku,date,quantity,unit_price,revenue\nSKU-TEST-001,2026-06-01,2,45.00,90.00\nSKU-TEST-002,2026-06-02,1,68.00,68.00\n";
-      filename = "sales_template.csv";
-    }
-
+  const downloadTemplate = () => {
+    const headers = "sku,name,category,stock_on_hand,lead_time_days,unit_cost,selling_price,date,sales_quantity\\nSKU-001,Premium Top,Tops,80,10,15.50,45.00,2026-06-01,2\\n";
+    const filename = "master_template.csv";
     const blob = new Blob([headers], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -329,64 +303,34 @@ export default function InventoryDashboardPage() {
       </div>
 
       {/* CSV Import Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          {
-            type: "inventory" as const,
-            label: "1. Import Inventory Stock",
-            icon: <Layers size={18} />,
-            colorClass: "bg-indigo-50 text-indigo-600",
-            borderClass: "hover:border-indigo-200:border-indigo-850",
-            uploading: uploadingInventory,
-            desc: "Required: sku, name, quantity",
-          },
-          {
-            type: "costs" as const,
-            label: "2. Import Product Costs",
-            icon: <DollarSign size={18} />,
-            colorClass: "bg-green-50 text-green-600",
-            borderClass: "hover:border-green-200:border-green-850",
-            uploading: uploadingCosts,
-            desc: "Required: sku, cost, price",
-          },
-          {
-            type: "sales" as const,
-            label: "3. Import Sales Records",
-            icon: <TrendingUp size={18} />,
-            colorClass: "bg-blue-50 text-blue-600",
-            borderClass: "hover:border-blue-200:border-blue-850",
-            uploading: uploadingSales,
-            desc: "Required: sku, date, quantity, price",
-          },
-        ].map(({ type, label, icon, colorClass, borderClass, uploading, desc }) => (
-          <div key={type} className={`bg-card p-4 rounded-xl border border-border shadow-sm ${borderClass} transition-colors`}>
-            <div className={`h-8 w-8 ${colorClass} rounded-lg flex items-center justify-center mb-2`}>{icon}</div>
-            <h3 className="font-semibold text-foreground text-sm">{label}</h3>
+      <div className="grid grid-cols-1 gap-4">
+          <div className={`bg-card p-4 rounded-xl border border-border shadow-sm transition-colors`}>
+            <div className={`h-8 w-8 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-2`}><Layers size={18} /></div>
+            <h3 className="font-semibold text-foreground text-sm">Upload Master Spreadsheet</h3>
             <div className="flex items-center justify-between mt-1 mb-3 text-[10px]">
-              <span className="text-muted-foreground truncate max-w-[75%]">{desc}</span>
+              <span className="text-muted-foreground truncate max-w-[75%]">Required: sku. Optional: name, quantity, cost, price, date, sales_quantity</span>
               <button
                 type="button"
-                onClick={() => downloadTemplate(type)}
-                className="text-indigo-600 hover:text-indigo-800:text-indigo-300 font-semibold hover:underline cursor-pointer outline-none flex-shrink-0"
+                onClick={downloadTemplate}
+                className="text-indigo-600 font-semibold hover:underline cursor-pointer outline-none flex-shrink-0"
               >
                 Download Template
               </button>
             </div>
             <label className="flex items-center justify-center gap-2 w-full py-1.5 px-3 border border-dashed border-border hover:border-indigo-400 bg-secondary text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
-              {uploading
+              {uploadingMaster
                 ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-600" />
                 : <Upload size={12} className="text-muted-foreground" />}
-              <span>{uploading ? "Processing..." : `Choose ${type} CSV`}</span>
+              <span>{uploadingMaster ? "Processing..." : `Choose Master CSV`}</span>
               <input
                 type="file"
                 accept=".csv"
                 className="hidden"
-                disabled={uploading}
-                onChange={(e) => handleFileUpload(e, type)}
+                disabled={uploadingMaster}
+                onChange={(e) => handleFileUpload(e)}
               />
             </label>
           </div>
-        ))}
       </div>
 
       {/* KPI Cards */}

@@ -19,7 +19,6 @@ from app.models.project import Project
 from app.models.client import Client
 from app.models.product import Product
 from app.models.inventory import InventoryItem
-from app.models.finance import Revenue, Expense
 from app.models.document import ProcessedDocument
 from app.core.security import get_current_user
 

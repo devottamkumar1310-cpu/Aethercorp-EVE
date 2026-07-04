@@ -8,7 +8,6 @@ from sqlalchemy import func
 from fastapi import HTTPException, status
 
 from app.models.document import ProcessedDocument
-from app.services.gcs_service import GCSService
 
 logger = logging.getLogger("eve.services.upload_security_service")
 

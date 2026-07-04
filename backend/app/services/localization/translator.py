@@ -1,6 +1,6 @@
 import re
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict
 
 logger = logging.getLogger("eve.services.localization.translator")
 

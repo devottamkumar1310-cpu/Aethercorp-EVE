@@ -9,11 +9,10 @@
 # ==============================================================================
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 
 from app.core.dependency_container import container
-from app.models.memory import MemoryEntry
 
 logger = logging.getLogger("eve.memory.memory_manager")
 

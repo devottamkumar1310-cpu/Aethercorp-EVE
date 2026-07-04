@@ -27,11 +27,6 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 # Import all models to register them on Base
 from app.models.organization import Organization, Membership
 from app.models.profile import Profile
-from app.models.product import Product
-from app.models.supplier import Supplier
-from app.models.inventory import InventoryItem, SalesRecord
-from app.models.memory import ConversationSession, ChatMessage, MemoryEntry
-from app.models.artifact import Artifact
 
 Base.metadata.create_all(bind=engine)
 

@@ -15,12 +15,6 @@ from app.core.security import get_current_user, get_required_workspace_id, requi
 from app.models.profile import Profile
 
 # Import specialized agents to trigger registration
-from app.agents.market.market_agent import MarketAgent
-from app.agents.inventory.inventory_agent import InventoryAgent
-from app.agents.pricing.pricing_agent import PricingAgent
-from app.agents.sourcing.sourcing_agent import SourcingAgent
-from app.agents.analytics.analytics_agent import AnalyticsAgent
-from app.agents.forecasting.forecasting_agent import ForecastingAgent
 
 logger = logging.getLogger("eve.routes.chat")
 router = APIRouter(prefix="/api", tags=["chat"])

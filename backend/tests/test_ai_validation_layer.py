@@ -4,7 +4,6 @@
 #            citations, rejections, and confidence classifications.
 # ==============================================================================
 
-import pytest
 from app.services.ai_validation_service import AIValidationService
 
 

@@ -10,7 +10,7 @@
 
 import logging
 import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -18,16 +18,9 @@ from app.core.dependency_container import container
 
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
-from app.models.supplier import Supplier
 from app.fashion.sell_through import calculate_sell_through_rate
 from app.fashion.dead_stock import detect_dead_stock
-from app.fashion.inventory_turnover import calculate_inventory_turnover
-from app.fashion.gmroi import calculate_gmroi
 from app.fashion.demand_forecast import calculate_replenishment_metrics
-from app.fashion.stockout_prediction import predict_stockout
-from app.fashion.reorder_engine import calculate_reorder_quantity
-from app.fashion.margin_analysis import calculate_margin
-from app.fashion.profit_impact import estimate_profit_impact
 
 logger = logging.getLogger("eve.services.analytics_service")
 
@@ -308,7 +301,7 @@ class AnalyticsService:
             
             # Quantity change = - Price Change % * Elasticity Coefficient
             qty_change_pct = -price_change_pct * elasticity
-            projected_qty_sold = max(0.0, units_sold * (1.0 + qty_change_pct))
+            projected_qty_sold = min(float(item.stock_on_hand), max(0.0, units_sold * (1.0 + qty_change_pct)))
             
             # Revenue impact = (Rec Price * Rec Qty) - (Curr Price * Curr Qty)
             curr_rev = current_price * units_sold

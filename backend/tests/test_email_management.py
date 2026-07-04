@@ -154,7 +154,6 @@ def test_email_change_request_trigger_and_logging(setup_email_data, caplog):
     headers = {"X-Workspace-Id": str(org_id), "Authorization": "Bearer fake-token"}
 
     from unittest.mock import patch, MagicMock, AsyncMock
-    from app.config import settings
 
     mock_resp = MagicMock()
     mock_resp.status_code = 200

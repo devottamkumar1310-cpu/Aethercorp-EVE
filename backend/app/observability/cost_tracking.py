@@ -6,7 +6,6 @@
 
 import logging
 from typing import Dict
-from app.observability.token_usage import TokenTracker
 
 logger = logging.getLogger("eve.observability.cost_tracking")
 

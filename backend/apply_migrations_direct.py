@@ -41,7 +41,7 @@ try:
         print(f"  Executing: {sql[:80]}...")
         try:
             cur.execute(sql)
-            print(f"    OK")
+            print("    OK")
         except Exception as e:
             print(f"    ERROR: {e}")
 

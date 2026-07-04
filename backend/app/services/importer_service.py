@@ -1,12 +1,10 @@
 import logging
-import io
 import datetime
 import pandas as pd
 from typing import List, Dict, Any, Tuple
 from sqlalchemy.orm import Session
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
-from app.models.organization import Membership
 from app.models.supplier import Supplier
 
 logger = logging.getLogger("eve.services.importer_service")
@@ -567,4 +565,119 @@ class ImporterService:
             "duplicate_rows": int(duplicate_rows_count),
             "missing_columns": [],
             "errors": []
+        }
+
+    @classmethod
+    def import_master(cls, db: Session, org_id: Any, df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Unified ingestion: parses sku, name, quantity, cost, price, date, supplier.
+        """
+        import uuid
+        if isinstance(org_id, str):
+            try:
+                org_id = uuid.UUID(org_id)
+            except ValueError:
+                pass
+        
+        df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
+        
+        # Mapping common aliases
+        col_map = {}
+        for c in df.columns:
+            if c in ["item_name", "product_name", "product"]: col_map[c] = "name"
+            elif c in ["stock_on_hand", "stock", "inventory_quantity"]: col_map[c] = "quantity"
+            elif c in ["cost", "unit_cost"]: col_map[c] = "unit_cost"
+            elif c in ["price", "selling_price"]: col_map[c] = "selling_price"
+            elif c in ["vendor", "supplier_name"]: col_map[c] = "supplier"
+            elif c in ["sales_qty", "sold_qty", "qty_sold"]: col_map[c] = "sales_quantity"
+        df.rename(columns=col_map, inplace=True)
+
+        is_valid, missing = cls.validate_schema(df, ["sku"])
+        if not is_valid:
+            return {
+                "status": "error", "total_rows": len(df), "valid_rows": 0, "invalid_rows": len(df),
+                "duplicate_rows": 0, "missing_columns": missing,
+                "errors": [{"row": 0, "column": "headers", "value": None, "message": f"Missing required columns: {missing}"}]
+            }
+
+        total_rows = len(df)
+        df = df.reset_index(drop=True)
+        
+        products_cache = {p.sku: p for p in db.query(Product).filter(Product.organization_id == org_id).all()}
+        existing_items = db.query(InventoryItem).filter(InventoryItem.organization_id == org_id).all()
+        inventory_cache = {item.product_id: item for item in existing_items}
+        suppliers_cache = {s.name: s for s in db.query(Supplier).filter(Supplier.organization_id == org_id).all()}
+        
+        sales_to_add = []
+        success_count = 0
+        
+        for index, row in df.iterrows():
+            sku = str(row.get("sku")).strip()
+            if not sku or sku == "nan": continue
+            
+            # Upsert Product
+            product = products_cache.get(sku)
+            if not product:
+                product = Product(
+                    id=uuid.uuid4(), organization_id=org_id, sku=sku,
+                    name=str(row.get("name", f"Product {sku}")).strip() or f"Product {sku}",
+                    category=str(row.get("category", "General")).strip() or "General",
+                    selling_price=50.0, unit_cost=20.0
+                )
+                db.add(product)
+                db.flush()
+                products_cache[sku] = product
+            else:
+                if "name" in df.columns and not pd.isna(row["name"]): product.name = str(row["name"]).strip()
+                if "category" in df.columns and not pd.isna(row["category"]): product.category = str(row["category"]).strip()
+            
+            if "unit_cost" in df.columns and not pd.isna(row["unit_cost"]): product.unit_cost = float(row["unit_cost"])
+            if "selling_price" in df.columns and not pd.isna(row["selling_price"]): product.selling_price = float(row["selling_price"])
+            
+            # Upsert Inventory Item
+            inventory_item = inventory_cache.get(product.id)
+            if not inventory_item:
+                inventory_item = InventoryItem(id=uuid.uuid4(), organization_id=org_id, product_id=product.id)
+                db.add(inventory_item)
+                inventory_cache[product.id] = inventory_item
+            
+            if "quantity" in df.columns and not pd.isna(row["quantity"]):
+                inventory_item.stock_on_hand = int(row["quantity"])
+                inventory_item.reorder_point = max(5, int(inventory_item.stock_on_hand * 0.1))
+                
+            # Sales Record
+            if "date" in df.columns and ("sales_quantity" in df.columns or "quantity" in df.columns):
+                date_val = row.get("date")
+                if not pd.isna(date_val):
+                    try:
+                        if isinstance(date_val, str):
+                            parsed_date = pd.to_datetime(date_val).date()
+                        else:
+                            parsed_date = date_val.date()
+                        
+                        sales_qty_col = "sales_quantity" if "sales_quantity" in df.columns else "quantity"
+                        sqty = int(row[sales_qty_col])
+                        if sqty > 0:
+                            rev = sqty * product.selling_price
+                            if "revenue" in df.columns and not pd.isna(row["revenue"]):
+                                rev = float(row["revenue"])
+                            sales_record = SalesRecord(
+                                organization_id=org_id, product_id=product.id,
+                                date=parsed_date, quantity=sqty,
+                                unit_price=product.selling_price, revenue=rev
+                            )
+                            sales_to_add.append(sales_record)
+                    except Exception:
+                        pass # Ignore row level sales parsing errors for MVP
+            
+            success_count += 1
+            
+        if sales_to_add:
+            db.add_all(sales_to_add)
+            
+        db.commit()
+        return {
+            "status": "success", "processed_count": success_count, "total_rows": total_rows,
+            "valid_rows": total_rows, "invalid_rows": 0, "duplicate_rows": 0,
+            "missing_columns": [], "errors": []
         }

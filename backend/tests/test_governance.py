@@ -75,7 +75,6 @@ def seed_business_data(db, org_id):
     from app.models.product import Product
     from app.models.inventory import InventoryItem
     from app.models.finance import Revenue
-    import datetime
 
     # Check if they already exist
     if db.query(Client).filter(Client.organization_id == org_id).count() == 0:
