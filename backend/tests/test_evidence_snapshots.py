@@ -5,9 +5,8 @@
 # ==============================================================================
 
 import uuid
-import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base
@@ -72,7 +71,7 @@ def test_evidence_snapshot_immutability():
             rec_type="inventory",
             action="Order 500 units of Snapshot Tee",
             confidence=0.94,
-            sources=[f"InventoryItem (SKU-SNAP-1)"],
+            sources=["InventoryItem (SKU-SNAP-1)"],
             metrics={"current_stock": item.stock_on_hand},
             reasoning=["Stock level fell below safety limit."],
             evidence_snapshot={

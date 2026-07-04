@@ -114,9 +114,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSkip = () => {
-    router.push("/dashboard/eve");
-  };
+
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
@@ -237,12 +235,6 @@ export default function OnboardingPage() {
               </form>
             )}
             
-            <button
-              onClick={handleSkip}
-              className="w-full text-center py-2.5 text-xs font-medium text-muted-foreground hover:text-muted-foreground transition-colors"
-            >
-              Skip to Command Center
-            </button>
           </div>
         </div>
       </div>

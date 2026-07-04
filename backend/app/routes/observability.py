@@ -1,6 +1,6 @@
 import uuid
 import datetime
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
@@ -9,7 +9,6 @@ from app.database import get_db
 from app.core.security import get_current_user, get_required_workspace_id, verify_workspace_admin
 from app.models.profile import Profile
 from app.models.executive_conversation import ExecutiveMessage, ExecutiveConversation
-from app.models.system_error import SystemError
 from app.models.client import Client
 from app.models.project import Project
 from app.models.task import Task

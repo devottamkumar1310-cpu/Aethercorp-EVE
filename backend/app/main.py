@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
     # 3. Validate live database schema matches SQLAlchemy models.
     try:
         validate_schema()
-    except SchemaValidationError as e:
+    except SchemaValidationError:
         logger.critical(
             "Startup aborted: database schema mismatch detected. "
             "Run 'alembic upgrade head' against production before deploying."

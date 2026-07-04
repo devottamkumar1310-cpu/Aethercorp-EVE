@@ -4,19 +4,12 @@
 # ==============================================================================
 
 import asyncio
-import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.agent_registry import AgentRegistry
 from app.core.event_bus import event_bus, Event
 from app.agents.executive_orchestrator import ExecutiveOrchestrator
-from app.agents.market.market_agent import MarketAgent
-from app.agents.inventory.inventory_agent import InventoryAgent
-from app.agents.pricing.pricing_agent import PricingAgent
-from app.agents.sourcing.sourcing_agent import SourcingAgent
-from app.agents.analytics.analytics_agent import AnalyticsAgent
-import app.services.gemini_service  # Triggers self-registration of gemini_service
 
 
 def test_agent_discovery():

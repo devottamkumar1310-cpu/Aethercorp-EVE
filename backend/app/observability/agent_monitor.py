@@ -8,10 +8,8 @@
 # ==============================================================================
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any
 from app.observability.metrics import MetricsCollector
-from app.observability.cost_tracking import CostTracker
-from app.observability.token_usage import TokenTracker
 from app.core.agent_registry import AgentRegistry
 
 logger = logging.getLogger("eve.observability.agent_monitor")

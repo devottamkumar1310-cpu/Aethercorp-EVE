@@ -399,7 +399,6 @@ class AgentOrchestrator:
         """
         Streams synthesized response chunk by chunk for ultra-fast first token delivery.
         """
-        import datetime
         import json
         from app.services.ai.prompt_templates import COO_STREAMING_SYSTEM_PROMPT, build_context_block
         from app.services.business_health_service import get_health_score
@@ -506,7 +505,7 @@ class AgentOrchestrator:
             full_text = translated_text
 
         # Create structured response model object to save in DB for SNAP reasoning detail visibility
-        from app.schemas.executive import StrategicPriority, GeminiExecutiveSynthesisResult
+        from app.schemas.executive import StrategicPriority
         
         # Build priority parsing from output
         priorities = []

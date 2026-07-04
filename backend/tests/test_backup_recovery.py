@@ -6,10 +6,6 @@
 
 import os
 import time
-import shutil
-import uuid
-import pytest
-from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
 from app.services.backup_service import BackupService, BACKUP_DIR

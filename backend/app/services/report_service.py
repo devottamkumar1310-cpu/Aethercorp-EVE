@@ -10,7 +10,6 @@ import logging
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from app.models.artifact import Artifact
-from app.schemas.artifact import ArtifactSchema
 
 logger = logging.getLogger("eve.services.report_service")
 

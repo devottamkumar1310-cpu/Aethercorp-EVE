@@ -7,7 +7,7 @@
 # ==============================================================================
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from sqlalchemy.orm import Session
 
 from app.knowledge.products import ProductKnowledgeRepository

@@ -1,4 +1,3 @@
-import io
 import pytest
 import pandas as pd
 from sqlalchemy import create_engine

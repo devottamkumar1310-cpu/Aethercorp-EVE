@@ -1,9 +1,6 @@
 import pytest
 import uuid
-import datetime
 import jwt
-import io
-import os
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -14,7 +11,6 @@ from app.main import app as api_app
 from app.database import Base, get_db
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
-from app.models.document import ProcessedDocument
 from app.config import settings
 
 # Setup isolated in-memory database for testing

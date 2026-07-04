@@ -15,7 +15,7 @@ logger = logging.getLogger("eve.fashion.dead_stock")
 def detect_dead_stock(
     stock_on_hand: int,
     avg_daily_sales: float,
-    threshold_days: int = 30
+    threshold_days: int = 180
 ) -> bool:
     """
     Flags whether a product is dead stock based on active quantity and sales rate.

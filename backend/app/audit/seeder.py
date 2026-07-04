@@ -46,7 +46,7 @@ def seed_database():
 
     # 2. AdventureWorks SQLite db copy/attach
     aw_dest = download_file("adventureworks", urls["adventureworks"])
-    print(f"[*] Seeding AdventureWorks tables...")
+    print("[*] Seeding AdventureWorks tables...")
     aw_conn = sqlite3.connect(aw_dest)
     aw_conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
     cursor = aw_conn.cursor()

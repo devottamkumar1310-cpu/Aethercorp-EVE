@@ -60,12 +60,12 @@ class AccountService:
         t_org = time.perf_counter()
         org = db.query(Organization).filter(Organization.id == organization_id).first()
         if org:
-            logger.info(f"[TIMING] Queueing organization deletion in SQLAlchemy...")
+            logger.info("[TIMING] Queueing organization deletion in SQLAlchemy...")
             db.delete(org)
             logger.info(f"[TIMING] Finished queueing organization deletion in {(time.perf_counter() - t_org) * 1000:.2f} ms")
             
             t_commit = time.perf_counter()
-            logger.info(f"[TIMING] Starting database commit for organization deletion...")
+            logger.info("[TIMING] Starting database commit for organization deletion...")
             db.commit()
             logger.info(f"[TIMING] Finished database commit for organization deletion in {(time.perf_counter() - t_commit) * 1000:.2f} ms")
             
@@ -115,7 +115,7 @@ class AccountService:
                     if resp.status_code not in (200, 204):
                         logger.error(f"[BACKGROUND CLEANUP] Failed Supabase delete: {resp.status_code} {resp.text}")
                     else:
-                        logger.info(f"[BACKGROUND CLEANUP] Supabase Auth user deleted.")
+                        logger.info("[BACKGROUND CLEANUP] Supabase Auth user deleted.")
             except Exception as e:
                 logger.error(f"[BACKGROUND CLEANUP] Supabase error: {e}")
 

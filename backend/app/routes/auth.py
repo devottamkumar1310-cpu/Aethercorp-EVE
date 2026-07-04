@@ -42,7 +42,7 @@ def sync_user(
     with _migration_lock:
         profile = db.query(Profile).filter(Profile.id == user_id).first()
         if not profile:
-            logger.info(f"Profile not found by ID. Checking by email under migration lock.")
+            logger.info("Profile not found by ID. Checking by email under migration lock.")
             email = payload.get("email", "")
             user_metadata = payload.get("user_metadata", {})
             full_name = user_metadata.get("full_name", "")

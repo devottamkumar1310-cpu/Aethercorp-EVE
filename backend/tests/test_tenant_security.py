@@ -14,7 +14,7 @@ from app.main import app
 from app.database import Base, get_db
 from app.models.organization import Organization, Membership
 from app.models.profile import Profile
-from app.core.security import get_current_user, get_active_workspace_id
+from app.core.security import get_current_user
 
 # 1. Setup in-memory SQLite database
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

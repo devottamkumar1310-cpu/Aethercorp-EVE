@@ -126,21 +126,6 @@ def init_db():
     """
     try:
         # Import all models to ensure they are registered on Base.metadata
-        from app.models.organization import Organization, Membership
-        from app.models.profile import Profile
-        from app.models.product import Product
-        from app.models.supplier import Supplier
-        from app.models.inventory import InventoryItem, SalesRecord
-        from app.models.memory import ConversationSession, ChatMessage, MemoryEntry
-        from app.models.artifact import Artifact
-        from app.models.future import Forecast, Recommendation, Report
-        from app.models.executive_memory import BusinessGoal
-        from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
-        from app.models.ai_recommendation import AIRecommendation
-        from app.models.system_error import SystemError
-        from app.models.audit_log import AuditLog
-        from app.models.document import ProcessedDocument
-        from app.models.recommendation_trace import RecommendationTrace
         
         # Check if pgvector is supported by the connection before building schemas
 

@@ -6,7 +6,7 @@
 # - Standardizes the output parameters of the Inventory Optimization workflow.
 # ==============================================================================
 
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel, Field
 
 

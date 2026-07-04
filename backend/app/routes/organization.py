@@ -19,7 +19,7 @@ class OnboardRequest(BaseModel):
 def get_workspaces(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"[TRACE /api/organization/workspaces] STEP 1: Request received — user_id={current_user.id}")
 
-    logger.info(f"[TRACE /api/organization/workspaces] STEP 2: Querying memberships")
+    logger.info("[TRACE /api/organization/workspaces] STEP 2: Querying memberships")
     logger.info("DB query start")
     try:
         memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()

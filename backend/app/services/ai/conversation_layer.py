@@ -1,7 +1,7 @@
 import re
 import logging
 from typing import Optional
-from app.schemas.executive import ExecutiveSynthesisResult, StrategicPriority
+from app.schemas.executive import ExecutiveSynthesisResult
 from app.services.localization.translator import LocalizationService
 
 logger = logging.getLogger("eve.services.ai.conversation_layer")

@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models.client import Client
 from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense

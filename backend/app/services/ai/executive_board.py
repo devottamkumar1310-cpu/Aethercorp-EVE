@@ -2,11 +2,11 @@ import uuid
 import asyncio
 import logging
 import re
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from app.core.dependency_container import container
-from app.schemas.executive import AgentAnalysisResult, ExecutiveSynthesisResult, StrategicPriority
+from app.schemas.executive import ExecutiveSynthesisResult, StrategicPriority
 from app.services.ai.finance_agent import FinanceAgent
 from app.services.ai.operations_agent import OperationsAgent
 from app.services.ai.inventory_agent import InventoryAgent
@@ -175,7 +175,7 @@ class ExecutiveBoard:
         # Add safe numbers to overview to bypass strict guardrail false positives on valid business claims
         safe_nums = []
         try:
-            from app.models.inventory import InventoryItem, SalesRecord
+            from app.models.inventory import InventoryItem
             from app.models.product import Product
             from app.models.finance import Revenue, Expense
             
@@ -377,7 +377,7 @@ class ExecutiveBoard:
             
         # Enforce High-Risk Safeguard Labels
         if synthesis.risk_classification in ["High Risk", "Strategic Risk"] and confidence_scores["Overall"] < 0.85:
-            synthesis.summary += f"\n\n[EVE COO WARNING]: This high-risk/strategic recommendation is backed by lower-than-required confidence data. Proceed with caution."
+            synthesis.summary += "\n\n[EVE COO WARNING]: This high-risk/strategic recommendation is backed by lower-than-required confidence data. Proceed with caution."
 
         # Compile evidence used
         synthesis.evidence_used = {
@@ -732,7 +732,7 @@ class ExecutiveBoard:
             priorities = [
                 StrategicPriority(title="Resolve Active Threats", description=f"Address top business risks: {', '.join(risks[:2]) if risks else 'Task velocity'}."),
                 StrategicPriority(title="Accelerate Pending Tasks", description=f"Close out pending tasks (current velocity: {completed_tasks}/{total_tasks} completed)."),
-                StrategicPriority(title="Leverage Growth Capacity", description=f"Onboard new client projects using available team capacity.")
+                StrategicPriority(title="Leverage Growth Capacity", description="Onboard new client projects using available team capacity.")
             ]
             expected_impact = f"Expected to lift the overall business health score from {score} back above 80."
             findings_by_agent = {"COO Agent": [f"Health Score: {score}", f"Active Risks: {len(risks)}", f"Task Completion: {completed_tasks}/{total_tasks}"]}

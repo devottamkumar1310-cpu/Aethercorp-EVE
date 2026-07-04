@@ -173,6 +173,52 @@ def upload_product_costs_csv(
             content={"status": "error", "message": f"Failed to process product cost CSV: {str(e)}"}
         )
 
+@router.post("/upload/master", status_code=status.HTTP_201_CREATED)
+def upload_master_csv(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _: None = Depends(rate_limit(requests=10, window_seconds=60)),
+    _role = Depends(require_workspace_role("manager"))
+):
+    """
+    Uploads and parses a master CSV (e.g. Shopify export).
+    """
+    org_id = token_context["organization_id"]
+    logger.info(f"Master Upload: Received file '{file.filename}' from tenant Org: {org_id}")
+
+    try:
+        contents = file.file.read()
+        if not contents or len(contents) == 0:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": "Uploaded file is empty."}
+            )
+        if len(contents) > MAX_CSV_SIZE_BYTES:
+            return JSONResponse(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                content={"status": "error", "message": "File size exceeds 10MB limit. Please split your CSV into smaller batches."}
+            )
+
+        try:
+            df = pd.read_csv(io.BytesIO(contents))
+        except (pd.errors.EmptyDataError, pd.errors.ParserError) as pe:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
+            )
+
+        report = ImporterService.import_master(db, org_id, df)
+        if report["status"] == "error":
+            return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
+    except Exception as e:
+        logger.error(f"Master Upload Error: {e}", exc_info=e)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"status": "error", "message": f"Failed to process master CSV: {str(e)}"}
+        )
+
 
 @router.get("/dashboard")
 def get_inventory_dashboard(
@@ -372,8 +418,6 @@ def get_inventory_alerts(
     - low_stock: items at or below their reorder_point
     - dead_stock: items with stock > 0 but no sales in the last 30 days
     """
-    import datetime
-    from sqlalchemy import func
     from sqlalchemy.orm import joinedload
     from app.models.inventory import InventoryItem, SalesRecord
 

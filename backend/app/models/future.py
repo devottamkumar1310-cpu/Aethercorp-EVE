@@ -1,8 +1,7 @@
 from sqlalchemy import DateTime
 import datetime
 import uuid
-from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, ForeignKey, JSON, UUID
 from app.database import Base
 
 class Forecast(Base):

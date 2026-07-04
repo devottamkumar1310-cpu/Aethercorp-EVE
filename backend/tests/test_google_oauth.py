@@ -6,16 +6,15 @@
 
 import uuid
 import pytest
-from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.database import Base, get_db
 from app.models.profile import Profile
-from app.core.security import get_current_user, verify_supabase_token
+from app.core.security import verify_supabase_token
 
 # 1. Setup isolated memory DB
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

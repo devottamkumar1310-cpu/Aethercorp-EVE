@@ -1,18 +1,14 @@
 import pytest
 import uuid
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.main import app
-from app.database import Base, get_db
+from app.database import Base
 from app.models.organization import Organization, Membership
 from app.models.profile import Profile
 from app.models.client import Client
-from app.models.document import ProcessedDocument
 from app.services.account_service import AccountService
-from app.core.security import get_current_user
 
 # Database Setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

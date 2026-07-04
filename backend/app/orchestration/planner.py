@@ -12,7 +12,6 @@
 
 import json
 import logging
-from typing import Dict, Any, List
 from app.core.agent_registry import AgentRegistry
 from app.core.dependency_container import container
 from app.orchestration.task_graph import TaskGraph

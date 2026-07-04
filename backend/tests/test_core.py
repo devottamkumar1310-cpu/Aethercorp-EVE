@@ -4,7 +4,6 @@
 # ==============================================================================
 
 import asyncio
-import pytest
 from app.core.agent_registry import register_agent, AgentRegistry
 from app.core.tool_registry import register_tool, ToolRegistry
 from app.core.event_bus import event_bus, Event

@@ -1,6 +1,5 @@
 import pytest
 import uuid
-import datetime
 from unittest.mock import patch, MagicMock
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -14,7 +13,7 @@ from app.models.future import Forecast, Recommendation, Report
 from app.models.system_error import SystemError
 from app.models.audit_log import AuditLog
 from app.models.memory import ConversationSession, ChatMessage, MemoryEntry
-from app.models.finance import Revenue, Expense
+from app.models.finance import Expense
 from app.models.intelligence_snapshot import IntelligenceSnapshot
 from app.models.executive_memory import BusinessGoal
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
@@ -35,7 +34,6 @@ def db_session():
     )
     
     # Register connection listener explicitly to verify foreign key cascade
-    from sqlalchemy.engine import Engine
     from sqlalchemy import event
     
     @event.listens_for(engine, "connect")

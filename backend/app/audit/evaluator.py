@@ -2,13 +2,11 @@ import os
 import uuid
 import time
 import asyncio
-import sqlite3
 import datetime
-from sqlalchemy import create_engine, select, delete
+from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import sessionmaker
 
 # Import active models and services
-from app.database import Base
 from app.models.profile import Profile
 from app.models.organization import Organization
 from app.models.product import Product
@@ -21,12 +19,9 @@ from app.models.executive_conversation import ExecutiveConversation, ExecutiveMe
 from app.models.ai_recommendation import AIRecommendation
 from app.models.activity_log import ActivityLog
 from app.services.ai.executive_board import ExecutiveBoard
-from app.core.dependency_container import container
-import app.services.gemini_service
 
 # Ground Truth and BI summaries
 from app.audit.ground_truth import calculate_ground_truth
-from app.audit.bi_layer import AuditBILayer
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "eve_audit_benchmarks.db")
 DATABASE_URL = "postgresql://postgres.kqncbxoftcqvzslsmswf:Po6P8mo36Yf3NanQ@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"

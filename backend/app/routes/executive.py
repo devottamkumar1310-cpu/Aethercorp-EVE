@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
-from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
+from app.models.executive_conversation import ExecutiveConversation
 from app.schemas.executive import (
     ExecutiveChatRequest,
     ExecutiveChatResponse,
@@ -379,7 +379,6 @@ def get_scenarios(
     from app.models.future import Forecast
     forecasts = db.query(Forecast).filter(Forecast.organization_id == workspace_id).order_by(Forecast.created_at.desc()).all()
     
-    from typing import Dict, Any
     import datetime
     results = []
     for f in forecasts:

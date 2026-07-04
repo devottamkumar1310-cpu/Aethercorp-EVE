@@ -13,7 +13,7 @@ import uuid
 
 import datetime
 import json
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON, UUID
+from sqlalchemy import Column, String, ForeignKey, Text, JSON, UUID
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship
 from app.database import Base

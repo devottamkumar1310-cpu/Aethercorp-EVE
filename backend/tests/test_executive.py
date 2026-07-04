@@ -86,9 +86,6 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Seed basic entities
-from app.models.executive_memory import BusinessGoal
-from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
-from app.models.ai_recommendation import AIRecommendation
 
 Base.metadata.create_all(bind=engine)
 

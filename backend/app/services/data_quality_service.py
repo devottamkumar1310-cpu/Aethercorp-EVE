@@ -2,7 +2,6 @@ import logging
 import uuid
 from typing import Dict, Any, List
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
 

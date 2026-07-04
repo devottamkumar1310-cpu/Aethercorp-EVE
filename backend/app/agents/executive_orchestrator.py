@@ -9,12 +9,11 @@
 # ==============================================================================
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 
 from app.agents.base_agent import BaseAgent
 from app.core.agent_registry import register_agent
-from app.schemas.agent_response import AgentResponseSchema
 
 logger = logging.getLogger("eve.agents.executive_orchestrator")
 

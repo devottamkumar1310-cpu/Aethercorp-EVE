@@ -6,7 +6,6 @@
 
 import uuid
 import pytest
-from io import BytesIO
 from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

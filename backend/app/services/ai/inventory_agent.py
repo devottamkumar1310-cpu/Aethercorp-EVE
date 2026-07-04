@@ -1,7 +1,5 @@
 import uuid
 from sqlalchemy.orm import Session
-from app.models.inventory import InventoryItem
-from app.models.product import Product
 from app.services.ai.prompt_templates import INVENTORY_SYSTEM_PROMPT
 from app.schemas.executive import AgentAnalysisResult
 from app.core.dependency_container import container

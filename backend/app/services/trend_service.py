@@ -1,8 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.models.intelligence_snapshot import IntelligenceSnapshot
-from app.models.client import Client
-from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.services.business_health_service import get_health_score

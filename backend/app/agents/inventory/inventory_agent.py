@@ -51,7 +51,6 @@ class InventoryAgent(BaseAgent):
         Executes inventory tasks. Enforces deterministic calculations BEFORE passing to LLM.
         """
         from app.services.analytics_service import AnalyticsService
-        from typing import Dict, Any
         
         # 1. Fetch exact calculations from the Business Intelligence engine
         metrics = AnalyticsService.get_dashboard_metrics(self.db, organization_id)

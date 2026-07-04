@@ -20,8 +20,6 @@ from app.models.finance import Revenue, Expense
 from app.models.client import Client
 from app.models.project import Project
 from app.models.task import Task
-from app.models.product import Product
-from app.models.inventory import InventoryItem, SalesRecord
 from app.models.document import ProcessedDocument
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
 from app.models.ai_recommendation import AIRecommendation
@@ -571,7 +569,7 @@ def seed_demo_workspace_data(db, org_id):
     db.commit()
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):
-    from app.models.organization import Organization, Membership
+    from app.models.organization import Membership
     from app.models.profile import Profile
     import uuid
     

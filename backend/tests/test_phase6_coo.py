@@ -14,8 +14,6 @@ from app.models.product import Product
 from app.models.inventory import InventoryItem, SalesRecord
 from app.models.finance import Revenue, Expense
 from app.models.future import Forecast
-from app.models.ai_recommendation import AIRecommendation
-from app.services.analytics_service import AnalyticsService
 from app.services.forecasting_engine import ForecastingEngine
 from app.services.confidence_engine import ConfidenceEngine
 from app.services.simulation_engine import SimulationEngine
