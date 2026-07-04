@@ -1,3 +1,23 @@
+# EVE v1.1.1 Release Notes — Production Authentication & CORS Stabilization
+
+## Overview
+This patch release addresses production domain-migration issues, stabilizing Google OAuth redirects and CORS preflight request processing for the custom domain `https://eveinventory.in`.
+
+## Key Improvements
+
+### 1. Production CORS Preflight Fix
+- Added `https://eveinventory.in` and `https://www.eveinventory.in` to CORS allowed origins in the FastAPI backend.
+- Resolved preflight `OPTIONS` failure where missing auth/workspace headers on unrecognized origins triggered a `400 Bad Request` before CORS validation occurred. Now, OPTIONS queries return a `200 OK` preflight response with appropriate headers.
+
+### 2. Google OAuth Redirect Security
+- Configured verbose server telemetry in Next.js middleware and callback routes to audit query param passing, code exchanges, and cookie states in production.
+- Documented configuration changes needed in the Supabase Dashboard Redirect URL settings to whitelist custom domain endpoints and prevent redirects from looping back to the landing page.
+
+### 3. Build & Archive Optimization
+- Created `.gcloudignore` files to prevent large development cache files (`node_modules/`, `.next/`), SQLite test databases (`*.db`), and CSV datasets from being uploaded during deployment. This reduced Cloud Build payload upload sizes by over 99% (from 114MB to less than 1MB).
+
+---
+
 # EVE v1.1.0 Release Notes — Inventory Intelligence Repositioning
 
 ## Overview
