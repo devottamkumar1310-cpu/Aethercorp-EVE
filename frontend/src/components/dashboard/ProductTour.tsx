@@ -21,19 +21,7 @@ export function ProductTour() {
 
   const tourSteps: TourStep[] = [
     {
-      title: "Step 1: Dashboard Overview",
-      targetPath: "/dashboard",
-      icon: LayoutDashboard,
-      explanation: "Monitor your core business health at a single glance. EVE tracks your live operations metrics and summarizes performance trends.",
-      bullets: [
-        "Revenue: Track gross income streams and trends.",
-        "Profit: See net margins after subtracting expenses.",
-        "Growth: Monitor client, project, and task completion growth.",
-        "Inventory Health: Keep track of active SKU states."
-      ]
-    },
-    {
-      title: "Step 2: Inventory Intelligence",
+      title: "Step 1: Inventory Intelligence",
       targetPath: "/dashboard/inventory",
       icon: Package,
       explanation: "Avoid cash flow blocks and supply gaps. EVE automatically monitors stock behavior to keep inventory optimized.",
@@ -44,10 +32,10 @@ export function ProductTour() {
       ]
     },
     {
-      title: "Step 3: AI COO (Command Center)",
+      title: "Step 2: AI Assistant",
       targetPath: "/dashboard/eve",
       icon: Brain,
-      explanation: "Interact directly with EVE, your Enterprise Virtual Executive. Get instant analyses and direct answers regarding your business.",
+      explanation: "Interact directly with EVE, your Inventory & Operations AI Assistant. Get instant analyses and direct answers regarding your business.",
       bullets: [
         "Executive Insights: Live briefings based on daily operations.",
         "Business Analysis: Instant query responses on business data.",
@@ -55,7 +43,7 @@ export function ProductTour() {
       ]
     },
     {
-      title: "Step 4: Executive Board",
+      title: "Step 3: Executive Board",
       targetPath: "/dashboard/eve",
       icon: Users2,
       explanation: "EVE orchestrates a team of specialized AI agents working together to run deep audits on your business data.",
@@ -64,6 +52,18 @@ export function ProductTour() {
         "Operations Agent: Evaluates supplier performance and SKU safety stocks.",
         "Growth Agent: Targets customer expansion and sales growth opportunities.",
         "Executive Synthesis: Merges agent reports into a unified business strategy."
+      ]
+    },
+    {
+      title: "Step 4: Operations & Finance",
+      targetPath: "/dashboard",
+      icon: LayoutDashboard,
+      explanation: "Monitor your core business health at a single glance. EVE tracks your live operations metrics and summarizes performance trends.",
+      bullets: [
+        "Revenue: Track gross income streams and trends.",
+        "Profit: See net margins after subtracting expenses.",
+        "Growth: Monitor client, project, and task completion growth.",
+        "Inventory Health: Keep track of active SKU states."
       ]
     }
   ];

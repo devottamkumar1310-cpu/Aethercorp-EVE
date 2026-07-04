@@ -68,13 +68,13 @@ export default function HelpPage() {
     },
     {
       id: "using-ai-coo",
-      title: "Using AI COO",
+      title: "Using AI Assistant",
       icon: Brain,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">AI Command Center (AI COO)</h3>
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">AI Assistant (AI Command Center)</h3>
           <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
-            Your conversational control room. Chat with EVE using normal text to command deep operational audits.
+            Your conversational control room. Chat with EVE using normal text to command deep inventory and operational audits.
           </p>
           <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl space-y-3 shadow-sm">
             <h4 className="text-xs font-bold text-indigo-400 uppercase">Suggested Prompts:</h4>

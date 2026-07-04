@@ -43,23 +43,23 @@ interface Workspace {
 
 const navItems = [
   {
-    label: "INTELLIGENCE",
+    label: "Inventory & Analysis",
     items: [
-      { href: "/dashboard/eve", label: "AI Command Center", icon: Brain, isAI: true },
-      { href: "/dashboard/documents", label: "Document Hub", icon: FileText, isAI: true },
-      { href: "/dashboard/traceability", label: "Decision Traceability", icon: Sparkles, isAI: true },
       { href: "/dashboard/inventory", label: "Inventory Intelligence", icon: Package },
+      { href: "/dashboard/documents", label: "Document Intelligence", icon: FileText },
+      { href: "/dashboard/traceability", label: "Decision Traceability", icon: Sparkles },
+      { href: "/dashboard/eve", label: "AI Assistant", icon: Brain, isAI: true },
     ],
   },
   {
-    label: "OPERATIONS",
+    label: "Operations & Finance",
     items: [
       { href: "/dashboard", label: "Operations Dashboard", icon: LayoutDashboard, exact: true },
+      { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
+      { href: "/dashboard/activity", label: "Activity Feed", icon: Activity },
       { href: "/dashboard/clients", label: "Clients", icon: Users },
       { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
       { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
-      { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
-      { href: "/dashboard/activity", label: "Activity", icon: Activity },
     ],
   },
   {
@@ -605,7 +605,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  isSidebarCollapsed ? "px-5 py-5 md:px-3 md:py-5 md:justify-center" : "gap-3 px-5 py-5"
  }`}>
           <div
-            onClick={() => router.push("/dashboard/eve")}
+            onClick={() => router.push("/dashboard/inventory")}
             className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-foreground font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
           >
             EVE

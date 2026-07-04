@@ -28,7 +28,7 @@ export default function LandingPage() {
         <div className="max-w-3xl space-y-8">
           <div className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-sm text-indigo-800">
             <Sparkles className="mr-2 h-4 w-4" />
-            The AI COO for D2C Fashion Brands
+            The Inventory Intelligence Platform for D2C Fashion Brands
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-foreground leading-tight">
             Stop Guessing. <br /> Start Forecasting.

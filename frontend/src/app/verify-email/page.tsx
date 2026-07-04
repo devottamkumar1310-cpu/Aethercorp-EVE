@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Mail, ArrowLeft, RefreshCw, CheckCircle, AlertCircle, ArrowRight } from "lucide-react";
+import { Mail, ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -28,7 +28,7 @@ function VerifyEmailForm() {
         if (user.email) setEmail(user.email);
         if (user.email_confirmed_at) {
           // If already verified, send them directly to dashboard
-          router.push("/dashboard/eve");
+          router.push("/dashboard/inventory");
           return;
         }
       }
