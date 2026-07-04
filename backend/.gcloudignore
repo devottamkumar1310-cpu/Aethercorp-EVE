@@ -1,0 +1,24 @@
+.gcloudignore
+.git
+.gitignore
+
+# Databases and CSV datasets
+*.db
+*.csv
+uploads/
+backups/
+
+# Python ignore list
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ipynb_checkpoints/
