@@ -1,0 +1,15 @@
+.gcloudignore
+.git
+.gitignore
+
+# Ignore frontend folder
+frontend/
+
+# Ignore backend databases, envs and caches
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/*.db
+backend/*.csv
+backend/uploads/
+backend/backups/
