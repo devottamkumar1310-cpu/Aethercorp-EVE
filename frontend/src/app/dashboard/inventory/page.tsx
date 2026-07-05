@@ -40,6 +40,9 @@ interface ProductMetric {
   revenue: number;
   profit: number;
   margin_percent: number;
+  gmroi?: number;
+  sell_through_rate?: number;
+  inventory_turnover?: number;
 }
 
 interface InventoryDashboardData {
@@ -705,6 +708,9 @@ export default function InventoryDashboardPage() {
                   >
                     <span className="flex items-center justify-end gap-1">Margin <SortIcon field="margin_percent" /></span>
                   </th>
+                  <th className="px-5 py-3 text-right">STR</th>
+                  <th className="px-5 py-3 text-right">GMROI</th>
+                  <th className="px-5 py-3 text-right">Turnover</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -749,11 +755,20 @@ export default function InventoryDashboardPage() {
                         </span>
                       </div>
                     </td>
+                    <td className="px-5 py-3 text-right font-medium text-foreground">
+                      {p.sell_through_rate !== undefined ? `${p.sell_through_rate.toFixed(1)}%` : "-"}
+                    </td>
+                    <td className={`px-5 py-3 text-right font-bold ${p.gmroi !== undefined && p.gmroi >= 1.5 ? "text-emerald-600" : "text-amber-600"}`}>
+                      {p.gmroi !== undefined ? `${p.gmroi.toFixed(2)}x` : "-"}
+                    </td>
+                    <td className="px-5 py-3 text-right font-medium text-muted-foreground">
+                      {p.inventory_turnover !== undefined ? `${p.inventory_turnover.toFixed(1)}x` : "-"}
+                    </td>
                   </tr>
                 ))}
                 {filteredAndSorted.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-5 py-12 text-center text-muted-foreground italic">
+                    <td colSpan={12} className="px-5 py-12 text-center text-muted-foreground italic">
                       No products match your filters.
                     </td>
                   </tr>

@@ -35,7 +35,8 @@ export default function ProjectsPage() {
     async function init() {
       try {
         const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { // get session
+          session } } = await supabase.auth.getSession();
         if (session) {
           setSessionToken(session.access_token);
           await loadData(session.access_token);
@@ -75,7 +76,7 @@ export default function ProjectsPage() {
       </div>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Briefcase className="text-blue-600"/> Projects Portfolio</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors cursor-pointer">
           <Plus size={18}/> New Project
         </button>
       </div>

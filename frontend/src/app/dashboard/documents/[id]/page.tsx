@@ -320,13 +320,88 @@ export default function DocumentDetailPage() {
             <div className="bg-gradient-to-br from-indigo-950/20 to-purple-950/20 border border-indigo-900/40 rounded-2xl p-6 shadow-2xl space-y-4 relative overflow-hidden">
               <div className="absolute -top-16 -right-16 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
               <h3 className="font-extrabold text-base text-indigo-300 flex items-center gap-2 border-b border-indigo-950/40 pb-3">
-                <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" /> EVE Executive Insights Summary
+                <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" /> EVE Executive Insights
               </h3>
-              <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {typeof document.coo_insights === "string" 
-                  ? document.coo_insights 
-                  : (document.coo_insights as any).summary || JSON.stringify(document.coo_insights)}
+              
+              {/* Summary */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block">Executive Summary</span>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {typeof document.coo_insights === "string" 
+                    ? document.coo_insights 
+                    : (document.coo_insights as any).summary || "No summary available."}
+                </p>
               </div>
+
+              {/* Risks */}
+              {typeof document.coo_insights !== "string" && (document.coo_insights as any).risks && (document.coo_insights as any).risks.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-indigo-950/40">
+                  <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest block">Detected Supply Chain Risks</span>
+                  <div className="space-y-2">
+                    {(document.coo_insights as any).risks.map((risk: any, i: number) => {
+                      const riskDesc = typeof risk === "string" ? risk : risk.description || "";
+                      const isStockout = riskDesc.toLowerCase().includes("stockout") || riskDesc.toLowerCase().includes("inventory");
+                      return (
+                        <div key={i} className="p-3 bg-rose-500/5 border border-rose-500/20 rounded-xl space-y-2 flex flex-col justify-between sm:flex-row sm:items-center sm:gap-4">
+                          <p className="text-xs text-rose-200/90 leading-relaxed flex-1">{riskDesc}</p>
+                          {isStockout && (
+                            <Link href="/dashboard/projects" className="text-[10px] font-bold px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/25 border border-rose-500/30 rounded-lg text-rose-300 transition-all text-center whitespace-nowrap">
+                              Initialize Project Run
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Opportunities */}
+              {typeof document.coo_insights !== "string" && (document.coo_insights as any).opportunities && (document.coo_insights as any).opportunities.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-indigo-950/40">
+                  <span className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest block">Opportunities & Volume Discounts</span>
+                  <div className="space-y-2">
+                    {(document.coo_insights as any).opportunities.map((opp: any, i: number) => {
+                      const oppDesc = typeof opp === "string" ? opp : opp.description || "";
+                      return (
+                        <div key={i} className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2 flex flex-col justify-between sm:flex-row sm:items-center sm:gap-4">
+                          <p className="text-xs text-emerald-200/90 leading-relaxed flex-1">{oppDesc}</p>
+                          <Link href="/dashboard/eve" className="text-[10px] font-bold px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-lg text-emerald-300 transition-all text-center whitespace-nowrap">
+                            Draft Negotiation Prompt
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {typeof document.coo_insights !== "string" && (document.coo_insights as any).recommendations && (document.coo_insights as any).recommendations.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-indigo-950/40">
+                  <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block">Recommended Action Plan</span>
+                  <div className="space-y-2">
+                    {(document.coo_insights as any).recommendations.map((rec: any, i: number) => {
+                      const recDesc = typeof rec === "string" ? rec : rec.description || "";
+                      const isPayment = recDesc.toLowerCase().includes("payment") || recDesc.toLowerCase().includes("discount") || recDesc.toLowerCase().includes("inv-");
+                      return (
+                        <div key={i} className="p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl space-y-2 flex flex-col justify-between sm:flex-row sm:items-center sm:gap-4">
+                          <p className="text-xs text-indigo-200/90 leading-relaxed flex-1">{recDesc}</p>
+                          {isPayment ? (
+                            <Link href="/dashboard/finance" className="text-[10px] font-bold px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-lg text-indigo-300 transition-all text-center whitespace-nowrap">
+                              Log Discount Expense
+                            </Link>
+                          ) : (
+                            <Link href="/dashboard/eve" className="text-[10px] font-bold px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-lg text-indigo-300 transition-all text-center whitespace-nowrap">
+                              Execute via EVE AI
+                            </Link>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-card border border-border rounded-2xl p-5 text-center text-muted-foreground text-sm italic">

@@ -25,6 +25,9 @@ from app.models.inventory import InventoryItem, SalesRecord
 from app.core.security import get_current_user_and_tenant, require_workspace_role
 from app.services.importer_service import ImporterService
 from app.core.rate_limiter import rate_limit
+from app.fashion.gmroi import calculate_gmroi
+from app.fashion.sell_through import calculate_sell_through_rate
+from app.fashion.inventory_turnover import calculate_inventory_turnover
 
 logger = logging.getLogger("eve.routes.inventory")
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
@@ -260,6 +263,12 @@ def get_inventory_dashboard(
             profit = revenue - cogs
             margin = (profit / revenue * 100.0) if revenue > 0 else 0.0
             
+            # Compute advanced fashion retail metrics
+            avg_stock_value = item.stock_on_hand * (prod.unit_cost or 0.0)
+            gmroi_val = calculate_gmroi(profit, avg_stock_value)
+            sell_through_val = calculate_sell_through_rate(qty_sold, item.stock_on_hand)
+            turnover_val = calculate_inventory_turnover(cogs, avg_stock_value)
+            
             product_metrics.append({
                 "sku": prod.sku,
                 "name": prod.name,
@@ -269,7 +278,10 @@ def get_inventory_dashboard(
                 "qty_sold": qty_sold,
                 "revenue": round(revenue, 2),
                 "profit": round(profit, 2),
-                "margin_percent": round(margin, 2)
+                "margin_percent": round(margin, 2),
+                "gmroi": gmroi_val,
+                "sell_through_rate": sell_through_val,
+                "inventory_turnover": turnover_val
             })
             
         # Extract best and worst sellers

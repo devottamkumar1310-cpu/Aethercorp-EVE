@@ -67,3 +67,5 @@ backend/uploads/
 uploads/ 
 .gemini/
 uploads/
+.vercel
+.env*

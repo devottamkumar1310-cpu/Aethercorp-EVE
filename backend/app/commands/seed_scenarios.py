@@ -23,6 +23,7 @@ from app.models.task import Task
 from app.models.document import ProcessedDocument
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
 from app.models.ai_recommendation import AIRecommendation
+from app.services.recommendation_trace_service import RecommendationTraceService
 
 DEV_ORG_ID = uuid.UUID("ea337dee-5c68-41ae-bb08-45afe771db8a")
 DIPTI_ORG_ID = uuid.UUID("dbbb6f95-f4e7-4bb4-b8c3-b776aca126cf")
@@ -94,15 +95,15 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     costs = []
     
     # Bestsellers (out of stock)
-    bestsellers = [("DD-BEST-001", "Vintage Blue Denim", 12.0, 48.0, 0, 45, "GlobalDenim China"),
-                   ("DD-BEST-002", "Slim Fit Black Jeans", 14.0, 52.0, 0, 45, "GlobalDenim China")]
+    bestsellers = [("DD-BEST-001", "Vintage Blue Denim", 12.0, 48.0, 0, 45, "GlobalDenim China", "Denim"),
+                   ("DD-BEST-002", "Slim Fit Black Jeans", 14.0, 52.0, 0, 45, "GlobalDenim China", "Denim")]
     
     # Slow movers (massive excess stock)
     dead_stock = [
-        ("DD-DEAD-101", "Neon Yellow Denim Vest", 18.0, 22.0, 800, 30, "VestVendor Inc"), # high cost, low selling price/margin
-        ("DD-DEAD-102", "Tie-Dye Overall Shorts", 20.0, 24.0, 600, 30, "VestVendor Inc"),
-        ("DD-DEAD-103", "Distressed Denim Hat", 8.0, 10.0, 1000, 30, "VendorX"),
-        ("DD-DEAD-104", "Fringe Denim Skirt", 22.0, 26.0, 500, 30, "VendorX")
+        ("DD-DEAD-101", "Neon Yellow Denim Vest", 18.0, 22.0, 800, 30, "VestVendor Inc", "Denim"),
+        ("DD-DEAD-102", "Tie-Dye Overall Shorts", 20.0, 24.0, 600, 30, "VestVendor Inc", "Denim"),
+        ("DD-DEAD-103", "Distressed Denim Hat", 8.0, 10.0, 1000, 30, "VendorX", "Denim"),
+        ("DD-DEAD-104", "Fringe Denim Skirt", 22.0, 26.0, 500, 30, "VendorX", "Denim")
     ]
     
     # Standard items
@@ -112,13 +113,19 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
         unit_cost = round(random.uniform(15.0, 25.0), 2)
         selling_price = round(unit_cost / 0.75, 2) # low margin ~25%
         stock = random.randint(30, 80)
-        standard.append((sku, f"Standard Denim Jacket {i}", unit_cost, selling_price, stock, 30, "Standard Mills"))
+        standard.append((sku, f"Standard Denim Jacket {i}", unit_cost, selling_price, stock, 30, "Standard Mills", "Denim"))
 
-    all_items = bestsellers + dead_stock + standard
+    # Extra D2C items to eliminate catalog disconnects
+    extra_items = [
+        ("TSHIRT-CLASSIC", "Classic Tee", 10.0, 25.0, 80, 7, "Premium Cotton Textiles Ltd", "Tops"),
+        ("FABRIC-COTTON-01", "Premium Cotton Fabric", 25.0, 85.0, 100, 10, "Premium Cotton Textiles Ltd", "Raw Materials")
+    ]
+
+    all_items = bestsellers + dead_stock + standard + extra_items
     
     for item in all_items:
-        sku, name, cost, price, stock, lead, supplier = item
-        products.append({"sku": sku, "name": name, "category": "Denim", "stock_on_hand": stock, "lead_time_days": lead})
+        sku, name, cost, price, stock, lead, supplier, category = item
+        products.append({"sku": sku, "name": name, "category": category, "stock_on_hand": stock, "lead_time_days": lead})
         costs.append({"sku": sku, "unit_cost": cost, "selling_price": price, "supplier_name": supplier})
         
     df_inv = pd.DataFrame(products)
@@ -135,24 +142,32 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
         daily_txs = int(random.randint(3, 8) * decline_multiplier)
         
         for _ in range(daily_txs):
-            # Select item (mostly standard items or bestseller orders when they were temporarily in stock earlier in the year)
-            # Dead stock has extremely low probability of selling
+            # Select item dynamically by SKU prefixes/values instead of brittle index positions
             choices = []
+            
             # Standard items
-            choices.extend([costs[i] for i in range(6, len(all_items))])
+            std_choices = [c for c in costs if c["sku"].startswith("DD-STD-")]
+            choices.extend(std_choices)
+            
+            # TSHIRT-CLASSIC also sells regularly (finished garment)
+            tshirt_choices = [c for c in costs if c["sku"] == "TSHIRT-CLASSIC"]
+            choices.extend(tshirt_choices)
+
             # Bestsellers (only sold in first half of year before running out of stock)
             if day < 180:
-                choices.extend([costs[0], costs[1]])
+                best_choices = [c for c in costs if c["sku"].startswith("DD-BEST-")]
+                choices.extend(best_choices)
+
             # Dead stock (rarely sells)
             if random.random() < 0.05:
-                choices.extend([costs[2], costs[3], costs[4], costs[5]])
+                dead_choices = [c for c in costs if c["sku"].startswith("DD-DEAD-")]
+                choices.extend(dead_choices)
                 
             if not choices:
                 continue
                 
             item_cost = random.choice(choices)
             sku = item_cost["sku"]
-            sku_idx = [x[0] for x in all_items].index(sku)
             qty = random.randint(1, 2)
             unit_price = item_cost["selling_price"]
             
@@ -350,15 +365,43 @@ def seed_finance_and_clients(db, org_id, is_healthy=True):
         )
         db.add(rev)
         
-    overhead_amount = 3000.0 if is_healthy else 12000.0 # higher overhead for challenged
-    exp = Expense(
-        organization_id=org_id,
-        amount=overhead_amount,
-        category="Rent & Overhead" if is_healthy else "Warehouse Storage Penalty",
-        description="Monthly operations logistics overhead",
-        date=datetime.datetime(2025, 9, 1, 12, 0, 0)
-    )
-    db.add(exp)
+    if is_healthy:
+        db.add(Expense(
+            organization_id=org_id,
+            amount=1500.0,
+            category="Shopify App Fees",
+            description="Shopify monthly platform subscription and apps",
+            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
+        ))
+        db.add(Expense(
+            organization_id=org_id,
+            amount=1500.0,
+            category="Meta Advertising Ads",
+            description="Acquisition spend for Summer collection launch",
+            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
+        ))
+    else:
+        db.add(Expense(
+            organization_id=org_id,
+            amount=6000.0,
+            category="Warehouse Storage Penalty",
+            description="Storage penalties for dead stock (Yellow Vests / Overalls)",
+            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
+        ))
+        db.add(Expense(
+            organization_id=org_id,
+            amount=4000.0,
+            category="Meta Advertising Ads",
+            description="Acquisition spend for Denim collection clearance runs",
+            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
+        ))
+        db.add(Expense(
+            organization_id=org_id,
+            amount=2000.0,
+            category="Freight Forwarder Surcharges",
+            description="Fuel surcharges on raw materials import",
+            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
+        ))
     db.commit()
 
 def seed_scenario(db, org_id, is_healthy=True):
@@ -566,6 +609,43 @@ def seed_demo_workspace_data(db, org_id):
         expected_outcome="Save $55.0 on textile vendor costs."
     )
     db.add_all([rec1, rec2])
+    db.flush()
+
+    try:
+        RecommendationTraceService.create_trace(
+            db=db,
+            org_id=org_id,
+            rec_type="inventory",
+            action=rec1.recommendation,
+            confidence=0.95,
+            sources=["InventoryItem (TSHIRT-CLASSIC)", "Sales Records"],
+            metrics={"stock": 80, "reorder_point": 140, "lead_time": 7, "avg_daily_sales": 20.0},
+            reasoning=[
+                "Classic Tee stock is 80 units.",
+                "Sales velocity is 20 units/day. Estimated stockout in 4 days.",
+                "Supplier lead time is 7 days. Ordering now prevents a 3-day stockout gap.",
+                "MOQ from Premium Cotton Textiles is 500 units."
+            ],
+            status="verified"
+        )
+        RecommendationTraceService.create_trace(
+            db=db,
+            org_id=org_id,
+            rec_type="margin",
+            action=rec2.recommendation,
+            confidence=0.98,
+            sources=["ProcessedDocument (INV-2026-0001)"],
+            metrics={"invoice_amount": 2750.0, "discount_pct": 2.0, "discount_savings": 55.0, "early_payment_deadline": "2026-07-14"},
+            reasoning=[
+                "Supplier Invoice INV-2026-0001 for Premium Cotton Textiles has early payment terms of 2/10 Net 30.",
+                "Paying before 2026-07-14 triggers a 2% discount, saving $55.0 on the total balance of $2,750.",
+                "Available cash flow is $48,000, which easily covers the invoice with zero impact on operational runway."
+            ],
+            status="verified"
+        )
+    except Exception as trace_err:
+        print(f"  Warning: Failed to seed recommendation traces: {trace_err}")
+
     db.commit()
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):
