@@ -78,6 +78,7 @@ export function TaskModal({ isOpen, onClose, token, task, projects, onSuccess }:
               className="w-full px-3 py-2 border border-border dark:border-border bg-card dark:bg-card text-foreground dark:text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
+              placeholder="e.g. Write design specifications"
               required
             />
           </div>

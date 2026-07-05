@@ -75,7 +75,7 @@ export default function TasksPage() {
       </div>
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><CheckSquare className="text-blue-600"/> Tasks</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors">
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors cursor-pointer">
           <Plus size={18}/> New Task
         </button>
       </div>

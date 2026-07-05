@@ -56,10 +56,10 @@ const navItems = [
     items: [
       { href: "/dashboard", label: "Operations Dashboard", icon: LayoutDashboard, exact: true },
       { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
-      { href: "/dashboard/activity", label: "Activity Feed", icon: Activity },
       { href: "/dashboard/clients", label: "Clients", icon: Users },
       { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
       { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
+      { href: "/dashboard/activity", label: "Activity Feed", icon: Activity },
     ],
   },
   {

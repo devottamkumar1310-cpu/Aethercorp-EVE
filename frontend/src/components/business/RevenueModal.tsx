@@ -97,7 +97,7 @@ export function RevenueModal({ isOpen, onClose, token, projects, onSuccess }: Re
           <div className="pt-4 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-muted-foreground dark:text-muted-foreground bg-secondary dark:bg-secondary hover:bg-secondary dark:hover:bg-secondary rounded-md transition-colors" disabled={isSubmitting}>Cancel</button>
             <button type="submit" className="px-4 py-2 text-foreground bg-green-600 hover:bg-green-700 rounded-md transition-colors flex items-center gap-2" disabled={isSubmitting || projects.length === 0}>
-              {isSubmitting ? "Saving..." : "Save Revenue"}
+              {isSubmitting ? "Save Revenue" : "Save Revenue"}
             </button>
           </div>
         </form>

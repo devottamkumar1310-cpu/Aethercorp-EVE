@@ -47,7 +47,6 @@ export function ProjectModal({ isOpen, onClose, token, project, clients, onSucce
 
     setIsSubmitting(true);
     try {
-      // Ensure date is formatted properly if empty
       const payload = { ...formData, deadline: formData.deadline || null };
       
       if (project) {

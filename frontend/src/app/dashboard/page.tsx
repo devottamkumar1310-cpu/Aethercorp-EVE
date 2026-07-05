@@ -194,11 +194,11 @@ export default function DashboardPage() {
         {/* Global Quick CTAs */}
         <div className="flex flex-wrap gap-3 items-center bg-card p-4 rounded-xl border border-border shadow-sm">
           <span className="font-medium text-foreground mr-2">Create Actions:</span>
-          <button onClick={() => setIsClientModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100:bg-blue-900/30 rounded-md text-sm font-medium transition-colors border border-blue-200"><Plus size={16}/> New Client</button>
-          <button onClick={() => setIsProjectModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100:bg-indigo-900/30 rounded-md text-sm font-medium transition-colors border border-indigo-200"><Plus size={16}/> New Project</button>
-          <button onClick={() => setIsTaskModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100:bg-cyan-900/30 rounded-md text-sm font-medium transition-colors border border-cyan-200"><Plus size={16}/> New Task</button>
-          <button onClick={() => setIsRevenueModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100:bg-green-900/30 rounded-md text-sm font-medium transition-colors border border-green-200"><Plus size={16}/> Add Revenue</button>
-          <button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100:bg-red-900/30 rounded-md text-sm font-medium transition-colors border border-red-200"><Plus size={16}/> Add Expense</button>
+          <button onClick={() => setIsClientModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100:bg-blue-900/30 rounded-md text-sm font-medium transition-colors border border-blue-200 cursor-pointer"><Plus size={16}/> New Client</button>
+          <button onClick={() => setIsProjectModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100:bg-indigo-900/30 rounded-md text-sm font-medium transition-colors border border-indigo-200 cursor-pointer"><Plus size={16}/> New Project</button>
+          <button onClick={() => setIsTaskModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100:bg-cyan-900/30 rounded-md text-sm font-medium transition-colors border border-cyan-200 cursor-pointer"><Plus size={16}/> New Task</button>
+          <button onClick={() => setIsRevenueModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100:bg-green-900/30 rounded-md text-sm font-medium transition-colors border border-green-200 cursor-pointer"><Plus size={16}/> Add Revenue</button>
+          <button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100:bg-red-900/30 rounded-md text-sm font-medium transition-colors border border-red-200 cursor-pointer"><Plus size={16}/> Add Expense</button>
         </div>
 
         <div className="space-y-6">
@@ -232,7 +232,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
                   <span className="text-sm font-medium text-muted-foreground flex justify-between">
-                    Total Projects 
+                    Active Projects
                     {loadingTrends ? (
                       <span className="h-4 w-4 bg-muted rounded animate-pulse" />
                     ) : (
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
                   <span className="text-sm font-medium text-muted-foreground flex justify-between">
-                    Tasks Completion
+                    Task Progress
                     {loadingTrends ? (
                       <span className="h-4 w-4 bg-muted rounded animate-pulse" />
                     ) : (
@@ -284,12 +284,12 @@ export default function DashboardPage() {
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
               <div className="bg-secondary px-4 py-3 border-b border-border font-semibold text-foreground flex justify-between items-center">
                 Recent Clients
-                <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Client</button>
+                <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline cursor-pointer">Add Client</button>
               </div>
               <div className="p-0 overflow-x-auto flex-1 scrollbar-thin">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-card border-b border-border text-muted-foreground">
-                    <tr><th className="px-4 py-2 font-medium">Company</th><th className="px-4 py-2 font-medium">Status</th></tr>
+                    <tr><th className="px-4 py-2 font-medium">Client</th><th className="px-4 py-2 font-medium">Status</th></tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {loadingSummary ? (
@@ -320,8 +320,8 @@ export default function DashboardPage() {
             {/* Upcoming Deadlines */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
               <div className="bg-secondary px-4 py-3 border-b border-border font-semibold text-foreground flex justify-between items-center">
-                Upcoming Deadlines
-                <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline">Add Project</button>
+                Upcoming Project Deadlines
+                <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline cursor-pointer">New Project</button>
               </div>
               <div className="p-0 overflow-x-auto flex-1 scrollbar-thin">
                 <table className="w-full text-left text-sm">
@@ -345,7 +345,7 @@ export default function DashboardPage() {
                       ))
                     )}
                     {!loadingSummary && (!summary?.upcoming_deadlines || summary.upcoming_deadlines.length === 0) && (
-                      <tr><td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">No upcoming deadlines</td></tr>
+                      <tr><td colSpan={2} className="px-4 py-8 text-center text-muted-foreground font-medium">No upcoming deadlines</td></tr>
                     )}
                   </tbody>
                 </table>

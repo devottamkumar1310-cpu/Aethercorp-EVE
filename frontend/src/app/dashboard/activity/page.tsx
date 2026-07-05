@@ -18,6 +18,28 @@ export default function ActivityPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const getReadableEntity = (entity: string) => {
+    const map: Record<string, string> = {
+      "Client": "Supplier / Account",
+      "Project": "Production Run",
+      "Task": "Supply Chain Milestone",
+      "Product": "Garment Product",
+      "InventoryItem": "Inventory Level",
+      "SalesRecord": "Sales Transaction",
+      "Revenue": "Inbound Revenue",
+      "Expense": "Outbound Expense"
+    };
+    return map[entity] || entity;
+  };
+
+  const getReadableAction = (action: string, entity: string) => {
+    const act = action.toUpperCase();
+    if (act === "CREATE") return `New ${getReadableEntity(entity)} Created`;
+    if (act === "UPDATE") return `${getReadableEntity(entity)} Details Updated`;
+    if (act === "DELETE") return `${getReadableEntity(entity)} Removed`;
+    return action;
+  };
+
   useEffect(() => {
     async function load() {
       try {
@@ -48,7 +70,8 @@ export default function ActivityPage() {
       const lowerQuery = searchQuery.toLowerCase();
       result = result.filter(log => 
         log.action.toLowerCase().includes(lowerQuery) || 
-        log.description?.toLowerCase().includes(lowerQuery)
+        log.description?.toLowerCase().includes(lowerQuery) ||
+        getReadableEntity(log.entity_type).toLowerCase().includes(lowerQuery)
       );
     }
     
@@ -73,7 +96,7 @@ export default function ActivityPage() {
         <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
       </div>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Activity className="text-blue-600"/> System Activity Log</h1>
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Activity className="text-blue-600"/> Business Activity Log</h1>
       </div>
       
       {/* Search and Filters */}
@@ -82,7 +105,7 @@ export default function ActivityPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <input 
             type="text" 
-            placeholder="Search activity description or action..." 
+            placeholder="Search activity description, action or type..." 
             className="w-full pl-10 pr-4 py-2 border border-border bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -95,9 +118,9 @@ export default function ActivityPage() {
             value={filterEntity}
             onChange={(e) => setFilterEntity(e.target.value)}
           >
-            <option value="all">All Entities</option>
+            <option value="all">All Event Types</option>
             {getUniqueEntities().map(entity => (
-              <option key={entity} value={entity}>{entity}</option>
+              <option key={entity} value={entity}>{getReadableEntity(entity)}</option>
             ))}
           </select>
         </div>
@@ -121,16 +144,20 @@ export default function ActivityPage() {
           <div className="p-6 space-y-6 flex-1">
             {currentLogs.map(log => (
               <div key={log.id} className="flex gap-4 items-start pb-6 border-b border-border/60 last:border-0 last:pb-0">
-                <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center flex-shrink-0 text-blue-500 shadow-sm border border-border">
+                <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center flex-shrink-0 text-indigo-500 shadow-sm border border-border">
                   <Activity size={18}/>
                 </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-bold text-foreground">[{log.entity_type}]</span>
-                    <span className="text-foreground font-medium">{log.action}</span>
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full tracking-wider shadow-sm">
+                      {getReadableEntity(log.entity_type)}
+                    </span>
+                    <span className="text-foreground font-bold text-sm">
+                      {getReadableAction(log.action, log.entity_type)}
+                    </span>
                   </div>
-                  <p className="text-muted-foreground text-sm">{log.description}</p>
-                  <p className="text-muted-foreground text-xs mt-2">{new Date(log.created_at).toLocaleString()}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{log.description}</p>
+                  <p className="text-slate-450 text-[10px] mt-2 font-medium">{new Date(log.created_at).toLocaleString()}</p>
                 </div>
               </div>
             ))}
@@ -149,14 +176,14 @@ export default function ActivityPage() {
                 <button 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border border-border rounded bg-card text-sm hover:bg-muted text-slate-750 disabled:opacity-50"
+                  className="px-3 py-1.5 border border-border rounded-lg bg-card text-xs font-semibold hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer transition-all"
                 >
                   Previous
                 </button>
                 <button 
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border border-border rounded bg-card text-sm hover:bg-muted text-slate-750 disabled:opacity-50"
+                  className="px-3 py-1.5 border border-border rounded-lg bg-card text-xs font-semibold hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-50 cursor-pointer transition-all"
                 >
                   Next
                 </button>

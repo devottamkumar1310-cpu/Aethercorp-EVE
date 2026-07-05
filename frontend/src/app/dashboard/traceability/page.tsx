@@ -18,30 +18,33 @@ interface TraceRecord {
   created_at: string;
 }
 
-// Resilient Pre-seeded Fallback Dataset
+// Resilient Pre-seeded Fallback Dataset aligned with Classic Tee dataset
 const fallbackRecommendation: TraceRecord = {
   id: "rec-123456",
   organization_id: "demo-org",
-  recommendation_type: "reorder",
-  action: "Order 500 units",
-  confidence_score: 0.94,
+  recommendation_type: "inventory",
+  action: "Trigger immediate reorder of 500 units of Classic Tee (TSHIRT-CLASSIC) fabric rolls to prevent stockout.",
+  confidence_score: 0.95,
   validation_status: "verified",
   source_datasets: [
-    "Inventory Item #123 (Cotton Crew Neck Shirt)",
-    "Supplier Alpha (Alpha Clothing Corp)"
+    "InventoryItem (TSHIRT-CLASSIC)",
+    "Sales Records (June 2026)",
+    "Supplier agreement (Premium Cotton Textiles Ltd)"
   ],
   supporting_metrics: {
-    stock: 10,
-    threshold: 50,
-    velocity_per_day: 3.5,
-    estimated_out_of_stock_days: 2.8
+    stock: 80,
+    reorder_point: 140,
+    avg_daily_sales: 20.0,
+    estimated_out_of_stock_days: 4.0,
+    lead_time_days: 7.0
   },
   reasoning_chain: [
-    "Stock level is checked (current = 10). Safety reorder threshold is 50. Reorder condition is met.",
-    "Average sales velocity is 3.5 units/day. Estimated days to absolute stockout is 2.8 days.",
-    "Base needed restock is 40 units. Adjusted to Supplier Alpha's Minimum Order Quantity (MOQ) constraint of 500 units."
+    "Stock level is checked (current = 80 units). Safety reorder threshold is 140 units.",
+    "Average sales velocity is 20 units/day. Estimated days to absolute stockout is 4.0 days.",
+    "Supplier lead time is 7 days. Ordering now prevents a 3-day stockout gap.",
+    "MOQ from Premium Cotton Textiles is 500 units."
   ],
-  created_at: "2026-06-29"
+  created_at: "2026-07-05"
 };
 
 export default function TraceabilityDashboard() {
@@ -114,7 +117,7 @@ export default function TraceabilityDashboard() {
           {traces.length > 0 && (
             <button 
               onClick={fetchTraces}
-              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 bg-indigo-950/10 px-3 py-1.5 rounded-lg transition"
+              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 bg-indigo-950/10 px-3 py-1.5 rounded-lg transition cursor-pointer"
             >
               <ListRestart className="h-3.5 w-3.5" /> Refresh List
             </button>
@@ -133,10 +136,10 @@ export default function TraceabilityDashboard() {
                 <div 
                   onClick={() => setSelectedTrace(fallbackRecommendation)}
                   className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
- selectedTrace.id === fallbackRecommendation.id 
- ? "border-emerald-500 bg-emerald-950/10" 
- : "border-border bg-card/30 hover:border-foreground/20"
- }`}
+                    selectedTrace.id === fallbackRecommendation.id 
+                    ? "border-emerald-500 bg-emerald-950/10" 
+                    : "border-border bg-card/30 hover:border-foreground/20"
+                  }`}
                 >
                   <span className="block text-xs font-semibold text-emerald-400 uppercase tracking-wide">Pre-seeded Fallback</span>
                   <span className="block text-sm font-bold text-foreground mt-1">{fallbackRecommendation.action}</span>
@@ -150,10 +153,10 @@ export default function TraceabilityDashboard() {
                   key={trace.id}
                   onClick={() => setSelectedTrace(trace)}
                   className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
- selectedTrace.id === trace.id 
- ? "border-emerald-500 bg-emerald-950/10" 
- : "border-border bg-card/30 hover:border-foreground/20"
- }`}
+                    selectedTrace.id === trace.id 
+                    ? "border-emerald-500 bg-emerald-950/10" 
+                    : "border-border bg-card/30 hover:border-foreground/20"
+                  }`}
                 >
                   <span className="block text-xs font-semibold text-indigo-400 uppercase tracking-wide">
                     {trace.recommendation_type}
@@ -186,10 +189,10 @@ export default function TraceabilityDashboard() {
                   </div>
                 </div>
                 
-                <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground">
+                <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground leading-snug">
                   {selectedTrace.action}
                 </h2>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                <p className="mt-3 text-sm text-slate-300 leading-relaxed">
                   {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
                 </p>
               </div>
@@ -218,12 +221,12 @@ export default function TraceabilityDashboard() {
               
               {/* Confidence Score Card */}
               <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
-                <span className="text-sm font-medium text-muted-foreground">Certainty Index</span>
+                <span className="text-sm font-medium text-muted-foreground font-semibold">Decision Confidence Score</span>
                 <p className="mt-3 text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                   {(selectedTrace.confidence_score * 100).toFixed(0)}%
                 </p>
-                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-muted-foreground">
-                  <Cpu className="h-3.5 w-3.5" /> High Certainty Logic
+                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
+                  <Cpu className="h-3.5 w-3.5 text-indigo-400" /> Audited reasoning logic
                 </div>
               </div>
 
@@ -250,10 +253,10 @@ export default function TraceabilityDashboard() {
                 <div className="space-y-2.5">
                   {selectedTrace.source_datasets.map((source, index) => (
                     <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs">
-                      <span className="block font-semibold text-foreground">{source}</span>
+                      <span className="block font-semibold text-foreground leading-relaxed">{source}</span>
                     </div>
                   ))}
-                  <span className="block text-[10px] text-muted-foreground mt-2 text-center">
+                  <span className="block text-[10px] text-muted-foreground mt-2 text-center font-medium">
                     Audited: {selectedTrace.created_at}
                   </span>
                 </div>

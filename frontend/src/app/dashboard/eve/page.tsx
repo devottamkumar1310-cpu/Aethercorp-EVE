@@ -1443,15 +1443,121 @@ export default function EVECoocommandCenter() {
             })}
 
             {messages.length <= 1 && (
-              <div className="max-w-2xl mx-auto py-24 text-center space-y-4 animate-fade-in px-4">
-                <div className="h-12 w-12 bg-indigo-650 rounded-2xl flex items-center justify-center text-foreground shadow-lg mx-auto">
-                  <Brain size={22} />
+              <div className="max-w-4xl mx-auto py-8 px-4 space-y-6 animate-fade-in">
+                {/* Briefing Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-indigo-950/45 via-purple-950/15 to-transparent p-6 rounded-2xl border border-indigo-500/10 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-indigo-650 rounded-xl text-foreground shadow-md shadow-indigo-600/30">
+                      <Brain size={22} className="text-foreground" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-extrabold text-foreground tracking-tight flex items-center gap-2">
+                        EVE Executive Briefing
+                      </h2>
+                      <p className="text-xs text-slate-400">
+                        Operational health status and automated intelligence for your brand
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 bg-indigo-950/30 border border-indigo-500/20 px-4 py-2.5 rounded-xl">
+                    <span className="text-xs font-semibold text-slate-400">Operational Health:</span>
+                    <span className={`text-sm font-extrabold px-2.5 py-0.5 rounded-full ${
+                      healthScore >= 75 ? "bg-emerald-500/10 text-emerald-450 border border-emerald-500/20"
+                      : healthScore >= 50 ? "bg-amber-500/10 text-amber-450 border border-amber-500/20"
+                      : "bg-rose-500/10 text-rose-450 border border-rose-500/20"
+                    }`}>
+                      {healthScore}/100 ({healthStatus})
+                    </span>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-lg font-bold text-foreground tracking-tight">EVE</h2>
-                  <p className="text-xs text-slate-450 leading-relaxed max-w-sm mx-auto">
-                    Executive Operating System. Ask anything regarding margins, inventory forecasting, client projects, or health features.
-                  </p>
+
+                {/* Risks & Opportunities Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Risks Card */}
+                  <div className="bg-card/45 backdrop-blur-sm border border-border/80 rounded-2xl p-5 shadow-md flex flex-col space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5 border-b border-border/40 pb-3">
+                      <AlertTriangle size={14} className="text-rose-500" /> Active Operational Risks
+                    </h3>
+                    <div className="flex-1 space-y-2.5">
+                      {risks.length > 0 ? (
+                        risks.slice(0, 3).map((risk, i) => (
+                          <div key={i} className="p-3 bg-rose-500/5 hover:bg-rose-500/10 border border-rose-500/10 rounded-xl transition-all flex items-start gap-2.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 flex-shrink-0" />
+                            <div className="space-y-0.5 flex-1">
+                              <p className="text-xs text-foreground font-medium leading-relaxed">{risk.description || risk}</p>
+                              {risk.impact_level && (
+                                <span className="inline-block text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 rounded uppercase tracking-wider mt-1">
+                                  {risk.impact_level} Impact
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-xs text-muted-foreground italic">
+                          No active critical risks identified.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Opportunities Card */}
+                  <div className="bg-card/45 backdrop-blur-sm border border-border/80 rounded-2xl p-5 shadow-md flex flex-col space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-450 flex items-center gap-1.5 border-b border-border/40 pb-3">
+                      <Sparkles size={14} className="text-emerald-500" /> Strategic Opportunities
+                    </h3>
+                    <div className="flex-1 space-y-2.5">
+                      {opportunities.length > 0 ? (
+                        opportunities.slice(0, 3).map((opp, i) => (
+                          <div key={i} className="p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all flex items-start gap-2.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                            <div className="space-y-0.5 flex-1">
+                              <p className="text-xs text-foreground font-medium leading-relaxed">{opp.description || opp}</p>
+                              {opp.value_potential && (
+                                <span className="inline-block text-[9px] font-bold text-emerald-450 bg-emerald-500/10 px-1.5 rounded uppercase tracking-wider mt-1">
+                                  +${opp.value_potential.toLocaleString()} Est. Value
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-6 text-xs text-muted-foreground italic">
+                          Scanning for revenue/margin opportunities...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Suggested Quick-Prompts */}
+                <div className="bg-card/30 border border-border/60 rounded-2xl p-5 space-y-3 shadow-sm">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+                    <MessageSquare size={13} className="text-indigo-500" /> Suggested Action Prompts
+                  </h3>
+                  <p className="text-xs text-slate-400">Click any prompt below to query the EVE Agent network immediately:</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    {getDynamicSuggestions().map((group, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                          {group.category}
+                        </span>
+                        <div className="flex flex-col gap-2">
+                          {group.questions.map((question, qIdx) => (
+                            <button
+                              key={qIdx}
+                              type="button"
+                              onClick={() => setInputMessage(question)}
+                              className="text-left text-xs text-muted-foreground hover:text-foreground hover:border-indigo-500/40 bg-background/50 hover:bg-indigo-650/10 p-3 rounded-xl border border-border/80 transition-all cursor-pointer truncate"
+                              title={question}
+                            >
+                              {question}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
