@@ -8,6 +8,8 @@ frontend/
 # Ignore backend databases, envs and caches
 backend/.venv/
 backend/venv/
+.venv/
+venv/
 backend/__pycache__/
 backend/*.db
 backend/*.csv

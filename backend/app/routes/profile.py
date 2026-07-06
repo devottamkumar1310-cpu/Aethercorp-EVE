@@ -59,7 +59,11 @@ def get_my_profile(
         "language": current_user.language,
         "avatar_url": current_user.avatar_url,
         "organization_id": membership.organization_id if membership else None,
-        "role": membership.role if membership else None
+        "role": membership.role if membership else None,
+        "trial_start_date": current_user.trial_start_date.isoformat() if current_user.trial_start_date else None,
+        "trial_end_date": current_user.trial_end_date.isoformat() if current_user.trial_end_date else None,
+        "subscription_status": current_user.subscription_status,
+        "plan_type": current_user.plan_type
     }
     logger.info("[TRACE /api/profile/me] STEP 5: Response ready — returning 200")
     logger.info("END profile/me")

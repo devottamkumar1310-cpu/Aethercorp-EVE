@@ -29,6 +29,10 @@ class Profile(Base):
     language = Column(String, default="en", nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    trial_start_date = Column(DateTime, default=datetime.datetime.utcnow, nullable=True)
+    trial_end_date = Column(DateTime, default=lambda: datetime.datetime.utcnow() + datetime.timedelta(days=14), nullable=True)
+    subscription_status = Column(String, default="trial", nullable=False)
+    plan_type = Column(String, default="starter", nullable=False)
 
     # Relationships
     memberships = relationship("Membership", back_populates="profile", cascade="all, delete-orphan")
