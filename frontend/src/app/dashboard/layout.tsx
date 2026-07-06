@@ -78,6 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
+  const isExempt = profile?.email === "devottamkumar1310@gmail.com" || profile?.subscription_status === "founder";
   const [sessionToken, setSessionToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [loadingStage, setLoadingStage] = useState(0);
@@ -759,7 +760,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Right: Workspace Switcher + User */}
             <div className="flex items-center gap-3">
               {/* Trial Status Badge */}
-              {profile?.subscription_status === "trial" && (
+              {profile?.subscription_status === "trial" && !isExempt && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-semibold text-indigo-400">
                   <Clock size={11} className="animate-pulse" />
                   <span>
@@ -850,76 +851,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-background text-foreground transition-colors duration-200">
           {(() => {
-            const isTrialExpired = profile?.subscription_status === "trial" && getRemainingDays() <= 0;
-            if (isTrialExpired) {
-              return (
-                <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[85vh]">
-                  <div className="bg-card/80 backdrop-blur-md rounded-3xl border border-border shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-xl mx-auto relative">
-                    <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                    
-                    <div className="flex justify-center">
-                      <div className="h-16 w-16 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center shadow-lg border border-red-500/20">
-                        <Lock size={32} />
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">Your free trial has ended</h2>
-                      <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
-                        We're currently onboarding customers gradually to ensure the best possible platform performance. Join the priority waitlist and we'll contact you first when paid plans launch.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col gap-3 max-w-xs mx-auto pt-2">
-                      {hasJoinedWaitlist ? (
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
-                          ✓ On Priority Waitlist
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setIsWaitlistOpen(true)}
-                          className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
-                        >
-                          Join Priority Waitlist
-                        </button>
-                      )}
-                      
-                      <button
-                        type="button"
-                        onClick={() => setIsWaitlistOpen(true)}
-                        className="w-full py-2.5 px-4 bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-foreground rounded-xl text-sm font-semibold transition-all cursor-pointer"
-                      >
-                        Request Early Access
-                      </button>
-
-                      <a
-                        href="mailto:aethercorp.support@gmail.com?subject=Contact%20EVE%20Founder"
-                        className="text-xs text-muted-foreground hover:text-indigo-400 underline pt-2"
-                      >
-                        Contact Founder
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
+            const days = getRemainingDays();
+            const isTrialExpired = profile?.subscription_status === "trial" && days <= 0;
+            const showSoftExpiry = isTrialExpired && !isExempt;
+            
             const showPreExpiry = 
               profile?.subscription_status === "trial" && 
+              !isExempt &&
               !hasJoinedWaitlist && 
               !bannerDismissed && 
-              [7, 3, 1].includes(getRemainingDays());
+              [7, 3, 1].includes(days);
 
             return (
               <>
+                {showSoftExpiry && (
+                  <div className="px-6 py-3.5 bg-gradient-to-r from-red-950/20 to-rose-950/20 border-b border-red-500/30 text-foreground flex flex-col sm:flex-row items-center justify-between gap-3 text-sm animate-fade-in z-20 relative">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
+                      <span>
+                        Your trial has ended. Request an extension or join the waitlist.
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsWaitlistOpen(true)}
+                        className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-foreground text-xs font-semibold rounded-lg transition-all shadow-md shadow-red-600/10 cursor-pointer"
+                      >
+                        Join Waitlist
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.location.href = "mailto:aethercorp.support@gmail.com?subject=EVE%20Trial%20Extension%20Request";
+                        }}
+                        className="px-3.5 py-1.5 bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                      >
+                        Request Extension
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {showPreExpiry && (
-                  <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border-b border-indigo-500/20 text-foreground flex flex-col sm:flex-row items-center justify-between gap-3 text-sm animate-fade-in">
+                  <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border-b border-indigo-500/20 text-foreground flex flex-col sm:flex-row items-center justify-between gap-3 text-sm animate-fade-in z-20 relative">
                     <div className="flex items-center gap-2">
                       <AlertCircle size={16} className="text-indigo-400 flex-shrink-0" />
                       <span>
-                        Enjoying EVE? Paid plans are coming soon. <strong>{getRemainingDays()} days remaining</strong> on your trial. Join the priority waitlist for early access and launch pricing.
+                        Enjoying EVE? Paid plans are coming soon. <strong>{days} {days === 1 ? "day" : "days"} remaining</strong> on your trial. Join the priority waitlist for early access and launch pricing.
                       </span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
