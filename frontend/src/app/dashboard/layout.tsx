@@ -30,8 +30,11 @@ import {
   Moon,
   FileText,
   HelpCircle,
+  Clock,
+  Lock,
 } from "lucide-react";
 import FeedbackModal from "@/components/business/FeedbackModal";
+import { WaitlistModal } from "@/components/business/WaitlistModal";
 import { ProductTour } from "@/components/dashboard/ProductTour";
 
 interface Workspace {
@@ -90,6 +93,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  
+  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  const getRemainingDays = () => {
+    if (!profile?.trial_end_date) return 0;
+    const end = new Date(profile.trial_end_date);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
+  };
+
+  useEffect(() => {
+    if (profile?.email && typeof window !== "undefined") {
+      const joined = localStorage.getItem(`eve_joined_waitlist_${profile.email}`);
+      if (joined === "true") {
+        setHasJoinedWaitlist(true);
+      }
+    }
+  }, [profile]);
+
   const router = useRouter();
   const pathname = usePathname();
   const sessionTokenRef = useRef(sessionToken);
@@ -732,6 +758,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Right: Workspace Switcher + User */}
             <div className="flex items-center gap-3">
+              {/* Trial Status Badge */}
+              {profile?.subscription_status === "trial" && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-semibold text-indigo-400">
+                  <Clock size={11} className="animate-pulse" />
+                  <span>
+                    {(() => {
+                      const days = getRemainingDays();
+                      if (days <= 0) return "Trial Ended";
+                      return `${days} ${days === 1 ? "day" : "days"} left`;
+                    })()}
+                  </span>
+                </div>
+              )}
               {/* Theme Toggler */}
               <button
                 onClick={() => setThemePreference(theme === "dark" ? "light" : "dark")}
@@ -810,116 +849,208 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Page Content */}
         <main className="flex-1 overflow-auto bg-background text-foreground transition-colors duration-200">
-          {!activeWorkspaceId && pathname !== "/dashboard/settings" && pathname !== "/dashboard/help" ? (
-            <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[85vh]">
-              <div className="bg-card/80 backdrop-blur-md rounded-3xl border border-border shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-3xl mx-auto relative">
-                {/* Decorative background glow */}
-                <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-                
-                <div className="flex justify-center">
-                  <div className="h-20 w-20 bg-gradient-to-tr from-indigo-600 to-violet-500 text-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 animate-pulse">
-                    <Sparkles size={38} />
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">Welcome to EVE</h2>
-                  <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                    Enterprise Virtual Executive AI OS. Choose how you would like to begin exploring the platform.
-                  </p>
-                </div>
+          {(() => {
+            const isTrialExpired = profile?.subscription_status === "trial" && getRemainingDays() <= 0;
+            if (isTrialExpired) {
+              return (
+                <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[85vh]">
+                  <div className="bg-card/80 backdrop-blur-md rounded-3xl border border-border shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-xl mx-auto relative">
+                    <div className="absolute -top-24 -left-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                    
+                    <div className="flex justify-center">
+                      <div className="h-16 w-16 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center shadow-lg border border-red-500/20">
+                        <Lock size={32} />
+                      </div>
+                    </div>
 
-                {createError && (
-                  <div className="p-4 bg-red-950/40 text-red-400 text-xs rounded-xl border border-red-800/50 text-left flex items-start gap-2 max-w-xl mx-auto">
-                    <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-                    <span>{createError}</span>
-                  </div>
-                )}
+                    <div className="space-y-3">
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">Your free trial has ended</h2>
+                      <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
+                        We're currently onboarding customers gradually to ensure the best possible platform performance. Join the priority waitlist and we'll contact you first when paid plans launch.
+                      </p>
+                    </div>
 
-                {!showManualForm ? (
-                  <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4">
-                    {/* Option A: Demo Workspace */}
-                    <button
-                      onClick={handleCreateDemoWorkspace}
-                      disabled={demoLoading || createLoading}
-                      className="group relative flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-indigo-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-indigo-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
-                    >
-                      {demoLoading && (
-                        <div className="absolute inset-0 bg-background backdrop-blur-xs flex items-center justify-center z-10">
-                          <div className="flex flex-col items-center gap-3">
-                            <div className="h-8 w-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
-                            <span className="text-xs text-indigo-400 font-semibold animate-pulse">Launching demo...</span>
-                          </div>
+                    <div className="flex flex-col gap-3 max-w-xs mx-auto pt-2">
+                      {hasJoinedWaitlist ? (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5">
+                          ✓ On Priority Waitlist
                         </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsWaitlistOpen(true)}
+                          className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
+                        >
+                          Join Priority Waitlist
+                        </button>
                       )}
-                      <div className="h-10 w-10 bg-indigo-900/30 group-hover:bg-indigo-600/20 text-indigo-400 rounded-lg flex items-center justify-center mb-4 transition-all">
-                        <Sparkles size={20} />
-                      </div>
-                      <h4 className="text-base font-bold text-foreground group-hover:text-indigo-400 transition-colors">Option A: Launch Demo Workspace</h4>
-                      <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
-                        Explore EVE using a realistic fashion business (<strong>NovaWear Fashion</strong>) with preloaded sales, inventory, customers, expenses, risks, and executive insights.
-                      </p>
-                      <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-indigo-400 group-hover:text-indigo-300">
-                        Launch Demo & Explore &rarr;
-                      </div>
-                    </button>
-
-                    {/* Option B: Create Workspace */}
-                    <button
-                      onClick={() => setShowManualForm(true)}
-                      disabled={demoLoading || createLoading}
-                      className="group flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-violet-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/5 cursor-pointer disabled:opacity-50"
-                    >
-                      <div className="h-10 w-10 bg-purple-900/30 group-hover:bg-purple-600/20 text-purple-400 rounded-lg flex items-center justify-center mb-4 transition-all">
-                        <Plus size={20} />
-                      </div>
-                      <h4 className="text-base font-bold text-foreground group-hover:text-purple-400 transition-colors">Option B: Create My Own</h4>
-                      <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
-                        Start fresh with your own brand details, upload your own business datasets/documents, and construct a custom operations workspace.
-                      </p>
-                      <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-purple-400 group-hover:text-purple-300">
-                        Create Custom Workspace &rarr;
-                      </div>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="max-w-md mx-auto space-y-4 pt-2">
-                    <div className="text-left mb-2">
+                      
                       <button
-                        onClick={() => setShowManualForm(false)}
-                        className="text-xs text-muted-foreground hover:text-muted-foreground flex items-center gap-1 transition-colors"
+                        type="button"
+                        onClick={() => setIsWaitlistOpen(true)}
+                        className="w-full py-2.5 px-4 bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-foreground rounded-xl text-sm font-semibold transition-all cursor-pointer"
                       >
-                        &larr; Back to options
+                        Request Early Access
+                      </button>
+
+                      <a
+                        href="mailto:aethercorp.support@gmail.com?subject=Contact%20EVE%20Founder"
+                        className="text-xs text-muted-foreground hover:text-indigo-400 underline pt-2"
+                      >
+                        Contact Founder
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            const showPreExpiry = 
+              profile?.subscription_status === "trial" && 
+              !hasJoinedWaitlist && 
+              !bannerDismissed && 
+              [7, 3, 1].includes(getRemainingDays());
+
+            return (
+              <>
+                {showPreExpiry && (
+                  <div className="px-6 py-3.5 bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border-b border-indigo-500/20 text-foreground flex flex-col sm:flex-row items-center justify-between gap-3 text-sm animate-fade-in">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-indigo-400 flex-shrink-0" />
+                      <span>
+                        Enjoying EVE? Paid plans are coming soon. <strong>{getRemainingDays()} days remaining</strong> on your trial. Join the priority waitlist for early access and launch pricing.
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsWaitlistOpen(true)}
+                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-foreground text-xs font-semibold rounded-lg transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
+                      >
+                        Join Priority Waitlist
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBannerDismissed(true)}
+                        className="p-1 hover:bg-sidebar-accent rounded text-muted-foreground hover:text-foreground cursor-pointer"
+                      >
+                        <X size={14} />
                       </button>
                     </div>
-                    <form onSubmit={handleCreateWorkspace} className="space-y-4 text-left">
-                      <div>
-                        <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Workspace / Brand Name</label>
-                        <input
-                          type="text"
-                          required
-                          value={newWorkspaceName}
-                          onChange={(e) => setNewWorkspaceName(e.target.value)}
-                          placeholder="e.g. Acme Clothing"
-                          className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm placeholder-slate-600"
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={createLoading || !newWorkspaceName.trim()}
-                        className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
-                      >
-                        {createLoading ? "Creating Workspace..." : "Create Workspace"}
-                      </button>
-                    </form>
                   </div>
                 )}
-              </div>
-            </div>
-          ) : (
-            children
-          )}
+
+                {!activeWorkspaceId && pathname !== "/dashboard/settings" && pathname !== "/dashboard/help" ? (
+                  <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[85vh]">
+                    <div className="bg-card/80 backdrop-blur-md rounded-3xl border border-border shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-3xl mx-auto relative">
+                      <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                      
+                      <div className="flex justify-center">
+                        <div className="h-20 w-20 bg-gradient-to-tr from-indigo-600 to-violet-500 text-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 animate-pulse">
+                          <Sparkles size={38} />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">Welcome to EVE</h2>
+                        <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+                          Enterprise Virtual Executive AI OS. Choose how you would like to begin exploring the platform.
+                        </p>
+                      </div>
+
+                      {createError && (
+                        <div className="p-4 bg-red-950/40 text-red-400 text-xs rounded-xl border border-red-800/50 text-left flex items-start gap-2 max-w-xl mx-auto">
+                          <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                          <span>{createError}</span>
+                        </div>
+                      )}
+
+                      {!showManualForm ? (
+                        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4">
+                          <button
+                            onClick={handleCreateDemoWorkspace}
+                            disabled={demoLoading || createLoading}
+                            className="group relative flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-indigo-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-indigo-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
+                          >
+                            {demoLoading && (
+                              <div className="absolute inset-0 bg-background backdrop-blur-xs flex items-center justify-center z-10">
+                                <div className="flex flex-col items-center gap-3">
+                                  <div className="h-8 w-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+                                  <span className="text-xs text-indigo-400 font-semibold animate-pulse">Launching demo...</span>
+                                </div>
+                              </div>
+                            )}
+                            <div className="h-10 w-10 bg-indigo-900/30 group-hover:bg-indigo-600/20 text-indigo-400 rounded-lg flex items-center justify-center mb-4 transition-all">
+                              <Sparkles size={20} />
+                            </div>
+                            <h4 className="text-base font-bold text-foreground group-hover:text-indigo-400 transition-colors">Option A: Launch Demo Workspace</h4>
+                            <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
+                              Explore EVE using a realistic fashion business (<strong>NovaWear Fashion</strong>) with preloaded sales, inventory, customers, expenses, risks, and executive insights.
+                            </p>
+                            <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-indigo-400 group-hover:text-indigo-300">
+                              Launch Demo & Explore &rarr;
+                            </div>
+                          </button>
+
+                          <button
+                            onClick={() => setShowManualForm(true)}
+                            disabled={demoLoading || createLoading}
+                            className="group flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-violet-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/5 cursor-pointer disabled:opacity-50"
+                          >
+                            <div className="h-10 w-10 bg-purple-900/30 group-hover:bg-purple-600/20 text-purple-400 rounded-lg flex items-center justify-center mb-4 transition-all">
+                              <Plus size={20} />
+                            </div>
+                            <h4 className="text-base font-bold text-foreground group-hover:text-purple-400 transition-colors">Option B: Create My Own</h4>
+                            <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
+                              Start fresh with your own brand details, upload your own business datasets/documents, and construct a custom operations workspace.
+                            </p>
+                            <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-purple-400 group-hover:text-purple-300">
+                              Create Custom Workspace &rarr;
+                            </div>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="max-w-md mx-auto space-y-4 pt-2">
+                          <div className="text-left mb-2">
+                            <button
+                              onClick={() => setShowManualForm(false)}
+                              className="text-xs text-muted-foreground hover:text-muted-foreground flex items-center gap-1 transition-colors"
+                            >
+                              &larr; Back to options
+                            </button>
+                          </div>
+                          <form onSubmit={handleCreateWorkspace} className="space-y-4 text-left">
+                            <div>
+                              <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Workspace / Brand Name</label>
+                              <input
+                                type="text"
+                                required
+                                value={newWorkspaceName}
+                                onChange={(e) => setNewWorkspaceName(e.target.value)}
+                                placeholder="e.g. Acme Clothing"
+                                className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm placeholder-slate-600"
+                              />
+                            </div>
+                            <button
+                              type="submit"
+                              disabled={createLoading || !newWorkspaceName.trim()}
+                              className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
+                            >
+                              {createLoading ? "Creating Workspace..." : "Create Workspace"}
+                            </button>
+                          </form>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  children
+                )}
+              </>
+            );
+          })()}
         </main>
       </div>
 
@@ -970,6 +1101,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
         sessionToken={sessionToken}
+      />
+      
+      <WaitlistModal
+        isOpen={isWaitlistOpen}
+        onClose={() => setIsWaitlistOpen(false)}
+        profile={profile}
+        onSuccess={() => {
+          setHasJoinedWaitlist(true);
+          if (profile?.email) {
+            localStorage.setItem(`eve_joined_waitlist_${profile.email}`, "true");
+          }
+        }}
       />
       {activeWorkspaceId && <ProductTour />}
     </div>

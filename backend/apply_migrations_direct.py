@@ -35,6 +35,25 @@ try:
         "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS timezone VARCHAR NOT NULL DEFAULT 'UTC'",
         "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS language VARCHAR NOT NULL DEFAULT 'en'",
         "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url VARCHAR",
+        # ─── Free Trial & Waitlist System columns ────────────────────────────
+        "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_start_date TIMESTAMP",
+        "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_end_date TIMESTAMP",
+        "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS subscription_status VARCHAR NOT NULL DEFAULT 'trial'",
+        "ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_type VARCHAR NOT NULL DEFAULT 'starter'",
+        # ─── Create waitlist_entries table ───────────────────────────────────
+        """
+        CREATE TABLE IF NOT EXISTS waitlist_entries (
+            id UUID PRIMARY KEY,
+            user_id UUID,
+            name VARCHAR,
+            email VARCHAR,
+            company_name VARCHAR,
+            company_website VARCHAR,
+            revenue_range VARCHAR,
+            biggest_inventory_challenge VARCHAR,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+        """
     ]
 
     for sql in migrations:
@@ -85,7 +104,8 @@ try:
     checks = [
         ("audit_logs", ["user_id", "client_ip", "before_state", "after_state"]),
         ("processed_documents", ["sha256_hash"]),
-        ("profiles", ["timezone", "language", "avatar_url"]),
+        ("profiles", ["timezone", "language", "avatar_url", "trial_start_date", "trial_end_date", "subscription_status", "plan_type"]),
+        ("waitlist_entries", ["id", "user_id", "name", "email", "company_name", "company_website", "revenue_range", "biggest_inventory_challenge", "created_at"]),
     ]
     all_ok = True
     for table, cols in checks:
