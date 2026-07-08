@@ -598,75 +598,256 @@ class ExecutiveBoard:
         projects = db.query(Project).filter(Project.organization_id == org_id).all()
         delayed_projects = [p for p in projects if p.status != "completed" and p.completion_percentage < 50]
         
-        priorities = []
-        
-        # Priority 1: Stock replenishment / Safety Stock reordering
-        if low_stock:
-            top_low = low_stock[0]
-            priorities.append(StrategicPriority(
-                title=f"Replenish SKU {top_low['sku']}",
-                description=(
-                    f"Reason: Projected stockout in {int(top_low.get('days_until_stockout', 0))} days due to average daily velocity of {top_low.get('avg_daily_sales', 0.0):.2f} units/day.\n"
-                    f"Impact: ${top_low.get('revenue_at_risk', 0.0):,.2f} revenue at risk.\n"
-                    f"Confidence: {int(top_low.get('confidence_score', 0.85) * 100)}%"
-                )
-            ))
-        else:
-            priorities.append(StrategicPriority(
-                title="Replenish Active Catalog",
-                description="Reason: No critical SKU stockouts detected; current inventory levels are within standard safety thresholds.\nImpact: Protect core unit delivery velocity.\nConfidence: 95%"
-            ))
-            
-        # Priority 2: Warehouse capacity / Overstock clearance
-        if overstock:
-            top_over = overstock[0]
-            priorities.append(StrategicPriority(
-                title=f"Liquidate SKU {top_over['sku']}",
-                description=(
-                    f"Reason: Flagged as slow-moving/dead stock with {int(top_over.get('days_until_stockout', 999))} days of inventory remaining.\n"
-                    f"Impact: ${top_over.get('working_capital_locked', 0.0):,.2f} working capital locked in warehouse overhead.\n"
-                    f"Confidence: {int(top_over.get('confidence_score', 0.85) * 100)}%"
-                )
-            ))
-        else:
-            priorities.append(StrategicPriority(
-                title="Optimize Warehouse Turnover",
-                description="Reason: Slow-moving inventory is below carrying limit threshold (15% per quarter).\nImpact: Clear carrying overhead and free up warehouse shelf capacity.\nConfidence: 90%"
-            ))
-            
-        # Priority 3: Project delay mitigation / operations velocity
-        if delayed_projects:
-            top_proj = delayed_projects[0]
-            priorities.append(StrategicPriority(
-                title=f"Accelerate Project '{top_proj.name}'",
-                description=(
-                    f"Reason: Progress is lagging at {top_proj.completion_percentage:.1f}% with pending overdue milestones.\n"
-                    f"Impact: Protect client relationship and secure remaining contract value.\n"
-                    f"Confidence: 90%"
-                )
-            ))
-        else:
-            priorities.append(StrategicPriority(
-                title="Review Supplier Lead Times",
-                description="Reason: Standard supply chain routes are operating within normal variance (14-day average).\nImpact: Maintain shipment buffer and align delivery schedules.\nConfidence: 85%"
-            ))
-
         low_stock_count = len(low_stock)
         overstock_count = len(overstock)
         total_rev_at_risk = sum(x.get("revenue_at_risk", 0.0) for x in low_stock)
         total_capital_locked = sum(x.get("working_capital_locked", 0.0) for x in overstock)
-        
-        summary = (
-            f"EVE AI Board (Deterministic Synthesis): Checked business health indicators (Score: {score}/100, Status: {status.upper()}). "
-            f"Detected {low_stock_count} low-stock SKU(s) (Revenue at Risk: ${total_rev_at_risk:,.2f}) and {overstock_count} slow-moving SKU(s) (Locked Capital: ${total_capital_locked:,.2f}). "
-            f"Recommended strategy is to trigger reorders for stockout items and launch promotional liquidations for dead inventory."
-        )
-        
-        expected_impact = f"Mitigate stockout risks to save up to ${total_rev_at_risk:,.2f} in revenue and free up ${total_capital_locked:,.2f} in locked capital."
-        findings_by_agent = {"COO Agent": [f"Health Score: {score}", f"Low Stock SKUs: {low_stock_count}", f"Overstock SKUs: {overstock_count}"]}
-        recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
-        confidence_scores = {"Overall": 0.90}
 
+        priorities = []
+        
+        # Determine specific query intent for custom executive narrative
+        if any(kw in q_lower for kw in ["bottleneck", "delay", "supply chain", "delivery", "supplier", "lead time", "velocity", "late", "slow"]):
+            # Supply Chain Bottlenecks Intent
+            if low_stock:
+                top_low = low_stock[0]
+                summary = (
+                    f"**Supply Chain Bottleneck Alert**: Standard procurement lead times (averaging 14 days) are currently failing to absorb velocity spikes on key active lines. "
+                    f"Specifically, SKU **{top_low['sku']}** is at critical risk of stockout in **{int(top_low.get('days_until_stockout', 0))} days** due to a daily sales velocity of {top_low.get('avg_daily_sales', 0.0):.2f} units/day. "
+                    f"If untreated, this bottleneck directly threatens **${top_low.get('revenue_at_risk', 0.0):,.2f} in revenue** due to fulfillment disruptions."
+                )
+                priorities = [
+                    StrategicPriority(
+                        title=f"Expedite SKU {top_low['sku']} Replenishment",
+                        description=(
+                            f"Reason: Current stock on hand ({int(top_low.get('stock_on_hand', 0))}) is below safety threshold ({int(top_low.get('safety_stock', 0))}) with {int(top_low.get('days_until_stockout', 0))} days remaining.\n"
+                            f"Impact: Bypass standard 14-day lead time to secure ${top_low.get('revenue_at_risk', 0.0):,.2f} at risk.\n"
+                            f"Confidence: 95%"
+                        )
+                    )
+                ]
+            else:
+                summary = (
+                    "**Supply Chain Health**: All major supply chain routes are operating within normal tolerances. No immediate SKU-level bottlenecks are active. "
+                    "Recommend setting standard safety stock parameters to maintain 14 days of inventory buffer across all items."
+                )
+                priorities = [
+                    StrategicPriority(
+                        title="Anchor Safety Stock Parameters",
+                        description="Reason: Current inventory levels are healthy across catalog.\nImpact: Standardize buffers at 14 days of average sales volume.\nConfidence: 90%"
+                    )
+                ]
+                
+            if overstock:
+                top_over = overstock[0]
+                priorities.append(StrategicPriority(
+                    title=f"Clear Dead Inventory SKU {top_over['sku']}",
+                    description=(
+                        f"Reason: Slow-moving stock ({int(top_over.get('days_until_stockout', 999))} days of inventory remaining) is congesting warehouse shelf space.\n"
+                        f"Impact: Free up carrying overhead and release ${top_over.get('working_capital_locked', 0.0):,.2f} in locked capital.\n"
+                        f"Confidence: 85%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Audit Warehouse Capacity",
+                    description="Reason: Warehouse turnover rates are within normal variance.\nImpact: Clear shelf capacity for upcoming seasonal lines.\nConfidence: 80%"
+                ))
+                
+            if delayed_projects:
+                top_proj = delayed_projects[0]
+                priorities.append(StrategicPriority(
+                    title=f"Resolve Milestone Bottleneck: {top_proj.name}",
+                    description=(
+                        f"Reason: Project progress has stalled at {top_proj.completion_percentage:.1f}% with overdue deliverables.\n"
+                        f"Impact: Protect client delivery deadlines and retain service revenues.\n"
+                        f"Confidence: 90%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Monitor Delivery Milestones",
+                    description="Reason: Standard client projects are proceeding on schedule.\nImpact: Align dev capacity with active contracts.\nConfidence: 85%"
+                ))
+
+            expected_impact = f"Bypass lead-time constraints to resolve SKU bottlenecks and protect active order volumes."
+            findings_by_agent = {"COO Agent": ["Supply chain capacity variance", f"Low stock SKU alerts: {len(low_stock)}"]}
+            recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
+            confidence_scores = {"Overall": 0.92}
+
+        elif any(kw in q_lower for kw in ["profit", "margin", "cost", "expense", "pricing", "hurt", "loss", "cogs", "profitable", "revenue"]):
+            # Profitability / Financial Leakage Intent
+            revenue = overview.get("revenue", 0.0)
+            expenses = overview.get("expenses", 0.0)
+            profit = overview.get("profit", 0.0)
+            margin = (profit / revenue * 100.0) if revenue > 0 else 0.0
+            
+            summary = (
+                f"**Profitability & Cost Analysis**: The business net profit margin currently stands at **{margin:.1f}%** on gross revenue of **${revenue:,.2f}**. "
+                f"Operational leakage is primarily driven by carrying costs of slow-moving inventory and project resource overallocation."
+            )
+            
+            priorities = []
+            if overstock:
+                top_over = overstock[0]
+                priorities.append(StrategicPriority(
+                    title=f"Liquidate Low-Margin SKU {top_over['sku']}",
+                    description=(
+                        f"Reason: Dead capital lockup of ${top_over.get('working_capital_locked', 0.0):,.2f} with excessive carrying costs (congested for {int(top_over.get('days_until_stockout', 999))} days).\n"
+                        f"Impact: Improve warehouse cost structure and recover working capital.\n"
+                        f"Confidence: 90%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Optimize Vendor Carrying Fees",
+                    description="Reason: Carrying costs are within standard threshold.\nImpact: Retain 5-10% net margin buffer.\nConfidence: 85%"
+                ))
+                
+            if low_stock:
+                top_low = low_stock[0]
+                priorities.append(StrategicPriority(
+                    title=f"Protect High-Margin SKU {top_low['sku']}",
+                    description=(
+                        f"Reason: Impending stockout in {int(top_low.get('days_until_stockout', 0))} days on high-velocity revenue generator.\n"
+                        f"Impact: Prevent loss of ${top_low.get('revenue_at_risk', 0.0):,.2f} in gross margins.\n"
+                        f"Confidence: 95%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Review Pricing Elasticity",
+                    description="Reason: No critical margin leaks detected on stockout items.\nImpact: Adjust unit pricing to maximize margin.\nConfidence: 80%"
+                ))
+                
+            if delayed_projects:
+                top_proj = delayed_projects[0]
+                priorities.append(StrategicPriority(
+                    title=f"Stop Cost Overruns on '{top_proj.name}'",
+                    description=(
+                        f"Reason: Completion rate is {top_proj.completion_percentage:.1f}% while operational resources remain allocated past schedule.\n"
+                        f"Impact: Recover resource capacity to protect project margins.\n"
+                        f"Confidence: 90%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Audit Team Resource Efficiency",
+                    description="Reason: Developer billing rates align with projections.\nImpact: Maintain overhead containment targets.\nConfidence: 85%"
+                ))
+
+            expected_impact = f"Optimize capital efficiency to lift monthly net margins by up to 5%."
+            findings_by_agent = {"COO Agent": [f"Profit Margin: {margin:.1f}%", f"Overstock capital lockup: ${total_capital_locked:,.2f}"]}
+            recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
+            confidence_scores = {"Overall": 0.94}
+
+        elif any(kw in q_lower for kw in ["inventory", "stock", "sku", "reorder", "stockout", "safety stock", "warehouse", "aging", "overstock", "dead stock"]):
+            # Inventory Health & Stockout Risks
+            low_stock_count = len(low_stock)
+            overstock_count = len(overstock)
+            total_rev_at_risk = sum(x.get("revenue_at_risk", 0.0) for x in low_stock)
+            total_capital_locked = sum(x.get("working_capital_locked", 0.0) for x in overstock)
+            
+            summary = (
+                f"**Inventory Health Brief**: Detected **{low_stock_count} SKU(s)** below safety reorder points and **{overstock_count} slow-moving SKU(s)**. "
+                f"Total revenue at risk due to impending stockouts is **${total_rev_at_risk:,.2f}**, while slow-moving lines lock up **${total_capital_locked:,.2f}** in dead working capital."
+            )
+            
+            priorities = []
+            if low_stock:
+                top_low = low_stock[0]
+                priorities.append(StrategicPriority(
+                    title=f"Reorder SKU {top_low['sku']} Immediately",
+                    description=(
+                        f"Reason: Stockout in {int(top_low.get('days_until_stockout', 0))} days with sales velocity of {top_low.get('avg_daily_sales', 0.0):.2f} units/day.\n"
+                        f"Impact: Prevent gross revenue loss of ${top_low.get('revenue_at_risk', 0.0):,.2f}.\n"
+                        f"Confidence: 95%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Maintain Standard Reorder Trigger",
+                    description="Reason: Current catalogs are stocked above safety limits.\nImpact: Retain listing search rankings.\nConfidence: 90%"
+                ))
+                
+            if overstock:
+                top_over = overstock[0]
+                priorities.append(StrategicPriority(
+                    title=f"Liquidate Slow SKU {top_over['sku']}",
+                    description=(
+                        f"Reason: Carrying slow-moving units with {int(top_over.get('days_until_stockout', 999))} days of inventory remaining.\n"
+                        f"Impact: Recover ${top_over.get('working_capital_locked', 0.0):,.2f} in locked capital.\n"
+                        f"Confidence: 85%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Review Inventory Turnover",
+                    description="Reason: Dead stock ratio is within safe parameters.\nImpact: Optimize warehouse storage capacity.\nConfidence: 85%"
+                ))
+                
+            priorities.append(StrategicPriority(
+                title="Verify Supplier Lead Times",
+                description="Reason: Align purchase ordering schedules with 14-day standard lead times.\nImpact: Establish safety buffer to mitigate supplier dispatch delays.\nConfidence: 80%"
+            ))
+
+            expected_impact = f"Free up storage capacity and reduce overall stockout revenue exposure to $0.00."
+            findings_by_agent = {"COO Agent": [f"Low stock count: {low_stock_count}", f"Revenue-at-risk: ${total_rev_at_risk:,.2f}"]}
+            recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
+            confidence_scores = {"Overall": 0.90}
+
+        else:
+            # Default General Strategic Overview
+            completed_tasks = overview.get("completed_tasks", 0)
+            total_tasks = overview.get("total_tasks", 0)
+            
+            summary = (
+                f"**General Strategic Briefing**: Business health score stands at **{score}/100** (Status: {status.upper()}). "
+                f"Our primary objective this week is to clear project blockers and protect active inventory margins."
+            )
+            
+            priorities = []
+            if low_stock:
+                top_low = low_stock[0]
+                priorities.append(StrategicPriority(
+                    title=f"Resolve Stockout Risk on SKU {top_low['sku']}",
+                    description=(
+                        f"Reason: projected stockout in {int(top_low.get('days_until_stockout', 0))} days.\n"
+                        f"Impact: Protect ${top_low.get('revenue_at_risk', 0.0):,.2f} in active sales velocity.\n"
+                        f"Confidence: 95%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Maintain Catalog Velocity",
+                    description="Reason: No critical SKU stockouts detected.\nImpact: Standardize reorder safety margins.\nConfidence: 90%"
+                ))
+                
+            if delayed_projects:
+                top_proj = delayed_projects[0]
+                priorities.append(StrategicPriority(
+                    title=f"Accelerate LAG Project '{top_proj.name}'",
+                    description=(
+                        f"Reason: Blocked at {top_proj.completion_percentage:.1f}% completion rate.\n"
+                        f"Impact: Complete backlog and invoice client contract value.\n"
+                        f"Confidence: 90%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Monitor Project Backlog",
+                    description="Reason: Task delivery velocity is currently stable.\nImpact: Retain developer capacity utilization.\nConfidence: 85%"
+                ))
+                
+            priorities.append(StrategicPriority(
+                title="Review Capital Allocation",
+                description="Reason: Maintain net profit margins above target thresholds.\nImpact: Retain net business health scoring above 80/100.\nConfidence: 85%"
+            ))
+
+            expected_impact = f"Mitigate stockout risks and lift general business health score from {score} back above 80."
+            findings_by_agent = {"COO Agent": [f"Health Score: {score}", f"Active risks: {len(risks)}"]}
+            recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
+            confidence_scores = {"Overall": 0.88}
+        
         fallback_res = ExecutiveSynthesisResult(
             agent="COO Lead",
             summary=summary,
