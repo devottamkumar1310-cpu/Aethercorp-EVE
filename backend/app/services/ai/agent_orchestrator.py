@@ -1,7 +1,11 @@
 import uuid
 import re
 import time
+import logging
+import asyncio
 from typing import Optional
+
+logger = logging.getLogger("eve.services.ai.agent_orchestrator")
 from sqlalchemy.orm import Session
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
 from app.schemas.executive import ExecutiveSynthesisResult
@@ -548,16 +552,44 @@ class AgentOrchestrator:
             
         reports_block = "\n".join(sub_agent_reports)
 
-        prompt = f"""
-        User Question/Goal: {question}
+        # If Gemini is in mock mode or has exhausted credits, fall back to local deterministic stream
+        if self.gemini_service.mock_mode:
+            logger.info("Gemini is in mock/depleted mode. Generating database-backed deterministic stream.")
+            coo_result = self.board.generate_deterministic_fallback(db, org_id, question)
+            
+            from app.schemas.executive import StrategicPriority
+            
+            # Format high-quality, professional data-driven markdown message
+            markdown_content = f"### 📊 Business Health Analysis\n{coo_result.summary}\n\n### 📑 Strategic Priorities\n"
+            if coo_result.priorities:
+                for idx, pri in enumerate(coo_result.priorities, 1):
+                    # Replace newline characters with indentation for clean markdown nesting
+                    desc_indented = pri.description.replace("\n", "\n  ")
+                    markdown_content += f"\n* **Priority {idx}: {pri.title}**\n  {desc_indented}\n"
+            else:
+                markdown_content += "\n*No strategic priorities required based on current catalog variables.*"
+                
+            markdown_content += f"\n### 📈 Expected Impact\n{coo_result.expected_impact}"
+            markdown_content += "\n\n*Note: EVE is running in local deterministic reasoning mode (AI service offline).* "
+            
+            # Stream the generated content chunk by chunk
+            for i in range(0, len(markdown_content), 10):
+                chunk = markdown_content[i:i+10]
+                yield json.dumps({"type": "token", "content": chunk}) + "\n"
+                await asyncio.sleep(0.01)
+                
+            # Save assistant message to database for future retrieval and UI snapshot panel sync
+            assistant_msg = ExecutiveMessage(
+                conversation_id=conversation.id,
+                role="assistant",
+                content=markdown_content,
+                agent_data=coo_result.model_dump()
+            )
+            db.add(assistant_msg)
+            db.commit()
+            yield json.dumps({"type": "done"}) + "\n"
+            return
         
-        Current Overall Business Health & Goals:
-        {context_block}
-        
-        Reports from Specialized Sub-Agents:
-        {reports_block or "No specialized sub-agent analysis executed for this query."}
-        """
-
         full_content = []
         async for chunk in self.gemini_service.generate_text_stream(
             prompt=prompt,
