@@ -170,8 +170,8 @@ class GeminiService:
                     raise GeminiOutageError("Gemini request timed out after maximum retries.", status_code=504)
             except Exception as e:
                 logger.error(f"Gemini generate_text failed on attempt {attempt+1}/{retries}: {e}")
-                if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
-                    logger.warning("Invalid API key detected during generate_text. Switching to mock mode.")
+                if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e) or "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    logger.warning("Invalid API key or exhausted credits detected during generate_text. Switching to mock mode.")
                     self.mock_mode = True
                     return "Insufficient business data available for analysis."
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
@@ -234,7 +234,7 @@ class GeminiService:
 
             except Exception as e:
                 logger.error(f"Gemini generate_text_stream failed on attempt {attempt+1}/{retries}: {e}")
-                if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
+                if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e) or "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                     self.mock_mode = True
                     yield "Insufficient business data available for analysis."
                     return
@@ -311,8 +311,8 @@ class GeminiService:
                     raise GeminiOutageError("Gemini structured request timed out after maximum retries.", status_code=504)
             except Exception as e:
                 logger.error(f"Gemini generate_structured_response failed on attempt {attempt+1}/{retries}: {e}")
-                if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
-                    logger.warning("Invalid API key detected during generate_structured_response. Switching to mock mode.")
+                if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e) or "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                    logger.warning("Invalid API key or exhausted credits detected during generate_structured_response. Switching to mock mode.")
                     self.mock_mode = True
                     return self._generate_mock_structured(response_schema, prompt)
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
