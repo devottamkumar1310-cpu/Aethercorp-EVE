@@ -1296,7 +1296,7 @@ class ExecutiveFormatter:
         facts_text = "\n".join([f"- {fact}" for fact in facts_list])
 
         # Construct structured markdown output separating facts, interpretation, and recommendations
-        exec_summary = clean_summary[:180] + "..." if len(clean_summary) > 180 else clean_summary
+        exec_summary = clean_summary
         reason_text = "Synthesized from executive board analysis across queried database records."
         impact_text = synthesis.expected_impact or "Optimized operational efficiency and risk mitigation."
 

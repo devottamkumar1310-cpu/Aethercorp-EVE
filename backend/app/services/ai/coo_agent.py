@@ -41,9 +41,30 @@ class COOAgent:
         if goals is None:
             goals = get_memory_context(db, org_id)
         
+        # Fetch inventory intelligence context
+        inventory_intel = None
+        try:
+            from app.services.analytics_service import AnalyticsService
+            inv_analysis = AnalyticsService.get_inventory_analysis(db, org_id)
+            items_at_risk = inv_analysis.get("items_at_risk", [])
+            rev_at_risk = sum(item.get("revenue_at_risk", 0.0) for item in items_at_risk)
+            capital_locked = sum(item.get("working_capital_locked", 0.0) for item in items_at_risk)
+            inventory_intel = {
+                "business_health_score": inv_analysis.get("business_health_score", 80),
+                "revenue_at_risk": rev_at_risk,
+                "working_capital_locked": capital_locked,
+                "stockout_skus": inv_analysis.get("out_of_stock_skus", 0) + inv_analysis.get("low_stock_skus", 0),
+                "top_actions": inv_analysis.get("top_actions", []),
+                "risk_count": len(inv_analysis.get("top_risks", [])),
+                "opportunity_count": len(inv_analysis.get("top_opportunities", []))
+            }
+        except Exception:
+            pass
+
         context_block = build_context_block(
             health=health,
-            goals=goals
+            goals=goals,
+            inventory_intel=inventory_intel
         )
         
         sub_agent_reports = []
@@ -100,6 +121,22 @@ class COOAgent:
             agent_name="coo"
         )
         
+        # Extract metadata metrics from inventory_intel
+        risk_count = 0
+        opportunity_count = 0
+        revenue_at_risk = 0.0
+        working_capital_locked = 0.0
+        business_health_score = 80
+        
+        if inventory_intel:
+            risk_count = inventory_intel["risk_count"]
+            opportunity_count = inventory_intel["opportunity_count"]
+            revenue_at_risk = inventory_intel["revenue_at_risk"]
+            working_capital_locked = inventory_intel["working_capital_locked"]
+            business_health_score = inventory_intel["business_health_score"]
+        else:
+            business_health_score = int(health.get("score", 80)) if health else 80
+
         result = ExecutiveSynthesisResult(
             agent=gemini_result.agent,
             summary=gemini_result.summary,
@@ -107,6 +144,13 @@ class COOAgent:
             expected_impact=gemini_result.expected_impact,
             findings_by_agent={},
             recommendations_by_agent={},
-            confidence_scores={}
+            confidence_scores={},
+            evidence_used={
+                "business_health_score": business_health_score,
+                "risk_count": risk_count,
+                "opportunity_count": opportunity_count,
+                "revenue_at_risk": revenue_at_risk,
+                "working_capital_locked": working_capital_locked
+            }
         )
         return result

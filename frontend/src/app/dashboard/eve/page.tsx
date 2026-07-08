@@ -1184,8 +1184,229 @@ export default function EVECoocommandCenter() {
           </div>
         </div>
 
+        {/* Executive Snapshot Compact Card */}
+        {isInsightsOpen && (
+          <div className="mx-6 mt-4 p-4 bg-indigo-950/20 border border-indigo-500/25 rounded-2xl space-y-3.5 shadow-xl transition-all duration-300 animate-fade-in flex flex-col relative overflow-hidden backdrop-blur-md">
+            {/* Ambient glowing effect */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex items-center justify-between border-b border-indigo-500/10 pb-2.5 z-10">
+              <div className="flex items-center gap-2">
+                <Sparkles size={15} className="text-indigo-450 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">
+                  Executive Snapshot
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedReasoning?.confidence_category && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
+                    selectedReasoning.confidence_category === "High Confidence"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : selectedReasoning.confidence_category === "Medium Confidence"
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      : "bg-rose-500/10 text-rose-450 border-rose-500/20"
+                  }`}>
+                    {selectedReasoning.confidence_category}
+                  </span>
+                )}
+                {selectedReasoning?.risk_classification && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
+                    selectedReasoning.risk_classification === "Low Risk"
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                  }`}>
+                    {selectedReasoning.risk_classification}
+                  </span>
+                )}
+                <button
+                  onClick={() => setIsInsightsOpen(false)}
+                  className="p-1 hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-300 rounded-lg transition-all cursor-pointer"
+                  title="Collapse Panel"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            </div>
+
+            {selectedReasoning ? (
+              /* Intelligence-Driven Snapshot from LLM */
+              <div className="space-y-3.5 z-10 text-xs">
+                {/* Executive metrics row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
+                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Business Health</span>
+                    <span className="text-sm font-bold text-indigo-300">
+                      {selectedReasoning.evidence_used?.business_health_score || 80}/100
+                    </span>
+                  </div>
+                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
+                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Top Risks</span>
+                    <span className="text-sm font-bold text-rose-400">
+                      {selectedReasoning.evidence_used?.risk_count || 0}
+                    </span>
+                  </div>
+                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
+                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Opportunities</span>
+                    <span className="text-sm font-bold text-emerald-400">
+                      {selectedReasoning.evidence_used?.opportunity_count || 0}
+                    </span>
+                  </div>
+                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
+                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Revenue at Risk</span>
+                    <span className="text-sm font-bold text-foreground">
+                      ${selectedReasoning.evidence_used?.revenue_at_risk?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Capital locked sub-badge */}
+                {selectedReasoning.evidence_used?.working_capital_locked > 0 && (
+                  <div className="text-[9.5px] text-muted-foreground bg-background/30 px-3 py-1.5 rounded-lg border border-indigo-500/10 flex items-center justify-between">
+                    <span>Working capital locked in slow-moving stock:</span>
+                    <span className="font-bold text-foreground">
+                      ${selectedReasoning.evidence_used?.working_capital_locked?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Strategic Priorities */}
+                  <div className="space-y-2 md:col-span-2">
+                    <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">
+                      Strategic Priorities
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {selectedReasoning.priorities && selectedReasoning.priorities.length > 0 ? (
+                        selectedReasoning.priorities.map((pri: any, idx: number) => (
+                          <div key={idx} className="p-2.5 bg-background/40 border border-indigo-500/10 rounded-xl space-y-1">
+                            <span className="font-bold text-indigo-300 block text-[11px]">
+                              {idx + 1}. {pri.title}
+                            </span>
+                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                              {pri.description}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground italic">No strategic priorities required.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Expected Impact */}
+                  <div className="space-y-2 flex flex-col justify-between">
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">
+                        Expected Impact
+                      </span>
+                      <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex-grow">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                          {selectedReasoning.expected_impact || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Conflict Warning & Resolution (if any) */}
+                {selectedReasoning.detected_conflicts && selectedReasoning.detected_conflicts.length > 0 && (
+                  <div className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-2 text-[10px]">
+                    <ShieldAlert size={14} className="text-amber-400 shrink-0 mt-0.5" />
+                    <div className="space-y-0.5">
+                      <span className="font-bold text-amber-300 block">Conflict Detected & Resolved:</span>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {selectedReasoning.trade_off_analysis || selectedReasoning.detected_conflicts.join("; ")}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Fallback Baseline Snapshot: Workspace Overview */
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs z-10">
+                {/* Workspace Health & Financials */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block flex items-center gap-1">
+                    <Coins size={11} className="text-indigo-400" /> Capital & Profit Buffer
+                  </span>
+                  
+                  {overview?.profit === 0 && overview?.revenue === 0 ? (
+                    <div className="p-3.5 bg-indigo-950/30 border border-indigo-500/10 rounded-xl text-center space-y-1">
+                      <span className="text-[9.5px] text-indigo-300 block font-semibold">Workspace Empty</span>
+                      <p className="text-[8.5px] text-muted-foreground leading-normal">
+                        Upload sales & inventory data to unlock executive insights.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2.5 p-3 bg-background/40 border border-indigo-500/10 rounded-xl">
+                      <div>
+                        <span className="text-[9px] text-muted-foreground block">Total Profit</span>
+                        <span className="text-xs font-bold text-foreground">
+                          ${overview?.profit?.toLocaleString() || "0"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-muted-foreground block">Gross Revenue</span>
+                        <span className="text-xs font-bold text-foreground">
+                          ${overview?.revenue?.toLocaleString() || "0"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Active Risks */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">
+                    Active Risks
+                  </span>
+                  <div className="space-y-1.5 max-h-24 overflow-y-auto scrollbar-none">
+                    {risks.length > 0 ? (
+                      risks.map((risk, idx) => (
+                        <div 
+                          key={idx} 
+                          onClick={() => handleSendChat(`Address and mitigate this risk: ${risk.description}`)}
+                          className="p-2 bg-rose-500/5 border border-rose-500/10 hover:border-rose-500/35 hover:bg-rose-500/10 rounded-lg flex items-start gap-1.5 text-[10px] cursor-pointer transition-all group"
+                        >
+                          <ShieldAlert size={12} className="text-rose-450 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-muted-foreground leading-normal line-clamp-2 group-hover:text-foreground">{risk.description}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[10px] text-slate-500 italic">No critical risks active. Seed data to analyze.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Active Opportunities */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">
+                    Opportunities
+                  </span>
+                  <div className="space-y-1.5 max-h-24 overflow-y-auto scrollbar-none">
+                    {opportunities.length > 0 ? (
+                      opportunities.map((opp, idx) => (
+                        <div 
+                          key={idx} 
+                          onClick={() => handleSendChat(`Analyze and execute opportunity: ${opp.description}`)}
+                          className="p-2 bg-emerald-500/5 border border-emerald-500/10 hover:border-emerald-500/35 hover:bg-emerald-500/10 rounded-lg flex items-start gap-1.5 text-[10px] cursor-pointer transition-all group"
+                        >
+                          <Lightbulb size={12} className="text-emerald-450 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                          <span className="text-muted-foreground leading-normal line-clamp-2 group-hover:text-foreground">{opp.description}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-[10px] text-slate-500 italic">No opportunities flagged. Seed data to scan.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Conversation history area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-background/20 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-4 px-5 space-y-3.5 bg-background/20 scrollbar-thin">
             {messages.map((msg) => {
               const isAssistant = msg.role === "assistant";
               const agentData = msg.agent_data as any;
@@ -1237,7 +1458,7 @@ export default function EVECoocommandCenter() {
                     <div className={`text-sm leading-relaxed space-y-2.5 ${
  isAssistant 
  ? "bg-transparent text-foreground border-none shadow-none px-1 py-0" 
- : "bg-indigo-600/10 text-indigo-100 border border-indigo-500/15 px-4.5 py-3 rounded-2xl shadow-sm"
+ : "bg-indigo-600/10 text-indigo-100 border border-indigo-500/15 px-3.5 py-2 rounded-2xl shadow-sm"
  }`}>
                       {isAssistant ? (
                         <>
@@ -1721,165 +1942,6 @@ export default function EVECoocommandCenter() {
             </p>
           </div>
         </div>
-
-      {/* Mobile Insights Backdrop */}
-      {isInsightsOpen && (
-        <div 
-          className="fixed inset-0 bg-background z-40 xl:hidden transition-opacity duration-300"
-          onClick={() => setIsInsightsOpen(false)}
-        />
-      )}
-
-      {/* Column 2: Right-hand Executive Snapshot Panel */}
-      <div className={`fixed inset-y-0 right-0 z-50 h-full w-72 border-l border-border bg-card rounded-l-2xl rounded-r-none transform transition-all duration-300 ease-in-out xl:relative xl:translate-x-0 xl:z-0 xl:border xl:rounded-2xl xl:shadow-lg xl:flex xl:flex-col xl:gap-4 xl:flex-shrink-0 xl:overflow-hidden ${
- isInsightsOpen 
- ? "translate-x-0 p-4 opacity-100" 
- : "translate-x-full xl:translate-x-0 xl:w-0 xl:p-0 xl:border-0 xl:opacity-0 xl:pointer-events-none"
- }`}>
-        <div className="flex items-center justify-between border-b border-border pb-3 flex-shrink-0">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles size={14} className="text-indigo-400 animate-pulse" /> Executive Snapshot
-          </h3>
-          <button
-            onClick={() => setIsInsightsOpen(false)}
-            className="p-1 hover:bg-muted text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer text-xs"
-            title="Collapse Panel"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        <div className="flex-grow overflow-y-auto space-y-5 pr-0.5 scrollbar-none pb-8">
-          {/* Working Capital & Profit Buffer */}
-          <div className="bg-background/40 border border-border p-4 rounded-xl space-y-3">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block flex items-center gap-1.5">
-              <Coins size={11} className="text-indigo-400" /> Capital & Profit Buffer
-            </span>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <span className="text-[10px] text-muted-foreground block">Total Profit</span>
-                <span className="text-sm font-bold text-foreground">${overview?.kpis?.profit?.toLocaleString() || "0"}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-muted-foreground block">Gross Revenue</span>
-                <span className="text-sm font-bold text-foreground">${overview?.kpis?.revenue?.toLocaleString() || "0"}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Decision Center Header */}
-          <div className="pt-2 border-t border-border/80">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider block">Decision Center</span>
-          </div>
-
-          {/* Active Risks */}
-          <div className="space-y-2">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Active Risks</span>
-            <div className="space-y-2">
-              {risks.length > 0 ? (
-                risks.map((risk, idx) => (
-                  <div key={idx} className="p-3 bg-rose-500/5 border border-rose-500/10 rounded-xl text-xs space-y-2">
-                    <div className="flex gap-2">
-                      <ShieldAlert size={14} className="text-rose-450 shrink-0 mt-0.5" />
-                      <span className="text-slate-350 font-medium leading-relaxed">{risk.description}</span>
-                    </div>
-                    <button
-                      onClick={() => handleSendChat(`Address and mitigate this risk: ${risk.description}`)}
-                      className="w-full py-1 px-2.5 bg-rose-950/50 hover:bg-rose-900/60 text-rose-350 hover:text-foreground rounded border border-rose-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Play size={10} /> Mitigate Risk
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-[10px] text-slate-550 italic">No critical risks active.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Active Opportunities */}
-          <div className="space-y-2">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Opportunities</span>
-            <div className="space-y-2">
-              {opportunities.length > 0 ? (
-                opportunities.map((opp, idx) => (
-                  <div key={idx} className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-xs space-y-2">
-                    <div className="flex gap-2">
-                      <Lightbulb size={14} className="text-emerald-450 shrink-0 mt-0.5" />
-                      <span className="text-slate-350 font-medium leading-relaxed">{opp.description}</span>
-                    </div>
-                    <button
-                      onClick={() => handleSendChat(`Analyze and execute opportunity: ${opp.description}`)}
-                      className="w-full py-1 px-2.5 bg-emerald-950/50 hover:bg-emerald-900/60 text-emerald-350 hover:text-foreground rounded border border-emerald-500/20 transition-all text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Play size={10} /> Capture Opportunity
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <p className="text-[10px] text-slate-555 italic">No strategic opportunities flagged.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Recommended Actions (Action Triggers) */}
-          <div className="space-y-2 pt-1 border-t border-border/80">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Recommended Actions</span>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => handleSendChat("Run replenishment analysis for out-of-stock items and check safety stock levels")}
-                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
-              >
-                <span>Run Replenishment Analysis</span>
-                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={() => handleSendChat("Analyze margin risk and trace operational profit leaks")}
-                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
-              >
-                <span>Analyze Margin Risk</span>
-                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={() => handleSendChat("Review dead stock inventory and outline liquidation path")}
-                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
-              >
-                <span>Review Dead Stock</span>
-                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={() => handleSendChat("Generate pricing recommendations based on inventory turnover rates")}
-                className="w-full py-2 px-3 bg-muted hover:bg-slate-750 text-foreground border border-border/60 rounded-xl text-left text-[11px] font-semibold flex items-center justify-between cursor-pointer group"
-              >
-                <span>Generate Pricing Recommendations</span>
-                <ArrowRight size={12} className="text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-          {/* Dynamic Suggested Queries */}
-          <div className="space-y-4 pt-3 border-t border-border/80">
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Suggested Context Queries</span>
-            {getDynamicSuggestions().map((group, gIdx) => (
-              <div key={gIdx} className="space-y-1.5">
-                <span className="text-[9px] font-bold text-indigo-400/90 uppercase tracking-wider block">{group.category}</span>
-                <div className="flex flex-col gap-1.5">
-                  {group.questions.map((q, qIdx) => (
-                    <button
-                      key={qIdx}
-                      onClick={() => handleSendChat(q)}
-                      disabled={chatLoading}
-                      className="text-left text-[11px] bg-background/80 hover:bg-background border border-border p-2.5 rounded-lg text-muted-foreground hover:text-foreground transition-all cursor-pointer disabled:opacity-50"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Render Daily Brief Modal */}
       <DailyBriefModal 
