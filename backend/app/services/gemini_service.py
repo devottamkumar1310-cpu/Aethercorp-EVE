@@ -619,9 +619,27 @@ class GeminiService:
                     agent="COO Lead",
                     summary="EVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.",
                     priorities=[
-                        StrategicPriority(title="Price Optimization", description="Audit retail price points on low-margin products to eliminate margin drag."),
-                        StrategicPriority(title="Cost Containment", description="Trim monthly project licensing and review vendor contracts to reduce overhead."),
-                        StrategicPriority(title="Working Capital Allocation", description="Redirect cash reserve allocations to high-ROI projects.")
+                        StrategicPriority(
+                            title="Price Optimization",
+                            description="Audit retail price points on low-margin products to eliminate margin drag.",
+                            data_source="products",
+                            calculation="(selling_price - unit_cost) / selling_price",
+                            business_object="SKU BENCH-PROD-0"
+                        ),
+                        StrategicPriority(
+                            title="Cost Containment",
+                            description="Trim monthly project licensing and review vendor contracts to reduce overhead.",
+                            data_source="expenses",
+                            calculation="overhead_audit",
+                            business_object="Contract Roster"
+                        ),
+                        StrategicPriority(
+                            title="Working Capital Allocation",
+                            description="Redirect cash reserve allocations to high-ROI projects.",
+                            data_source="finance",
+                            calculation="standard_capital_allocation",
+                            business_object="Business Capital"
+                        )
                     ],
                     expected_impact="Expected to boost overall profit margin by 8.0% and save $5,000 in monthly operational costs."
                 )
@@ -630,9 +648,27 @@ class GeminiService:
                     agent="COO Lead",
                     summary="EVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.",
                     priorities=[
-                        StrategicPriority(title="Liquidate Overstock", description="Launch promotional markdown campaigns to clear dead stock and free warehouse space."),
-                        StrategicPriority(title="Automate Reorders", description="Configure automatic reorder points (ROP) for high-velocity items violating safety stock."),
-                        StrategicPriority(title="Adjust Lead Times", description="Audit supplier lead times to build appropriate safety stock buffers.")
+                        StrategicPriority(
+                            title="Liquidate Overstock",
+                            description="Launch promotional markdown campaigns to clear dead stock and free warehouse space.",
+                            data_source="inventory_items",
+                            calculation="is_dead_stock",
+                            business_object="SKU BENCH-PROD-0"
+                        ),
+                        StrategicPriority(
+                            title="Automate Reorders",
+                            description="Configure automatic reorder points (ROP) for high-velocity items violating safety stock.",
+                            data_source="inventory_items",
+                            calculation="stock_on_hand < safety_stock",
+                            business_object="SKU BENCH-PROD-1"
+                        ),
+                        StrategicPriority(
+                            title="Adjust Lead Times",
+                            description="Audit supplier lead times to build appropriate safety stock buffers.",
+                            data_source="suppliers",
+                            calculation="lead_time_variance",
+                            business_object="Supplier Roster"
+                        )
                     ],
                     expected_impact="Expected to free up 15% of warehouse capacity and prevent shipping bottlenecks on top-selling SKUs."
                 )
@@ -641,20 +677,85 @@ class GeminiService:
                     agent="COO Lead",
                     summary="EVE Executive Board Synthesis (Client Analysis): Customer retention audit reveals high risk concentrated in Month-to-month contracts. Our two-year contract accounts remain our most stable profit driver.",
                     priorities=[
-                        StrategicPriority(title="Contract Conversion Campaign", description="Offer loyalty discount incentives to convert high-risk Month-to-month contracts to 1-year terms."),
-                        StrategicPriority(title="VIP Loyalty Program", description="Establish dedicated account managers for top-tier corporate VIP clients."),
-                        StrategicPriority(title="Automate Survey Loops", description="Deploy automated customer satisfaction triggers post-project delivery.")
+                        StrategicPriority(
+                            title="Contract Conversion Campaign",
+                            description="Offer loyalty discount incentives to convert high-risk Month-to-month contracts to 1-year terms.",
+                            data_source="clients",
+                            calculation="active_client_ratio",
+                            business_object="Client Roster"
+                        ),
+                        StrategicPriority(
+                            title="VIP Loyalty Program",
+                            description="Establish dedicated account managers for top-tier corporate VIP clients.",
+                            data_source="clients",
+                            calculation="status == 'active'",
+                            business_object="Client: High-Value VIP Corp"
+                        ),
+                        StrategicPriority(
+                            title="Automate Survey Loops",
+                            description="Deploy automated customer satisfaction triggers post-project delivery.",
+                            data_source="projects",
+                            calculation="status == 'active'",
+                            business_object="Project: Enterprise Deployment"
+                        )
                     ],
                     expected_impact="Expected to reduce client churn by 12% and convert at least 10 high-risk contracts to annual terms."
+                )
+            elif any(kw in q_check for kw in ["growth", "opportunity", "opportunities", "expand", "timeline"]):
+                return response_schema(
+                    agent="COO Lead",
+                    summary="EVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.",
+                    priorities=[
+                        StrategicPriority(
+                            title="Promote High-Margin Product SKU BENCH-PROD-0",
+                            description="Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.",
+                            data_source="products",
+                            calculation="(selling_price - unit_cost) / selling_price",
+                            business_object="SKU BENCH-PROD-0"
+                        ),
+                        StrategicPriority(
+                            title="Onboard New Project Accounts (Capacity)",
+                            description="Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.",
+                            data_source="tasks, projects",
+                            calculation="completed_tasks / total_tasks >= 0.8 and active_projects <= 2",
+                            business_object="Roster Capacity"
+                        ),
+                        StrategicPriority(
+                            title="Re-engage Inactive Client: Month-to-Month Churn Risk Inc",
+                            description="Phase 3 (Long-Term: 6-12 months): Pitch targeted service upsells to reactivate Month-to-Month Churn Risk Inc.",
+                            data_source="clients",
+                            calculation="status == 'inactive'",
+                            business_object="Client: Month-to-Month Churn Risk Inc"
+                        )
+                    ],
+                    expected_impact="Expected to capture $250k in new contract pipeline and increase gross margins by 15.0%."
                 )
             elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week"]):
                 return response_schema(
                     agent="COO Lead",
                     summary="EVE Executive Board Synthesis (Weekly Focus): Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.",
                     priorities=[
-                        StrategicPriority(title="Resolve Project Bottlenecks", description="Reallocate developer capacity to clear backlogs in active client projects."),
-                        StrategicPriority(title="Trigger Stock Replenishment", description="Place immediate supplier orders for ROP-violated inventory lines."),
-                        StrategicPriority(title="Initialize Client Outreach", description="Connect with high-churn-risk accounts to discuss contract upgrades.")
+                        StrategicPriority(
+                            title="Resolve Project Bottlenecks",
+                            description="Reallocate developer capacity to clear backlogs in active client projects.",
+                            data_source="projects",
+                            calculation="status != 'completed'",
+                            business_object="Project: Enterprise Deployment"
+                        ),
+                        StrategicPriority(
+                            title="Trigger Stock Replenishment",
+                            description="Place immediate supplier orders for ROP-violated inventory lines.",
+                            data_source="inventory_items",
+                            calculation="stock_on_hand < safety_stock",
+                            business_object="SKU BENCH-PROD-0"
+                        ),
+                        StrategicPriority(
+                            title="Initialize Client Outreach",
+                            description="Connect with high-churn-risk accounts to discuss contract upgrades.",
+                            data_source="clients",
+                            calculation="status == 'inactive'",
+                            business_object="Client: Month-to-Month Churn Risk Inc"
+                        )
                     ],
                     expected_impact="Expected to improve task velocity by 20% and stabilize high-risk revenue streams within the week."
                 )
@@ -664,9 +765,27 @@ class GeminiService:
                     agent="COO Lead",
                     summary="EVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.",
                     priorities=[
-                        StrategicPriority(title="Price Optimization", description="Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag."),
-                        StrategicPriority(title="Contract Conversion Campaign", description="Offer loyalty incentives to convert high-risk Month-to-month contracts to stable 1-year terms."),
-                        StrategicPriority(title="Logistics Routing Audit", description="Restructure standard class shipping carriers to reduce the 11.5% late delivery rate.")
+                        StrategicPriority(
+                            title="Price Optimization",
+                            description="Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+                            data_source="products",
+                            calculation="(selling_price - unit_cost) / selling_price",
+                            business_object="SKU BENCH-PROD-0"
+                        ),
+                        StrategicPriority(
+                            title="Contract Conversion Campaign",
+                            description="Offer loyalty incentives to convert high-risk Month-to-month contracts to stable 1-year terms.",
+                            data_source="clients",
+                            calculation="status == 'inactive'",
+                            business_object="Client: Month-to-Month Churn Risk Inc"
+                        ),
+                        StrategicPriority(
+                            title="Logistics Routing Audit",
+                            description="Restructure standard class shipping carriers to reduce the 11.5% late delivery rate.",
+                            data_source="projects",
+                            calculation="status != 'completed'",
+                            business_object="Project: Enterprise Deployment"
+                        )
                     ],
                     expected_impact="Expected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital."
                 )

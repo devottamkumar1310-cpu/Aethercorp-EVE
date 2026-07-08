@@ -97,6 +97,11 @@ class ExecutiveBoard:
                     "run_finance": False, "run_operations": False, "run_inventory": False,
                     "run_client": True, "run_growth": True, "run_forecasting": False
                 }
+            elif resolved_intent == "Growth Query":
+                fast_path_selection = {
+                    "run_finance": True, "run_operations": False, "run_inventory": False,
+                    "run_client": False, "run_growth": True, "run_forecasting": False
+                }
             elif resolved_intent == "Project Query":
                 fast_path_selection = {
                     "run_finance": False, "run_operations": True, "run_inventory": False,
@@ -486,6 +491,9 @@ class ExecutiveBoard:
                 
             synthesis.priorities = priorities[:3]
 
+        # Apply evidence-only audit to synthesis priorities
+        synthesis.priorities = ExecutiveGovernanceValidator.audit_recommendations_evidence(synthesis.priorities, db, org_id)
+
         # Track governance decisions log
         synthesis.governance_decisions = {
             "data_sufficiency": data_state,
@@ -622,7 +630,10 @@ class ExecutiveBoard:
                             f"Reason: Current stock on hand ({int(top_low.get('stock_on_hand', 0))}) is below safety threshold ({int(top_low.get('safety_stock', 0))}) with {int(top_low.get('days_until_stockout', 0))} days remaining.\n"
                             f"Impact: Bypass standard 14-day lead time to secure ${top_low.get('revenue_at_risk', 0.0):,.2f} at risk.\n"
                             f"Confidence: 95%"
-                        )
+                        ),
+                        data_source="inventory_items",
+                        calculation="stock_on_hand < safety_stock",
+                        business_object=f"SKU: {top_low['sku']}"
                     )
                 ]
             else:
@@ -633,7 +644,10 @@ class ExecutiveBoard:
                 priorities = [
                     StrategicPriority(
                         title="Anchor Safety Stock Parameters",
-                        description="Reason: Current inventory levels are healthy across catalog.\nImpact: Standardize buffers at 14 days of average sales volume.\nConfidence: 90%"
+                        description="Reason: Current inventory levels are healthy across catalog.\nImpact: Standardize buffers at 14 days of average sales volume.\nConfidence: 90%",
+                        data_source="inventory_items",
+                        calculation="standard_buffer",
+                        business_object="Inventory Roster"
                     )
                 ]
                 
@@ -645,12 +659,18 @@ class ExecutiveBoard:
                         f"Reason: Slow-moving stock ({int(top_over.get('days_until_stockout', 999))} days of inventory remaining) is congesting warehouse shelf space.\n"
                         f"Impact: Free up carrying overhead and release ${top_over.get('working_capital_locked', 0.0):,.2f} in locked capital.\n"
                         f"Confidence: 85%"
-                    )
+                    ),
+                    data_source="inventory_items",
+                    calculation="days_until_stockout >= 180 or is_dead_stock",
+                    business_object=f"SKU: {top_over['sku']}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Audit Warehouse Capacity",
-                    description="Reason: Warehouse turnover rates are within normal variance.\nImpact: Clear shelf capacity for upcoming seasonal lines.\nConfidence: 80%"
+                    description="Reason: Warehouse turnover rates are within normal variance.\nImpact: Clear shelf capacity for upcoming seasonal lines.\nConfidence: 80%",
+                    data_source="inventory_items",
+                    calculation="standard_turnover_rate",
+                    business_object="Warehouse Layout"
                 ))
                 
             if delayed_projects:
@@ -661,12 +681,18 @@ class ExecutiveBoard:
                         f"Reason: Project progress has stalled at {top_proj.completion_percentage:.1f}% with overdue deliverables.\n"
                         f"Impact: Protect client delivery deadlines and retain service revenues.\n"
                         f"Confidence: 90%"
-                    )
+                    ),
+                    data_source="projects",
+                    calculation="status != 'completed' and completion_percentage < 50",
+                    business_object=f"Project: {top_proj.name}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Monitor Delivery Milestones",
-                    description="Reason: Standard client projects are proceeding on schedule.\nImpact: Align dev capacity with active contracts.\nConfidence: 85%"
+                    description="Reason: Standard client projects are proceeding on schedule.\nImpact: Align dev capacity with active contracts.\nConfidence: 85%",
+                    data_source="projects",
+                    calculation="status == 'active'",
+                    business_object="Project Roster"
                 ))
 
             expected_impact = f"Bypass lead-time constraints to resolve SKU bottlenecks and protect active order volumes."
@@ -695,12 +721,18 @@ class ExecutiveBoard:
                         f"Reason: Dead capital lockup of ${top_over.get('working_capital_locked', 0.0):,.2f} with excessive carrying costs (congested for {int(top_over.get('days_until_stockout', 999))} days).\n"
                         f"Impact: Improve warehouse cost structure and recover working capital.\n"
                         f"Confidence: 90%"
-                    )
+                    ),
+                    data_source="inventory_items, products",
+                    calculation="is_dead_stock == True",
+                    business_object=f"SKU: {top_over['sku']}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Optimize Vendor Carrying Fees",
-                    description="Reason: Carrying costs are within standard threshold.\nImpact: Retain 5-10% net margin buffer.\nConfidence: 85%"
+                    description="Reason: Carrying costs are within standard threshold.\nImpact: Retain 5-10% net margin buffer.\nConfidence: 85%",
+                    data_source="expenses",
+                    calculation="under_overhead_threshold",
+                    business_object="Vendor Roster"
                 ))
                 
             if low_stock:
@@ -711,12 +743,18 @@ class ExecutiveBoard:
                         f"Reason: Impending stockout in {int(top_low.get('days_until_stockout', 0))} days on high-velocity revenue generator.\n"
                         f"Impact: Prevent loss of ${top_low.get('revenue_at_risk', 0.0):,.2f} in gross margins.\n"
                         f"Confidence: 95%"
-                    )
+                    ),
+                    data_source="inventory_items, products",
+                    calculation="stock_on_hand < reorder_point",
+                    business_object=f"SKU: {top_low['sku']}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Review Pricing Elasticity",
-                    description="Reason: No critical margin leaks detected on stockout items.\nImpact: Adjust unit pricing to maximize margin.\nConfidence: 80%"
+                    description="Reason: No critical margin leaks detected on stockout items.\nImpact: Adjust unit pricing to maximize margin.\nConfidence: 80%",
+                    data_source="products",
+                    calculation="standard_price_optimization",
+                    business_object="Product Catalog"
                 ))
                 
             if delayed_projects:
@@ -727,12 +765,18 @@ class ExecutiveBoard:
                         f"Reason: Completion rate is {top_proj.completion_percentage:.1f}% while operational resources remain allocated past schedule.\n"
                         f"Impact: Recover resource capacity to protect project margins.\n"
                         f"Confidence: 90%"
-                    )
+                    ),
+                    data_source="projects, tasks",
+                    calculation="over_resource_threshold",
+                    business_object=f"Project: {top_proj.name}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Audit Team Resource Efficiency",
-                    description="Reason: Developer billing rates align with projections.\nImpact: Maintain overhead containment targets.\nConfidence: 85%"
+                    description="Reason: Developer billing rates align with projections.\nImpact: Maintain overhead containment targets.\nConfidence: 85%",
+                    data_source="tasks",
+                    calculation="standard_developer_billing_rates",
+                    business_object="Task Roster"
                 ))
 
             expected_impact = f"Optimize capital efficiency to lift monthly net margins by up to 5%."
@@ -761,12 +805,18 @@ class ExecutiveBoard:
                         f"Reason: Stockout in {int(top_low.get('days_until_stockout', 0))} days with sales velocity of {top_low.get('avg_daily_sales', 0.0):.2f} units/day.\n"
                         f"Impact: Prevent gross revenue loss of ${top_low.get('revenue_at_risk', 0.0):,.2f}.\n"
                         f"Confidence: 95%"
-                    )
+                    ),
+                    data_source="inventory_items",
+                    calculation="stock_on_hand < safety_stock",
+                    business_object=f"SKU: {top_low['sku']}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Maintain Standard Reorder Trigger",
-                    description="Reason: Current catalogs are stocked above safety limits.\nImpact: Retain listing search rankings.\nConfidence: 90%"
+                    description="Reason: Current catalogs are stocked above safety limits.\nImpact: Retain listing search rankings.\nConfidence: 90%",
+                    data_source="inventory_items",
+                    calculation="standard_reorder_trigger",
+                    business_object="Inventory Roster"
                 ))
                 
             if overstock:
@@ -777,17 +827,26 @@ class ExecutiveBoard:
                         f"Reason: Carrying slow-moving units with {int(top_over.get('days_until_stockout', 999))} days of inventory remaining.\n"
                         f"Impact: Recover ${top_over.get('working_capital_locked', 0.0):,.2f} in locked capital.\n"
                         f"Confidence: 85%"
-                    )
+                    ),
+                    data_source="inventory_items",
+                    calculation="days_until_stockout >= 180",
+                    business_object=f"SKU: {top_over['sku']}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Review Inventory Turnover",
-                    description="Reason: Dead stock ratio is within safe parameters.\nImpact: Optimize warehouse storage capacity.\nConfidence: 85%"
+                    description="Reason: Dead stock ratio is within safe parameters.\nImpact: Optimize warehouse storage capacity.\nConfidence: 85%",
+                    data_source="inventory_items",
+                    calculation="standard_turnover",
+                    business_object="Inventory Roster"
                 ))
                 
             priorities.append(StrategicPriority(
                 title="Verify Supplier Lead Times",
-                description="Reason: Align purchase ordering schedules with 14-day standard lead times.\nImpact: Establish safety buffer to mitigate supplier dispatch delays.\nConfidence: 80%"
+                description="Reason: Align purchase ordering schedules with 14-day standard lead times.\nImpact: Establish safety buffer to mitigate supplier dispatch delays.\nConfidence: 80%",
+                data_source="suppliers",
+                calculation="lead_time_variance",
+                business_object="Supplier Roster"
             ))
 
             expected_impact = f"Free up storage capacity and reduce overall stockout revenue exposure to $0.00."
@@ -795,7 +854,7 @@ class ExecutiveBoard:
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.90}
 
-        elif any(kw in q_lower for kw in ["client", "customer", "retention", "churn", "inactive", "growth", "opportunity", "expand"]):
+        elif any(kw in q_lower for kw in ["client", "customer", "retention", "churn", "inactive"]):
             # Client Intelligence & Churn Risks
             active_clients = overview.get("active_clients", 0)
             total_clients = overview.get("clients", 0)
@@ -807,42 +866,185 @@ class ExecutiveBoard:
                 f"With **{inactive_clients} inactive accounts** and a **{rev_trend} revenue trend**, our growth strategy should prioritize re-engagement campaigns and capacity upsells."
             )
             
+            # Find an inactive client to reference as exact business object
+            from app.models.client import Client
+            inactive_c = db.query(Client).filter(Client.organization_id == org_id, Client.status == "inactive").first()
+            inactive_c_name = inactive_c.company_name if inactive_c else f"{inactive_clients} Inactive Clients"
+            
             priorities = [
                 StrategicPriority(
-                    title=f"Re-engage {inactive_clients} Inactive Client Rosters",
+                    title=f"Re-engage Inactive Client: {inactive_c_name}",
                     description=(
                         f"Reason: Inactive customer count ({inactive_clients}) represents untapped service revenue potential.\n"
                         f"Impact: Reactivate dormant lines to drive incremental monthly margins.\n"
                         f"Confidence: 88%"
-                    )
+                    ),
+                    data_source="clients",
+                    calculation=f"total_clients - active_clients = {inactive_clients}",
+                    business_object=f"Client: {inactive_c_name}"
                 )
             ]
             
             if delayed_projects:
                 top_proj = delayed_projects[0]
                 priorities.append(StrategicPriority(
-                    title=f"Unblock Client Milestone '{top_proj.name}'",
+                    title=f"Unblock Client Project: {top_proj.name}",
                     description=(
                         f"Reason: Client delivery is lagging at {top_proj.completion_percentage:.1f}% capacity.\n"
                         f"Impact: Mitigate customer churn risk and secure contract value retention.\n"
                         f"Confidence: 90%"
-                    )
+                    ),
+                    data_source="projects",
+                    calculation=f"status != 'completed' and completion_percentage < 50 (current: {top_proj.completion_percentage:.1f}%)",
+                    business_object=f"Project: {top_proj.name}"
                 ))
             else:
+                from app.models.project import Project
+                active_p = db.query(Project).filter(Project.organization_id == org_id, Project.status == "active").first()
+                active_p_name = active_p.name if active_p else "Active Projects"
                 priorities.append(StrategicPriority(
-                    title="Audit Active Client Satisfaction",
-                    description="Reason: Deliverables are on track.\nImpact: Anchor customer retention above 90%.\nConfidence: 85%"
+                    title=f"Audit Active Client Satisfaction: {active_p_name}",
+                    description="Reason: Deliverables are on track.\nImpact: Anchor customer retention above 90%.\nConfidence: 85%",
+                    data_source="projects",
+                    calculation="status == 'active'",
+                    business_object=f"Project: {active_p_name}"
                 ))
                 
             priorities.append(StrategicPriority(
                 title="Review Expansion Opportunities",
-                description="Reason: Cross-sell capacity catalog lines to existing client base.\nImpact: Capture organic revenue expansion without customer acquisition cost.\nConfidence: 85%"
+                description="Reason: Cross-sell capacity catalog lines to existing client base.\nImpact: Capture organic revenue expansion without customer acquisition cost.\nConfidence: 85%",
+                data_source="clients",
+                calculation="status == 'active'",
+                business_object="Client Roster"
             ))
 
             expected_impact = f"Reactivate client accounts and secure stable recurring contract lines."
             findings_by_agent = {"COO Agent": [f"Active Clients: {active_clients}", f"Inactive Clients: {inactive_clients}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.89}
+
+        elif any(kw in q_lower for kw in ["growth", "opportunity", "opportunities", "expand", "timeline"]):
+            # Growth & Expansion Opportunities Timeline
+            from app.models.product import Product
+            from app.models.client import Client
+            from app.models.task import Task
+            from app.models.project import Project
+            
+            # Find a high-margin product
+            all_prods = db.query(Product).filter(Product.organization_id == org_id).all()
+            high_margin_prod = None
+            max_margin = 0.0
+            for p in all_prods:
+                price = p.selling_price or 0.0
+                cost = p.unit_cost or 0.0
+                margin = (price - cost) / price if price > 0.0 else 0.0
+                if margin > max_margin:
+                    max_margin = margin
+                    high_margin_prod = p
+            
+            # Get an inactive client
+            inactive_c = db.query(Client).filter(Client.organization_id == org_id, Client.status == "inactive").first()
+            inactive_c_name = inactive_c.company_name if inactive_c else "Inactive Clients"
+            
+            # Calculate task completion rate and active projects
+            total_tasks = db.query(Task).filter(Task.organization_id == org_id).count()
+            completed_tasks = db.query(Task).filter(Task.organization_id == org_id, Task.status == "completed").count()
+            active_projects = db.query(Project).filter(Project.organization_id == org_id, Project.status == "active").count()
+            
+            summary = (
+                "**Growth & Opportunities Timeline Briefing**: To capitalize on expansion opportunities, we sequence a "
+                "three-phase roadmap targeting high-margin SKU promotions, capacity utilization, and inactive client upselling."
+            )
+            
+            priorities = []
+            
+            # 1. Promote High-Margin Product (Short-Term: 0-3 months)
+            if high_margin_prod:
+                priorities.append(StrategicPriority(
+                    title=f"Promote High-Margin Product '{high_margin_prod.name}'",
+                    description=(
+                        f"Phase 1 (Short-Term: 0-3 months): Launch marketing campaigns for '{high_margin_prod.name}' to capture "
+                        f"a high unit margin of {max_margin*100:.1f}%.\n"
+                        f"Impact: Drive gross margins upwards and generate immediate cash flow.\n"
+                        f"Confidence: 92%"
+                    ),
+                    data_source="products",
+                    calculation=f"(selling_price - unit_cost) / selling_price = {max_margin:.2f}",
+                    business_object=f"SKU: {high_margin_prod.sku}"
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Audit Catalog Profitability",
+                    description=(
+                        "Phase 1 (Short-Term: 0-3 months): Identify high-margin offerings across product lines.\n"
+                        "Impact: Standardize unit profitability benchmarking.\n"
+                        "Confidence: 85%"
+                    ),
+                    data_source="products",
+                    calculation="pricing_audit",
+                    business_object="Product Catalog"
+                ))
+                
+            # 2. Capacity Expansion (Medium-Term: 3-6 months)
+            task_rate = (completed_tasks / total_tasks * 100.0) if total_tasks > 0 else 100.0
+            if total_tasks > 0 and task_rate >= 80.0 and active_projects <= 2:
+                priorities.append(StrategicPriority(
+                    title="Onboard New Project Accounts",
+                    description=(
+                        f"Phase 2 (Medium-Term: 3-6 months): Scale project pipeline. Current task velocity is healthy at "
+                        f"{task_rate:.1f}% completion rate with only {active_projects} active projects.\n"
+                        f"Impact: Expand operational utilization and contract revenue.\n"
+                        f"Confidence: 90%"
+                    ),
+                    data_source="tasks, projects",
+                    calculation=f"completed_tasks / total_tasks = {task_rate/100.0:.2f} and active_projects = {active_projects}",
+                    business_object="Roster Capacity"
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Review Dev Velocity",
+                    description=(
+                        "Phase 2 (Medium-Term: 3-6 months): Streamline operational pipelines and clear open task backlogs "
+                        "before expanding active contract limits.\n"
+                        "Impact: Secure operational bandwidth.\n"
+                        "Confidence: 88%"
+                    ),
+                    data_source="tasks",
+                    calculation="task_backlog_count",
+                    business_object="Project Task Roster"
+                ))
+                
+            # 3. Upsell Inactive Clients (Long-Term: 6-12 months)
+            if inactive_c:
+                priorities.append(StrategicPriority(
+                    title=f"Re-engage Inactive Client '{inactive_c.company_name}'",
+                    description=(
+                        f"Phase 3 (Long-Term: 6-12 months): Pitch catalog upgrades and targeted service incentives to reactivate "
+                        f"'{inactive_c.company_name}'.\n"
+                        f"Impact: Reactivate client relationship to secure long-term contract value.\n"
+                        f"Confidence: 87%"
+                    ),
+                    data_source="clients",
+                    calculation="status == 'inactive'",
+                    business_object=f"Client: {inactive_c.company_name}"
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Review Expansion Upsell",
+                    description=(
+                        "Phase 3 (Long-Term: 6-12 months): Audit active accounts to identify upselling paths for premium capacity catalogs.\n"
+                        "Impact: Drive organic expansion without additional customer acquisition costs.\n"
+                        "Confidence: 85%"
+                    ),
+                    data_source="clients",
+                    calculation="status == 'active'",
+                    business_object="Client Roster"
+                ))
+
+            expected_impact = "Sequence growth initiatives to capture up to 15% margin improvements and stabilize recurring pipelines."
+            findings_by_agent = {"Growth Agent": [f"Products analyzed: {len(all_prods)}", f"Task completion rate: {task_rate:.1f}%"]}
+            recommendations_by_agent = {"Growth Agent": [p.description for p in priorities]}
+            confidence_scores = {"Overall": 0.90}
 
         else:
             # Default General Strategic Overview
@@ -863,12 +1065,18 @@ class ExecutiveBoard:
                         f"Reason: projected stockout in {int(top_low.get('days_until_stockout', 0))} days.\n"
                         f"Impact: Protect ${top_low.get('revenue_at_risk', 0.0):,.2f} in active sales velocity.\n"
                         f"Confidence: 95%"
-                    )
+                    ),
+                    data_source="inventory_items",
+                    calculation="days_until_stockout < 14",
+                    business_object=f"SKU: {top_low['sku']}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Maintain Catalog Velocity",
-                    description="Reason: No critical SKU stockouts detected.\nImpact: Standardize reorder safety margins.\nConfidence: 90%"
+                    description="Reason: No critical SKU stockouts detected.\nImpact: Standardize reorder safety margins.\nConfidence: 90%",
+                    data_source="inventory_items",
+                    calculation="standard_catalog_velocity",
+                    business_object="Product Catalog"
                 ))
                 
             if delayed_projects:
@@ -879,23 +1087,35 @@ class ExecutiveBoard:
                         f"Reason: Blocked at {top_proj.completion_percentage:.1f}% completion rate.\n"
                         f"Impact: Complete backlog and invoice client contract value.\n"
                         f"Confidence: 90%"
-                    )
+                    ),
+                    data_source="projects",
+                    calculation="status != 'completed' and completion_percentage < 50",
+                    business_object=f"Project: {top_proj.name}"
                 ))
             else:
                 priorities.append(StrategicPriority(
                     title="Monitor Project Backlog",
-                    description="Reason: Task delivery velocity is currently stable.\nImpact: Retain developer capacity utilization.\nConfidence: 85%"
+                    description="Reason: Task delivery velocity is currently stable.\nImpact: Retain developer capacity utilization.\nConfidence: 85%",
+                    data_source="projects",
+                    calculation="status == 'active'",
+                    business_object="Project Roster"
                 ))
                 
             priorities.append(StrategicPriority(
                 title="Review Capital Allocation",
-                description="Reason: Maintain net profit margins above target thresholds.\nImpact: Retain net business health scoring above 80/100.\nConfidence: 85%"
+                description="Reason: Maintain net profit margins above target thresholds.\nImpact: Retain net business health scoring above 80/100.\nConfidence: 85%",
+                data_source="finance",
+                calculation="standard_capital_allocation",
+                business_object="Business Capital"
             ))
 
             expected_impact = f"Mitigate stockout risks and lift general business health score from {score} back above 80."
             findings_by_agent = {"COO Agent": [f"Health Score: {score}", f"Active risks: {len(risks)}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.88}
+            
+        # Apply evidence-only audit to deterministic fallback priorities
+        priorities = ExecutiveGovernanceValidator.audit_recommendations_evidence(priorities, db, org_id)
         
         fallback_res = ExecutiveSynthesisResult(
             agent="COO Lead",

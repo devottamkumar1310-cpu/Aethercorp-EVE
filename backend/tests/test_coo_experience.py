@@ -293,6 +293,36 @@ def test_question_sensitivity_and_routing():
     """
     from unittest.mock import patch
     from app.orchestration.validator import ExecutiveGovernanceValidator
+    from app.models.product import Product
+    from app.models.client import Client
+    from app.models.project import Project
+    
+    db_session = TestingSessionLocal()
+    # Seed required entities for mock verification
+    if db_session.query(Product).filter(Product.sku == "BENCH-PROD-0").count() == 0:
+        p0 = Product(id=uuid.uuid4(), organization_id=MOCK_ORG_ID, sku="BENCH-PROD-0", name="Bench Product 0", category="General", selling_price=10.0, unit_cost=5.0)
+        db_session.add(p0)
+    if db_session.query(Product).filter(Product.sku == "BENCH-PROD-1").count() == 0:
+        p1 = Product(id=uuid.uuid4(), organization_id=MOCK_ORG_ID, sku="BENCH-PROD-1", name="Bench Product 1", category="General", selling_price=10.0, unit_cost=5.0)
+        db_session.add(p1)
+    if db_session.query(Client).filter(Client.company_name.like("%Month-to-Month Churn Risk%")).count() == 0:
+        c1 = Client(id=uuid.uuid4(), organization_id=MOCK_ORG_ID, company_name="Month-to-Month Churn Risk Inc", email="c1@test.com", status="inactive")
+        db_session.add(c1)
+        db_session.flush()
+        c1_id = c1.id
+    else:
+        c1_id = db_session.query(Client).filter(Client.company_name.like("%Month-to-Month%")).first().id
+        
+    if db_session.query(Client).filter(Client.company_name.like("%High-Value VIP%")).count() == 0:
+        c2 = Client(id=uuid.uuid4(), organization_id=MOCK_ORG_ID, company_name="High-Value VIP Corp", email="c2@test.com", status="active")
+        db_session.add(c2)
+        
+    if db_session.query(Project).filter(Project.name.like("%Enterprise Deployment%")).count() == 0:
+        proj = Project(id=uuid.uuid4(), organization_id=MOCK_ORG_ID, name="Enterprise Deployment", client_id=c1_id, status="active")
+        db_session.add(proj)
+        
+    db_session.commit()
+    db_session.close()
 
     scenarios = {
         "Executive Summary": {
@@ -375,6 +405,14 @@ def test_question_sensitivity_and_routing():
     unique_priorities_sets = {tuple(res["priorities"]) for res in results.values()}
     assert len(unique_priorities_sets) == len(scenarios), \
         f"Expected {len(scenarios)} unique priority sets, but got {len(unique_priorities_sets)} (identical templates reused)."
+
+    # Clean up seeded entities to prevent test contamination
+    db_session = TestingSessionLocal()
+    db_session.query(Project).filter(Project.organization_id == MOCK_ORG_ID).delete()
+    db_session.query(Client).filter(Client.organization_id == MOCK_ORG_ID).delete()
+    db_session.query(Product).filter(Product.organization_id == MOCK_ORG_ID).delete()
+    db_session.commit()
+    db_session.close()
 
 
 def test_sku_level_inventory_recommendations():

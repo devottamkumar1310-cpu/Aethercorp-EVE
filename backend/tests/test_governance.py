@@ -396,3 +396,108 @@ def test_blocked_response_formatting():
     formatted = ExecutiveFormatter.format_executive_response(blocked_synth, "What are our margins?")
     assert "I don't currently have enough verified data" in formatted
     assert "Recommendation Confidence: 0% (Low Confidence)" in formatted
+
+
+def test_evidence_validation_and_suppression():
+    """
+    Test that ExecutiveGovernanceValidator.audit_recommendations_evidence:
+    1. Retains recommendations with valid database evidence (e.g. valid SKU, client, project).
+    2. Suppresses recommendations with invalid database evidence (e.g. non-existent SKU).
+    """
+    from app.schemas.executive import StrategicPriority
+    from app.orchestration.validator import ExecutiveGovernanceValidator
+    from app.models.product import Product
+    from app.models.client import Client
+    from app.models.project import Project
+    from app.models.task import Task
+    
+    db_session = TestingSessionLocal()
+    try:
+        # Seed test database
+        seed_business_data(db_session, MOCK_ORG_ID)
+        
+        # Fetch the seeded items to ensure we reference exact records
+        db_prod = db_session.query(Product).filter(Product.organization_id == MOCK_ORG_ID).first()
+        db_client = db_session.query(Client).filter(Client.organization_id == MOCK_ORG_ID).first()
+        db_project = db_session.query(Project).filter(Project.organization_id == MOCK_ORG_ID).first()
+        
+        assert db_prod is not None
+        assert db_client is not None
+        assert db_project is not None
+        
+        # Create test priorities
+        p_valid_sku = StrategicPriority(
+            title="Promote seeded product",
+            description="Focus marketing efforts on seeded product to drive margins.",
+            data_source="products",
+            calculation="margin > 0.3",
+            business_object=f"SKU: {db_prod.sku}"
+        )
+        
+        p_invalid_sku = StrategicPriority(
+            title="Promote fake product",
+            description="Focus marketing efforts on fake product.",
+            data_source="products",
+            calculation="margin > 0.3",
+            business_object="SKU: FAKE-SKU-999"
+        )
+        
+        p_valid_client = StrategicPriority(
+            title="Re-engage client",
+            description="Re-engage seeded client.",
+            data_source="clients",
+            calculation="status == 'active'",
+            business_object=f"Client: {db_client.company_name}"
+        )
+        
+        p_invalid_client = StrategicPriority(
+            title="Re-engage fake client",
+            description="Re-engage fake client.",
+            data_source="clients",
+            calculation="status == 'inactive'",
+            business_object="Client: NonExistent Client Inc"
+        )
+        
+        p_valid_project = StrategicPriority(
+            title="Complete project",
+            description="Complete seeded project.",
+            data_source="projects",
+            calculation="status == 'active'",
+            business_object=f"Project: {db_project.name}"
+        )
+        
+        p_invalid_project = StrategicPriority(
+            title="Complete fake project",
+            description="Complete fake project.",
+            data_source="projects",
+            calculation="status == 'delayed'",
+            business_object="Project: Ghost Project"
+        )
+
+        priorities = [
+            p_valid_sku,
+            p_invalid_sku,
+            p_valid_client,
+            p_invalid_client,
+            p_valid_project,
+            p_invalid_project
+        ]
+        
+        audited = ExecutiveGovernanceValidator.audit_recommendations_evidence(
+            priorities, db_session, MOCK_ORG_ID
+        )
+        
+        # Verify audited contains only the valid ones
+        audited_titles = [a.title for a in audited]
+        assert "Promote seeded product" in audited_titles
+        assert "Re-engage client" in audited_titles
+        assert "Complete project" in audited_titles
+        
+        assert "Promote fake product" not in audited_titles
+        assert "Re-engage fake client" not in audited_titles
+        assert "Complete fake project" not in audited_titles
+        
+        assert len(audited) == 3
+
+    finally:
+        db_session.close()

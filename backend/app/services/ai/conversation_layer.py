@@ -32,6 +32,10 @@ INTENT_PATTERNS = {
         r"\b(client|clients|customer|customers|churn|retention|outreach|contact|inactive clients|at risk|at-risk)\b",
         re.IGNORECASE
     ),
+    "Growth Query": re.compile(
+        r"\b(growth|expansion|opportunity|opportunities|expand|timeline|promote|market segment)\b",
+        re.IGNORECASE
+    ),
     "Project Query": re.compile(
         r"\b(project|projects|delayed projects|overdue tasks|deadlines|milestone|weekly focus|team focus|operational priorities)\b",
         re.IGNORECASE
@@ -144,6 +148,7 @@ class ConversationLayer:
             "Pricing Query",
             "Finance Query",
             "Client Query",
+            "Growth Query",
             "Project Query",
             "Executive Query",
             "Capability Discovery",

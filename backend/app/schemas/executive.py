@@ -13,6 +13,9 @@ class AgentAnalysisResult(BaseModel):
 class StrategicPriority(BaseModel):
     title: str = Field(description="The priority title")
     description: str = Field(description="Action plan or detail for this priority")
+    data_source: Optional[str] = Field(default=None, description="The exact database table or system source containing the evidence.")
+    calculation: Optional[str] = Field(default=None, description="The exact mathematical rule or logic used.")
+    business_object: Optional[str] = Field(default=None, description="The exact SKU, project name, or client name involved.")
 
 class ExecutiveRecommendation(BaseModel):
     recommendation: str

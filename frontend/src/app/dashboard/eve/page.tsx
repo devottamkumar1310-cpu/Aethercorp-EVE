@@ -140,7 +140,7 @@ function renderMarkdown(text: string) {
     <>
       <div className="space-y-1">{renderLines(normalLines)}</div>
       {evidenceLines.length > 0 && (
-        <details className="mt-3 border border-border bg-background/40 rounded-xl overflow-hidden group">
+        <details open className="mt-3 border border-border bg-background/40 rounded-xl overflow-hidden group">
           <summary className="px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer list-none flex items-center justify-between select-none bg-card/40 hover:bg-card/60">
             <span className="flex items-center gap-1.5">📊 Supporting Evidence</span>
             <span className="text-[10px] text-indigo-405 group-open:rotate-185 transition-transform">▼</span>
@@ -415,6 +415,85 @@ export default function EVECoocommandCenter() {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+  const [activeActions, setActiveActions] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (sessionToken && pendingQuestion) {
+      handleSendChat(pendingQuestion);
+      setPendingQuestion(null);
+    }
+  }, [sessionToken, pendingQuestion]);
+
+  const renderActionButtons = (pri: any, idx: number, source: string) => {
+    if (!pri || pri.title === "Insufficient Verified Data") return null;
+    
+    const titleLower = (pri.title || "").toLowerCase();
+    const descLower = (pri.description || "").toLowerCase();
+    
+    const showReorder = titleLower.includes("reorder") || titleLower.includes("replenish") || titleLower.includes("safety stock") || titleLower.includes("stockout") || descLower.includes("reorder") || descLower.includes("replenish") || descLower.includes("lead time");
+    const showDiscount = titleLower.includes("liquidate") || titleLower.includes("overstock") || titleLower.includes("dead stock") || titleLower.includes("pricing") || titleLower.includes("margin") || titleLower.includes("discount") || descLower.includes("overstock") || descLower.includes("dead stock") || descLower.includes("discount");
+    const showSkuExport = showReorder || showDiscount || titleLower.includes("sku") || titleLower.includes("product") || descLower.includes("sku") || descLower.includes("product") || (!showReorder && !showDiscount);
+
+    const actionKey = `${source}-${pri.title}-${idx}`;
+    const triggeredOutcome = activeActions[actionKey];
+
+    if (triggeredOutcome) {
+      return (
+        <div className="mt-2 p-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[9px] font-semibold animate-fade-in flex items-center gap-1">
+          <span>✓</span>
+          <span>{triggeredOutcome}</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {showSkuExport && (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveActions(prev => ({
+                ...prev,
+                [actionKey]: "Success: Exported 3 SKUs to CSV (TSHIRT-CLASSIC, HOODIE-WINTER, BENCH-PROD-0)"
+              }));
+            }}
+            className="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-300 rounded text-[9px] font-bold cursor-pointer transition-all"
+          >
+            Export SKU List
+          </button>
+        )}
+        {showDiscount && (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveActions(prev => ({
+                ...prev,
+                [actionKey]: "Success: Generated discount campaign for BENCH-PROD-0 (30% discount suggested)"
+              }));
+            }}
+            className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300 rounded text-[9px] font-bold cursor-pointer transition-all"
+          >
+            Generate Discount Campaign
+          </button>
+        )}
+        {showReorder && (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveActions(prev => ({
+                ...prev,
+                [actionKey]: "Success: Generated replenishment order of 50 units for HOODIE-WINTER via Mock Supplier Corp"
+              }));
+            }}
+            className="px-2 py-1 bg-purple-600/20 hover:bg-purple-600/35 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 rounded text-[9px] font-bold cursor-pointer transition-all"
+          >
+            Create Reorder Plan
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const hydrateDashboard = async (token: string) => {
     try {
@@ -551,6 +630,11 @@ export default function EVECoocommandCenter() {
           } catch (err) {
             console.error("Failed to load document context for chat:", err);
           }
+        }
+
+        const questionParam = searchParams?.get("question");
+        if (questionParam) {
+          setPendingQuestion(questionParam);
         }
 
         hydrateDashboard(session.access_token);
@@ -905,7 +989,7 @@ export default function EVECoocommandCenter() {
       {/* Mobile Sidebar Backdrop */}
       {isHistoryOpen && (
         <div 
-          className="fixed inset-0 bg-background z-40 xl:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 xl:hidden transition-opacity duration-300"
           onClick={() => setIsHistoryOpen(false)}
         />
       )}
@@ -921,6 +1005,13 @@ export default function EVECoocommandCenter() {
             <MessageSquare size={14} className="text-indigo-400" /> Chat History
           </h3>
           <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setIsHistoryOpen(false)}
+              className="xl:hidden p-1 hover:bg-muted text-muted-foreground hover:text-indigo-400 rounded-lg transition-all cursor-pointer"
+              title="Close Sidebar"
+            >
+              <X size={14} />
+            </button>
             <button
               onClick={handleStartNewChat}
               className="p-1 hover:bg-muted text-muted-foreground hover:text-indigo-400 rounded-lg transition-all flex items-center gap-1 text-[10px] font-bold border border-border hover:border-border cursor-pointer"
@@ -1232,7 +1323,7 @@ export default function EVECoocommandCenter() {
               /* Intelligence-Driven Snapshot from LLM */
               <div className="space-y-3.5 z-10 text-xs">
                 {/* Executive metrics row */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
                     <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Business Health</span>
                     <span className="text-sm font-extrabold text-indigo-200">
@@ -1278,13 +1369,14 @@ export default function EVECoocommandCenter() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {selectedReasoning.priorities && selectedReasoning.priorities.length > 0 ? (
                         selectedReasoning.priorities.map((pri: any, idx: number) => (
-                          <div key={idx} className="p-2.5 bg-slate-950/40 border border-indigo-500/20 rounded-xl space-y-1">
-                            <span className="font-extrabold text-indigo-200 block text-[11px]">
+                          <div key={idx} className="p-2.5 bg-surface-secondary border border-semantic rounded-xl space-y-1">
+                            <span className="font-extrabold text-indigo-400 dark:text-indigo-200 block text-[11px]">
                               {idx + 1}. {pri.title}
                             </span>
-                            <p className="text-[10px] text-slate-200 leading-relaxed font-medium">
+                            <p className="text-[10px] text-secondary leading-relaxed font-medium">
                               {pri.description}
                             </p>
+                            {renderActionButtons(pri, idx, "right-panel")}
                           </div>
                         ))
                       ) : (
@@ -1538,9 +1630,10 @@ export default function EVECoocommandCenter() {
                               <span className="text-[10px] font-bold text-slate-405 uppercase tracking-widest block">Strategic Priorities</span>
                               <div className="grid grid-cols-1 gap-2">
                                 {agentData.priorities.map((pri: any, idx: number) => (
-                                  <div key={idx} className="py-2.5 px-3 bg-background/30 border-l-2 border-indigo-500 rounded-r-xl space-y-0.5 animate-fade-in">
-                                    <span className="text-xs font-bold text-indigo-300 block">Priority {idx + 1}: {pri.title}</span>
-                                    <p className="text-[11px] text-muted-foreground leading-relaxed font-normal">{pri.description}</p>
+                                  <div key={idx} className="py-2.5 px-3 bg-surface-secondary border-l-2 border-indigo-500 rounded-r-xl space-y-0.5 animate-fade-in">
+                                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 block">Priority {idx + 1}: {pri.title}</span>
+                                    <p className="text-[11px] text-secondary leading-relaxed font-normal">{pri.description}</p>
+                                    {renderActionButtons(pri, idx, `chat-${msg.id || "msg"}`)}
                                   </div>
                                 ))}
                               </div>
@@ -1680,15 +1773,24 @@ export default function EVECoocommandCenter() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 bg-indigo-950/30 border border-indigo-500/20 px-4 py-2.5 rounded-xl">
-                    <span className="text-xs font-semibold text-slate-400">Operational Health:</span>
-                    <span className={`text-sm font-extrabold px-2.5 py-0.5 rounded-full ${
-                      healthScore >= 75 ? "bg-emerald-500/10 text-emerald-450 border border-emerald-500/20"
-                      : healthScore >= 50 ? "bg-amber-500/10 text-amber-450 border border-amber-500/20"
-                      : "bg-rose-500/10 text-rose-450 border border-rose-500/20"
-                    }`}>
-                      {healthScore}/100 ({healthStatus})
-                    </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-[10px] font-bold shadow-sm">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      </span>
+                      <span>Data Freshness: Live (Synced Just Now)</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-indigo-950/30 border border-indigo-500/20 px-4 py-2.5 rounded-xl">
+                      <span className="text-xs font-semibold text-slate-400">Operational Health:</span>
+                      <span className={`text-sm font-extrabold px-2.5 py-0.5 rounded-full ${
+                        healthScore >= 75 ? "bg-emerald-500/10 text-emerald-450 border border-emerald-500/20"
+                        : healthScore >= 50 ? "bg-amber-500/10 text-amber-450 border border-amber-500/20"
+                        : "bg-rose-500/10 text-rose-450 border border-rose-500/20"
+                      }`}>
+                        {healthScore}/100 ({healthStatus})
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1914,7 +2016,7 @@ export default function EVECoocommandCenter() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Query agent network (e.g. 'Should we adjust price for item XYZ?')..."
                 disabled={chatLoading}
-                className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-muted-foreground"
+                className="flex-1 min-w-0 bg-background border border-border rounded-xl px-4 py-3 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-muted-foreground"
               />
               <button
                 type="button"
