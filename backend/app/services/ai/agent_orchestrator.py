@@ -211,48 +211,6 @@ class AgentOrchestrator:
                     )
 
         # --- POST-PROCESS & REWRITE LAYER ---
-        # Clear generic executive board properties for inventory-specific and finance-specific queries
-        if not is_static:
-            q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
-            is_inventory_query = (
-                q_clean in ["identify overstock risks", "which products are hurting inventory efficiency",
-                            "suggest reorder quantities", "which products need immediate attention"] or
-                "overstock risks" in q_clean or
-                "hurting inventory efficiency" in q_clean or
-                "reorder quantities" in q_clean or
-                "need immediate attention" in q_clean
-            )
-            is_finance_query = (
-                q_clean in ["where am i spending the most money", "what is hurting profitability",
-                            "give me a finance summary"] or
-                "spending the most money" in q_clean or
-                "spending most money" in q_clean or
-                "hurting profitability" in q_clean or
-                "finance summary" in q_clean
-            )
-            is_client_query = (
-                q_clean in ["which clients are at risk", "who should i contact this week",
-                            "which clients generate the most revenue", "which clients are inactive"] or
-                "clients are at risk" in q_clean or
-                "who should i contact" in q_clean or
-                "clients generate the most revenue" in q_clean or
-                "clients generate most revenue" in q_clean or
-                "clients are inactive" in q_clean
-            )
-            is_project_query = (
-                q_clean in ["which projects are delayed", "which projects need attention",
-                            "what deadlines are at risk", "what should my team focus on this week"] or
-                "projects are delayed" in q_clean or
-                "projects need attention" in q_clean or
-                "deadlines are at risk" in q_clean or
-                "deadlines at risk" in q_clean or
-                "team focus on this week" in q_clean or
-                "team focus this week" in q_clean or
-                "what should my team focus on" in q_clean
-            )
-            if is_inventory_query or is_finance_query or is_client_query or is_project_query:
-                coo_result.priorities = []
-                coo_result.expected_impact = "N/A"
 
         # 1. Audit logs for data sufficiency / hallucination blocks
         if not is_static:
