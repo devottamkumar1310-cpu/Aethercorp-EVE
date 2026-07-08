@@ -157,6 +157,31 @@ async def daily_brief(
     coo_agent = COOAgent()
     
     try:
+        # Gather health score, risks, and opportunities from unified orchestrator analytics
+        from app.services.analytics_service import AnalyticsService
+        inv_analysis = AnalyticsService.get_inventory_analysis(db, workspace_id)
+        
+        health = {
+            "score": float(inv_analysis.get("business_health_score", 80)),
+            "status": "healthy" if inv_analysis.get("business_health_score", 80) >= 80 else "warning",
+            "recommendations": inv_analysis.get("top_actions", [])
+        }
+        
+        risks_list = []
+        for r in inv_analysis.get("top_risks", []):
+            risks_list.append({
+                "severity": "high" if r.get("priority", 50) >= 70 else "medium",
+                "title": r.get("title", "Stockout Risk"),
+                "description": f"SKU {r.get('sku')} has priority score {r.get('priority')} and impact of ₹{r.get('impact'):,.0f}."
+            })
+            
+        opps_list = []
+        for o in inv_analysis.get("top_opportunities", []):
+            opps_list.append({
+                "title": "Optimization Opportunity",
+                "description": o.get("description", "")
+            })
+
         # Compile sub-agent analyses asynchronously
         finance_result = await finance_agent.analyze(db, workspace_id, "Analyze financial health for daily brief.")
         operations_result = await operations_agent.analyze(db, workspace_id, "Analyze operational performance for daily brief.")
@@ -167,37 +192,16 @@ async def daily_brief(
             org_id=workspace_id,
             question="Generate a daily brief summarizing company operations, risks, and opportunities.",
             finance_result=finance_result,
-            operations_result=operations_result
+            operations_result=operations_result,
+            health=health
         )
         
         # Save recommendations
         save_recommendation(db, workspace_id, "coo", coo_result)
         
-        # Gathers health score, risks, opportunities
-        health = get_health_score(db, workspace_id)
-        risks_data = detect_risks(db, workspace_id)
-        opportunities_data = detect_opportunities(db, workspace_id)
-        
         # Calculate urgent actions
-        urgent_actions = []
-        for risk in risks_data.get("risks", []):
-            if risk.get("impact_level") == "high":
-                urgent_actions.append(f"Mitigate risk: {risk.get('description')}")
+        urgent_actions = inv_analysis.get("top_actions", [])
         
-        try:
-            from app.services.analytics_service import AnalyticsService
-            metrics = AnalyticsService.get_dashboard_metrics(db, workspace_id)
-            if metrics.get("reorder_recommendations"):
-                urgent_actions.append("Reorder safety stock immediately to prevent D2C stockout.")
-            if metrics.get("pricing_recommendations"):
-                first_rec = metrics["pricing_recommendations"][0]
-                urgent_actions.append(f"Adjust pricing for SKU {first_rec.get('sku')} to optimize margin.")
-        except Exception:
-            pass
-            
-        if not urgent_actions:
-            urgent_actions.append("No critical alerts. Maintain current operating strategy.")
-
         # Calculate recent activity
         from app.services.activity_service import ActivityService
         activities = ActivityService.get_activities(db, workspace_id, limit=5)
@@ -211,12 +215,12 @@ async def daily_brief(
             })
 
         return DailyBriefResponse(
-            health_score=health.get("score", 50.0),
-            health_status=health.get("status", "warning"),
-            risks=risks_data.get("risks", []),
-            opportunities=opportunities_data.get("opportunities", []),
+            health_score=health["score"],
+            health_status=health["status"],
+            risks=risks_list,
+            opportunities=opps_list,
             summary=coo_result.summary,
-            recommendations=health.get("recommendations", []),
+            recommendations=health["recommendations"],
             urgent_actions=urgent_actions,
             recent_activity=recent_activity
         )

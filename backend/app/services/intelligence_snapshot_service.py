@@ -28,6 +28,33 @@ def create_snapshot(db: Session, workspace_id: uuid.UUID) -> IntelligenceSnapsho
     health_data = get_health_score(db, workspace_id)
     health_score = health_data.get("score", 0.0)
 
+    # Calculate inventory prioritization aggregates for the snapshot
+    from app.services.analytics_service import AnalyticsService
+    try:
+        inv_analysis = AnalyticsService.get_inventory_analysis(db, workspace_id)
+        product_metrics = inv_analysis.get("items_at_risk", [])
+        inventory_value = sum(item.get("stock_on_hand", 0) * item.get("unit_cost", 0.0) for item in product_metrics)
+        at_risk_skus = sum(1 for item in product_metrics if item.get("stockout_risk_score", 0.0) >= 70.0)
+        dead_stock_skus = sum(1 for item in product_metrics if item.get("is_dead_stock", False))
+        revenue_at_risk = sum(item.get("revenue_at_risk", 0.0) for item in product_metrics)
+        working_capital_locked = sum(item.get("working_capital_locked", 0.0) for item in product_metrics)
+        
+        # Phase 3 priority counts
+        business_health_score = inv_analysis.get("business_health_score", int(health_score))
+        top_risk_count = len(inv_analysis.get("top_risks", []))
+        top_opportunity_count = len(inv_analysis.get("top_opportunities", []))
+        top_action_count = len(inv_analysis.get("top_actions", []))
+    except Exception:
+        inventory_value = 0.0
+        at_risk_skus = 0
+        dead_stock_skus = 0
+        revenue_at_risk = 0.0
+        working_capital_locked = 0.0
+        business_health_score = int(health_score)
+        top_risk_count = 0
+        top_opportunity_count = 0
+        top_action_count = 0
+
     snapshot = IntelligenceSnapshot(
         organization_id=workspace_id,
         health_score=health_score,
@@ -39,7 +66,16 @@ def create_snapshot(db: Session, workspace_id: uuid.UUID) -> IntelligenceSnapsho
         completed_tasks=completed_tasks,
         revenue=revenue_sum,
         expenses=expense_sum,
-        profit=profit
+        profit=profit,
+        inventory_value=inventory_value,
+        at_risk_skus=at_risk_skus,
+        dead_stock_skus=dead_stock_skus,
+        revenue_at_risk=revenue_at_risk,
+        working_capital_locked=working_capital_locked,
+        business_health_score=business_health_score,
+        top_risk_count=top_risk_count,
+        top_opportunity_count=top_opportunity_count,
+        top_action_count=top_action_count
     )
     
     db.add(snapshot)

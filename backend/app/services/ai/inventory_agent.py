@@ -12,13 +12,20 @@ class InventoryAgent:
     async def analyze(self, db: Session, org_id: uuid.UUID, question: str = "") -> AgentAnalysisResult:
         # Run full inventory analysis using the AnalyticsService
         analysis = AnalyticsService.get_inventory_analysis(db, org_id)
-        inventory_data = analysis.get("items_at_risk", [])
+        health_score = analysis.get("business_health_score", 80)
+        health_grade = analysis.get("business_health_grade", "B")
+        top_risks = analysis.get("top_risks", [])
+        top_opportunities = analysis.get("top_opportunities", [])
+        top_actions = analysis.get("top_actions", [])
             
         prompt = f"""
-        User Question/Goal: {question or "Analyze inventory health, overstock risks, and reorder alerts."}
+        User Question/Goal: {question or "Analyze inventory health, risks, and prioritize recommendations."}
         
-        Current Warehouse/Catalog Inventory:
-        {inventory_data if inventory_data else "No inventory items are currently defined in the database."}
+        Executive Prioritization Summary:
+        - Business Health Score: {health_score}/100 (Grade: {health_grade})
+        - Top Risks: {top_risks}
+        - Top Opportunities: {top_opportunities}
+        - Top Actions: {top_actions}
         """
         
         result = await self.gemini_service.generate_structured_response(

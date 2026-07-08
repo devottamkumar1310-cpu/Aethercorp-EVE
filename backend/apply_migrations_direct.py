@@ -53,7 +53,17 @@ try:
             biggest_inventory_challenge VARCHAR,
             created_at TIMESTAMP NOT NULL DEFAULT NOW()
         )
-        """
+        """,
+        # ─── Phase 2 & 3 Executive Prioritization Columns ─────────────────────
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS inventory_value FLOAT NOT NULL DEFAULT 0.0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS at_risk_skus INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS dead_stock_skus INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS revenue_at_risk FLOAT NOT NULL DEFAULT 0.0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS working_capital_locked FLOAT NOT NULL DEFAULT 0.0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS business_health_score INTEGER NOT NULL DEFAULT 80",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_risk_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_opportunity_count INTEGER NOT NULL DEFAULT 0",
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_action_count INTEGER NOT NULL DEFAULT 0"
     ]
 
     for sql in migrations:
@@ -106,6 +116,7 @@ try:
         ("processed_documents", ["sha256_hash"]),
         ("profiles", ["timezone", "language", "avatar_url", "trial_start_date", "trial_end_date", "subscription_status", "plan_type"]),
         ("waitlist_entries", ["id", "user_id", "name", "email", "company_name", "company_website", "revenue_range", "biggest_inventory_challenge", "created_at"]),
+        ("intelligence_snapshots", ["inventory_value", "at_risk_skus", "dead_stock_skus", "revenue_at_risk", "working_capital_locked", "business_health_score", "top_risk_count", "top_opportunity_count", "top_action_count"]),
     ]
     all_ok = True
     for table, cols in checks:
