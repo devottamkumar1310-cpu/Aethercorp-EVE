@@ -165,7 +165,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     };
     mql.addEventListener("change", onOSChange);
-    return () => mql.removeEventListener("change", onOSChange);
+
+    // Listen for custom settings theme-changed event
+    const handleThemeEvent = () => {
+      const updatedStored = localStorage.getItem("theme") || "dark";
+      setTheme(updatedStored);
+      const activeResolved = resolveTheme(updatedStored);
+      document.documentElement.setAttribute("data-theme", activeResolved);
+    };
+    window.addEventListener("theme-changed", handleThemeEvent);
+
+    return () => {
+      mql.removeEventListener("change", onOSChange);
+      window.removeEventListener("theme-changed", handleThemeEvent);
+    };
   }, []);
 
   const getThemePreference = (profileData?: any): string => {

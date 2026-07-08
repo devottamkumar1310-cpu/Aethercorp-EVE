@@ -589,7 +589,31 @@ class AgentOrchestrator:
             db.commit()
             yield json.dumps({"type": "done"}) + "\n"
             return
+        # Reconstruct recent conversation history block if available
+        history_block = ""
+        if conversation:
+            history_msgs = db.query(ExecutiveMessage).filter(
+                ExecutiveMessage.conversation_id == conversation.id
+            ).order_by(ExecutiveMessage.created_at.desc()).limit(6).all()
+            history_msgs.reverse()
+            history_lines = []
+            for msg in history_msgs:
+                role_label = "Founder" if msg.role == "user" else "EVE COO"
+                history_lines.append(f"{role_label}: {msg.content}")
+            if history_lines:
+                history_block = "\n=== RECENT CONVERSATION HISTORY ===\n" + "\n".join(history_lines) + "\n====================================\n"
+
+        prompt = f"""
+        {history_block}
+        User Question/Goal: {question}
         
+        Current Overall Business Health & Goals:
+        {context_block}
+        
+        Reports from Specialized Sub-Agents:
+        {reports_block or "No specialized sub-agent analysis executed for this query."}
+        """
+
         full_content = []
         async for chunk in self.gemini_service.generate_text_stream(
             prompt=prompt,
@@ -614,7 +638,27 @@ class AgentOrchestrator:
         priorities = []
         priority_matches = re.findall(r"-\s+\*\*Priority\s+\d+:\s*(.*?)\*\*\s*—\s*(.*)", full_text)
         for title, desc in priority_matches[:3]:
-            priorities.append(StrategicPriority(title=title.strip(), description=desc.strip()))
+            data_source = None
+            calculation = None
+            business_object = None
+            desc_clean = desc
+            evidence_match = re.search(r"\[Source:\s*(.*?)\s*\|\s*Calc:\s*(.*?)\s*\|\s*Object:\s*(.*?)\]", desc)
+            if evidence_match:
+                data_source = evidence_match.group(1).strip()
+                calculation = evidence_match.group(2).strip()
+                business_object = evidence_match.group(3).strip()
+                desc_clean = desc[:evidence_match.start()].strip()
+            priorities.append(StrategicPriority(
+                title=title.strip(),
+                description=desc_clean,
+                data_source=data_source,
+                calculation=calculation,
+                business_object=business_object
+            ))
+
+        # Apply evidence-only audit to parsed priorities
+        from app.orchestration.validator import ExecutiveGovernanceValidator
+        priorities = ExecutiveGovernanceValidator.audit_recommendations_evidence(priorities, db, org_id)
 
         # Extract confidence and expected impact from full_text if possible, or fall back
         confidence_val = 0.95

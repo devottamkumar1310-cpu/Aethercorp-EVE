@@ -18,16 +18,20 @@ import { ProjectModal } from "@/components/business/ProjectModal";
 import { TaskModal } from "@/components/business/TaskModal";
 import { RevenueModal } from "@/components/business/RevenueModal";
 import { ExpenseModal } from "@/components/business/ExpenseModal";
-import { fetchTrends } from "@/services/intelligenceService";
+import { fetchTrends, fetchRisks, fetchOpportunities } from "@/services/intelligenceService";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [trends, setTrends] = useState<any>(null);
+  const [risks, setRisks] = useState<any[]>([]);
+  const [opportunities, setOpportunities] = useState<any[]>([]);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [loadingTrends, setLoadingTrends] = useState(true);
+  const [loadingRisks, setLoadingRisks] = useState(true);
+  const [loadingOpportunities, setLoadingOpportunities] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState<string>("");
 
@@ -49,11 +53,15 @@ export default function DashboardPage() {
     setLoadingSummary(true);
     setLoadingLogs(true);
     setLoadingTrends(true);
+    setLoadingRisks(true);
+    setLoadingOpportunities(true);
 
     const results = await Promise.allSettled([
       fetchDashboardSummary(token),
       fetchActivityLogs(token),
-      fetchTrends(token)
+      fetchTrends(token),
+      fetchRisks(token),
+      fetchOpportunities(token)
     ]);
 
     // Handle Dashboard Summary result
@@ -79,6 +87,22 @@ export default function DashboardPage() {
       console.error("Error loading trends:", results[2].reason);
     }
     setLoadingTrends(false);
+
+    // Handle Risks result
+    if (results[3].status === "fulfilled") {
+      setRisks(results[3].value);
+    } else {
+      console.error("Error loading risks:", results[3].reason);
+    }
+    setLoadingRisks(false);
+
+    // Handle Opportunities result
+    if (results[4].status === "fulfilled") {
+      setOpportunities(results[4].value);
+    } else {
+      console.error("Error loading opportunities:", results[4].reason);
+    }
+    setLoadingOpportunities(false);
   };
 
   const fetchModalDropdowns = async (token: string) => {
@@ -183,6 +207,20 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans transition-colors duration-200">
       <main className="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Operational Dashboard</h1>
+            <p className="text-xs text-muted-foreground">Automated brand metrics, project tracking, and executive intelligence feed.</p>
+          </div>
+          <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>Data Freshness: Live (Synced Just Now)</span>
+          </div>
+        </div>
+
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -349,6 +387,77 @@ export default function DashboardPage() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          {/* EVE Active Alerts Grid */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* EVE Active Risks */}
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-rose-500/10 dark:bg-rose-950/30 px-4 py-3 border-b border-border font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2">
+                <AlertCircle size={15} className="text-rose-500 animate-pulse" />
+                <span>EVE Active Operational Risks</span>
+              </div>
+              <div className="p-4 flex-grow">
+                {loadingRisks ? (
+                  <div className="space-y-3 animate-pulse">
+                    <div className="h-10 bg-muted rounded-lg" />
+                    <div className="h-10 bg-muted rounded-lg" />
+                  </div>
+                ) : risks.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center">No active operational risks. Systems nominal.</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {risks.map((risk, idx) => (
+                      <Link 
+                        key={idx}
+                        href={`/dashboard/eve?question=${encodeURIComponent(`Address and mitigate this risk: ${risk.description}`)}`}
+                        className="block p-3 rounded-xl border border-rose-500/10 hover:border-rose-500/35 bg-rose-500/5 hover:bg-rose-500/10 transition-all cursor-pointer"
+                      >
+                        <div className="flex justify-between items-center gap-2 mb-1">
+                          <span className="font-semibold text-rose-600 dark:text-rose-300 text-xs">{risk.title || "Operational Risk"}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/30 uppercase tracking-wide">Mitigate</span>
+                        </div>
+                        <p className="text-muted-foreground text-[11px] leading-relaxed font-normal">{risk.description}</p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* EVE Active Opportunities */}
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-emerald-500/10 dark:bg-emerald-950/30 px-4 py-3 border-b border-border font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+                <Sparkles size={15} className="text-emerald-500" />
+                <span>EVE Active Growth Opportunities</span>
+              </div>
+              <div className="p-4 flex-grow">
+                {loadingOpportunities ? (
+                  <div className="space-y-3 animate-pulse">
+                    <div className="h-10 bg-muted rounded-lg" />
+                    <div className="h-10 bg-muted rounded-lg" />
+                  </div>
+                ) : opportunities.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic py-4 text-center">No active growth opportunities detected.</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {opportunities.map((opp, idx) => (
+                      <Link 
+                        key={idx}
+                        href={`/dashboard/eve?question=${encodeURIComponent(`Analyze and execute opportunity: ${opp.description}`)}`}
+                        className="block p-3 rounded-xl border border-emerald-500/10 hover:border-emerald-500/35 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all cursor-pointer"
+                      >
+                        <div className="flex justify-between items-center gap-2 mb-1">
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-300 text-xs">{opp.title || "Growth Opportunity"}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30 uppercase tracking-wide">Execute</span>
+                        </div>
+                        <p className="text-muted-foreground text-[11px] leading-relaxed font-normal">{opp.description}</p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>

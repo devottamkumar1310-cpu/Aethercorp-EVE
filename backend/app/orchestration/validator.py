@@ -511,4 +511,130 @@ class ExecutiveGovernanceValidator:
         trade_off_str = "\n\n".join(trade_off_lines) if trade_off_lines else "No direct agent conflicts detected."
         return conflicts, trade_off_str
 
+    @classmethod
+    def audit_recommendations_evidence(cls, priorities: List[Any], db: Any, org_id: Any) -> List[Any]:
+        """
+        Performs an 'evidence-only audit' on generated strategic priorities.
+        Verifies that:
+        1. data_source is specified.
+        2. business_object is specified and exists in the database.
+        3. calculation is specified.
+        If a recommendation cannot be verified, it is suppressed (removed).
+        """
+        from app.models.product import Product
+        from app.models.project import Project
+        from app.models.client import Client
+        from app.models.task import Task
+        from sqlalchemy import func
+        import re
+
+        verified_priorities = []
+        for p in priorities:
+            data_source = getattr(p, "data_source", None)
+            calculation = getattr(p, "calculation", None)
+            business_object = getattr(p, "business_object", None)
+            
+            if not data_source or not calculation or not business_object:
+                logger.warning(f"Suppressing recommendation '{p.title}': Missing evidence attributes (data_source={data_source}, calculation={calculation}, business_object={business_object})")
+                continue
+                
+            b_obj_str = str(business_object).lower()
+            ds_str = str(data_source).lower()
+            
+            is_valid = False
+            
+            # Check collective/roster level business objects
+            if b_obj_str in ["client roster", "clients roster"]:
+                if db.query(Client).filter(Client.organization_id == org_id).first():
+                    is_valid = True
+            elif b_obj_str in ["product catalog", "inventory roster", "warehouse layout"]:
+                if db.query(Product).filter(Product.organization_id == org_id).first():
+                    is_valid = True
+            elif b_obj_str in ["project roster", "project task roster", "roster capacity", "task roster"]:
+                if db.query(Project).filter(Project.organization_id == org_id).first():
+                    is_valid = True
+                elif db.query(Task).filter(Task.organization_id == org_id).first():
+                    is_valid = True
+            elif b_obj_str in ["vendor roster", "supplier roster", "contract roster"]:
+                is_valid = True
+                
+            if not is_valid:
+                # Check products/SKUs
+                if any(k in ds_str for k in ["sku", "product", "inventory"]):
+                    sku_match = re.search(r"bench-prod-\d+", b_obj_str)
+                    if not sku_match:
+                        sku_match = re.search(r"sku:\s*(\S+)", b_obj_str)
+                    
+                    sku_val = sku_match.group(0).replace("sku:", "").strip().upper() if sku_match else b_obj_str.replace("sku:", "").replace("sku", "").strip().upper()
+                    
+                    # Check DB
+                    prod = db.query(Product).filter(Product.organization_id == org_id, func.upper(Product.sku) == sku_val).first()
+                    if prod:
+                        is_valid = True
+                    else:
+                        # Check by name
+                        prod_name = b_obj_str.replace("sku:", "").strip()
+                        prod_by_name = db.query(Product).filter(Product.organization_id == org_id, func.lower(Product.name).contains(prod_name)).first()
+                        if prod_by_name:
+                            is_valid = True
+                        else:
+                            logger.warning(f"Suppressing recommendation '{p.title}': SKU/Product '{sku_val}' not found in database.")
+                            
+                # Check projects/tasks
+                elif any(k in ds_str for k in ["project", "task", "operation"]):
+                    proj_name = b_obj_str.replace("project:", "").replace("task:", "").replace("'", "").replace('"', '').strip()
+                    proj = db.query(Project).filter(Project.organization_id == org_id, func.lower(Project.name).contains(proj_name)).first()
+                    if proj:
+                        is_valid = True
+                    else:
+                        # Let's check tasks
+                        task = db.query(Task).filter(Task.organization_id == org_id, func.lower(Task.title).contains(proj_name)).first()
+                        if task:
+                            is_valid = True
+                        else:
+                            # Check if any project matches
+                            all_projs = db.query(Project).filter(Project.organization_id == org_id).all()
+                            for pr in all_projs:
+                                if pr.name.lower() in b_obj_str or b_obj_str in pr.name.lower():
+                                    is_valid = True
+                                    break
+                            if not is_valid:
+                                logger.warning(f"Suppressing recommendation '{p.title}': Project/Task '{proj_name}' not found in database.")
+                                
+                # Check clients
+                elif any(k in ds_str for k in ["client", "customer"]):
+                    client_name = b_obj_str.replace("client:", "").replace("'", "").replace('"', '').strip()
+                    client = db.query(Client).filter(Client.organization_id == org_id, func.lower(Client.company_name).contains(client_name)).first()
+                    if client:
+                        is_valid = True
+                    else:
+                        # Check if any client matches
+                        all_clients = db.query(Client).filter(Client.organization_id == org_id).all()
+                        for cl in all_clients:
+                            if cl.company_name.lower() in b_obj_str or b_obj_str in cl.company_name.lower():
+                                is_valid = True
+                                break
+                        if not is_valid:
+                            logger.warning(f"Suppressing recommendation '{p.title}': Client '{client_name}' not found in database.")
+                            
+                # Check general finance
+                elif any(k in ds_str for k in ["finance", "revenue", "expense", "budget", "cash", "capital"]):
+                    is_valid = True
+            
+            if is_valid:
+                verified_priorities.append(p)
+                
+        if not verified_priorities:
+            from app.schemas.executive import StrategicPriority
+            insufficient_priority = StrategicPriority(
+                title="Insufficient Verified Data",
+                description="EVE requires additional active workspace records (such as inventory, project, or financial sheets) to verify and unlock this recommendation.",
+                data_source="workspace database",
+                calculation="data_sufficiency_check",
+                business_object="Workspace Catalog"
+            )
+            return [insufficient_priority]
+            
+        return verified_priorities
+
 
