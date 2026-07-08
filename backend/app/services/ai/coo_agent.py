@@ -28,7 +28,16 @@ class COOAgent:
     ) -> ExecutiveSynthesisResult:
         # Retrieve overall health score and goals if not passed as cached params
         if health is None:
-            health = get_health_score(db, org_id)
+            try:
+                from app.services.analytics_service import AnalyticsService
+                inv_analysis = AnalyticsService.get_inventory_analysis(db, org_id)
+                health = {
+                    "score": inv_analysis.get("business_health_score", 80),
+                    "status": "healthy" if inv_analysis.get("business_health_score", 80) >= 80 else "warning",
+                    "recommendations": inv_analysis.get("top_actions", [])
+                }
+            except Exception:
+                health = get_health_score(db, org_id)
         if goals is None:
             goals = get_memory_context(db, org_id)
         

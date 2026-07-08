@@ -29,4 +29,17 @@ class IntelligenceSnapshot(Base):
     expenses = Column(Float, default=0.0)
     profit = Column(Float, default=0.0)
     
+    # Prioritization tracking columns
+    inventory_value = Column(Float, default=0.0)
+    at_risk_skus = Column(Integer, default=0)
+    dead_stock_skus = Column(Integer, default=0)
+    revenue_at_risk = Column(Float, default=0.0)
+    working_capital_locked = Column(Float, default=0.0)
+    
+    # Executive priority columns
+    business_health_score = Column(Integer, default=80)
+    top_risk_count = Column(Integer, default=0)
+    top_opportunity_count = Column(Integer, default=0)
+    top_action_count = Column(Integer, default=0)
+    
     created_at = Column(DateTime(timezone=True), default=func.now())

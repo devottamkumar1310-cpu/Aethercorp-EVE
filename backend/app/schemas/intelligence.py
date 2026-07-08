@@ -15,6 +15,15 @@ class IntelligenceSnapshotResponse(BaseModel):
     revenue: float
     expenses: float
     profit: float
+    inventory_value: float = 0.0
+    at_risk_skus: int = 0
+    dead_stock_skus: int = 0
+    revenue_at_risk: float = 0.0
+    working_capital_locked: float = 0.0
+    business_health_score: int = 80
+    top_risk_count: int = 0
+    top_opportunity_count: int = 0
+    top_action_count: int = 0
     created_at: datetime
     
     class Config:

@@ -21,8 +21,40 @@ from app.models.inventory import InventoryItem, SalesRecord
 from app.fashion.sell_through import calculate_sell_through_rate
 from app.fashion.dead_stock import detect_dead_stock
 from app.fashion.demand_forecast import calculate_replenishment_metrics
+import asyncio
+import concurrent.futures
+from app.core.orchestrator.orchestrator import IntelligenceOrchestrator
+from app.core.orchestrator.base_engine import EngineContext
+from app.services.intelligence.forecast_engine import ForecastEngine
+from app.services.intelligence.optimization_engine import OptimizationEngine
+from app.services.intelligence.confidence_engine import ConfidenceEngine
+from app.services.intelligence.classification_engine import ClassificationEngine
+from app.services.intelligence.anomaly_engine import AnomalyEngine
+from app.services.intelligence.financial_engine import FinancialEngine
+from app.services.intelligence.business_health_engine import BusinessHealthEngine
+from app.services.intelligence.action_engine import ActionEngine
+from app.services.intelligence.executive_summary_engine import ExecutiveSummaryEngine
 
 logger = logging.getLogger("eve.services.analytics_service")
+
+def run_async_as_sync(coro):
+    """Event-loop-safe helper to run async coroutines synchronously."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, coro)
+            return future.result()
+    else:
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        return loop.run_until_complete(coro)
 
 
 class AnalyticsService:
@@ -108,9 +140,82 @@ class AnalyticsService:
                              .filter(SalesRecord.date >= thirty_days_ago)\
                              .group_by(SalesRecord.product_id).all()
         sales_qty_map = {row[0]: int(row[1]) for row in thirty_day_sales if row[1] is not None}
-        
-        # 2. Iterate products to calculate metrics
+        # Calculate ABC revenue classifications in bulk (A: top 80% revenue, B: next 15%, C: remaining 5%)
+        sku_revenue_map = {}
         for item in items:
+            prod = item.product
+            qty_sold_30 = sales_qty_map.get(prod.id, 0)
+            revenue_30 = qty_sold_30 * (prod.selling_price or 40.0)
+            sku_revenue_map[prod.sku] = revenue_30
+
+        sorted_skus = sorted(sku_revenue_map.keys(), key=lambda s: sku_revenue_map[s], reverse=True)
+        total_rev_30 = sum(sku_revenue_map.values())
+        
+        abc_classifications = {}
+        cumulative_rev = 0.0
+        for s in sorted_skus:
+            rev = sku_revenue_map[s]
+            cumulative_rev += rev
+            if total_rev_30 <= 0.001:
+                abc_classifications[s] = "C"
+            else:
+                ratio = cumulative_rev / total_rev_30
+                if ratio <= 0.80:
+                    abc_classifications[s] = "A"
+                elif ratio <= 0.95:
+                    abc_classifications[s] = "B"
+                else:
+                    abc_classifications[s] = "C"
+
+        # Bulk fetch all historical sales records to prevent N+1 queries in the engines
+        all_sales_records = db.query(SalesRecord.product_id, SalesRecord.quantity)\
+                              .filter(SalesRecord.organization_id == organization_id)\
+                              .order_by(SalesRecord.date.asc()).all()
+        sales_series_map = {}
+        for row in all_sales_records:
+            pid = row[0]
+            qty = float(row[1]) if row[1] is not None else 0.0
+            if pid not in sales_series_map:
+                sales_series_map[pid] = []
+            sales_series_map[pid].append(qty)
+
+        # 1b. Run orchestrator in batch for maximum performance and alignment
+        async def run_inventory_orchestration_batch():
+            orchestrator = IntelligenceOrchestrator()
+            orchestrator.register_engine(ForecastEngine())
+            orchestrator.register_engine(OptimizationEngine())
+            orchestrator.register_engine(ConfidenceEngine())
+            orchestrator.register_engine(ClassificationEngine())
+            orchestrator.register_engine(AnomalyEngine())
+            orchestrator.register_engine(FinancialEngine())
+            orchestrator.register_engine(ActionEngine())
+            orchestrator.register_engine(ExecutiveSummaryEngine())
+            
+            tasks = []
+            for item in items:
+                product = item.product
+                vel_info = velocities.get(product.sku, {"avg": 0.0, "std_dev": 0.0})
+                sku_sales = sales_series_map.get(product.id, [])
+                context = EngineContext(
+                    sku=product.sku,
+                    stock_on_hand=item.stock_on_hand,
+                    lead_time_days=item.lead_time_days,
+                    avg_daily_sales=vel_info["avg"],
+                    db=db,
+                    organization_id=organization_id,
+                    parameters={
+                        "sales_series_override": sku_sales,
+                        "unit_cost_override": product.unit_cost or 20.0,
+                        "abc_classifications": abc_classifications
+                    }
+                )
+                tasks.append(orchestrator.run_pipeline(context))
+            return await asyncio.gather(*tasks, return_exceptions=True)
+
+        batch_results = run_async_as_sync(run_inventory_orchestration_batch())
+
+        # 2. Iterate products to compile metrics
+        for item, pipeline_res in zip(items, batch_results):
             product = item.product
             sku = product.sku
             
@@ -119,13 +224,72 @@ class AnalyticsService:
             avg_daily_sales = vel_info["avg"]
             std_dev = vel_info["std_dev"]
             
-            # Calculate replenishment numbers
-            metrics = calculate_replenishment_metrics(
-                avg_daily_sales=avg_daily_sales,
-                sales_std_dev=std_dev,
-                lead_time_days=item.lead_time_days,
-                stock_on_hand=item.stock_on_hand
-            )
+            # Extract orchestrator results with failover
+            if isinstance(pipeline_res, Exception) or not isinstance(pipeline_res, dict):
+                logger.error(f"Orchestrator failed for {sku}, using fallback metrics. Error: {pipeline_res}")
+                metrics = calculate_replenishment_metrics(
+                    avg_daily_sales=avg_daily_sales,
+                    sales_std_dev=std_dev,
+                    lead_time_days=item.lead_time_days,
+                    stock_on_hand=item.stock_on_hand
+                )
+                confidence_score = 0.50
+                reasoning = ["Calculated using legacy fallback rules."]
+                signals = ["Fallback triggered"]
+                priority_score = 50
+                inventory_class = "HEALTHY"
+                abc_class = "B"
+                revenue_at_risk = 0.0
+                margin_at_risk = 0.0
+                working_capital_locked = item.stock_on_hand * (product.unit_cost or 20.0)
+                is_dead = detect_dead_stock(item.stock_on_hand, avg_daily_sales)
+            else:
+                opt_out = pipeline_res.get("engine_outputs", {}).get("optimization_engine", {})
+                safety_stock = opt_out.get("data", {}).get("safety_stock", int(avg_daily_sales * item.lead_time_days * 0.5))
+                reorder_point = opt_out.get("data", {}).get("reorder_point", int(avg_daily_sales * item.lead_time_days * 1.5))
+                reorder_qty = pipeline_res.get("recommended_quantity", 0.0)
+                
+                # Predict stockout days using optimized forecast
+                forecast_out = pipeline_res.get("engine_outputs", {}).get("forecast_engine", {})
+                forecast_val = forecast_out.get("data", {}).get("forecast_value", avg_daily_sales)
+                if forecast_val <= 0.001:
+                    days_until_stockout = 999.0
+                else:
+                    days_until_stockout = max(0.0, float(item.stock_on_hand) / forecast_val)
+                    
+                # Stockout risk score calculation matching legacy expectations
+                lead_time = item.lead_time_days
+                if item.stock_on_hand <= 0 or days_until_stockout <= 0:
+                    risk_score = 100.0
+                elif days_until_stockout >= lead_time * 2:
+                    risk_score = 10.0
+                else:
+                    ratio = days_until_stockout / lead_time
+                    if ratio < 1.0:
+                        risk_score = 50.0 + (1.0 - ratio) * 50.0
+                    else:
+                        risk_score = 50.0 * (2.0 - ratio)
+                risk_score = max(0.0, min(100.0, round(risk_score, 1)))
+
+                metrics = {
+                    "safety_stock": int(safety_stock),
+                    "reorder_point": int(reorder_point),
+                    "recommended_reorder_qty": int(reorder_qty),
+                    "days_until_stockout": round(days_until_stockout, 1),
+                    "stockout_risk_score": risk_score
+                }
+                confidence_score = pipeline_res.get("confidence_score", 75.0) / 100.0
+                reasoning = pipeline_res.get("reasoning", [])
+                signals = pipeline_res.get("supporting_signals", [])
+                
+                # Pull Phase 2 Prioritization metrics
+                priority_score = pipeline_res.get("priority_score", 50)
+                inventory_class = pipeline_res.get("inventory_class", "HEALTHY")
+                abc_class = pipeline_res.get("abc_class", "B")
+                revenue_at_risk = pipeline_res.get("revenue_at_risk", 0.0)
+                margin_at_risk = pipeline_res.get("margin_at_risk", 0.0)
+                working_capital_locked = pipeline_res.get("working_capital_locked", 0.0)
+                is_dead = (inventory_class == "DEAD_STOCK")
             
             # Write metrics back to database for persistence
             item.avg_daily_sales = avg_daily_sales
@@ -136,7 +300,6 @@ class AnalyticsService:
             units_sold = sales_qty_map.get(product.id, 0)
                            
             str_rate = calculate_sell_through_rate(units_sold, item.stock_on_hand)
-            is_dead = detect_dead_stock(item.stock_on_hand, avg_daily_sales)
             
             # Count aggregations
             if item.stock_on_hand <= 0:
@@ -155,7 +318,6 @@ class AnalyticsService:
                 reorder_qty = metrics["recommended_reorder_qty"]
                 total_reorder_cost += (product.unit_cost * reorder_qty)
                 
-            confidence = 0.95 if item.lead_time_days <= 14 else 0.88
             sku_analyses.append({
                 "sku": sku,
                 "name": product.name,
@@ -170,15 +332,19 @@ class AnalyticsService:
                 "stockout_risk_score": metrics["stockout_risk_score"],
                 "is_dead_stock": is_dead,
                 "sell_through_rate": str_rate,
-                "confidence_score": confidence,
+                "confidence_score": confidence_score,
+                
+                # Prioritization fields
+                "priority_score": priority_score,
+                "inventory_class": inventory_class,
+                "abc_class": abc_class,
+                "revenue_at_risk": revenue_at_risk,
+                "margin_at_risk": margin_at_risk,
+                "working_capital_locked": working_capital_locked,
+                
                 "explainability": {
-                    "method": "Safety Stock & ROP calculations",
-                    "factors": [
-                        f"Lead time days: {item.lead_time_days}",
-                        f"Daily sales velocity: {avg_daily_sales:.3f} units/day",
-                        f"Safety stock: {metrics['safety_stock']} units",
-                        f"Stockout risk score: {metrics['stockout_risk_score']:.1f}%"
-                    ]
+                    "method": "EVE Multi-Engine Orchestrator (Forecast + Optimization + Confidence + Prioritization)",
+                    "factors": reasoning + signals
                 },
                 "provenance": {
                     "source": "AnalyticsService.get_inventory_analysis",
@@ -190,6 +356,62 @@ class AnalyticsService:
 
         avg_risk = total_risk_score / len(items) if items else 0.0
         
+        # Compile catalog aggregates for BusinessHealthEngine
+        successful_results = [res for res in batch_results if isinstance(res, dict) and not isinstance(res, Exception)]
+        healthy_skus = sum(1 for res in successful_results if res.get("inventory_class") in ["HEALTHY", "SLOW_MOVING"])
+        dead_capital = sum(res.get("working_capital_locked", 0.0) for res in successful_results if res.get("inventory_class") == "DEAD_STOCK")
+        total_capital = sum(res.get("working_capital_locked", 0.0) for res in successful_results)
+        anomalous_skus = sum(1 for res in successful_results if res.get("anomalies"))
+        
+        business_health_score = 80
+        business_health_grade = "B"
+        try:
+            health_eng = BusinessHealthEngine()
+            health_context = EngineContext(
+                sku="ORGANIZATION_HEALTH",
+                stock_on_hand=0,
+                lead_time_days=0,
+                avg_daily_sales=0.0,
+                parameters={
+                    "catalog_total_skus": len(items),
+                    "catalog_healthy_skus": healthy_skus,
+                    "catalog_avg_stockout_risk": avg_risk,
+                    "catalog_dead_capital": dead_capital,
+                    "catalog_total_capital": total_capital,
+                    "catalog_anomalous_skus": anomalous_skus
+                }
+            )
+            health_output = run_async_as_sync(health_eng.execute(health_context))
+            if health_output.success:
+                business_health_score = health_output.data.get("health_score", 80)
+                business_health_grade = health_output.data.get("health_grade", "B")
+        except Exception as e:
+            logger.error(f"Failed to calculate catalog health score: {e}")
+
+        # Compile Top Risks (Top 5 ranked by priority descending, then impact descending)
+        all_risks = [res["risk"] for res in successful_results if res.get("risk")]
+        top_risks = sorted(all_risks, key=lambda r: (r["priority"], r["impact"]), reverse=True)[:5]
+        
+        # Compile Top Opportunities (Top 5 ranked by dollar value descending)
+        all_opportunities = []
+        for res in successful_results:
+            all_opportunities.extend(res.get("opportunities", []))
+        top_opportunities = sorted(all_opportunities, key=lambda o: o.get("value", 0.0), reverse=True)[:5]
+        
+        # Compile Top Actions (Top 5 recommended actions derived from highest priority items)
+        sorted_results = sorted(successful_results, key=lambda r: r.get("priority_score", 50), reverse=True)
+        top_actions = []
+        for res in sorted_results:
+            for action in res.get("actions", []):
+                if action not in top_actions and "Monitor sales velocity" not in action:
+                    top_actions.append(action)
+                    if len(top_actions) >= 5:
+                        break
+            if len(top_actions) >= 5:
+                break
+        if not top_actions:
+            top_actions = ["No urgent actions needed. Maintain current strategy."]
+
         return {
             "organization_id": organization_id,
             "total_skus": len(items),
@@ -198,6 +420,14 @@ class AnalyticsService:
             "dead_stock_skus": dead_stock_count,
             "average_risk_score": round(avg_risk, 1),
             "estimated_reorder_cost": round(total_reorder_cost, 2),
+            
+            # Prioritization outputs
+            "business_health_score": business_health_score,
+            "business_health_grade": business_health_grade,
+            "top_risks": top_risks,
+            "top_opportunities": top_opportunities,
+            "top_actions": top_actions,
+            
             "items_at_risk": sku_analyses
         }
 
@@ -231,13 +461,52 @@ class AnalyticsService:
                              .group_by(SalesRecord.product_id).all()
         sales_qty_map = {row[0]: int(row[1]) for row in thirty_day_sales if row[1] is not None}
         
+        # Bulk fetch all historical sales records to prevent N+1 queries in the engines
+        all_sales_records = db.query(SalesRecord.product_id, SalesRecord.quantity)\
+                              .filter(SalesRecord.organization_id == organization_id)\
+                              .order_by(SalesRecord.date.asc()).all()
+        sales_series_map = {}
+        for row in all_sales_records:
+            pid = row[0]
+            qty = float(row[1]) if row[1] is not None else 0.0
+            if pid not in sales_series_map:
+                sales_series_map[pid] = []
+            sales_series_map[pid].append(qty)
+            
         recommendations = []
         total_profit_impact = 0.0
         total_revenue_impact = 0.0
         current_margin_sum = 0.0
         recommended_margin_sum = 0.0
         
-        for item in items:
+        # 1b. Run orchestrator in batch for pricing calculations
+        async def run_pricing_orchestration_batch():
+            orchestrator = IntelligenceOrchestrator()
+            orchestrator.register_engine(ForecastEngine())
+            orchestrator.register_engine(OptimizationEngine())
+            orchestrator.register_engine(ConfidenceEngine())
+            
+            tasks = []
+            for item in items:
+                sku_sales = sales_series_map.get(item.product_id, [])
+                context = EngineContext(
+                    sku=item.product.sku,
+                    stock_on_hand=item.stock_on_hand,
+                    lead_time_days=item.lead_time_days,
+                    avg_daily_sales=item.avg_daily_sales or 0.0,
+                    db=db,
+                    organization_id=organization_id,
+                    parameters={
+                        "sales_series_override": sku_sales,
+                        "unit_cost_override": item.product.unit_cost or 20.0
+                    }
+                )
+                tasks.append(orchestrator.run_pipeline(context))
+            return await asyncio.gather(*tasks, return_exceptions=True)
+
+        batch_results = run_async_as_sync(run_pricing_orchestration_batch())
+        
+        for item, pipeline_res in zip(items, batch_results):
             product = item.product
             
             # Use cached average price
@@ -260,12 +529,27 @@ class AnalyticsService:
             # - If item is dead stock (slow velocity), reduce price by 15-30% (markdown clearance)
             # - Otherwise suggest a minor margin-optimizing change (e.g. target 60% margin)
             
-            reorder_metrics = calculate_replenishment_metrics(
-                avg_daily_sales=item.avg_daily_sales,
-                sales_std_dev=0.0,
-                lead_time_days=item.lead_time_days,
-                stock_on_hand=item.stock_on_hand
-            )
+            if isinstance(pipeline_res, Exception) or not isinstance(pipeline_res, dict):
+                stockout_risk_score = 0.0
+            else:
+                forecast_out = pipeline_res.get("engine_outputs", {}).get("forecast_engine", {})
+                forecast_val = forecast_out.get("data", {}).get("forecast_value", item.avg_daily_sales or 0.0)
+                if forecast_val <= 0.001:
+                    days_until_stockout = 999.0
+                else:
+                    days_until_stockout = max(0.0, float(item.stock_on_hand) / forecast_val)
+                    
+                lead_time = item.lead_time_days
+                if item.stock_on_hand <= 0 or days_until_stockout <= 0:
+                    stockout_risk_score = 100.0
+                elif days_until_stockout >= lead_time * 2:
+                    stockout_risk_score = 10.0
+                else:
+                    ratio = days_until_stockout / lead_time
+                    if ratio < 1.0:
+                        stockout_risk_score = 50.0 + (1.0 - ratio) * 50.0
+                    else:
+                        stockout_risk_score = 50.0 * (2.0 - ratio)
             
             price_change_pct = 0.0
             reason = "Price is optimal."
@@ -273,7 +557,7 @@ class AnalyticsService:
             if item.stock_on_hand <= 0:
                 price_change_pct = 0.0
                 reason = "Out of stock. Hold price."
-            elif reorder_metrics["stockout_risk_score"] >= 70.0:
+            elif stockout_risk_score >= 70.0:
                 price_change_pct = 0.10 # 10% increase to slow runout rate
                 reason = "High stockout risk. Increasing price to slow velocity and capture margin."
             elif detect_dead_stock(item.stock_on_hand, item.avg_daily_sales):
