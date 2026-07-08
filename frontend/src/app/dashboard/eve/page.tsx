@@ -1186,14 +1186,14 @@ export default function EVECoocommandCenter() {
 
         {/* Executive Snapshot Compact Card */}
         {isInsightsOpen && (
-          <div className="mx-6 mt-4 p-4 bg-indigo-950/20 border border-indigo-500/25 rounded-2xl space-y-3.5 shadow-xl transition-all duration-300 animate-fade-in flex flex-col relative overflow-hidden backdrop-blur-md">
+          <div className="mx-6 mt-4 p-4 bg-indigo-950/45 border border-indigo-500/40 rounded-2xl space-y-3.5 shadow-xl transition-all duration-300 animate-fade-in flex flex-col relative overflow-hidden backdrop-blur-md">
             {/* Ambient glowing effect */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
             
-            <div className="flex items-center justify-between border-b border-indigo-500/10 pb-2.5 z-10">
+            <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2.5 z-10">
               <div className="flex items-center gap-2">
-                <Sparkles size={15} className="text-indigo-450 animate-pulse" />
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-200">
+                <Sparkles size={15} className="text-indigo-400 animate-pulse" />
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-100">
                   Executive Snapshot
                 </span>
               </div>
@@ -1201,10 +1201,10 @@ export default function EVECoocommandCenter() {
                 {selectedReasoning?.confidence_category && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
                     selectedReasoning.confidence_category === "High Confidence"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
                       : selectedReasoning.confidence_category === "Medium Confidence"
-                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                      : "bg-rose-500/10 text-rose-450 border-rose-500/20"
+                      ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                      : "bg-rose-500/15 text-rose-350 border-rose-500/30"
                   }`}>
                     {selectedReasoning.confidence_category}
                   </span>
@@ -1212,15 +1212,15 @@ export default function EVECoocommandCenter() {
                 {selectedReasoning?.risk_classification && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
                     selectedReasoning.risk_classification === "Low Risk"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                      : "bg-rose-500/15 text-rose-300 border-rose-500/30"
                   }`}>
                     {selectedReasoning.risk_classification}
                   </span>
                 )}
                 <button
                   onClick={() => setIsInsightsOpen(false)}
-                  className="p-1 hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-300 rounded-lg transition-all cursor-pointer"
+                  className="p-1 hover:bg-indigo-500/15 text-slate-300 hover:text-indigo-300 rounded-lg transition-all cursor-pointer"
                   title="Collapse Panel"
                 >
                   <X size={13} />
@@ -1233,27 +1233,27 @@ export default function EVECoocommandCenter() {
               <div className="space-y-3.5 z-10 text-xs">
                 {/* Executive metrics row */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
-                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Business Health</span>
-                    <span className="text-sm font-bold text-indigo-300">
+                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Business Health</span>
+                    <span className="text-sm font-extrabold text-indigo-200">
                       {selectedReasoning.evidence_used?.business_health_score || 80}/100
                     </span>
                   </div>
-                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
-                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Top Risks</span>
-                    <span className="text-sm font-bold text-rose-400">
+                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Top Risks</span>
+                    <span className="text-sm font-extrabold text-rose-300">
                       {selectedReasoning.evidence_used?.risk_count || 0}
                     </span>
                   </div>
-                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
-                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Opportunities</span>
-                    <span className="text-sm font-bold text-emerald-400">
+                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Opportunities</span>
+                    <span className="text-sm font-extrabold text-emerald-300">
                       {selectedReasoning.evidence_used?.opportunity_count || 0}
                     </span>
                   </div>
-                  <div className="p-2 bg-background/30 border border-indigo-500/10 rounded-xl text-center">
-                    <span className="text-[9px] text-muted-foreground block uppercase font-bold tracking-wider">Revenue at Risk</span>
-                    <span className="text-sm font-bold text-foreground">
+                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Revenue at Risk</span>
+                    <span className="text-sm font-extrabold text-slate-100">
                       ${selectedReasoning.evidence_used?.revenue_at_risk?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
                     </span>
                   </div>
@@ -1261,9 +1261,9 @@ export default function EVECoocommandCenter() {
 
                 {/* Capital locked sub-badge */}
                 {selectedReasoning.evidence_used?.working_capital_locked > 0 && (
-                  <div className="text-[9.5px] text-muted-foreground bg-background/30 px-3 py-1.5 rounded-lg border border-indigo-500/10 flex items-center justify-between">
+                  <div className="text-[9.5px] text-slate-200 bg-amber-500/5 px-3 py-1.5 rounded-lg border border-amber-500/20 flex items-center justify-between">
                     <span>Working capital locked in slow-moving stock:</span>
-                    <span className="font-bold text-foreground">
+                    <span className="font-extrabold text-amber-300">
                       ${selectedReasoning.evidence_used?.working_capital_locked?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </span>
                   </div>
@@ -1272,23 +1272,23 @@ export default function EVECoocommandCenter() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Strategic Priorities */}
                   <div className="space-y-2 md:col-span-2">
-                    <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">
+                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest block">
                       Strategic Priorities
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {selectedReasoning.priorities && selectedReasoning.priorities.length > 0 ? (
                         selectedReasoning.priorities.map((pri: any, idx: number) => (
-                          <div key={idx} className="p-2.5 bg-background/40 border border-indigo-500/10 rounded-xl space-y-1">
-                            <span className="font-bold text-indigo-300 block text-[11px]">
+                          <div key={idx} className="p-2.5 bg-slate-950/40 border border-indigo-500/20 rounded-xl space-y-1">
+                            <span className="font-extrabold text-indigo-200 block text-[11px]">
                               {idx + 1}. {pri.title}
                             </span>
-                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                            <p className="text-[10px] text-slate-200 leading-relaxed font-medium">
                               {pri.description}
                             </p>
                           </div>
                         ))
                       ) : (
-                        <p className="text-[10px] text-muted-foreground italic">No strategic priorities required.</p>
+                        <p className="text-[10px] text-slate-400 italic">No strategic priorities required.</p>
                       )}
                     </div>
                   </div>
@@ -1296,11 +1296,11 @@ export default function EVECoocommandCenter() {
                   {/* Expected Impact */}
                   <div className="space-y-2 flex flex-col justify-between">
                     <div className="space-y-1.5">
-                      <span className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest block">
+                      <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest block">
                         Expected Impact
                       </span>
-                      <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex-grow">
-                        <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      <div className="p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded-xl flex-grow">
+                        <p className="text-[10px] text-emerald-100 leading-relaxed font-medium">
                           {selectedReasoning.expected_impact || "N/A"}
                         </p>
                       </div>
@@ -1310,11 +1310,11 @@ export default function EVECoocommandCenter() {
 
                 {/* Conflict Warning & Resolution (if any) */}
                 {selectedReasoning.detected_conflicts && selectedReasoning.detected_conflicts.length > 0 && (
-                  <div className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-start gap-2 text-[10px]">
+                  <div className="p-2.5 bg-amber-950/30 border border-amber-500/30 rounded-xl flex items-start gap-2 text-[10px]">
                     <ShieldAlert size={14} className="text-amber-400 shrink-0 mt-0.5" />
                     <div className="space-y-0.5">
                       <span className="font-bold text-amber-300 block">Conflict Detected & Resolved:</span>
-                      <p className="text-muted-foreground leading-relaxed">
+                      <p className="text-amber-100 leading-relaxed font-medium">
                         {selectedReasoning.trade_off_analysis || selectedReasoning.detected_conflicts.join("; ")}
                       </p>
                     </div>
