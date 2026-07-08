@@ -56,7 +56,7 @@ def generate_healthy_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFram
     
     # 2. Sales records (~5,000 rows over 12 months with growing trend)
     sales = []
-    start_date = datetime.date(2025, 6, 1)
+    start_date = datetime.date.today() - datetime.timedelta(days=365)
     
     for day in range(365):
         current_date = start_date + datetime.timedelta(days=day)
@@ -133,7 +133,7 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     
     # 2. Sales records with declining volume
     sales = []
-    start_date = datetime.date(2025, 6, 1)
+    start_date = datetime.date.today() - datetime.timedelta(days=365)
     
     for day in range(365):
         current_date = start_date + datetime.timedelta(days=day)

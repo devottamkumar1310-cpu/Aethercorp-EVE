@@ -135,7 +135,7 @@ class GeminiService:
 
         if self.mock_mode:
             await asyncio.sleep(0.1)
-            return "Mock text response generated successfully."
+            return "Insufficient business data available for analysis."
 
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
@@ -173,7 +173,7 @@ class GeminiService:
                 if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
                     logger.warning("Invalid API key detected during generate_text. Switching to mock mode.")
                     self.mock_mode = True
-                    return "Mock text response generated successfully."
+                    return "Insufficient business data available for analysis."
                 if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
                     sleep_time = 30.0 + random.uniform(5.0, 25.0)
                     logger.warning(f"Rate limit hit (429) in generate_text. Sleeping for {sleep_time:.1f}s to stagger retries...")
@@ -207,11 +207,7 @@ class GeminiService:
             system_instruction = safety_guideline.strip()
 
         if self.mock_mode:
-            # Yield mock text chunks with micro-delays to simulate dynamic streaming response speed!
-            mock_resp = "Mock response streaming: EVE COO is analyzing parameters in mock mode. Connection and database tables are verified."
-            for chunk in mock_resp.split(" "):
-                yield chunk + " "
-                await asyncio.sleep(0.04)
+            yield "Insufficient business data available for analysis."
             return
 
         config = types.GenerateContentConfig(
@@ -240,10 +236,7 @@ class GeminiService:
                 logger.error(f"Gemini generate_text_stream failed on attempt {attempt+1}/{retries}: {e}")
                 if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
                     self.mock_mode = True
-                    mock_resp = "Mock response streaming (invalid API key fallback): EVE COO is analyzing parameters."
-                    for chunk in mock_resp.split(" "):
-                        yield chunk + " "
-                        await asyncio.sleep(0.04)
+                    yield "Insufficient business data available for analysis."
                     return
                 if attempt == retries - 1:
                     yield f"Error generating stream: {str(e)}"

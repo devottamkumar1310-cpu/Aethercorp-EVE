@@ -88,10 +88,23 @@ def build_context_block(
     risks: Optional[Dict[str, Any]] = None,
     opportunities: Optional[Dict[str, Any]] = None,
     trends: Optional[Dict[str, Any]] = None,
-    goals: Optional[List[Any]] = None
+    goals: Optional[List[Any]] = None,
+    inventory_intel: Optional[Dict[str, Any]] = None
 ) -> str:
     """Formats intelligence inputs and memory/goals context into a clean text block for prompt injection."""
     lines = []
+    
+    if inventory_intel:
+        lines.append("=== INVENTORY & FINANCIAL INTELLIGENCE ===")
+        lines.append(f"Business Health Score: {inventory_intel.get('business_health_score', 'N/A')}/100")
+        lines.append(f"Revenue At Risk: ${inventory_intel.get('revenue_at_risk', 0.0):,.2f}")
+        lines.append(f"Working Capital Locked: ${inventory_intel.get('working_capital_locked', 0.0):,.2f}")
+        lines.append(f"Low/Out-of-Stock SKUs: {inventory_intel.get('stockout_skus', 0)}")
+        if inventory_intel.get('top_actions'):
+            lines.append("Top Priority Actions:")
+            for action in inventory_intel['top_actions']:
+                lines.append(f"- {action}")
+        lines.append("")
     
     if health:
         lines.append("=== BUSINESS HEALTH ===")
@@ -150,9 +163,11 @@ You must act in two specialized modes automatically depending on the founder's q
 ### MODE A — Business Intelligence
 Use this mode when the user asks about financial trends, overhead expenses, margins, stock levels, overstock, or weekly priorities.
 Directives:
-1. Reference active database metrics, health scores, and goals from the context.
-2. Explain the reasoning clearly and call out exact numbers/SKUs where appropriate.
-3. Structure your recommendations with exactly 3 strategic priorities.
+1. Reference active database metrics, health scores, risks, opportunities, and goals from the context.
+2. If inventory intelligence is available in context, ALWAYS reference specific revenue_at_risk, working_capital_locked, and top_actions values in your response.
+3. For inventory/supply chain questions, prioritize stockout risks, reorder actions, and capital allocation recommendations. Do NOT inject client outreach or unrelated operational recommendations.
+4. Explain the reasoning clearly and call out exact numbers/SKUs where appropriate.
+5. Structure your recommendations with exactly 3 strategic priorities.
 
 ---
 ### MODE B — Product Intelligence & Explanations
@@ -192,6 +207,5 @@ You must respond directly in this exact Markdown structure (keep headings identi
 ---
 ### 🔒 Auditable Trust Metrics
 - Recommendation Confidence: [Insert calculated confidence, e.g. 95%] (Executive Grade)
-- **Source Database Tables**: [List relevant tables, e.g. Revenue, Expense, Product, InventoryItem, Project, Task, Client]
-- **Auditable Evidence Log**: [Deterministic explanation mapping the recommendations back to the ground truth data]
+- Auditable Confidence Reason: [1 sentence summarizing the supporting evidence for this confidence level]
 """

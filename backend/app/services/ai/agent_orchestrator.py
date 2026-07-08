@@ -328,16 +328,31 @@ class AgentOrchestrator:
                 conversation = None
 
             if not conversation:
-                # Generate a lightweight title from the first user message
-                cleaned = re.sub(r'[^\w\s]', '', question)
-                words = cleaned.split()
-                if words:
-                    title_words = [w.capitalize() for w in words[:5]]
-                    title = " ".join(title_words)
-                    if len(words) > 5:
-                        title += "..."
-                else:
-                    title = "Executive Consultation"
+                # Generate a professional, short title using LLM
+                title = "Executive Consultation"
+                if question and not is_static:
+                    try:
+                        short_q = question[:200]
+                        title_prompt = (
+                            f"Generate an extremely concise, professional 2-to-4 word title "
+                            f"for an executive business consultation conversation that starts with this user query: '{short_q}'. "
+                            f"Do NOT use quotes, punctuation, markdown, or any introductory phrases. Return ONLY the title text."
+                        )
+                        title_res = await self.gemini_service.generate_text(
+                            prompt=title_prompt,
+                            system_instruction="You are a professional business advisor. Generate short, professional chat titles.",
+                            model="gemini-2.5-flash",
+                            timeout=5.0
+                        )
+                        generated_title = title_res.strip().strip('"').strip("'").strip()
+                        generated_title = re.sub(r'\.{2,}', '', generated_title).strip('.').strip()
+                        if generated_title and len(generated_title) <= 50 and not generated_title.lower().startswith("generate"):
+                            title = generated_title
+                    except Exception as title_err:
+                        logger.warning(f"Failed to generate LLM chat title: {title_err}. Falling back to word truncation.")
+                        cleaned = re.sub(r'[^\w\s]', '', question)
+                        words = cleaned.split()
+                        title = " ".join([w.capitalize() for w in words[:5]]) + ("..." if len(words) > 5 else "") if words else "Executive Consultation"
 
                 conversation = ExecutiveConversation(
                     organization_id=org_id,
@@ -406,7 +421,11 @@ class AgentOrchestrator:
         
         start_time = time.time()
         
-        # 1. Resolve or create ExecutiveConversation
+        # 1. Intent Classifier & Data sufficiency check
+        intent = ConversationLayer.classify_intent(question)
+        is_static = ConversationLayer.is_static_intent(intent)
+        
+        # 2. Resolve or create ExecutiveConversation
         if conversation_id:
             conversation = db.query(ExecutiveConversation).filter(
                 ExecutiveConversation.organization_id == org_id,
@@ -416,9 +435,32 @@ class AgentOrchestrator:
             conversation = None
 
         if not conversation:
-            cleaned = re.sub(r'[^\w\s]', '', question)
-            words = cleaned.split()
-            title = " ".join([w.capitalize() for w in words[:5]]) + ("..." if len(words) > 5 else "") if words else "Executive Consultation"
+            # Generate a professional, short title using LLM
+            title = "Executive Consultation"
+            if question and not is_static:
+                try:
+                    short_q = question[:200]
+                    title_prompt = (
+                        f"Generate an extremely concise, professional 2-to-4 word title "
+                        f"for an executive business consultation conversation that starts with this user query: '{short_q}'. "
+                        f"Do NOT use quotes, punctuation, markdown, or any introductory phrases. Return ONLY the title text."
+                    )
+                    title_res = await self.gemini_service.generate_text(
+                        prompt=title_prompt,
+                        system_instruction="You are a professional business advisor. Generate short, professional chat titles.",
+                        model="gemini-2.5-flash",
+                        timeout=5.0
+                    )
+                    generated_title = title_res.strip().strip('"').strip("'").strip()
+                    generated_title = re.sub(r'\.{2,}', '', generated_title).strip('.').strip()
+                    if generated_title and len(generated_title) <= 50 and not generated_title.lower().startswith("generate"):
+                        title = generated_title
+                except Exception as title_err:
+                    logger.warning(f"Failed to generate LLM chat title: {title_err}. Falling back to word truncation.")
+                    cleaned = re.sub(r'[^\w\s]', '', question)
+                    words = cleaned.split()
+                    title = " ".join([w.capitalize() for w in words[:5]]) + ("..." if len(words) > 5 else "") if words else "Executive Consultation"
+
             conversation = ExecutiveConversation(organization_id=org_id, title=title)
             db.add(conversation)
             db.flush()
@@ -427,10 +469,6 @@ class AgentOrchestrator:
         user_msg = ExecutiveMessage(conversation_id=conversation.id, role="user", content=question)
         db.add(user_msg)
         db.commit()
-
-        # 2. Intent Classifier & Data sufficiency check
-        intent = ConversationLayer.classify_intent(question)
-        is_static = ConversationLayer.is_static_intent(intent)
 
         yield json.dumps({"type": "meta", "conversation_id": str(conversation.id), "title": conversation.title}) + "\n"
 
@@ -455,7 +493,40 @@ class AgentOrchestrator:
         # 3. For dynamic queries, pre-fetch database indicators to inject context
         health = get_health_score(db, org_id)
         goals = get_memory_context(db, org_id)
-        context_block = build_context_block(health=health, goals=goals)
+        
+        inventory_intel = None
+        business_health_score = int(health.get("score", 80))
+        risk_count = 0
+        opportunity_count = 0
+        revenue_at_risk = 0.0
+        working_capital_locked = 0.0
+        
+        try:
+            from app.services.analytics_service import AnalyticsService
+            inv_analysis = AnalyticsService.get_inventory_analysis(db, org_id)
+            items_at_risk = inv_analysis.get("items_at_risk", [])
+            revenue_at_risk = sum(item.get("revenue_at_risk", 0.0) for item in items_at_risk)
+            working_capital_locked = sum(item.get("working_capital_locked", 0.0) for item in items_at_risk)
+            risk_count = len(inv_analysis.get("top_risks", []))
+            opportunity_count = len(inv_analysis.get("top_opportunities", []))
+            business_health_score = inv_analysis.get("business_health_score", business_health_score)
+            inventory_intel = {
+                "business_health_score": business_health_score,
+                "revenue_at_risk": revenue_at_risk,
+                "working_capital_locked": working_capital_locked,
+                "stockout_skus": inv_analysis.get("out_of_stock_skus", 0) + inv_analysis.get("low_stock_skus", 0),
+                "top_actions": inv_analysis.get("top_actions", []),
+                "risk_count": risk_count,
+                "opportunity_count": opportunity_count
+            }
+        except Exception as e:
+            logger.error(f"Failed to fetch inventory analytics in orchestrate_stream: {e}")
+
+        context_block = build_context_block(
+            health=health,
+            goals=goals,
+            inventory_intel=inventory_intel
+        )
 
         # Build sub-agent analysis summary blocks to inject as COO context
         sub_agent_reports = []
@@ -513,19 +584,47 @@ class AgentOrchestrator:
         for title, desc in priority_matches[:3]:
             priorities.append(StrategicPriority(title=title.strip(), description=desc.strip()))
 
+        # Extract confidence and expected impact from full_text if possible, or fall back
+        confidence_val = 0.95
+        confidence_match = re.search(r"Recommendation Confidence:\s*(\d+)%", full_text)
+        if confidence_match:
+            confidence_val = float(confidence_match.group(1)) / 100.0
+
+        expected_impact_val = "Optimize operational margins and reduce stockout risk."
+        impact_match = re.search(r"### 📈 Expected Impact\n(.*)", full_text)
+        if impact_match:
+            expected_impact_val = impact_match.group(1).strip()
+
         if not priorities:
-            priorities = [
-                StrategicPriority(title="Audit Pricing Model", description="Audit price points on low-margin products to eliminate margin drag."),
-                StrategicPriority(title="Replenish Safety Stock", description="Trigger immediate reorders for high-priority stockout risks."),
-                StrategicPriority(title="Improve Client Outreach", description="Re-engage Month-to-month contracts at high risk of churn.")
-            ]
+            if inventory_intel and inventory_intel.get("top_actions"):
+                actions = inventory_intel["top_actions"]
+                priorities = [
+                    StrategicPriority(title=actions[0][:40], description=actions[0]),
+                    StrategicPriority(title=actions[1][:40] if len(actions) > 1 else "Replenish Safety Stock", description=actions[1] if len(actions) > 1 else "Trigger immediate reorders for high-priority stockout risks."),
+                    StrategicPriority(title=actions[2][:40] if len(actions) > 2 else "Review Supplier Costs", description=actions[2] if len(actions) > 2 else "Assess supplier overhead inflation and adjust pricing.")
+                ]
+            else:
+                priorities = [
+                    StrategicPriority(title="Audit Pricing Model", description="Audit price points on low-margin products to eliminate margin drag."),
+                    StrategicPriority(title="Replenish Safety Stock", description="Trigger immediate reorders for high-priority stockout risks."),
+                    StrategicPriority(title="Review Supplier Costs", description="Assess supplier overhead inflation and adjust pricing.")
+                ]
 
         coo_result = ExecutiveSynthesisResult(
             agent="COO Lead",
             summary=full_text,
             priorities=priorities,
-            expected_impact="Optimize operational margins and reduce churn risk.",
-            confidence_scores={"Overall": 0.95}
+            expected_impact=expected_impact_val,
+            confidence_scores={"Overall": confidence_val},
+            confidence_category="High Confidence" if confidence_val >= 0.8 else "Medium Confidence",
+            risk_classification="High Risk" if "high risk" in full_text.lower() or "critical" in full_text.lower() else "Low Risk",
+            evidence_used={
+                "business_health_score": business_health_score,
+                "risk_count": risk_count,
+                "opportunity_count": opportunity_count,
+                "revenue_at_risk": revenue_at_risk,
+                "working_capital_locked": working_capital_locked
+            }
         )
 
         # Save assistant message
