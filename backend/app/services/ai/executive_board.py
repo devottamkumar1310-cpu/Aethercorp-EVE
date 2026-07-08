@@ -795,6 +795,55 @@ class ExecutiveBoard:
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.90}
 
+        elif any(kw in q_lower for kw in ["client", "customer", "retention", "churn", "inactive", "growth", "opportunity", "expand"]):
+            # Client Intelligence & Churn Risks
+            active_clients = overview.get("active_clients", 0)
+            total_clients = overview.get("clients", 0)
+            inactive_clients = total_clients - active_clients
+            rev_trend = trends.get("revenue_trend", "stable")
+            
+            summary = (
+                f"**Client Retention & Expansion Briefing**: Active account roster stands at **{active_clients} clients** (out of {total_clients} total). "
+                f"With **{inactive_clients} inactive accounts** and a **{rev_trend} revenue trend**, our growth strategy should prioritize re-engagement campaigns and capacity upsells."
+            )
+            
+            priorities = [
+                StrategicPriority(
+                    title=f"Re-engage {inactive_clients} Inactive Client Rosters",
+                    description=(
+                        f"Reason: Inactive customer count ({inactive_clients}) represents untapped service revenue potential.\n"
+                        f"Impact: Reactivate dormant lines to drive incremental monthly margins.\n"
+                        f"Confidence: 88%"
+                    )
+                )
+            ]
+            
+            if delayed_projects:
+                top_proj = delayed_projects[0]
+                priorities.append(StrategicPriority(
+                    title=f"Unblock Client Milestone '{top_proj.name}'",
+                    description=(
+                        f"Reason: Client delivery is lagging at {top_proj.completion_percentage:.1f}% capacity.\n"
+                        f"Impact: Mitigate customer churn risk and secure contract value retention.\n"
+                        f"Confidence: 90%"
+                    )
+                ))
+            else:
+                priorities.append(StrategicPriority(
+                    title="Audit Active Client Satisfaction",
+                    description="Reason: Deliverables are on track.\nImpact: Anchor customer retention above 90%.\nConfidence: 85%"
+                ))
+                
+            priorities.append(StrategicPriority(
+                title="Review Expansion Opportunities",
+                description="Reason: Cross-sell capacity catalog lines to existing client base.\nImpact: Capture organic revenue expansion without customer acquisition cost.\nConfidence: 85%"
+            ))
+
+            expected_impact = f"Reactivate client accounts and secure stable recurring contract lines."
+            findings_by_agent = {"COO Agent": [f"Active Clients: {active_clients}", f"Inactive Clients: {inactive_clients}"]}
+            recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
+            confidence_scores = {"Overall": 0.89}
+
         else:
             # Default General Strategic Overview
             completed_tasks = overview.get("completed_tasks", 0)
