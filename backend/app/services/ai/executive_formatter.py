@@ -1309,6 +1309,22 @@ class ExecutiveFormatter:
         elif "executive summary" in q_clean or "summary" in q_clean:
             domain_label = "Executive Summary"
 
+        from app.services.ai.conversation_layer import ConversationLayer
+        resolved_intent = ConversationLayer.classify_intent(question)
+        intent_label = resolved_intent or "General COO"
+        source_map = {
+            "Inventory Query": "reorder_engine.py, stockout_prediction.py",
+            "Finance Query": "margin_analysis.py",
+            "Sales Query": "revenue_projection.py",
+            "Customers Query": "client_churn_analysis.py",
+            "Supply Chain Query": "vendor_metrics.py",
+            "Projects Query": "project_timeline.py",
+            "Tasks Query": "task_backlog_analyzer.py",
+            "Executive Summary Query": "executive_brief_synthesis.py",
+            "Operations Query": "ops_velocity_tracker.py"
+        }
+        source_file = source_map.get(intent_label, "coo_agent.py")
+
         # Construct structured markdown output separating facts, interpretation, and recommendations
         exec_summary = clean_summary
         reason_text = "Synthesized from executive board analysis across queried database records."
@@ -1324,6 +1340,8 @@ class ExecutiveFormatter:
             f"### 🔍 Reason\n{reason_text}\n\n"
             f"---\n"
             f"### 🔒 Auditable Trust Metrics\n"
+            f"- **Intent**: {intent_label}\n"
+            f"- **Source Engine**: {source_file}\n"
             f"- Recommendation Confidence: {int(rec_details.confidence * 100)}% ({conf_category})\n"
             f"- **Source Database Tables**: {tables_str}\n"
             f"- **Auditable Evidence Log**:\n{evidence_text}"

@@ -9,15 +9,19 @@ logger = logging.getLogger("eve.services.ai.conversation_layer")
 # Deterministic regex patterns for intent routing
 INTENT_PATTERNS = {
     "Technical Query": re.compile(
-        r"\b(developer|technical|debug|agent scores|governance|hallucination|routing|diagnostics|telemetry|system logs|database|db|config|status|api|health|healthz|developer mode)\b",
+        r"\b(developer|technical|debug|agent scores|governance|hallucination|routing|diagnostics|telemetry|system logs|database|db|config|api|healthz|developer mode)\b",
         re.IGNORECASE
     ),
     "Forecast Query": re.compile(
         r"\b(forecast|prediction|projection|simulate|simulation|what happens if|demand drop|sales increase|demand decline|inventory expansion|future sales)\b",
         re.IGNORECASE
     ),
+    "Supply Chain Query": re.compile(
+        r"\b(supply chain|vendor|vendors|lead time|lead times|procurement|logistics|carrier|shipping|supplier|suppliers|bottleneck|bottlenecks)\b",
+        re.IGNORECASE
+    ),
     "Inventory Query": re.compile(
-        r"\b(inventory|stock|warehouse|sku|product|reorder|supplier|safety stock|overstock|dead stock|replenish|out of stock|stockout)\b",
+        r"\b(inventory|stock|warehouse|sku|skus|product|products|reorder|safety stock|overstock|dead stock|replenish|out of stock|stockout)\b",
         re.IGNORECASE
     ),
     "Pricing Query": re.compile(
@@ -25,23 +29,31 @@ INTENT_PATTERNS = {
         re.IGNORECASE
     ),
     "Finance Query": re.compile(
-        r"\b(finance|financial|revenue|expense|expenses|profit|budget|cash flow|cash|working capital|margin|balance sheet|income|loss|spend|spending|spent)\b",
+        r"\b(finance|financial|expense|expenses|budget|cash flow|cash|working capital|balance sheet|income|loss|spend|spending|spent)\b",
         re.IGNORECASE
     ),
-    "Client Query": re.compile(
+    "Sales Query": re.compile(
+        r"\b(sales|revenue|profit|profitability|margin|margins|growth|expansion|opportunity|opportunities|expand|timeline|promote|market segment)\b",
+        re.IGNORECASE
+    ),
+    "Customers Query": re.compile(
         r"\b(client|clients|customer|customers|churn|retention|outreach|contact|inactive clients|at risk|at-risk)\b",
         re.IGNORECASE
     ),
-    "Growth Query": re.compile(
-        r"\b(growth|expansion|opportunity|opportunities|expand|timeline|promote|market segment)\b",
+    "Projects Query": re.compile(
+        r"\b(project|projects|milestone|milestones|gantt|roadmap)\b",
         re.IGNORECASE
     ),
-    "Project Query": re.compile(
-        r"\b(project|projects|delayed projects|overdue tasks|deadlines|milestone|weekly focus|team focus|operational priorities)\b",
+    "Tasks Query": re.compile(
+        r"\b(task|tasks|overdue|overdue tasks|delayed tasks|blocked tasks|backlog|todo|todos|to-do|to-dos|assign|assignee)\b",
         re.IGNORECASE
     ),
-    "Executive Query": re.compile(
-        r"\b(summary|brief|daily brief|health score|status|executive|ceo|coo|priorities|strategic|health of my business|risks|opportunities|priority)\b",
+    "Executive Summary Query": re.compile(
+        r"\b(summary|brief|daily brief|health score|status|executive|ceo|coo|health of my business|risks|opportunities|priority|priorities|strategic)\b",
+        re.IGNORECASE
+    ),
+    "Operations Query": re.compile(
+        r"\b(operational|operations|workflow|process|efficiency|team focus|operational priorities)\b",
         re.IGNORECASE
     ),
     "Capability Discovery": re.compile(
@@ -161,13 +173,16 @@ class ConversationLayer:
         priorities = [
             "Technical Query",
             "Forecast Query",
+            "Supply Chain Query",
             "Inventory Query",
             "Pricing Query",
             "Finance Query",
-            "Client Query",
-            "Growth Query",
-            "Project Query",
-            "Executive Query",
+            "Sales Query",
+            "Customers Query",
+            "Projects Query",
+            "Tasks Query",
+            "Executive Summary Query",
+            "Operations Query",
             "Capability Discovery",
             "Small Talk",
             "Thanks",
@@ -186,7 +201,7 @@ class ConversationLayer:
             return fuzzy_intent
 
         # Fallback default
-        return "Executive Query"
+        return "Executive Summary Query"
 
     @staticmethod
     def is_static_intent(intent: str) -> bool:

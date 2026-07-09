@@ -730,7 +730,36 @@ class GeminiService:
                     ],
                     expected_impact="Expected to capture $250k in new contract pipeline and increase gross margins by 15.0%."
                 )
-            elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week", "tasks", "task", "overdue", "delayed", "bottleneck", "bottlenecks"]):
+            elif any(kw in q_check for kw in ["supply chain", "vendor", "vendors", "procurement", "logistics"]):
+                return response_schema(
+                    agent="COO Lead",
+                    summary="Highest-leverage supply chain bottleneck: Standard shipping carrier lead times. Average delay: 4 days.",
+                    priorities=[
+                        StrategicPriority(
+                            title="Audit Logistics Routing",
+                            description="Evaluate alternative regional shipping carriers to optimize transit times.",
+                            data_source="suppliers",
+                            calculation="lead_time_days > 30",
+                            business_object="Supplier: Global Sourcing Inc"
+                        ),
+                        StrategicPriority(
+                            title="Reassign blocked tasks",
+                            description="Reallocate operations capacity to expedite procurement orders.",
+                            data_source="projects",
+                            calculation="status != 'completed'",
+                            business_object="Project: Enterprise Deployment"
+                        ),
+                        StrategicPriority(
+                            title="Escalate dependencies",
+                            description="Escalate raw material delay tickets with offshore suppliers.",
+                            data_source="inventory_items",
+                            calculation="stock_on_hand < safety_stock",
+                            business_object="SKU BENCH-PROD-0"
+                        )
+                    ],
+                    expected_impact="Expected to reduce average supplier lead time by 15% and resolve transport delays within 14 days."
+                )
+            elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week", "tasks", "task", "overdue", "delayed", "bottlenecks"]):
                 return response_schema(
                     agent="COO Lead",
                     summary="12 tasks are overdue. Most overdue project: Project Alpha.",
