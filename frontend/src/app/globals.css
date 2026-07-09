@@ -68,16 +68,16 @@
   --bg-app: #08080a;
   --bg-card: #0f0f12;
   --bg-sidebar: #0c0c0e;
-  --border-accent: #1f1f23;
-  --text-primary: #f4f4f5;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --border-accent: #2e2e33;
+  --text-primary: #ffffff;
+  --text-secondary: #e4e4e7;
+  --text-muted: #a1a1aa;
   --accent-color: #ffffff;
   --accent-glow: rgba(255, 255, 255, 0.05);
-  --accent-hover: #e4e4e7;
+  --accent-hover: #f4f4f5;
   --panel-glow: none;
-  --chart-primary: #f4f4f5;
-  --chart-secondary: #71717a;
+  --chart-primary: #ffffff;
+  --chart-secondary: #a1a1aa;
 
   /* Semantic Variables */
   --background: var(--bg-app);
@@ -284,7 +284,7 @@
   .text-slate-500, .text-slate-550, .text-slate-600 {
     color: var(--text-muted) !important;
   }
-  .text-slate-400, .text-slate-450, .text-slate-405 {
+  .text-slate-400, .text-slate-450, .text-slate-405, .text-slate-300, .text-slate-200 {
     color: var(--text-secondary) !important;
   }
   .text-indigo-200, .text-indigo-300 {
@@ -298,7 +298,34 @@
   }
   
   /* Borders accessibility */
-  .border-border, .border-accent {
+  .border-border, .border-accent, .border-border/60, .border-border/80 {
     border-color: var(--border) !important;
+  }
+
+  /* Tables readability overrides */
+  th {
+    color: var(--text-secondary) !important;
+    background-color: var(--surface-secondary) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  td {
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+  tr:hover {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+  }
+
+  /* Form & Empty State accessibility */
+  input[type="text"], input[type="email"], select, textarea {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* KPI / Insights Card distinct hierarchy styling */
+  .bg-card, .bg-slate-900, .bg-slate-950/40, .bg-slate-900/50 {
+    border-color: var(--border) !important;
+    background-color: var(--surface) !important;
   }
 }
