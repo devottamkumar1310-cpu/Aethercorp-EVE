@@ -120,10 +120,20 @@ class ConversationLayer:
                         return intent
                 continue
 
+            # Explicit blacklist of business words that must never fuzzy match conversational intents
+            business_blacklist = {
+                "task", "tasks", "project", "projects", "client", "clients", "cogs", "stock",
+                "sales", "revenue", "price", "pricing", "inventory", "budget", "cost", "costs",
+                "expense", "expenses", "profit", "profitability", "opportunity", "opportunities",
+                "mitigate", "risk", "risks", "bottleneck", "bottlenecks", "timeline", "capacity"
+            }
+            if word in business_blacklist:
+                continue
+
             for intent, keywords in static_keywords.items():
                 for kw in keywords:
-                    # Determine typo tolerance threshold: 1 for short keywords, 2 for longer ones
-                    threshold = 1 if len(kw) <= 4 else 2
+                    # Typos are only allowed 1 character difference for standard keywords, and 2 for long ones (> 6 chars)
+                    threshold = 2 if len(kw) > 6 else 1
                     if abs(len(word) - len(kw)) > threshold:
                         continue
                     if ConversationLayer.levenshtein_distance(word, kw) <= threshold:
