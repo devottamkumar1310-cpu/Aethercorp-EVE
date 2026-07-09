@@ -1103,7 +1103,7 @@ export default function EVECoocommandCenter() {
                         {getRelativeTimeString(c.updated_at || c.created_at)}
                       </span>
                       {c.message_count !== undefined && c.message_count > 0 && (
-                        <span className="bg-muted text-slate-450 px-1 py-0.2 rounded text-[7px] font-bold">
+                        <span className="bg-muted text-muted px-1 py-0.2 rounded text-[7px] font-bold">
                           {c.message_count} {c.message_count === 1 ? "msg" : "msgs"}
                         </span>
                       )}
@@ -1114,7 +1114,7 @@ export default function EVECoocommandCenter() {
             </div>
           ))}
           {conversations.length === 0 && (
-            <p className="text-[10px] text-slate-550 italic text-center py-6">No previous conversations.</p>
+            <p className="text-[10px] text-muted italic text-center py-6">No previous conversations.</p>
           )}
         </div>
       </div>
@@ -1129,7 +1129,7 @@ export default function EVECoocommandCenter() {
             {!isHistoryOpen && (
               <button
                 onClick={() => setIsHistoryOpen(true)}
-                className="p-1 hover:bg-muted text-slate-450 hover:text-indigo-400 rounded-lg transition-all border border-border cursor-pointer flex items-center gap-1 text-[10px]"
+                className="p-1 hover:bg-muted text-muted hover:text-indigo-400 rounded-lg transition-all border border-border cursor-pointer flex items-center gap-1 text-[10px]"
                 title="Show Chat History"
               >
                 <MessageSquare size={12} /> History
@@ -1142,7 +1142,7 @@ export default function EVECoocommandCenter() {
               <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
                 EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Active</span>
               </h2>
-              <p className="text-[10px] text-slate-405">Queries route automatically to COO, Finance & Operations agents</p>
+              <p className="text-[10px] text-secondary">Queries route automatically to COO, Finance & Operations agents</p>
             </div>
           </div>
 
@@ -1624,31 +1624,7 @@ export default function EVECoocommandCenter() {
                             </div>
                           )}
 
-                          {/* Priorities */}
-                          {agentData?.priorities && agentData.priorities.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
-                              <span className="text-[10px] font-bold text-slate-405 uppercase tracking-widest block">Strategic Priorities</span>
-                              <div className="grid grid-cols-1 gap-2">
-                                {agentData.priorities.map((pri: any, idx: number) => (
-                                  <div key={idx} className="py-2.5 px-3 bg-surface-secondary border-l-2 border-indigo-500 rounded-r-xl space-y-0.5 animate-fade-in">
-                                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-300 block">Priority {idx + 1}: {pri.title}</span>
-                                    <p className="text-[11px] text-secondary leading-relaxed font-normal">{pri.description}</p>
-                                    {renderActionButtons(pri, idx, `chat-${msg.id || "msg"}`)}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                           {/* Expected Business Impact */}
-                          {agentData?.expected_impact && 
-                           agentData.expected_impact.trim() !== "" && 
-                           agentData.expected_impact.trim().toUpperCase() !== "N/A" && (
-                            <div className="p-2.5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-xs space-y-0.5">
-                              <span className="font-semibold text-emerald-400 block text-[10px] uppercase tracking-wider">Expected Business Impact</span>
-                              <p className="text-muted-foreground font-normal leading-relaxed">{agentData.expected_impact}</p>
-                            </div>
-                          )}
+                          {/* Priorities and Impact are rendered in the right-hand reasoning panel to avoid duplication */}
 
                           {/* Recommendations by agent */}
                           {developerMode && agentData?.recommendations_by_agent && Object.keys(agentData.recommendations_by_agent).length > 0 && (
