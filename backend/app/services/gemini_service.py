@@ -505,10 +505,10 @@ class GeminiService:
 
         if schema_name == "AgentSelection":
             # Determine routing based on query
-            run_finance = any(k in q_check for k in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"])
+            run_finance = any(k in q_check for k in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs", "sales", "sales velocity"])
             run_inventory = any(k in q_check for k in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"])
             run_client = any(k in q_check for k in ["client", "customer", "retention", "churn", "inactive"])
-            run_growth = any(k in q_check for k in ["growth", "opportunity", "opportunities", "expand"])
+            run_growth = any(k in q_check for k in ["growth", "opportunity", "opportunities", "expand", "sales", "increase"])
             run_operations = any(k in q_check for k in ["projects", "tasks", "operations", "velocity", "delay", "capacity", "bottleneck", "deadline"])
             run_forecasting = any(k in q_check for k in ["forecast", "scenario", "simulate", "what happens if", "demand drops", "sales increase", "demand decline", "inventory expansion", "cash flow"])
             if not any([run_finance, run_operations, run_inventory, run_client, run_growth, run_forecasting]):

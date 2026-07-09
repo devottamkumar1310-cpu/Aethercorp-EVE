@@ -98,6 +98,11 @@ class ConversationLayer:
         Fuzzy matches static intents only (Greetings, Thanks, Goodbye) to prevent
         spillover to business-critical queries. Typos like 'namste', 'hllo', 'thx' match.
         """
+        # Phase 2: Query Length Guard (if query contains > 3 words, skip conversational fuzzy matching)
+        raw_word_count = len(re.findall(r"\b\w+\b", question))
+        if raw_word_count > 3:
+            return None
+
         words = re.findall(r"\b\w+\b", question.lower())
         if not words:
             return None
@@ -125,7 +130,9 @@ class ConversationLayer:
                 "task", "tasks", "project", "projects", "client", "clients", "cogs", "stock",
                 "sales", "revenue", "price", "pricing", "inventory", "budget", "cost", "costs",
                 "expense", "expenses", "profit", "profitability", "opportunity", "opportunities",
-                "mitigate", "risk", "risks", "bottleneck", "bottlenecks", "timeline", "capacity"
+                "mitigate", "risk", "risks", "bottleneck", "bottlenecks", "timeline", "capacity",
+                "supplier", "suppliers", "forecast", "forecasting", "stockout", "customer", "growth",
+                "reorder", "margin", "margins"
             }
             if word in business_blacklist:
                 continue

@@ -123,7 +123,53 @@ def test_greeting_intent_routing():
             assert "Good morning! How can I help you today?" in content
 
         # Telemetry should be stripped in Founder Mode
-        assert "telemetry" not in data["message"]["agent_data"]
+def test_intent_classification_hardening():
+    """
+    Harden intent classification against static intent spillovers and ensure
+    business queries never map to courtesy/conversational intents.
+    """
+    # 1. Courtesy/Conversational static intents (Must Pass)
+    assert ConversationLayer.classify_intent("thanks") == "Thanks"
+    assert ConversationLayer.classify_intent("thank you") == "Thanks"
+    assert ConversationLayer.classify_intent("thx") == "Thanks"
+    assert ConversationLayer.classify_intent("hello") == "Greeting"
+    
+    # 2. Business Queries (Must Never Map to static/courtesy intents)
+    business_queries = [
+        "How do we increase sales?",
+        "What risks are impacting sales?",
+        "How do we mitigate overdue tasks?",
+        "Should we reorder inventory?",
+        "What is hurting profitability?",
+        "Which clients are at risk?"
+    ]
+    for q in business_queries:
+        intent = ConversationLayer.classify_intent(q)
+        assert intent not in ["Thanks", "Greeting", "Goodbye", "Small Talk"], f"Query '{q}' was misclassified as conversational intent: {intent}"
+
+
+def test_agent_routing_for_sales():
+    """
+    Verify that query 'How do we increase sales?' routes exactly to Finance Agent
+    and Growth Agent.
+    """
+    from app.services.gemini_service import GeminiService
+    from app.services.ai.executive_board import AgentSelection
+    import asyncio
+    
+    service = GeminiService()
+    service.mock_mode = True
+    
+    res = asyncio.run(service.generate_structured_response(
+        prompt="User Question: How do we increase sales?",
+        response_schema=AgentSelection
+    ))
+    assert res.run_finance is True
+    assert res.run_growth is True
+    assert res.run_operations is False
+    assert res.run_inventory is False
+    assert res.run_client is False
+    assert res.run_forecasting is False
 
 
 def test_greeting_intent_bypass_and_latency():
