@@ -64,20 +64,20 @@
    ────────────────────────────────────────────────────────────────────────────── */
 
 :root, [data-theme="executive-dark"], [data-theme="dark"] {
-  /* Default: Executive Dark */
-  --bg-app: #030712;
-  --bg-card: #0b0f19;
-  --bg-sidebar: #090d16;
-  --border-accent: #1f2937;
-  --text-primary: #f3f4f6;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --accent-color: #6366f1;
-  --accent-glow: rgba(99, 102, 241, 0.15);
-  --accent-hover: #4f46e5;
-  --panel-glow: radial-gradient(circle at top, rgba(99, 102, 241, 0.05), transparent 60%);
-  --chart-primary: #818cf8;
-  --chart-secondary: #34d399;
+  /* Default: Premium Executive OS Dark Theme */
+  --bg-app: #08080a;
+  --bg-card: #0f0f12;
+  --bg-sidebar: #0c0c0e;
+  --border-accent: #1f1f23;
+  --text-primary: #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --accent-color: #ffffff;
+  --accent-glow: rgba(255, 255, 255, 0.05);
+  --accent-hover: #e4e4e7;
+  --panel-glow: none;
+  --chart-primary: #f4f4f5;
+  --chart-secondary: #71717a;
 
   /* Semantic Variables */
   --background: var(--bg-app);
@@ -100,7 +100,7 @@
   --popover: var(--bg-card);
   --popover-foreground: var(--text-primary);
   --primary: var(--accent-color);
-  --primary-foreground: var(--text-primary);
+  --primary-foreground: #000000;
   --secondary: var(--bg-sidebar);
   --secondary-foreground: var(--text-primary);
   --border: var(--border-accent);
@@ -111,19 +111,20 @@
 }
 
 [data-theme="executive-light"], [data-theme="light"] {
-  --bg-app: #f9fafb;
+  /* Premium Executive OS Light Theme */
+  --bg-app: #fafafa;
   --bg-card: #ffffff;
-  --bg-sidebar: #f3f4f6;
-  --border-accent: #e5e7eb;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
-  --accent-color: #4f46e5;
-  --accent-glow: rgba(79, 70, 229, 0.08);
-  --accent-hover: #4338ca;
+  --bg-sidebar: #f4f4f5;
+  --border-accent: #e4e4e7;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --accent-color: #18181b;
+  --accent-glow: rgba(24, 24, 27, 0.05);
+  --accent-hover: #27272a;
   --panel-glow: none;
-  --chart-primary: #4f46e5;
-  --chart-secondary: #10b981;
+  --chart-primary: #18181b;
+  --chart-secondary: #71717a;
 
   /* Semantic Variables */
   --background: var(--bg-app);
