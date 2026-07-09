@@ -225,52 +225,82 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/api/executive/diagnostic_test")
 async def diagnostic_test(question: str = "What should I reorder this week?"):
-    import uuid
-    from app.database import SessionLocal
-    from app.services.ai.agent_orchestrator import AgentOrchestrator
-    
-    db = SessionLocal()
-    try:
-        from app.models.organization import Organization
-        org = db.query(Organization).first()
-        org_id = org.id if org else uuid.uuid4()
-        
-        orchestrator = AgentOrchestrator()
-        
-        import sys
-        import io
-        old_stdout = sys.stdout
-        new_stdout = io.StringIO()
-        sys.stdout = new_stdout
-        
-        response_text = ""
-        try:
-            async for chunk in orchestrator.orchestrate_stream(
-                db=db,
-                org_id=org_id,
-                question=question,
-                mode="smart",
-                conversation_id=None,
-                user_id=None,
-                language="en",
-                developer_mode=True,
-                document_id=None
-            ):
-                response_text += chunk
-        except Exception as inner_err:
-            response_text = f"STREAM ERROR: {inner_err}"
-            
-        sys.stdout = old_stdout
-        captured_logs = new_stdout.getvalue()
-        
-        return {
-            "status": "success",
-            "question": question,
-            "captured_logs": captured_logs,
-            "response": response_text
-        }
-    finally:
-        db.close()
+    """
+    Lightweight runtime trace endpoint — no LLM calls, no DB writes.
+    Returns: intent, question_type, formatter_used, streaming, mock_mode.
+    """
+    import re
+    import sys
+    import importlib
+    from app.services.ai.conversation_layer import ConversationLayer
+    from app.services.ai.executive_formatter import ExecutiveFormatter
+    from app.core.dependency_container import container
+    from app.services.gemini_service import GeminiService
+
+    # Resolve mock_mode from the shared singleton
+    gemini_svc = container.get_optional("gemini_service")
+    if not gemini_svc:
+        gemini_svc = GeminiService()
+    mock_mode = gemini_svc.mock_mode
+
+    intent = ConversationLayer.classify_intent(question)
+    question_type = ExecutiveFormatter.get_question_type(question)
+    q_clean = re.sub(r'[^\w\s]', '', question).strip().lower()
+
+    # Mirror exact formatter-selection logic from orchestrate / orchestrate_stream
+    is_biggest_risk_query   = "biggest operational risk" in q_clean
+    is_overstock_query      = "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped" in q_clean
+    is_inventory_prof_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" in q_clean
+    is_reorder_query        = "reorder" in q_clean or "what should i reorder" in q_clean or "need immediate attention" in q_clean or "skus are at risk" in q_clean
+    is_spending_query       = "spending" in q_clean
+    is_profitability_query  = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" not in q_clean
+    is_finance_summary      = "finance summary" in q_clean
+    is_client_risk          = "clients are at risk" in q_clean or "clients at risk" in q_clean
+    is_client_contact       = "who should i contact" in q_clean
+    is_client_revenue       = "generate the most revenue" in q_clean or "generate most revenue" in q_clean
+    is_client_inactive      = "clients are inactive" in q_clean or "clients inactive" in q_clean
+    is_project_delayed      = ("projects are delayed" in q_clean or "projects delayed" in q_clean or
+                               ("project" in q_clean and any(k in q_clean for k in ["deadline", "passed", "overdue", "mitigate"])))
+    is_project_attention    = "projects need attention" in q_clean
+    is_project_deadlines    = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
+    is_project_focus        = "team focus" in q_clean or "operational priorities" in q_clean
+
+    if is_biggest_risk_query:        formatter = "get_biggest_operational_risk"
+    elif is_overstock_query or is_inventory_prof_query: formatter = "format_sku_overstock"
+    elif is_reorder_query:           formatter = "format_sku_reorders"
+    elif is_spending_query:          formatter = "format_finance_spending"
+    elif is_profitability_query:     formatter = "format_finance_profitability_leaks"
+    elif is_finance_summary:         formatter = "format_finance_summary"
+    elif is_client_risk:             formatter = "format_client_at_risk"
+    elif is_client_contact:          formatter = "format_client_outreach"
+    elif is_client_revenue:          formatter = "format_client_revenue"
+    elif is_client_inactive:         formatter = "format_client_inactive"
+    elif is_project_delayed:         formatter = "format_project_delayed"
+    elif is_project_attention:       formatter = "format_project_attention"
+    elif is_project_deadlines:       formatter = "format_project_deadlines_at_risk"
+    elif is_project_focus:           formatter = "format_project_weekly_focus"
+    else:                            formatter = "LLM_synthesis_fallback"
+
+    # Python + module revisions
+    py_version = sys.version
+    formatter_module = importlib.import_module("app.services.ai.executive_formatter").__file__
+    orchestrator_module = importlib.import_module("app.services.ai.agent_orchestrator").__file__
+
+    return {
+        "INTENT":           intent,
+        "QUESTION_TYPE":    question_type,
+        "ORCHESTRATOR":     "orchestrate_stream (UI path)",
+        "FORMATTER":        formatter,
+        "STREAMING":        True,
+        "MOCK_MODE":        mock_mode,
+        "question":         question,
+        "python_version":   py_version,
+        "formatter_file":   formatter_module,
+        "orchestrator_file": orchestrator_module,
+        "git_commit":       "a2ecb94e107a8f14f4ed8bbe5141dd49a51d9ed5",
+        "revision":         "eve-backend-00033-724",
+        "backend_url":      "https://eve-backend-68416570138.us-central1.run.app",
+    }
 
 
 app.include_router(inventory.router)
