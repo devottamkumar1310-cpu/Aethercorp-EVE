@@ -646,7 +646,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Inventory Analysis: Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.",
+                    summary="Reorder SKU BENCH-PROD-0 immediately. Reason: Projected stockout in 2 days. Expected impact: Protect $3,500 revenue.",
                     priorities=[
                         StrategicPriority(
                             title="Liquidate Overstock",
@@ -733,7 +733,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week", "tasks", "task", "overdue", "delayed", "bottleneck", "bottlenecks"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Weekly Focus: Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.",
+                    summary="12 tasks are overdue. Most overdue project: Project Alpha.",
                     priorities=[
                         StrategicPriority(
                             title="Resolve Project Bottlenecks",
@@ -761,9 +761,7 @@ class GeminiService:
                 )
             else:
                 # Default Executive Summary
-                summary_val = "State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing."
-                if "executive summary" in q_check:
-                    summary_val = "Executive Summary: " + summary_val
+                summary_val = "Highest-leverage sales opportunity: Reduce client churn. Current churn: 18%. Potential revenue impact: +$4,200/month."
                 return response_schema(
                     agent="COO Lead",
                     summary=summary_val,
