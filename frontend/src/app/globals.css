@@ -301,7 +301,7 @@
   }
   
   /* Borders accessibility */
-  .border-border, .border-accent, .border-border/60, .border-border/80 {
+  .border-border, .border-accent, .border-border\/60, .border-border\/80 {
     border-color: var(--border) !important;
   }
 
@@ -327,7 +327,7 @@
   }
 
   /* KPI / Insights Card distinct hierarchy styling */
-  .bg-card, .bg-slate-900, .bg-slate-950/40, .bg-slate-900/50 {
+  .bg-card, .bg-slate-900, .bg-slate-950\/40, .bg-slate-900\/50 {
     border-color: var(--border) !important;
     background-color: var(--surface) !important;
   }
