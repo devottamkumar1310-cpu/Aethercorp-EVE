@@ -15,7 +15,16 @@ class GCPSecretManagerService:
         """
         project = project_id or os.environ.get("GCP_PROJECT_ID")
         if not project:
-            logger.debug("GCP_PROJECT_ID not set. Bypassing Secret Manager fetch.")
+            try:
+                import google.auth
+                _, default_project = google.auth.default()
+                if default_project:
+                    project = default_project
+            except Exception as e:
+                logger.debug(f"Failed to auto-detect project ID: {e}")
+
+        if not project:
+            logger.debug("GCP_PROJECT_ID not set and auto-detection failed. Bypassing Secret Manager fetch.")
             return None
 
         try:
