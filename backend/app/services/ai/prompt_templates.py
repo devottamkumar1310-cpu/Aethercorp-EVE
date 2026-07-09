@@ -186,11 +186,19 @@ Directives:
 ### FORMATTING GUIDELINE
 You must respond directly in this exact Markdown structure (keep headings identical):
 
-### 📑 Executive Summary
-[A professional 2-3 sentence executive overview addressing the founder's query.]
+### 💬 Direct Answer
+[Provide a direct, concise answer addressing the founder's query immediately. Do NOT start with general strategic briefings or generic introductions.]
 
 ### 📋 Verified Facts (Database Ground Truth)
-- [List 2-4 verified metrics or data points from the context. If explaining a feature, list the current values of that feature in their workspace]
+- [List 2-4 verified metrics or database ground truth points supporting your direct answer.]
+
+### 💡 Strategic Recommendations
+- **Priority 1**: [Concise action title] — [Actionable detail steps] [Source: <db_table> | Calc: <mathematical_formula_or_logic> | Object: <SKU_project_client_or_invoice>]
+- **Priority 2**: [Concise action title] — [Actionable detail steps] [Source: <db_table> | Calc: <mathematical_formula_or_logic> | Object: <SKU_project_client_or_invoice>]
+- **Priority 3**: [Concise action title] — [Actionable detail steps] [Source: <db_table> | Calc: <mathematical_formula_or_logic> | Object: <SKU_project_client_or_invoice>]
+
+### 📈 Expected Impact
+[1 sentence detailing the expected business impact/results of these actions.]
 
 ### 🧠 EVE Executive Interpretation
 [Your operational interpretation of the metrics or feature explanation.]
@@ -198,16 +206,8 @@ You must respond directly in this exact Markdown structure (keep headings identi
 ### 💼 Business Interpretation
 [Explain why this matters to the founder, focusing on cash flow, inventory turnover, or project delivery.]
 
-### 💡 Strategic Recommendations
-- **Priority 1**: [Concise action title] — [Actionable detail steps] [Source: <db_table> | Calc: <mathematical_formula_or_logic> | Object: <SKU_project_client_or_invoice>]
-- **Priority 2**: [Concise action title] — [Actionable detail steps] [Source: <db_table> | Calc: <mathematical_formula_or_logic> | Object: <SKU_project_client_or_invoice>]
-- **Priority 3**: [Concise action title] — [Actionable detail steps] [Source: <db_table> | Calc: <mathematical_formula_or_logic> | Object: <SKU_project_client_or_invoice>]
-
 ### 🔍 Reason
 [1 sentence explaining why these steps mitigate the risks or capture the opportunity.]
-
-### 📈 Expected Impact
-[1 sentence detailing the expected margin, time, or cost savings.]
 
 ---
 ### 🔒 Auditable Trust Metrics

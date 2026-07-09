@@ -1,0 +1,405 @@
+[
+  {
+    "category": "Strategic",
+    "query": "What should I focus on this week?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Trigger Stock Replenishment",
+        "description": "Place immediate supplier orders for ROP-violated inventory lines.",
+        "data_source": "inventory_items",
+        "calculation": "stock_on_hand < safety_stock",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Weekly Focus): Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Weekly Focus): Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Weekly Focus): Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Trigger Stock Replenishment**: Place immediate supplier orders for ROP-violated inventory lines.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to improve task velocity by 20% and stabilize high-risk revenue streams within the week.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 81% (Moderate Confidence)\n- **Source Database Tables**: Project, Task\n- **Auditable Evidence Log**:\n- Ground truth projects: 2\n- Ground truth tasks: 1"
+  },
+  {
+    "category": "Strategic",
+    "query": "What is our biggest strategic risk?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 81% (Moderate Confidence)\n- **Source Database Tables**: Client, Expense, InventoryItem, Product, Project, Revenue, Task\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Strategic",
+    "query": "What should I stop doing?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 81% (Moderate Confidence)\n- **Source Database Tables**: Client, Expense, InventoryItem, Product, Project, Revenue, Task\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Strategic",
+    "query": "What is our biggest opportunity?",
+    "detected_intent": "Growth Query",
+    "agents": [
+      "Growth Agent",
+      "Finance Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Promote High-Margin Product SKU BENCH-PROD-0",
+        "description": "Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Onboard New Project Accounts (Capacity)",
+        "description": "Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.",
+        "data_source": "tasks, projects",
+        "calculation": "completed_tasks / total_tasks >= 0.8 and active_projects <= 2",
+        "business_object": "Roster Capacity"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Promote High-Margin Product SKU BENCH-PROD-0**: Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.\n- **Onboard New Project Accounts (Capacity)**: Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to capture $250k in new contract pipeline and increase gross margins by 15.0%.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 90% (Executive Grade)\n- **Source Database Tables**: Client, Expense, IntelligenceSnapshot, Project, Revenue\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Growth",
+    "query": "What is the timeline for our growth opportunities?",
+    "detected_intent": "Growth Query",
+    "agents": [
+      "Growth Agent",
+      "Finance Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Promote High-Margin Product SKU BENCH-PROD-0",
+        "description": "Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Onboard New Project Accounts (Capacity)",
+        "description": "Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.",
+        "data_source": "tasks, projects",
+        "calculation": "completed_tasks / total_tasks >= 0.8 and active_projects <= 2",
+        "business_object": "Roster Capacity"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Promote High-Margin Product SKU BENCH-PROD-0**: Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.\n- **Onboard New Project Accounts (Capacity)**: Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to capture $250k in new contract pipeline and increase gross margins by 15.0%.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 94% (Executive Grade)\n- **Source Database Tables**: Client, Expense, IntelligenceSnapshot, Project, Revenue\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Growth",
+    "query": "Where should we invest next quarter?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 81% (Moderate Confidence)\n- **Source Database Tables**: Client, Expense, InventoryItem, Product, Project, Revenue, Task\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Growth",
+    "query": "How can we expand revenue?",
+    "detected_intent": "Finance Query",
+    "agents": [
+      "Finance Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit retail price points on low-margin products to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Cost Containment",
+        "description": "Trim monthly project licensing and review vendor contracts to reduce overhead.",
+        "data_source": "expenses",
+        "calculation": "overhead_audit",
+        "business_object": "Contract Roster"
+      },
+      {
+        "title": "Working Capital Allocation",
+        "description": "Redirect cash reserve allocations to high-ROI projects.",
+        "data_source": "finance",
+        "calculation": "standard_capital_allocation",
+        "business_object": "Business Capital"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit retail price points on low-margin products to eliminate margin drag.\n- **Cost Containment**: Trim monthly project licensing and review vendor contracts to reduce overhead.\n- **Working Capital Allocation**: Redirect cash reserve allocations to high-ROI projects.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 8.0% and save $5,000 in monthly operational costs.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 90% (Executive Grade)\n- **Source Database Tables**: Client, Expense, IntelligenceSnapshot, Project, Revenue\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth expenses: $4,700.00\n- Ground truth profit: $7,100.00\n- Revenue trend: STABLE\n- Profit trend: STABLE"
+  },
+  {
+    "category": "Growth",
+    "query": "Which opportunities should we prioritize?",
+    "detected_intent": "Growth Query",
+    "agents": [
+      "Growth Agent",
+      "Finance Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Promote High-Margin Product SKU BENCH-PROD-0",
+        "description": "Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Onboard New Project Accounts (Capacity)",
+        "description": "Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.",
+        "data_source": "tasks, projects",
+        "calculation": "completed_tasks / total_tasks >= 0.8 and active_projects <= 2",
+        "business_object": "Roster Capacity"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Promote High-Margin Product SKU BENCH-PROD-0**: Phase 1 (Short-Term: 0-3 months): Execute promotional credit campaign for BENCH-PROD-0 to capture high-margin revenue.\n- **Onboard New Project Accounts (Capacity)**: Phase 2 (Medium-Term: 3-6 months): Onboard new enterprise projects leveraging current 80%+ task completion rate.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to capture $250k in new contract pipeline and increase gross margins by 15.0%.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 90% (Executive Grade)\n- **Source Database Tables**: Client, Expense, IntelligenceSnapshot, Project, Revenue\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Inventory",
+    "query": "What should I reorder?",
+    "detected_intent": "Inventory Query",
+    "agents": [
+      "Inventory Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Liquidate Overstock",
+        "description": "Launch promotional markdown campaigns to clear dead stock and free warehouse space.",
+        "data_source": "inventory_items",
+        "calculation": "is_dead_stock",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Adjust Lead Times",
+        "description": "Audit supplier lead times to build appropriate safety stock buffers.",
+        "data_source": "suppliers",
+        "calculation": "lead_time_variance",
+        "business_object": "Supplier Roster"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Liquidate Overstock**: Launch promotional markdown campaigns to clear dead stock and free warehouse space.\n- **Adjust Lead Times**: Audit supplier lead times to build appropriate safety stock buffers.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to free up 15% of warehouse capacity and prevent shipping bottlenecks on top-selling SKUs.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 85% (High Confidence)\n- **Source Database Tables**: InventoryItem, Product, Supplier\n- **Auditable Evidence Log**:\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Inventory",
+    "query": "What inventory is putting revenue at risk?",
+    "detected_intent": "Inventory Query",
+    "agents": [
+      "Inventory Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit retail price points on low-margin products to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Cost Containment",
+        "description": "Trim monthly project licensing and review vendor contracts to reduce overhead.",
+        "data_source": "expenses",
+        "calculation": "overhead_audit",
+        "business_object": "Contract Roster"
+      },
+      {
+        "title": "Working Capital Allocation",
+        "description": "Redirect cash reserve allocations to high-ROI projects.",
+        "data_source": "finance",
+        "calculation": "standard_capital_allocation",
+        "business_object": "Business Capital"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit retail price points on low-margin products to eliminate margin drag.\n- **Cost Containment**: Trim monthly project licensing and review vendor contracts to reduce overhead.\n- **Working Capital Allocation**: Redirect cash reserve allocations to high-ROI projects.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 8.0% and save $5,000 in monthly operational costs.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 91% (Executive Grade)\n- **Source Database Tables**: Expense, InventoryItem, Product, Revenue, Supplier\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth expenses: $4,700.00\n- Ground truth profit: $7,100.00\n- Revenue trend: STABLE\n- Profit trend: STABLE"
+  },
+  {
+    "category": "Inventory",
+    "query": "Which SKUs should we stop buying?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Liquidate Overstock",
+        "description": "Launch promotional markdown campaigns to clear dead stock and free warehouse space.",
+        "data_source": "inventory_items",
+        "calculation": "is_dead_stock",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Adjust Lead Times",
+        "description": "Audit supplier lead times to build appropriate safety stock buffers.",
+        "data_source": "suppliers",
+        "calculation": "lead_time_variance",
+        "business_object": "Supplier Roster"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Liquidate Overstock**: Launch promotional markdown campaigns to clear dead stock and free warehouse space.\n- **Adjust Lead Times**: Audit supplier lead times to build appropriate safety stock buffers.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to free up 15% of warehouse capacity and prevent shipping bottlenecks on top-selling SKUs.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 85% (High Confidence)\n- **Source Database Tables**: InventoryItem, Product, Supplier\n- **Auditable Evidence Log**:\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Inventory",
+    "query": "What inventory is tying up cash?",
+    "detected_intent": "Inventory Query",
+    "agents": [
+      "Inventory Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Liquidate Overstock",
+        "description": "Launch promotional markdown campaigns to clear dead stock and free warehouse space.",
+        "data_source": "inventory_items",
+        "calculation": "is_dead_stock",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Adjust Lead Times",
+        "description": "Audit supplier lead times to build appropriate safety stock buffers.",
+        "data_source": "suppliers",
+        "calculation": "lead_time_variance",
+        "business_object": "Supplier Roster"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Liquidate Overstock**: Launch promotional markdown campaigns to clear dead stock and free warehouse space.\n- **Adjust Lead Times**: Audit supplier lead times to build appropriate safety stock buffers.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to free up 15% of warehouse capacity and prevent shipping bottlenecks on top-selling SKUs.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 91% (Executive Grade)\n- **Source Database Tables**: InventoryItem, Product, Supplier\n- **Auditable Evidence Log**:\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Profitability",
+    "query": "What is hurting profitability?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [],
+    "summary": "### \ud83d\udcd1 Executive Summary\nDeterministic business intelligence lookup for: \"What is hurting profitability?\".\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\nWeakest Categories (Profitability Leaks)\n\n1. Apparel\n   Revenue Contribution: $0.00\n   Cost Contribution: $0.00\n   Margin Impact: 0.0%\n\n### \ud83e\udde0 EVE Executive Interpretation\nDeterministic query execution matching business parameters.\n\n### \ud83d\udcbc Business Interpretation\nVerified data retrieved directly from workspace database tables.\n\n### \ud83d\udca1 Strategic Recommendations\nRaise pricing or renegotiate supplier COGS for Apparel to resolve margin compression.\n\nStrongest Categories (Highly Profitable)\n\nNo highly profitable categories detected.\n\n### \ud83d\udd0d Reason\nDirect SQL search based on user criteria.\n\n### \ud83d\udcc8 Expected Impact\nHigh accuracy business analytics mapping without generative drift.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- **Confidence Level**: 100% (High Confidence - Deterministic)\n- **Source Database Tables**: Revenue, Expense\n- **Auditable Evidence Log**: [Deterministic calculations applied directly on SQL records]"
+  },
+  {
+    "category": "Profitability",
+    "query": "Where are we losing money?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 81% (Moderate Confidence)\n- **Source Database Tables**: Client, Expense, InventoryItem, Product, Project, Revenue, Task\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Profitability",
+    "query": "Which products have weak margins?",
+    "detected_intent": "Pricing Query",
+    "agents": [
+      "Finance Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit retail price points on low-margin products to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      },
+      {
+        "title": "Cost Containment",
+        "description": "Trim monthly project licensing and review vendor contracts to reduce overhead.",
+        "data_source": "expenses",
+        "calculation": "overhead_audit",
+        "business_object": "Contract Roster"
+      },
+      {
+        "title": "Working Capital Allocation",
+        "description": "Redirect cash reserve allocations to high-ROI projects.",
+        "data_source": "finance",
+        "calculation": "standard_capital_allocation",
+        "business_object": "Business Capital"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit retail price points on low-margin products to eliminate margin drag.\n- **Cost Containment**: Trim monthly project licensing and review vendor contracts to reduce overhead.\n- **Working Capital Allocation**: Redirect cash reserve allocations to high-ROI projects.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 8.0% and save $5,000 in monthly operational costs.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 90% (Executive Grade)\n- **Source Database Tables**: Expense, Revenue\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth expenses: $4,700.00\n- Ground truth profit: $7,100.00\n- Revenue trend: STABLE\n- Profit trend: STABLE"
+  },
+  {
+    "category": "Operations",
+    "query": "What are the top bottlenecks in our supply chain?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 95% (Executive Grade)\n- **Source Database Tables**: Client, Expense, InventoryItem, Product, Project, Revenue, Task\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  },
+  {
+    "category": "Operations",
+    "query": "What projects are behind schedule?",
+    "detected_intent": "Project Query",
+    "agents": [
+      "Operations Agent"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 95% (Executive Grade)\n- **Source Database Tables**: Project, Task\n- **Auditable Evidence Log**:\n- Ground truth projects: 2\n- Ground truth tasks: 1"
+  },
+  {
+    "category": "Operations",
+    "query": "What is blocking execution?",
+    "detected_intent": "Executive Query",
+    "agents": [
+      "COO Lead"
+    ],
+    "priorities": [
+      {
+        "title": "Price Optimization",
+        "description": "Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.",
+        "data_source": "products",
+        "calculation": "(selling_price - unit_cost) / selling_price",
+        "business_object": "SKU BENCH-PROD-0"
+      }
+    ],
+    "summary": "### \ud83d\udcd1 Executive Summary\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udccb Verified Facts (Database Ground Truth)\n- Total Revenue: $11,800.00\n- Total Expenses: $4,700.00\n- Net Profit: $7,100.00\n- Active Clients: 3\n- Active Projects: 2 | Tasks: 1\n- Inventory SKU Count: 3\n\n### \ud83e\udde0 EVE Executive Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udcbc Business Interpretation\nEVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.\n\n### \ud83d\udca1 Strategic Recommendations\n- **Price Optimization**: Audit and adjust retail pricing for negative-margin SKUs to eliminate margin drag.\n\n### \ud83d\udd0d Reason\nSynthesized from executive board analysis across queried database records.\n\n### \ud83d\udcc8 Expected Impact\nExpected to boost overall profit margin by 7.5%, reduce client churn by 12%, and free up $45,000 in working capital.\n\n---\n### \ud83d\udd12 Auditable Trust Metrics\n- Recommendation Confidence: 81% (Moderate Confidence)\n- **Source Database Tables**: Client, Expense, InventoryItem, Product, Project, Revenue, Task\n- **Auditable Evidence Log**:\n- Ground truth revenue: $11,800.00\n- Ground truth profit: $7,100.00\n- Ground truth clients: 3\n- Ground truth projects: 2\n- Ground truth inventory count: 3"
+  }
+]

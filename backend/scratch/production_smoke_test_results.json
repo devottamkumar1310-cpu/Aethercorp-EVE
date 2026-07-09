@@ -1,0 +1,84 @@
+{
+  "Strategic": {
+    "status": "PASS",
+    "routing": "COO Lead",
+    "recommendations": [
+      "Insufficient Verified Data"
+    ],
+    "evidence": [
+      {
+        "title": "Insufficient Verified Data",
+        "source": "workspace database",
+        "calc": "data_sufficiency_check",
+        "obj": "Workspace Catalog"
+      }
+    ]
+  },
+  "Growth": {
+    "status": "PASS",
+    "routing": "COO Lead",
+    "recommendations": [
+      "Onboard New Project Accounts (Capacity)"
+    ],
+    "evidence": [
+      {
+        "title": "Onboard New Project Accounts (Capacity)",
+        "source": "tasks, projects",
+        "calc": "completed_tasks / total_tasks >= 0.8 and active_projects <= 2",
+        "obj": "Roster Capacity"
+      }
+    ]
+  },
+  "Inventory": {
+    "status": "PASS",
+    "routing": "COO Lead",
+    "recommendations": [
+      "Adjust Lead Times"
+    ],
+    "evidence": [
+      {
+        "title": "Adjust Lead Times",
+        "source": "suppliers",
+        "calc": "lead_time_variance",
+        "obj": "Supplier Roster"
+      }
+    ]
+  },
+  "Profitability": {
+    "status": "PASS",
+    "routing": "COO Lead",
+    "recommendations": [
+      "Cost Containment",
+      "Working Capital Allocation"
+    ],
+    "evidence": [
+      {
+        "title": "Cost Containment",
+        "source": "expenses",
+        "calc": "overhead_audit",
+        "obj": "Contract Roster"
+      },
+      {
+        "title": "Working Capital Allocation",
+        "source": "finance",
+        "calc": "standard_capital_allocation",
+        "obj": "Business Capital"
+      }
+    ]
+  },
+  "Operations": {
+    "status": "PASS",
+    "routing": "COO Lead",
+    "recommendations": [
+      "Insufficient Verified Data"
+    ],
+    "evidence": [
+      {
+        "title": "Insufficient Verified Data",
+        "source": "workspace database",
+        "calc": "data_sufficiency_check",
+        "obj": "Workspace Catalog"
+      }
+    ]
+  }
+}

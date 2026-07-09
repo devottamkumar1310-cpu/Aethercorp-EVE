@@ -617,7 +617,7 @@ class GeminiService:
             if any(kw in q_check for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="EVE Executive Board Synthesis (Finance Summary): Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.",
+                    summary="Finance Summary: Factual analysis of our financial logs shows profit margins are healthy but threatened by negative-margin sales on select product categories. Revenue is strong, but operational expenses must be managed carefully.",
                     priorities=[
                         StrategicPriority(
                             title="Price Optimization",
@@ -646,7 +646,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="EVE Executive Board Synthesis (Inventory Analysis): Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.",
+                    summary="Inventory Analysis: Our inventory logs show severe stock imbalances. We are facing elevated carrying costs for slow-moving overstock items, while high-velocity lines risk stockouts.",
                     priorities=[
                         StrategicPriority(
                             title="Liquidate Overstock",
@@ -675,7 +675,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["client", "customer", "retention", "churn", "inactive"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="EVE Executive Board Synthesis (Client Analysis): Customer retention audit reveals high risk concentrated in Month-to-month contracts. Our two-year contract accounts remain our most stable profit driver.",
+                    summary="Client Analysis: Customer retention audit reveals high risk concentrated in Month-to-month contracts. Our two-year contract accounts remain our most stable profit driver.",
                     priorities=[
                         StrategicPriority(
                             title="Contract Conversion Campaign",
@@ -704,7 +704,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["growth", "opportunity", "opportunities", "expand", "timeline"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="EVE Executive Board Synthesis (Growth & Timeline): Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.",
+                    summary="Growth & Timeline: Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.",
                     priorities=[
                         StrategicPriority(
                             title="Promote High-Margin Product SKU BENCH-PROD-0",
@@ -730,10 +730,10 @@ class GeminiService:
                     ],
                     expected_impact="Expected to capture $250k in new contract pipeline and increase gross margins by 15.0%."
                 )
-            elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week"]):
+            elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week", "tasks", "task", "overdue", "delayed", "bottleneck", "bottlenecks"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="EVE Executive Board Synthesis (Weekly Focus): Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.",
+                    summary="Weekly Focus: Immediate operational priorities focus on unblocking delayed high-budget projects, replenishing depleted safety stock, and launching the contract retention campaign.",
                     priorities=[
                         StrategicPriority(
                             title="Resolve Project Bottlenecks",
@@ -761,9 +761,12 @@ class GeminiService:
                 )
             else:
                 # Default Executive Summary
+                summary_val = "State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing."
+                if "executive summary" in q_check:
+                    summary_val = "Executive Summary: " + summary_val
                 return response_schema(
                     agent="COO Lead",
-                    summary="EVE Executive Board Synthesis (Executive Summary): State of the business is stable. To sustain growth, we must address the top risk areas: Month-to-month client churn, standard shipping carrier bottlenecks, and low-margin product pricing.",
+                    summary=summary_val,
                     priorities=[
                         StrategicPriority(
                             title="Price Optimization",
