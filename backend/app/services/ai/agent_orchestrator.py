@@ -684,20 +684,48 @@ class AgentOrchestrator:
             
         reports_block = "\n".join(sub_agent_reports)
 
-        # If Gemini is in mock mode or has exhausted credits, fall back to local deterministic stream
-        if self.gemini_service.mock_mode:
-            logger.info("Gemini is in mock/depleted mode. Generating database-backed deterministic stream.")
+        # Check if the query matches any deterministic triggers
+        from app.services.ai.executive_formatter import ExecutiveFormatter
+        q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+        is_deterministic = False
+        if db and org_id:
+            is_deterministic = (
+                "biggest operational risk" in q_clean or
+                "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean or
+                "profitability" in q_clean or "hurting profitability" in q_clean or
+                "reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean or
+                "spending" in q_clean or
+                "finance summary" in q_clean or
+                "clients are at risk" in q_clean or "clients at risk" in q_clean or
+                "who should i contact" in q_clean or
+                "generate the most revenue" in q_clean or "generate most revenue" in q_clean or
+                "clients are inactive" in q_clean or "clients inactive" in q_clean or
+                "projects are delayed" in q_clean or "projects delayed" in q_clean or
+                ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean)) or
+                "projects need attention" in q_clean or
+                "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean or
+                "team focus" in q_clean or "operational priorities" in q_clean
+            )
+
+        # If Gemini is in mock mode or has exhausted credits, or if this is a deterministic query,
+        # fall back to local database-backed deterministic stream
+        if self.gemini_service.mock_mode or is_deterministic:
+            if is_deterministic:
+                logger.info("Deterministic query detected in stream. Bypassing LLM call to return ground-truth database data.")
+            else:
+                logger.info("Gemini is in mock/depleted mode. Generating database-backed deterministic stream.")
+                
             coo_result = self.board.generate_deterministic_fallback(db, org_id, question)
 
             # Route through format_executive_response so Sprint 6 intent routing,
             # question_type detection, deterministic formatters, and header conversion
             # (Issue/Cause/Mitigation/Impact, Direct Answer/Evidence/Recommended Action, etc.)
             # are all applied correctly — identical to the non-streaming orchestrate() path.
-            from app.services.ai.executive_formatter import ExecutiveFormatter
             markdown_content = ExecutiveFormatter.format_executive_response(
                 coo_result, question, db=db, org_id=org_id
             )
-            markdown_content += "\n\n*Note: EVE is running in local deterministic reasoning mode (AI service offline).*"
+            if self.gemini_service.mock_mode and not is_deterministic:
+                markdown_content += "\n\n*Note: EVE is running in local deterministic reasoning mode (AI service offline).*"
 
             # Stream the formatted content chunk by chunk
             for i in range(0, len(markdown_content), 10):
