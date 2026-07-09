@@ -281,10 +281,13 @@
 }
 
 [data-theme="executive-dark"], [data-theme="dark"] {
+  .text-slate-850, .text-slate-900, .text-slate-950, .text-slate-800 {
+    color: var(--text-primary) !important;
+  }
   .text-slate-500, .text-slate-550, .text-slate-600 {
     color: var(--text-muted) !important;
   }
-  .text-slate-400, .text-slate-450, .text-slate-405, .text-slate-300, .text-slate-200 {
+  .text-slate-350, .text-slate-355, .text-slate-400, .text-slate-450, .text-slate-405, .text-slate-300, .text-slate-200 {
     color: var(--text-secondary) !important;
   }
   .text-indigo-200, .text-indigo-300 {
