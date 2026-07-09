@@ -62,6 +62,72 @@ class AgentOrchestrator:
         intent = ConversationLayer.classify_intent(question)
         is_static = ConversationLayer.is_static_intent(intent)
 
+        # DIAGNOSTIC PRINTS FOR RUNTIME TRACE
+        try:
+            import re
+            from app.services.ai.executive_formatter import ExecutiveFormatter
+            q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+            question_type = ExecutiveFormatter.get_question_type(question)
+            
+            is_biggest_risk_query = "biggest operational risk" in q_clean
+            is_overstock_query = "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean
+            is_reorder_query = "reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean
+            is_spending_query = "spending" in q_clean
+            is_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" not in q_clean
+            is_inventory_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" in q_clean
+            is_finance_summary_query = "finance summary" in q_clean
+            is_client_risk_query = "clients are at risk" in q_clean or "clients at risk" in q_clean
+            is_client_contact_query = "who should i contact" in q_clean
+            is_client_revenue_query = "generate the most revenue" in q_clean or "generate most revenue" in q_clean
+            is_client_inactive_query = "clients are inactive" in q_clean or "clients inactive" in q_clean
+            is_project_delayed_query = (
+                "projects are delayed" in q_clean or 
+                "projects delayed" in q_clean or
+                ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean))
+            )
+            is_project_attention_query = "projects need attention" in q_clean
+            is_project_deadlines_query = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
+            is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
+
+            formatter_name = "ExecutiveFormatter.format_executive_response (LLM synthesis fallback)"
+            if is_biggest_risk_query:
+                formatter_name = "get_biggest_operational_risk"
+            elif is_overstock_query or is_inventory_profitability_query:
+                formatter_name = "format_sku_overstock"
+            elif is_reorder_query:
+                formatter_name = "format_sku_reorders"
+            elif is_spending_query:
+                formatter_name = "format_finance_spending"
+            elif is_profitability_query:
+                formatter_name = "format_finance_profitability_leaks"
+            elif is_finance_summary_query:
+                formatter_name = "format_finance_summary"
+            elif is_client_risk_query:
+                formatter_name = "format_client_at_risk"
+            elif is_client_contact_query:
+                formatter_name = "format_client_outreach"
+            elif is_client_revenue_query:
+                formatter_name = "format_client_revenue"
+            elif is_client_inactive_query:
+                formatter_name = "format_client_inactive"
+            elif is_project_delayed_query:
+                formatter_name = "format_project_delayed"
+            elif is_project_attention_query:
+                formatter_name = "format_project_attention"
+            elif is_project_deadlines_query:
+                formatter_name = "format_project_deadlines_at_risk"
+            elif is_project_focus_query:
+                formatter_name = "format_project_weekly_focus"
+
+            print("INTENT =", intent, flush=True)
+            print("QUESTION_TYPE =", question_type, flush=True)
+            print("ORCHESTRATOR =", "orchestrate", flush=True)
+            print("FORMATTER =", formatter_name, flush=True)
+            print("STREAMING =", False, flush=True)
+            print("MOCK_MODE =", self.gemini_service.mock_mode, flush=True)
+        except Exception as e:
+            print("DIAGNOSTIC ERROR:", e, flush=True)
+
         # Detect language
         target_lang = "en"
         # We can extract language if passed in request or auto-detect if Devanagari characters are present
@@ -428,6 +494,72 @@ class AgentOrchestrator:
         # 1. Intent Classifier & Data sufficiency check
         intent = ConversationLayer.classify_intent(question)
         is_static = ConversationLayer.is_static_intent(intent)
+
+        # DIAGNOSTIC PRINTS FOR RUNTIME TRACE
+        try:
+            import re
+            from app.services.ai.executive_formatter import ExecutiveFormatter
+            q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+            question_type = ExecutiveFormatter.get_question_type(question)
+            
+            is_biggest_risk_query = "biggest operational risk" in q_clean
+            is_overstock_query = "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean
+            is_reorder_query = "reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean
+            is_spending_query = "spending" in q_clean
+            is_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" not in q_clean
+            is_inventory_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" in q_clean
+            is_finance_summary_query = "finance summary" in q_clean
+            is_client_risk_query = "clients are at risk" in q_clean or "clients at risk" in q_clean
+            is_client_contact_query = "who should i contact" in q_clean
+            is_client_revenue_query = "generate the most revenue" in q_clean or "generate most revenue" in q_clean
+            is_client_inactive_query = "clients are inactive" in q_clean or "clients inactive" in q_clean
+            is_project_delayed_query = (
+                "projects are delayed" in q_clean or 
+                "projects delayed" in q_clean or
+                ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean))
+            )
+            is_project_attention_query = "projects need attention" in q_clean
+            is_project_deadlines_query = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
+            is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
+
+            formatter_name = "ExecutiveFormatter.format_executive_response (LLM synthesis fallback)"
+            if is_biggest_risk_query:
+                formatter_name = "get_biggest_operational_risk"
+            elif is_overstock_query or is_inventory_profitability_query:
+                formatter_name = "format_sku_overstock"
+            elif is_reorder_query:
+                formatter_name = "format_sku_reorders"
+            elif is_spending_query:
+                formatter_name = "format_finance_spending"
+            elif is_profitability_query:
+                formatter_name = "format_finance_profitability_leaks"
+            elif is_finance_summary_query:
+                formatter_name = "format_finance_summary"
+            elif is_client_risk_query:
+                formatter_name = "format_client_at_risk"
+            elif is_client_contact_query:
+                formatter_name = "format_client_outreach"
+            elif is_client_revenue_query:
+                formatter_name = "format_client_revenue"
+            elif is_client_inactive_query:
+                formatter_name = "format_client_inactive"
+            elif is_project_delayed_query:
+                formatter_name = "format_project_delayed"
+            elif is_project_attention_query:
+                formatter_name = "format_project_attention"
+            elif is_project_deadlines_query:
+                formatter_name = "format_project_deadlines_at_risk"
+            elif is_project_focus_query:
+                formatter_name = "format_project_weekly_focus"
+
+            print("INTENT =", intent, flush=True)
+            print("QUESTION_TYPE =", question_type, flush=True)
+            print("ORCHESTRATOR =", "orchestrate_stream", flush=True)
+            print("FORMATTER =", formatter_name, flush=True)
+            print("STREAMING =", True, flush=True)
+            print("MOCK_MODE =", self.gemini_service.mock_mode, flush=True)
+        except Exception as e:
+            print("DIAGNOSTIC ERROR:", e, flush=True)
         
         # 2. Resolve or create ExecutiveConversation
         if conversation_id:
@@ -556,29 +688,24 @@ class AgentOrchestrator:
         if self.gemini_service.mock_mode:
             logger.info("Gemini is in mock/depleted mode. Generating database-backed deterministic stream.")
             coo_result = self.board.generate_deterministic_fallback(db, org_id, question)
-            
-            from app.schemas.executive import StrategicPriority
-            
-            # Format high-quality, professional data-driven markdown message
-            markdown_content = f"### 📊 Business Health Analysis\n{coo_result.summary}\n\n### 📑 Strategic Priorities\n"
-            if coo_result.priorities:
-                for idx, pri in enumerate(coo_result.priorities, 1):
-                    # Replace newline characters with indentation for clean markdown nesting
-                    desc_indented = pri.description.replace("\n", "\n  ")
-                    markdown_content += f"\n* **Priority {idx}: {pri.title}**\n  {desc_indented}\n"
-            else:
-                markdown_content += "\n*No strategic priorities required based on current catalog variables.*"
-                
-            markdown_content += f"\n### 📈 Expected Impact\n{coo_result.expected_impact}"
-            markdown_content += "\n\n*Note: EVE is running in local deterministic reasoning mode (AI service offline).* "
-            
-            # Stream the generated content chunk by chunk
+
+            # Route through format_executive_response so Sprint 6 intent routing,
+            # question_type detection, deterministic formatters, and header conversion
+            # (Issue/Cause/Mitigation/Impact, Direct Answer/Evidence/Recommended Action, etc.)
+            # are all applied correctly — identical to the non-streaming orchestrate() path.
+            from app.services.ai.executive_formatter import ExecutiveFormatter
+            markdown_content = ExecutiveFormatter.format_executive_response(
+                coo_result, question, db=db, org_id=org_id
+            )
+            markdown_content += "\n\n*Note: EVE is running in local deterministic reasoning mode (AI service offline).*"
+
+            # Stream the formatted content chunk by chunk
             for i in range(0, len(markdown_content), 10):
                 chunk = markdown_content[i:i+10]
                 yield json.dumps({"type": "token", "content": chunk}) + "\n"
                 await asyncio.sleep(0.01)
-                
-            # Save assistant message to database for future retrieval and UI snapshot panel sync
+
+            # Save assistant message to database
             assistant_msg = ExecutiveMessage(
                 conversation_id=conversation.id,
                 role="assistant",

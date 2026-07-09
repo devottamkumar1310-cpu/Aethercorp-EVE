@@ -1213,9 +1213,64 @@ def test_project_risk_mitigation_routing():
     data = response.json()
     content = data["message"]["content"]
     
-    # Assert Diagnostic structure
-    assert "Answer:" in content
-    assert "Evidence:" in content
-    assert "Recommendation:" in content
+    # Assert Project structure
+    assert "Issue:" in content
+    assert "Cause:" in content
+    assert "Mitigation:" in content
     assert "Project Alpha" in content
-    assert "Expected Impact" in content
+    assert "Impact:" in content
+
+
+def test_success_criteria_scenarios():
+    """
+    Verify the 4 founder demo success criteria questions.
+    """
+    # Success Criteria Test 1: Mitigation risk for passed deadline
+    response1 = client.post("/api/executive/chat", json={
+        "question": "How do we mitigate the risk: \"1 active project(s) have passed their deadline\"?",
+        "mode": "smart",
+        "developer_mode": True
+    })
+    assert response1.status_code == 200
+    content1 = response1.json()["message"]["content"]
+    assert "PROJECT_RISK intent detected" in content1 or "Project Alpha" in content1
+    assert "Issue:" in content1
+    assert "Cause:" in content1
+    assert "Mitigation:" in content1
+    assert "Impact:" in content1
+
+    # Success Criteria Test 2: What should I reorder this week?
+    response2 = client.post("/api/executive/chat", json={
+        "question": "What should I reorder this week?",
+        "mode": "smart",
+        "developer_mode": True
+    })
+    assert response2.status_code == 200
+    content2 = response2.json()["message"]["content"]
+    assert content2.startswith("Direct Answer:\nReorder SKU")
+
+    # Success Criteria Test 3: Which inventory is hurting profitability?
+    response3 = client.post("/api/executive/chat", json={
+        "question": "Which inventory is hurting profitability?",
+        "mode": "smart",
+        "developer_mode": True
+    })
+    assert response3.status_code == 200
+    content3 = response3.json()["message"]["content"]
+    assert "Top Overstock Risks" in content3 or "SKU" in content3
+    assert "Direct Answer:" in content3
+
+    # Success Criteria Test 4: What is our biggest operational risk right now?
+    response4 = client.post("/api/executive/chat", json={
+        "question": "What is our biggest operational risk right now?",
+        "mode": "smart",
+        "developer_mode": True
+    })
+    assert response4.status_code == 200
+    content4 = response4.json()["message"]["content"]
+    assert "PROJECT_RISK intent detected" in content4 or "Project Alpha" in content4
+    assert "Issue:" in content4
+    assert "Cause:" in content4
+    assert "Mitigation:" in content4
+    assert "Impact:" in content4
+

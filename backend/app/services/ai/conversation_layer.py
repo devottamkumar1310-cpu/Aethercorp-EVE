@@ -169,6 +169,20 @@ class ConversationLayer:
         if not question or not question.strip():
             return "Greeting"
 
+        PROJECT_RISK_KEYWORDS = [
+            "deadline",
+            "overdue",
+            "project risk",
+            "late project",
+            "delayed project",
+            "missed milestone",
+            "mitigate risk",
+            "project blocker",
+        ]
+        q_lower = question.lower()
+        if any(kw in q_lower for kw in PROJECT_RISK_KEYWORDS):
+            return "PROJECT_MITIGATION"
+
         # Check in prioritized order to ensure correct routing
         priorities = [
             "Technical Query",

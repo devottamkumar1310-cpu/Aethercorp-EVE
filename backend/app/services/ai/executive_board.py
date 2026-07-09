@@ -107,7 +107,7 @@ class ExecutiveBoard:
                     "run_finance": False, "run_operations": False, "run_inventory": False,
                     "run_client": True, "run_growth": True, "run_forecasting": False
                 }
-            elif resolved_intent == "Projects Query" or resolved_intent == "Tasks Query" or resolved_intent == "Operations Query":
+            elif resolved_intent == "Projects Query" or resolved_intent == "Tasks Query" or resolved_intent == "Operations Query" or resolved_intent == "PROJECT_MITIGATION":
                 fast_path_selection = {
                     "run_finance": False, "run_operations": True, "run_inventory": False,
                     "run_client": False, "run_growth": False, "run_forecasting": False
