@@ -59,6 +59,10 @@ class Settings(BaseSettings):
             if jwt_sec:
                 self.SUPABASE_JWT_SECRET = jwt_sec
 
+            supabase_url = GCPSecretManagerService.get_secret("SUPABASE_URL")
+            if supabase_url:
+                self.SUPABASE_URL = supabase_url
+
             anon_key = GCPSecretManagerService.get_secret("SUPABASE_ANON_KEY")
             if anon_key:
                 self.SUPABASE_ANON_KEY = anon_key
