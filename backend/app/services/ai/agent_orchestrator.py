@@ -534,17 +534,17 @@ class AgentOrchestrator:
 
         # Build sub-agent analysis summary blocks to inject as COO context
         sub_agent_reports = []
-        if mode == "full" or intent in ["Finance Query", "Pricing Query"]:
+        if mode == "full" or intent in ["Finance Query", "Pricing Query", "Sales Query"]:
             from app.services.ai.finance_agent import FinanceAgent
             finance_agent = FinanceAgent(self.gemini_service)
             finance_result = await finance_agent.analyze(db, org_id, question)
             sub_agent_reports.append(f"Finance Agent summary: {finance_result.summary}\nFindings: {finance_result.findings}")
-        if mode == "full" or intent in ["Inventory Query"]:
+        if mode == "full" or intent in ["Inventory Query", "Supply Chain Query"]:
             from app.services.ai.inventory_agent import InventoryAgent
             inventory_agent = InventoryAgent(self.gemini_service)
             inventory_result = await inventory_agent.analyze(db, org_id, question)
             sub_agent_reports.append(f"Inventory Agent summary: {inventory_result.summary}\nFindings: {inventory_result.findings}")
-        if mode == "full" or intent in ["Project Query", "Technical Query"]:
+        if mode == "full" or intent in ["Projects Query", "Tasks Query", "Operations Query", "Technical Query", "Supply Chain Query"]:
             from app.services.ai.operations_agent import OperationsAgent
             ops_agent = OperationsAgent(self.gemini_service)
             ops_result = await ops_agent.analyze(db, org_id, question)

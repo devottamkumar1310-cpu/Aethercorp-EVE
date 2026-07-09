@@ -163,7 +163,7 @@ class ExecutiveGovernanceValidator:
         requested = []
         if any(kw in q_lower for kw in ["churn", "retention", "client", "customer", "vip"]):
             requested.append("client")
-        if any(kw in q_lower for kw in ["inventory", "stock", "warehouse", "sku", "reorder", "supplier", "safety stock", "overstock", "dead stock"]):
+        if any(kw in q_lower for kw in ["inventory", "stock", "warehouse", "sku", "reorder", "safety stock", "overstock", "dead stock"]):
             requested.append("inventory")
         if any(kw in q_lower for kw in ["finance", "revenue", "expense", "profit", "pricing", "budget", "cost", "margin", "cogs"]):
             requested.append("finance")
@@ -171,6 +171,8 @@ class ExecutiveGovernanceValidator:
             requested.append("operations")
         if any(kw in q_lower for kw in ["growth", "opportunity", "opportunities", "expand"]):
             requested.append("growth")
+        if any(kw in q_lower for kw in ["supply chain", "vendor", "vendors", "lead time", "procurement", "logistics", "carrier", "shipping", "supplier", "suppliers", "bottleneck", "bottlenecks"]):
+            requested.append("supply_chain")
         return requested
 
     @classmethod
@@ -189,13 +191,15 @@ class ExecutiveGovernanceValidator:
         has_tasks = overview.get("tasks", 0) > 0
         has_revenue = overview.get("revenue", 0.0) > 0.0
         has_inventory = overview.get("inventory", 0) > 0
+        has_suppliers = overview.get("suppliers", 0) > 0
         
         available_domains = {
             "finance": has_revenue,
             "growth": has_revenue and (has_clients or has_projects),
             "client": has_clients,
             "operations": has_projects or has_tasks,
-            "inventory": has_inventory
+            "inventory": has_inventory,
+            "supply_chain": has_suppliers
         }
         
         active_domain_count = sum(1 for is_active in available_domains.values() if is_active)
@@ -224,6 +228,8 @@ class ExecutiveGovernanceValidator:
                         return "DATA_INSUFFICIENT", "Insufficient financial data available.", available_domains
                     else:
                         return "DATA_INSUFFICIENT", "Insufficient customer data available.", available_domains
+                elif primary_missing == "supply_chain":
+                    return "DATA_INSUFFICIENT", "I cannot identify supply chain bottlenecks because no supply chain metrics are currently available.", available_domains
 
         if active_domain_count < len(available_domains):
             missing = [k.capitalize() for k, v in available_domains.items() if not v]

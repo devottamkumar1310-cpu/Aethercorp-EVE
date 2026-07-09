@@ -6,6 +6,7 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.models.inventory import InventoryItem
+from app.models.supplier import Supplier
 
 class BusinessAnalyticsService:
     @staticmethod
@@ -33,6 +34,9 @@ class BusinessAnalyticsService:
         
         # Inventory Metrics
         total_inventory = db.query(InventoryItem).filter(InventoryItem.organization_id == organization_id).count()
+
+        # Supplier / Supply Chain Metrics
+        total_suppliers = db.query(Supplier).filter(Supplier.organization_id == organization_id).count()
         
         return {
             "clients": total_clients,
@@ -44,7 +48,8 @@ class BusinessAnalyticsService:
             "revenue": total_revenue,
             "expenses": total_expenses,
             "profit": net_profit,
-            "inventory": total_inventory
+            "inventory": total_inventory,
+            "suppliers": total_suppliers
         }
 
     @staticmethod
