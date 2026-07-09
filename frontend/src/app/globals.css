@@ -216,119 +216,48 @@
 
 /* Global Contrast & Readability Overrides */
 [data-theme="executive-light"], [data-theme="light"] {
-  /* Text adjustments */
-  .text-slate-50, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-350, .text-slate-400, .text-white, .text-slate-100\/90, .text-slate-200\/80, .text-indigo-100, .text-indigo-200, .text-indigo-50 {
-    color: var(--text-primary) !important;
+  /* Enforce Light Mode Rule: Primary = near black, Secondary = dark gray */
+  h1, h2, h3, h4, h5, h6, th, td, strong, .font-bold, .font-extrabold, .text-foreground, .text-primary {
+    color: #18181b !important;
   }
-  .text-slate-405, .text-slate-450, .text-slate-500, .text-slate-550, .text-muted-foreground {
-    color: var(--text-secondary) !important;
+  p, span, li, label, .text-xs, .text-sm, .text-muted-foreground, .text-secondary, .text-slate-400, .text-slate-500 {
+    color: #4b5563 !important;
   }
-  .text-slate-700, .text-slate-800, .text-slate-900, .text-foreground {
-    color: var(--text-primary) !important;
+  svg {
+    stroke: #18181b !important;
+    color: #18181b !important;
   }
-  .text-indigo-200, .text-indigo-300, .text-indigo-400 {
-    color: #4f46e5 !important; /* Boost to indigo-600 color on light theme */
+  .border-border, .border-accent, .border-border\/60, .border-border\/80 {
+    border-color: #e4e4e7 !important;
   }
-  .text-emerald-300, .text-emerald-400 {
-    color: #059669 !important; /* Boost to emerald-600 */
-  }
-  .text-rose-300, .text-rose-450 {
-    color: #dc2626 !important; /* Boost to red-600 */
-  }
-
-  /* Background overrides to ensure card contrast */
-  .bg-slate-950\/40, .bg-slate-950\/50, .bg-background\/30, .bg-background\/20, .bg-card\/45, .bg-slate-900\/50, .bg-slate-900\/30 {
-    background-color: var(--surface-secondary) !important;
-    border-color: var(--border) !important;
-  }
-  .bg-slate-950, .bg-slate-900 {
-    background-color: var(--surface) !important;
-  }
-  .bg-indigo-950\/20, .bg-indigo-950\/30 {
-    background-color: var(--accent-glow) !important;
-    border-color: var(--border) !important;
-  }
-
-  /* Borders accessibility */
-  .border-border, .border-accent, .border-border\/60, .border-border\/80, .border-indigo-500\/20, .border-emerald-500\/10, .border-rose-500\/10 {
-    border-color: var(--border) !important;
-  }
-
-  /* Form visibility */
-  input[type="text"], input[type="email"], input[type="password"], select, textarea {
-    background-color: var(--surface) !important;
-    border-color: var(--border) !important;
-    color: var(--text-primary) !important;
-  }
-
-  /* Tables visibility */
   th {
-    color: var(--text-secondary) !important;
-    background-color: var(--surface-secondary) !important;
+    background-color: #f4f4f5 !important;
   }
   td {
-    color: var(--text-primary) !important;
-  }
-  tr:hover {
-    background-color: var(--surface-secondary) !important;
-  }
-  
-  /* Details and summary accessibility */
-  summary {
-    color: var(--text-primary) !important;
-    background-color: var(--surface-secondary) !important;
+    border-bottom: 1px solid #e4e4e7 !important;
   }
 }
 
 [data-theme="executive-dark"], [data-theme="dark"] {
-  .text-slate-850, .text-slate-900, .text-slate-950, .text-slate-800 {
-    color: var(--text-primary) !important;
+  /* Enforce Dark Mode Rule: Primary = white, Secondary = light gray */
+  h1, h2, h3, h4, h5, h6, th, td, strong, .font-bold, .font-extrabold, .text-foreground, .text-primary {
+    color: #ffffff !important;
   }
-  .text-slate-500, .text-slate-550, .text-slate-600 {
-    color: var(--text-muted) !important;
+  p, span, li, label, .text-xs, .text-sm, .text-muted-foreground, .text-secondary, .text-slate-400, .text-slate-500, .text-slate-850, .text-slate-900, .text-slate-950, .text-slate-800 {
+    color: #d4d4d8 !important;
   }
-  .text-slate-350, .text-slate-355, .text-slate-400, .text-slate-450, .text-slate-405, .text-slate-300, .text-slate-200 {
-    color: var(--text-secondary) !important;
+  svg {
+    stroke: #ffffff !important;
+    color: #ffffff !important;
   }
-  .text-indigo-200, .text-indigo-300 {
-    color: #818cf8 !important;
-  }
-  .text-emerald-300 {
-    color: #34d399 !important;
-  }
-  .text-rose-300 {
-    color: #fca5a5 !important;
-  }
-  
-  /* Borders accessibility */
   .border-border, .border-accent, .border-border\/60, .border-border\/80 {
-    border-color: var(--border) !important;
+    border-color: #2e2e33 !important;
   }
-
-  /* Tables readability overrides */
   th {
-    color: var(--text-secondary) !important;
-    background-color: var(--surface-secondary) !important;
-    border-bottom: 1px solid var(--border) !important;
+    background-color: #0c0c0e !important;
+    border-bottom: 1px solid #2e2e33 !important;
   }
   td {
-    color: var(--text-primary) !important;
-    border-bottom: 1px solid var(--border) !important;
-  }
-  tr:hover {
-    background-color: rgba(255, 255, 255, 0.02) !important;
-  }
-
-  /* Form & Empty State accessibility */
-  input[type="text"], input[type="email"], select, textarea {
-    background-color: var(--surface) !important;
-    border-color: var(--border) !important;
-    color: var(--text-primary) !important;
-  }
-
-  /* KPI / Insights Card distinct hierarchy styling */
-  .bg-card, .bg-slate-900, .bg-slate-950\/40, .bg-slate-900\/50 {
-    border-color: var(--border) !important;
-    background-color: var(--surface) !important;
+    border-bottom: 1px solid #2e2e33 !important;
   }
 }
