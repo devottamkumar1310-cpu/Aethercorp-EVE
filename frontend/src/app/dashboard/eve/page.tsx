@@ -1325,26 +1325,26 @@ export default function EVECoocommandCenter() {
                 {/* Executive metrics row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
-                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Business Health</span>
+                    <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Business Health</span>
                     <span className="text-sm font-extrabold text-indigo-200">
                       {selectedReasoning.evidence_used?.business_health_score || 80}/100
                     </span>
                   </div>
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
-                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Top Risks</span>
+                    <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Top Risks</span>
                     <span className="text-sm font-extrabold text-rose-300">
                       {selectedReasoning.evidence_used?.risk_count || 0}
                     </span>
                   </div>
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
-                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Opportunities</span>
+                    <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Opportunities</span>
                     <span className="text-sm font-extrabold text-emerald-300">
                       {selectedReasoning.evidence_used?.opportunity_count || 0}
                     </span>
                   </div>
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
-                    <span className="text-[9px] text-slate-350 block uppercase font-bold tracking-wider">Revenue at Risk</span>
-                    <span className="text-sm font-extrabold text-slate-100">
+                    <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Revenue at Risk</span>
+                    <span className="text-sm font-extrabold text-primary">
                       ${selectedReasoning.evidence_used?.revenue_at_risk?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
                     </span>
                   </div>
@@ -1352,7 +1352,7 @@ export default function EVECoocommandCenter() {
 
                 {/* Capital locked sub-badge */}
                 {selectedReasoning.evidence_used?.working_capital_locked > 0 && (
-                  <div className="text-[9.5px] text-slate-200 bg-amber-500/5 px-3 py-1.5 rounded-lg border border-amber-500/20 flex items-center justify-between">
+                  <div className="text-[9.5px] text-primary bg-amber-500/5 px-3 py-1.5 rounded-lg border border-amber-500/20 flex items-center justify-between">
                     <span>Working capital locked in slow-moving stock:</span>
                     <span className="font-extrabold text-amber-300">
                       ${selectedReasoning.evidence_used?.working_capital_locked?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}

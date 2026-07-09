@@ -118,7 +118,7 @@ export default function ClientsPage() {
               <tbody className="divide-y divide-slate-100">
                 {clients.map(c => (
                   <tr key={c.id} className="hover:bg-muted/40 group">
-                    <td className="px-6 py-4 font-medium text-slate-850">{c.company_name}</td>
+                    <td className="px-6 py-4 font-medium text-primary">{c.company_name}</td>
                     <td className="px-6 py-4 text-muted-foreground">{c.industry || '-'}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-foreground'}`}>{c.status}</span>

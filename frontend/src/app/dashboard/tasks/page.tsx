@@ -123,7 +123,7 @@ export default function TasksPage() {
               <tbody className="divide-y divide-slate-100">
                 {tasks.map(t => (
                   <tr key={t.id} className="hover:bg-muted/40 group">
-                    <td className="px-6 py-4 font-medium text-slate-850">{t.title}</td>
+                    <td className="px-6 py-4 font-medium text-primary">{t.title}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-muted text-foreground'}`}>{t.priority}</span>
                     </td>
