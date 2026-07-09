@@ -216,7 +216,7 @@
 /* Global Contrast & Readability Overrides */
 [data-theme="executive-light"], [data-theme="light"] {
   /* Text adjustments */
-  .text-slate-50, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-350, .text-slate-400, .text-white, .text-slate-100\/90, .text-slate-200\/80 {
+  .text-slate-50, .text-slate-100, .text-slate-200, .text-slate-300, .text-slate-350, .text-slate-400, .text-white, .text-slate-100\/90, .text-slate-200\/80, .text-indigo-100, .text-indigo-200, .text-indigo-50 {
     color: var(--text-primary) !important;
   }
   .text-slate-405, .text-slate-450, .text-slate-500, .text-slate-550, .text-muted-foreground {
