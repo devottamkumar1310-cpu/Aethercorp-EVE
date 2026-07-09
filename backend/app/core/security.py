@@ -29,6 +29,9 @@ if settings.SUPABASE_URL:
         logger.warning("cryptography or PyJWKClient not available")
 
 def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizationCredentials | None = Depends(security)):
+    auth_header = request.headers.get("authorization") if request else None
+    token = credentials.credentials if credentials else None
+    
     path = request.url.path if request else ""
     if path.endswith("/api/profile/me"):
         logger.info("START profile/me")
@@ -36,12 +39,16 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
         logger.info("START organization/workspaces")
 
     if credentials is None:
+        reason = "Credentials missing (HTTPBearer returned None)"
+        print("AUTH HEADER PRESENT:", bool(auth_header), flush=True)
+        print("TOKEN LENGTH:", len(token) if token else 0, flush=True)
+        print("AUTH SYNC FAILURE REASON:", reason, flush=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication credentials were not provided.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = credentials.credentials
+        
     try:
         # Debug: Print unverified token to see what claims are present
         unverified_payload = jwt.decode(token, options={"verify_signature": False})
@@ -92,6 +99,10 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
             logger.info("JWT verified")
         return payload
     except jwt.ExpiredSignatureError as e:
+        reason = f"ExpiredSignatureError: {str(e)}"
+        print("AUTH HEADER PRESENT:", bool(auth_header), flush=True)
+        print("TOKEN LENGTH:", len(token) if token else 0, flush=True)
+        print("AUTH SYNC FAILURE REASON:", reason, flush=True)
         logger.warning(f"JWT Validation Failed: Session expired - {e}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -99,6 +110,10 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
             headers={"WWW-Authenticate": "Bearer"},
         )
     except Exception as e:
+        reason = f"{type(e).__name__}: {str(e)}"
+        print("AUTH HEADER PRESENT:", bool(auth_header), flush=True)
+        print("TOKEN LENGTH:", len(token) if token else 0, flush=True)
+        print("AUTH SYNC FAILURE REASON:", reason, flush=True)
         logger.warning(f"JWT Validation Failed: {type(e).__name__} - {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
