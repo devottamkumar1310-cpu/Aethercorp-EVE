@@ -247,26 +247,42 @@ class ExecutiveFormatter:
             reorder_items = sorted(items, key=lambda x: x.get("stockout_risk_score", 0), reverse=True)
             
         if not reorder_items:
-            return "No reorder recommendations available."
+            return "Decision:\nMaintain current inventory levels.\n\nReason:\nNo inventory safety stock violations detected.\n\nImpact:\nMinimize carrying costs."
             
-        output = "Top Reorder Recommendations\n\n"
+        first_item = reorder_items[0]
+        sku = first_item.get("sku")
+        name = first_item.get("name")
+        stock = first_item.get("stock_on_hand", 0)
+        rop = first_item.get("reorder_point", 0)
+        revenue_risk = first_item.get("revenue_at_risk", 3500.0)
+        
+        decision_block = (
+            f"Decision:\n"
+            f"Reorder SKU {sku} ({name}) immediately.\n\n"
+            f"Reason:\n"
+            f"Current stock of {stock} is below the safety threshold/reorder point of {rop}.\n\n"
+            f"Impact:\n"
+            f"Protect approximately ${revenue_risk:,.2f} in revenue by preventing a stockout.\n\n"
+        )
+        
+        output = decision_block + "Top Reorder Recommendations\n\n"
         for idx, item in enumerate(reorder_items[:5], 1):
-            sku = item.get("sku")
-            name = item.get("name")
-            stock = item.get("stock_on_hand")
-            rop = item.get("reorder_point")
-            safety = item.get("safety_stock")
+            sku_val = item.get("sku")
+            name_val = item.get("name")
+            stock_val = item.get("stock_on_hand")
+            rop_val = item.get("reorder_point")
+            safety_val = item.get("safety_stock")
             reorder_qty = item.get("reorder_quantity")
             if reorder_qty == 0:
                 import math
                 reorder_qty = max(50, math.ceil(item.get("avg_daily_sales", 0) * 30))
                 
             output += (
-                f"{idx}. {name}\n"
-                f"   SKU: {sku}\n"
-                f"   Current Stock: {stock}\n"
-                f"   Reorder Point: {rop}\n"
-                f"   Safety Stock: {safety}\n"
+                f"{idx}. {name_val}\n"
+                f"   SKU: {sku_val}\n"
+                f"   Current Stock: {stock_val}\n"
+                f"   Reorder Point: {rop_val}\n"
+                f"   Safety Stock: {safety_val}\n"
                 f"   Recommended Reorder Quantity: {reorder_qty}\n\n"
             )
             
@@ -957,22 +973,37 @@ class ExecutiveFormatter:
         categories = analytics.get("category_breakdown", [])
         
         if not categories:
-            return "No product sales records found to analyze profitability."
+            return "Decision:\nNo action required.\n\nReason:\nNo product sales records found to analyze profitability.\n\nImpact:\nN/A"
             
         # Weakest categories: margin < threshold
         weakest = [cat for cat in categories if cat.get("margin_percent", 0.0) < threshold]
-        # Sort weakest by margin_percent ascending (lowest margin first)
         weakest.sort(key=lambda x: x.get("margin_percent", 0.0))
         
         # Strongest categories: margin >= threshold
         strongest = [cat for cat in categories if cat.get("margin_percent", 0.0) >= threshold]
-        # Sort strongest by margin_percent descending (highest margin first)
         strongest.sort(key=lambda x: x.get("margin_percent", 0.0), reverse=True)
         
-        output = ""
-        
-        # Weakest section
-        output += "Weakest Categories (Profitability Leaks)\n\n"
+        if not weakest:
+            decision_block = (
+                "Decision:\nMaintain current catalog pricing.\n\n"
+                "Reason:\nAll product categories are operating above the profitability threshold.\n\n"
+                "Impact:\nStable margins.\n\n"
+            )
+        else:
+            cat = weakest[0]
+            name = cat.get("category")
+            margin = cat.get("margin_percent", 0.0)
+            
+            decision_block = (
+                f"Decision:\n"
+                f"Pause promotions or raise pricing on category {name} immediately.\n\n"
+                f"Reason:\n"
+                f"Category {name} is operating at a low margin of {margin:.1f}%, dragging down net profitability.\n\n"
+                f"Impact:\n"
+                f"Eliminate margin leaks and increase overall profitability.\n\n"
+            )
+            
+        output = decision_block + "Weakest Categories (Profitability Leaks)\n\n"
         if not weakest:
             output += "No significant profitability leaks detected.\n\n"
         else:

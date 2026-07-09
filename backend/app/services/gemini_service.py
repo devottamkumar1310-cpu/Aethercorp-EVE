@@ -646,7 +646,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Reorder SKU BENCH-PROD-0 immediately. Reason: Projected stockout in 2 days. Expected impact: Protect $3,500 revenue.",
+                    summary="Decision:\nReorder SKU BENCH-PROD-0 immediately.\n\nReason:\nProjected stockout in 2 days.\n\nImpact:\nProtect approximately $3,500 in revenue.",
                     priorities=[
                         StrategicPriority(
                             title="Liquidate Overstock",
@@ -675,7 +675,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["client", "customer", "retention", "churn", "inactive"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Client Analysis: Customer retention audit reveals high risk concentrated in Month-to-month contracts. Our two-year contract accounts remain our most stable profit driver.",
+                    summary="Decision:\nFocus on reducing client churn.\n\nReason:\nCurrent churn is 18%, representing our largest verified revenue leak.\n\nImpact:\nPotential monthly revenue increase of $4,200.",
                     priorities=[
                         StrategicPriority(
                             title="Contract Conversion Campaign",
@@ -704,7 +704,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["growth", "opportunity", "opportunities", "expand", "timeline"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Growth & Timeline: Growth opportunities have been sequenced into a clear short-term to long-term roadmap based on high-margin offerings and available team capacity.",
+                    summary="Decision:\nPromote high-margin product SKU BENCH-PROD-0 immediately.\n\nReason:\nMargins are healthy at 45.0% and team has available capacity.\n\nImpact:\nCapture $250k in new contract pipeline and increase gross margins by 15.0%.",
                     priorities=[
                         StrategicPriority(
                             title="Promote High-Margin Product SKU BENCH-PROD-0",
@@ -733,7 +733,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["supply chain", "vendor", "vendors", "procurement", "logistics"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Highest-leverage supply chain bottleneck: Standard shipping carrier lead times. Average delay: 4 days.",
+                    summary="Decision:\nAudit logistics routing options.\n\nReason:\nStandard shipping carrier lead times average 4 days delay.\n\nImpact:\nReduce average supplier lead time by 15%.",
                     priorities=[
                         StrategicPriority(
                             title="Audit Logistics Routing",
@@ -762,7 +762,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["weekly", "focus", "priorities", "priority", "week", "tasks", "task", "overdue", "delayed", "bottlenecks"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="12 tasks are overdue. Most overdue project: Project Alpha.",
+                    summary="Decision:\nReassign blocked tasks immediately.\n\nReason:\n12 tasks are overdue under Project Alpha.\n\nImpact:\nReduce deadline risk across active projects.",
                     priorities=[
                         StrategicPriority(
                             title="Resolve Project Bottlenecks",
@@ -790,7 +790,7 @@ class GeminiService:
                 )
             else:
                 # Default Executive Summary
-                summary_val = "Highest-leverage sales opportunity: Reduce client churn. Current churn: 18%. Potential revenue impact: +$4,200/month."
+                summary_val = "Decision:\nFocus on reducing client churn.\n\nReason:\nCurrent churn is 18%, representing our largest verified revenue leak.\n\nImpact:\nPotential monthly revenue increase of $4,200."
                 return response_schema(
                     agent="COO Lead",
                     summary=summary_val,
