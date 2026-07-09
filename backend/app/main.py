@@ -223,6 +223,56 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 
+@app.get("/api/executive/diagnostic_test")
+async def diagnostic_test(question: str = "What should I reorder this week?"):
+    import uuid
+    from app.database import SessionLocal
+    from app.services.ai.agent_orchestrator import AgentOrchestrator
+    
+    db = SessionLocal()
+    try:
+        from app.models.organization import Organization
+        org = db.query(Organization).first()
+        org_id = org.id if org else uuid.uuid4()
+        
+        orchestrator = AgentOrchestrator()
+        
+        import sys
+        import io
+        old_stdout = sys.stdout
+        new_stdout = io.StringIO()
+        sys.stdout = new_stdout
+        
+        response_text = ""
+        try:
+            async for chunk in orchestrator.orchestrate_stream(
+                db=db,
+                org_id=org_id,
+                question=question,
+                mode="smart",
+                conversation_id=None,
+                user_id=None,
+                language="en",
+                developer_mode=True,
+                document_id=None
+            ):
+                response_text += chunk
+        except Exception as inner_err:
+            response_text = f"STREAM ERROR: {inner_err}"
+            
+        sys.stdout = old_stdout
+        captured_logs = new_stdout.getvalue()
+        
+        return {
+            "status": "success",
+            "question": question,
+            "captured_logs": captured_logs,
+            "response": response_text
+        }
+    finally:
+        db.close()
+
+
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
