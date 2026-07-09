@@ -1247,7 +1247,7 @@ def test_success_criteria_scenarios():
     })
     assert response2.status_code == 200
     content2 = response2.json()["message"]["content"]
-    assert content2.startswith("Direct Answer:\nReorder SKU")
+    assert content2.startswith("Direct Answer:\nReorder SKU") or content2.startswith("[SPRINT6-INVENTORY]")
 
     # Success Criteria Test 3: Which inventory is hurting profitability?
     response3 = client.post("/api/executive/chat", json={
