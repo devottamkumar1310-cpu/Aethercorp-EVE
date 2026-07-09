@@ -46,6 +46,10 @@ class Settings(BaseSettings):
             gemini_key = GCPSecretManagerService.get_secret("GEMINI_API_KEY")
             if gemini_key:
                 self.GEMINI_API_KEY = gemini_key
+            
+            # Disable mock mode in production if key is present
+            if self.GEMINI_API_KEY:
+                self.GEMINI_MOCK_MODE = False
 
             sec_key = GCPSecretManagerService.get_secret("SECRET_KEY")
             if sec_key:
@@ -66,6 +70,9 @@ class Settings(BaseSettings):
             frontend_url = GCPSecretManagerService.get_secret("FRONTEND_URL")
             if frontend_url:
                 self.FRONTEND_URL = frontend_url
+
+        if self.GEMINI_API_KEY:
+            self.GEMINI_MOCK_MODE = False
 
 
     # Pydantic Configuration
