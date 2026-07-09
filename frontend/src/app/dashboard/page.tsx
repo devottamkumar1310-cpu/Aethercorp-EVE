@@ -340,7 +340,7 @@ export default function DashboardPage() {
                     ) : (
                       summary?.recent_clients?.map(c => (
                         <tr key={c.id} className="hover:bg-muted/40">
-                          <td className="px-4 py-3 text-slate-850 font-medium">{c.company_name}</td>
+                          <td className="px-4 py-3 font-medium text-primary">{c.company_name}</td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-foreground'}`}>{c.status}</span>
                           </td>
@@ -377,7 +377,7 @@ export default function DashboardPage() {
                     ) : (
                       summary?.upcoming_deadlines?.map(p => (
                         <tr key={p.id} className="hover:bg-muted/40">
-                          <td className="px-4 py-3 text-slate-850 font-medium">{p.name}</td>
+                          <td className="px-4 py-3 font-medium text-primary">{p.name}</td>
                           <td className="px-4 py-3 text-red-650 font-medium">{p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A'}</td>
                         </tr>
                       ))

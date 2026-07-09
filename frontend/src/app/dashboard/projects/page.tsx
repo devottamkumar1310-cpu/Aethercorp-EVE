@@ -132,7 +132,7 @@ export default function ProjectsPage() {
               <tbody className="divide-y divide-slate-100">
                 {projects.map(p => (
                   <tr key={p.id} className="hover:bg-muted/40 group">
-                    <td className="px-6 py-4 font-medium text-slate-850">{p.name}</td>
+                    <td className="px-6 py-4 font-medium text-primary">{p.name}</td>
                     <td className="px-6 py-4 text-muted-foreground">${p.budget.toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

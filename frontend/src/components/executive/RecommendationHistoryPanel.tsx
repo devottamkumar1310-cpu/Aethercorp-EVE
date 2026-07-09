@@ -147,7 +147,7 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
                       </p>
                       {item.influenced_by_goals && item.influenced_by_goals.length > 0 && (
                         <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
-                          <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider flex items-center gap-0.5">
+                          <span className="text-[10px] text-muted font-bold uppercase tracking-wider flex items-center gap-0.5">
                             <Target size={11} className="text-indigo-400" /> Influenced by:
                           </span>
                           {item.influenced_by_goals.map((g) => (
