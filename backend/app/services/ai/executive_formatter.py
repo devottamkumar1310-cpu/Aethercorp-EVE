@@ -199,7 +199,7 @@ class ExecutiveFormatter:
         overstock_items.sort(key=lambda x: (1 if x.get("is_dead_stock") else 0, x.get("days_until_stockout", 0)), reverse=True)
         
         if not overstock_items:
-            return "[SPRINT6-PROFITABILITY]\nDecision:\nMaintain current stock levels.\n\nReason:\nNo slow-moving or overstocked inventory detected.\n\nImpact:\nInventory turnover is optimized."
+            return "Decision:\nMaintain current stock levels.\n\nReason:\nNo slow-moving or overstocked inventory detected.\n\nImpact:\nInventory turnover is optimized."
             
         first_item = overstock_items[0]
         sku = first_item.get("sku")
@@ -250,7 +250,7 @@ class ExecutiveFormatter:
             actions.append(f"- SKU {sku_val}: {action_text}")
             
         output += "Recommended Action:\n" + "\n".join(actions)
-        return "[SPRINT6-PROFITABILITY]\n" + output
+        return output
 
     @classmethod
     def format_sku_reorders(cls, db, org_id) -> str:
@@ -265,7 +265,7 @@ class ExecutiveFormatter:
             reorder_items = sorted(items, key=lambda x: x.get("stockout_risk_score", 0), reverse=True)
             
         if not reorder_items:
-            return "[SPRINT6-INVENTORY]\nDecision:\nMaintain current inventory levels.\n\nReason:\nNo inventory safety stock violations detected.\n\nImpact:\nMinimize carrying costs."
+            return "Decision:\nMaintain current inventory levels.\n\nReason:\nNo inventory safety stock violations detected.\n\nImpact:\nMinimize carrying costs."
             
         first_item = reorder_items[0]
         sku = first_item.get("sku")
@@ -304,7 +304,7 @@ class ExecutiveFormatter:
                 f"   Recommended Reorder Quantity: {reorder_qty}\n\n"
             )
             
-        return "[SPRINT6-INVENTORY]\n" + output.strip()
+        return output.strip()
 
     @classmethod
     def format_client_at_risk(cls, db, org_id) -> str:
@@ -669,8 +669,8 @@ class ExecutiveFormatter:
         
         if not delayed_list:
             if is_mitigate_risk:
-                return "[SPRINT6-PROJECT]\nAnswer:\nNo delayed projects detected in the current workspace.\n\nEvidence:\nSystems nominal.\n\nRecommendation:\nMonitor standard timelines."
-            return "[SPRINT6-PROJECT]\nNo delayed projects detected in the current workspace."
+                return "Answer:\nNo delayed projects detected in the current workspace.\n\nEvidence:\nSystems nominal.\n\nRecommendation:\nMonitor standard timelines."
+            return "No delayed projects detected in the current workspace."
             
         if is_mitigate_risk:
             evidence_lines = []
@@ -712,7 +712,7 @@ class ExecutiveFormatter:
                 f"Expected Impact:\n"
                 f"Protect project delivery timelines and prevent breach penalties."
             )
-            return "[SPRINT6-PROJECT]\n" + output
+            return output
             
         output = "Delayed Projects\n\n"
         actions = []
@@ -743,7 +743,7 @@ class ExecutiveFormatter:
             actions.append(f"- {name}: {action_text}")
             
         output += "Recommended Action:\n" + "\n".join(actions)
-        return "[SPRINT6-PROJECT]\n" + output.strip()
+        return output.strip()
 
     @classmethod
     def format_project_attention(cls, db, org_id) -> str:
@@ -1192,7 +1192,6 @@ class ExecutiveFormatter:
             overdue_tasks = sum(1 for t in top_p.tasks if t.status != "completed" and t.due_date and to_utc(t.due_date) < datetime.datetime.now(datetime.timezone.utc))
             overdue_desc = "overdue milestone" if overdue_tasks > 0 else "timeline delay"
             return (
-                f"[SPRINT6-RISK]\n"
                 f"Issue:\n"
                 f"PROJECT_RISK intent detected\n\n"
                 f"Project affected:\n"
@@ -1219,7 +1218,6 @@ class ExecutiveFormatter:
         if low_stock:
             top_low = low_stock[0]
             return (
-                f"[SPRINT6-RISK]\n"
                 f"Issue:\n"
                 f"Fulfillment risk on SKU {top_low['sku']}.\n\n"
                 f"Cause:\n"
@@ -1231,7 +1229,6 @@ class ExecutiveFormatter:
             )
             
         return (
-            f"[SPRINT6-RISK]\n"
             f"Issue:\n"
             f"No critical operational risks detected.\n\n"
             f"Cause:\n"
