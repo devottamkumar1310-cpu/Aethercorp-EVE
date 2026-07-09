@@ -1249,10 +1249,10 @@ class ExecutiveFormatter:
                 tables_str = ", ".join(table_mappings.get(domain_name, table_mappings["general"]))
                 
                 formatted = (
-                    f"### 💬 Direct Answer\n{facts}\n\n"
+                    f"### 💬 Direct Answer\n{raw_text}\n\n"
                     f"### 📋 Verified Facts (Database Ground Truth)\nVerified database records retrieved directly from workspace tables.\n\n"
-                    f"### 💡 Strategic Recommendations\n{recs}\n\n"
-                    f"### 📈 Expected Impact\nHigh accuracy business analytics mapping without generative drift.\n\n"
+                    f"### 💡 Strategic Recommendations\n- **Action Card**: Detailed recommendations are populated in the right-hand reasoning panel to avoid duplication.\n\n"
+                    f"### 📈 Expected Impact\nRefer to the Expected Impact metrics panel.\n\n"
                     f"### 🧠 EVE Executive Interpretation\nDeterministic query execution matching business parameters.\n\n"
                     f"### 💼 Business Interpretation\nVerified data retrieved directly from workspace database tables.\n\n"
                     f"### 🔍 Reason\nDirect SQL search based on user criteria.\n\n"
@@ -1268,13 +1268,7 @@ class ExecutiveFormatter:
         clean_summary = cls.convert_technical_to_founder_language(synthesis.summary)
 
         # Build list of action points
-        priorities_text = ""
-        if synthesis.priorities:
-            priorities_text = "\n".join([
-                f"- **{p.title}**: {p.description}" for p in synthesis.priorities
-            ])
-        else:
-            priorities_text = "- No immediate manual actions required. Maintain current operational levels."
+        priorities_text = "- **Action Card**: Detailed recommendations are populated in the right-hand reasoning panel to avoid duplication."
 
         # Supporting evidence details
         rec_details = cls.build_executive_recommendation(synthesis, question)

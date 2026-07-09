@@ -962,8 +962,12 @@ class ExecutiveBoard:
             active_projects = db.query(Project).filter(Project.organization_id == org_id, Project.status == "active").count()
             
             summary = (
-                "**Growth & Opportunities Timeline Briefing**: To capitalize on expansion opportunities, we sequence a "
-                "three-phase roadmap targeting high-margin SKU promotions, capacity utilization, and inactive client upselling."
+                f"Decision:\n"
+                f"Promote high-margin product '{high_margin_prod.name if high_margin_prod else 'Vintage Blue Denim'}' immediately.\n\n"
+                f"Reason:\n"
+                f"It yields the highest gross margin of {max_margin*100:.1f}% to boost immediate cash flow.\n\n"
+                f"Impact:\n"
+                f"Sequence growth initiatives to capture up to 15% margin improvements."
             )
             
             priorities = []
