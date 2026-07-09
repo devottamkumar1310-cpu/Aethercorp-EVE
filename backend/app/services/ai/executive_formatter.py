@@ -602,9 +602,10 @@ class ExecutiveFormatter:
         return output.strip()
 
     @classmethod
-    def format_project_delayed(cls, db, org_id) -> str:
+    def format_project_delayed(cls, db, org_id, question: str = "") -> str:
         from app.models.project import Project
         import datetime
+        import re
         
         projects = db.query(Project).filter(Project.organization_id == org_id).all()
         
@@ -645,8 +646,54 @@ class ExecutiveFormatter:
         # Sort by days_remaining ascending (most overdue first)
         delayed_list.sort(key=lambda x: x["days_remaining"])
         
+        q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+        is_mitigate_risk = "mitigate" in q_clean or "risk" in q_clean or "passed" in q_clean
+        
         if not delayed_list:
+            if is_mitigate_risk:
+                return "Answer:\nNo delayed projects detected in the current workspace.\n\nEvidence:\nSystems nominal.\n\nRecommendation:\nMonitor standard timelines."
             return "No delayed projects detected in the current workspace."
+            
+        if is_mitigate_risk:
+            evidence_lines = []
+            actions = []
+            for idx, item in enumerate(delayed_list[:5], 1):
+                name = item["name"]
+                progress = item["progress"]
+                deadline = item["deadline"]
+                days = item["days_remaining"]
+                open_t = item["open_tasks"]
+                risk = item["risk_level"]
+                blocking = item["blocking"]
+                
+                days_text = f"{days} days remaining" if days >= 0 else f"Overdue by {abs(days)} days"
+                if days == 999:
+                    days_text = "No deadline"
+                
+                evidence_lines.append(
+                    f"{idx}. {name}\n"
+                    f"   Progress Percentage: {progress:.1f}%\n"
+                    f"   Deadline: {deadline}\n"
+                    f"   Days Remaining: {days_text}\n"
+                    f"   Open Tasks: {open_t}\n"
+                    f"   Risk Level: {risk}\n"
+                    f"   Blocking Factors: {blocking}"
+                )
+                actions.append(f"- Reassign open tasks on project '{name}' to senior resources to resolve blockers.")
+                
+            evidence_block = "\n\n".join(evidence_lines)
+            rec_actions = "\n".join(actions)
+            
+            output = (
+                f"Answer:\n"
+                f"Identify delayed project(s) and reallocate resources immediately to resolve blockers.\n\n"
+                f"Evidence:\n"
+                f"{evidence_block}\n\n"
+                f"Recommendation:\n"
+                f"{rec_actions}\n"
+                f"- **Expected Impact**: Protect project delivery timelines and prevent breach penalties."
+            )
+            return output
             
         output = "Delayed Projects\n\n"
         actions = []
@@ -1278,7 +1325,11 @@ class ExecutiveFormatter:
                 is_client_contact_query = "who should i contact" in q_clean
                 is_client_revenue_query = "generate the most revenue" in q_clean or "generate most revenue" in q_clean
                 is_client_inactive_query = "clients are inactive" in q_clean or "clients inactive" in q_clean
-                is_project_delayed_query = "projects are delayed" in q_clean or "projects delayed" in q_clean
+                is_project_delayed_query = (
+                    "projects are delayed" in q_clean or 
+                    "projects delayed" in q_clean or
+                    ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean))
+                )
                 is_project_attention_query = "projects need attention" in q_clean
                 is_project_deadlines_query = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
                 is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
@@ -1313,7 +1364,7 @@ class ExecutiveFormatter:
                     raw_text = cls.format_client_inactive(db, org_id)
                     domain_name = "client"
                 elif is_project_delayed_query:
-                    raw_text = cls.format_project_delayed(db, org_id)
+                    raw_text = cls.format_project_delayed(db, org_id, question)
                     domain_name = "operations"
                 elif is_project_attention_query:
                     raw_text = cls.format_project_attention(db, org_id)
@@ -1364,7 +1415,11 @@ class ExecutiveFormatter:
             is_client_contact_query = "who should i contact" in q_clean
             is_client_revenue_query = "generate the most revenue" in q_clean or "generate most revenue" in q_clean
             is_client_inactive_query = "clients are inactive" in q_clean or "clients inactive" in q_clean
-            is_project_delayed_query = "projects are delayed" in q_clean or "projects delayed" in q_clean
+            is_project_delayed_query = (
+                "projects are delayed" in q_clean or 
+                "projects delayed" in q_clean or
+                ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean))
+            )
             is_project_attention_query = "projects need attention" in q_clean
             is_project_deadlines_query = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
             is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
@@ -1389,7 +1444,7 @@ class ExecutiveFormatter:
             elif is_client_inactive_query:
                 raw_text = cls.format_client_inactive(db, org_id)
             elif is_project_delayed_query:
-                raw_text = cls.format_project_delayed(db, org_id)
+                raw_text = cls.format_project_delayed(db, org_id, question)
             elif is_project_attention_query:
                 raw_text = cls.format_project_attention(db, org_id)
             elif is_project_deadlines_query:

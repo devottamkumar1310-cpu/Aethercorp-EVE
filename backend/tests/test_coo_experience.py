@@ -1198,3 +1198,24 @@ def test_record_level_project_intelligence():
     assert "### 💡 Strategic Recommendations" in content
     assert data["message"]["agent_data"]["priorities"] == []
     assert data["message"]["agent_data"]["expected_impact"] == "N/A"
+
+
+def test_project_risk_mitigation_routing():
+    """
+    Verify that project risk mitigation queries are routed correctly to delayed projects and formatted as Diagnostic.
+    """
+    response = client.post("/api/executive/chat", json={
+        "question": "How do we mitigate the risk: \"1 active project(s) have passed their deadline\"?",
+        "mode": "smart",
+        "developer_mode": True
+    })
+    assert response.status_code == 200
+    data = response.json()
+    content = data["message"]["content"]
+    
+    # Assert Diagnostic structure
+    assert "Answer:" in content
+    assert "Evidence:" in content
+    assert "Recommendation:" in content
+    assert "Project Alpha" in content
+    assert "Expected Impact" in content
