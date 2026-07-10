@@ -409,14 +409,10 @@ class GeminiService:
                         raise GeminiOutageError("Gemini call timed out after maximum retries.", status_code=504)
                 except Exception as e:
                     logger.error(f"Gemini call failed for agent '{agent_role}' (Attempt {attempt+1}/{retries}): {e}")
-                    if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
-                        logger.warning("Invalid API key detected during generate_response. Switching to mock mode.")
+                    if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e) or "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
+                        logger.warning("Invalid API key or exhausted credits detected during generate_response. Switching to mock mode.")
                         self.mock_mode = True
                         return await self._generate_mock_response(prompt, system_instruction, agent_role, tool_names)
-                    if "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e):
-                        sleep_time = 30.0 + random.uniform(5.0, 25.0)
-                        logger.warning(f"Rate limit hit (429) in generate_response. Sleeping for {sleep_time:.1f}s to stagger retries...")
-                        await asyncio.sleep(sleep_time)
                     if attempt == retries - 1:
                         status_code = 429 if ("429" in str(e) or "RESOURCE_EXHAUSTED" in str(e)) else 503
                         raise GeminiOutageError(f"Gemini response generation failed: {str(e)}", status_code=status_code)
