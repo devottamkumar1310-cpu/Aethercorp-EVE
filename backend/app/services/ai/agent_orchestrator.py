@@ -490,10 +490,12 @@ class AgentOrchestrator:
         from app.services.ai.memory_service import get_memory_context
         
         start_time = time.time()
+        print("STEP A - request received", flush=True)
         
         # 1. Intent Classifier & Data sufficiency check
         intent = ConversationLayer.classify_intent(question)
         is_static = ConversationLayer.is_static_intent(intent)
+        print("STEP B - intent classified", flush=True)
 
         # DIAGNOSTIC PRINTS FOR RUNTIME TRACE
         try:
@@ -560,6 +562,33 @@ class AgentOrchestrator:
             print("MOCK_MODE =", self.gemini_service.mock_mode, flush=True)
         except Exception as e:
             print("DIAGNOSTIC ERROR:", e, flush=True)
+
+        # 1.5 Evaluate is_deterministic early
+        from app.services.ai.executive_formatter import ExecutiveFormatter
+        q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+        is_deterministic = (
+            "biggest operational risk" in q_clean or
+            "overstock" in q_clean or "hurting inventory efficiency" in q_clean or
+            "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean or
+            "profitability" in q_clean or "hurting profitability" in q_clean or
+            "reorder" in q_clean or "need immediate attention" in q_clean or
+            "what should i reorder" in q_clean or "skus are at risk" in q_clean or
+            "sku at risk" in q_clean or "skus at risk" in q_clean or
+            "spending" in q_clean or
+            "finance summary" in q_clean or
+            "clients are at risk" in q_clean or "clients at risk" in q_clean or
+            "who should i contact" in q_clean or
+            "generate the most revenue" in q_clean or "generate most revenue" in q_clean or
+            "clients are inactive" in q_clean or "clients inactive" in q_clean or
+            "projects are delayed" in q_clean or "projects delayed" in q_clean or
+            ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or
+             "overdue" in q_clean or "mitigate" in q_clean)) or
+            "projects need attention" in q_clean or
+            "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean or
+            "team focus" in q_clean or "operational priorities" in q_clean
+        )
+        print("STEP C - deterministic check", flush=True)
+        print(f"is_deterministic = {is_deterministic}", flush=True)
         
         # 2. Resolve or create ExecutiveConversation
         if conversation_id:
@@ -571,31 +600,12 @@ class AgentOrchestrator:
             conversation = None
 
         if not conversation:
-            # Generate a professional, short title using LLM
+            # Fast, local title generation (never blocks)
             title = "Executive Consultation"
             if question and not is_static:
-                try:
-                    short_q = question[:200]
-                    title_prompt = (
-                        f"Generate an extremely concise, professional 2-to-4 word title "
-                        f"for an executive business consultation conversation that starts with this user query: '{short_q}'. "
-                        f"Do NOT use quotes, punctuation, markdown, or any introductory phrases. Return ONLY the title text."
-                    )
-                    title_res = await self.gemini_service.generate_text(
-                        prompt=title_prompt,
-                        system_instruction="You are a professional business advisor. Generate short, professional chat titles.",
-                        model="gemini-2.5-flash",
-                        timeout=5.0
-                    )
-                    generated_title = title_res.strip().strip('"').strip("'").strip()
-                    generated_title = re.sub(r'\.{2,}', '', generated_title).strip('.').strip()
-                    if generated_title and len(generated_title) <= 50 and not generated_title.lower().startswith("generate"):
-                        title = generated_title
-                except Exception as title_err:
-                    logger.warning(f"Failed to generate LLM chat title: {title_err}. Falling back to word truncation.")
-                    cleaned = re.sub(r'[^\w\s]', '', question)
-                    words = cleaned.split()
-                    title = " ".join([w.capitalize() for w in words[:5]]) + ("..." if len(words) > 5 else "") if words else "Executive Consultation"
+                cleaned_title = re.sub(r'[^\w\s]', '', question)
+                words = cleaned_title.split()
+                title = " ".join([w.capitalize() for w in words[:4]]) + ("..." if len(words) > 4 else "") if words else "Executive Consultation"
 
             conversation = ExecutiveConversation(organization_id=org_id, title=title)
             db.add(conversation)
@@ -626,66 +636,31 @@ class AgentOrchestrator:
             yield json.dumps({"type": "done"}) + "\n"
             return
 
-        _t0 = time.time()
-        print(f"STEP A — orchestrate_stream entered for deterministic routing check | t=0.000s", flush=True)
-
-        # 3. Evaluate is_deterministic FIRST — before any DB or LLM calls
-        from app.services.ai.executive_formatter import ExecutiveFormatter
-        q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
-        is_deterministic = (
-            "biggest operational risk" in q_clean or
-            "overstock" in q_clean or "hurting inventory efficiency" in q_clean or
-            "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean or
-            "profitability" in q_clean or "hurting profitability" in q_clean or
-            "reorder" in q_clean or "need immediate attention" in q_clean or
-            "what should i reorder" in q_clean or "skus are at risk" in q_clean or
-            "sku at risk" in q_clean or "skus at risk" in q_clean or
-            "spending" in q_clean or
-            "finance summary" in q_clean or
-            "clients are at risk" in q_clean or "clients at risk" in q_clean or
-            "who should i contact" in q_clean or
-            "generate the most revenue" in q_clean or "generate most revenue" in q_clean or
-            "clients are inactive" in q_clean or "clients inactive" in q_clean or
-            "projects are delayed" in q_clean or "projects delayed" in q_clean or
-            ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or
-             "overdue" in q_clean or "mitigate" in q_clean)) or
-            "projects need attention" in q_clean or
-            "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean or
-            "team focus" in q_clean or "operational priorities" in q_clean
-        )
-        print(f"STEP B — is_deterministic={is_deterministic} mock_mode={self.gemini_service.mock_mode} | t={time.time()-_t0:.3f}s", flush=True)
-
         # If deterministic or mock mode, skip ALL LLM sub-agent calls and go straight to formatter
         if self.gemini_service.mock_mode or is_deterministic:
             if is_deterministic:
                 logger.info("Deterministic query detected in stream. Bypassing ALL LLM calls.")
-                print(f"STEP C — deterministic path selected, skipping sub-agents | t={time.time()-_t0:.3f}s", flush=True)
             else:
                 logger.info("Gemini mock/depleted mode. Skipping sub-agents, using deterministic stream.")
-                print(f"STEP C — mock mode path selected, skipping sub-agents | t={time.time()-_t0:.3f}s", flush=True)
 
-            print(f"STEP D — calling generate_deterministic_fallback | t={time.time()-_t0:.3f}s", flush=True)
             coo_result = self.board.generate_deterministic_fallback(db, org_id, question)
-            print(f"STEP E — deterministic_fallback complete | t={time.time()-_t0:.3f}s", flush=True)
 
-            print(f"STEP F — calling format_executive_response | t={time.time()-_t0:.3f}s", flush=True)
+            print("STEP F - formatter", flush=True)
             markdown_content = ExecutiveFormatter.format_executive_response(
                 coo_result, question, db=db, org_id=org_id
             )
-            print(f"STEP G — formatter complete, content_len={len(markdown_content)} | t={time.time()-_t0:.3f}s", flush=True)
 
             if self.gemini_service.mock_mode and not is_deterministic:
                 markdown_content += "\n\n*Note: EVE is running in local deterministic reasoning mode (AI service offline).*"
 
             # Stream formatted content chunk by chunk
-            print(f"STEP H — starting token stream | t={time.time()-_t0:.3f}s", flush=True)
+            print("STEP G - first token", flush=True)
             for i in range(0, len(markdown_content), 10):
                 chunk = markdown_content[i:i+10]
                 yield json.dumps({"type": "token", "content": chunk}) + "\n"
                 await asyncio.sleep(0.01)
 
             # Save assistant message
-            print(f"STEP I — saving assistant message to DB | t={time.time()-_t0:.3f}s", flush=True)
             assistant_msg = ExecutiveMessage(
                 conversation_id=conversation.id,
                 role="assistant",
@@ -694,17 +669,15 @@ class AgentOrchestrator:
             )
             db.add(assistant_msg)
             db.commit()
-            print(f"STEP J — done, total elapsed={time.time()-_t0:.3f}s", flush=True)
             yield json.dumps({"type": "done"}) + "\n"
             return
 
         # --- NON-DETERMINISTIC LLM PATH (Gemini live) ---
-        print(f"STEP C — LLM path, fetching DB context | t={time.time()-_t0:.3f}s", flush=True)
+        print("STEP D - db fetch", flush=True)
 
         # Pre-fetch database indicators to inject context
         health = get_health_score(db, org_id)
         goals = get_memory_context(db, org_id)
-        print(f"STEP D — health/goals fetched | t={time.time()-_t0:.3f}s", flush=True)
 
         inventory_intel = None
         business_health_score = int(health.get("score", 80))
@@ -714,7 +687,6 @@ class AgentOrchestrator:
         working_capital_locked = 0.0
         
         try:
-            print(f"STEP E — fetching inventory analytics | t={time.time()-_t0:.3f}s", flush=True)
             from app.services.analytics_service import AnalyticsService
             inv_analysis = AnalyticsService.get_inventory_analysis(db, org_id)
             items_at_risk = inv_analysis.get("items_at_risk", [])
@@ -732,10 +704,8 @@ class AgentOrchestrator:
                 "risk_count": risk_count,
                 "opportunity_count": opportunity_count
             }
-            print(f"STEP F — inventory analytics complete | t={time.time()-_t0:.3f}s", flush=True)
         except Exception as e:
             logger.error(f"Failed to fetch inventory analytics in orchestrate_stream: {e}")
-            print(f"STEP F — inventory analytics FAILED: {e} | t={time.time()-_t0:.3f}s", flush=True)
 
         context_block = build_context_block(
             health=health,
@@ -745,31 +715,25 @@ class AgentOrchestrator:
 
         # Build sub-agent analysis summary blocks to inject as COO context
         # Only runs when Gemini is live AND query is non-deterministic
+        print("STEP E - agent dispatch", flush=True)
         sub_agent_reports = []
         if mode == "full" or intent in ["Finance Query", "Pricing Query", "Sales Query"]:
-            print(f"STEP G — calling FinanceAgent | t={time.time()-_t0:.3f}s", flush=True)
             from app.services.ai.finance_agent import FinanceAgent
             finance_agent = FinanceAgent(self.gemini_service)
             finance_result = await finance_agent.analyze(db, org_id, question)
             sub_agent_reports.append(f"Finance Agent summary: {finance_result.summary}\nFindings: {finance_result.findings}")
-            print(f"STEP G done — FinanceAgent complete | t={time.time()-_t0:.3f}s", flush=True)
         if mode == "full" or intent in ["Inventory Query", "Supply Chain Query"]:
-            print(f"STEP H — calling InventoryAgent | t={time.time()-_t0:.3f}s", flush=True)
             from app.services.ai.inventory_agent import InventoryAgent
             inventory_agent = InventoryAgent(self.gemini_service)
             inventory_result = await inventory_agent.analyze(db, org_id, question)
             sub_agent_reports.append(f"Inventory Agent summary: {inventory_result.summary}\nFindings: {inventory_result.findings}")
-            print(f"STEP H done — InventoryAgent complete | t={time.time()-_t0:.3f}s", flush=True)
         if mode == "full" or intent in ["Projects Query", "Tasks Query", "Operations Query", "Technical Query", "Supply Chain Query"]:
-            print(f"STEP I — calling OperationsAgent | t={time.time()-_t0:.3f}s", flush=True)
             from app.services.ai.operations_agent import OperationsAgent
             ops_agent = OperationsAgent(self.gemini_service)
             ops_result = await ops_agent.analyze(db, org_id, question)
             sub_agent_reports.append(f"Operations Agent summary: {ops_result.summary}\nFindings: {ops_result.findings}")
-            print(f"STEP I done — OperationsAgent complete | t={time.time()-_t0:.3f}s", flush=True)
             
         reports_block = "\n".join(sub_agent_reports)
-        print(f"STEP J — sub-agents complete, starting Gemini stream | t={time.time()-_t0:.3f}s", flush=True)
 
         # Reconstruct recent conversation history block if available
         history_block = ""
@@ -797,6 +761,8 @@ class AgentOrchestrator:
         """
 
         full_content = []
+        print("STEP F - formatter", flush=True)
+        print("STEP G - first token", flush=True)
         async for chunk in self.gemini_service.generate_text_stream(
             prompt=prompt,
             system_instruction=COO_STREAMING_SYSTEM_PROMPT
