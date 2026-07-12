@@ -107,20 +107,36 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-5 bg-background border border-border rounded-xl flex flex-col justify-center items-center text-center">
                   <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Business Health Score</span>
-                  <span className={`text-5xl font-black mt-2 tracking-tight ${
-                    brief.health_score >= 80 ? 'text-emerald-400' : brief.health_score >= 60 ? 'text-amber-400' : 'text-rose-400'
-                  }`}>
-                    {brief.health_score}
-                  </span>
-                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full mt-2 border ${
-                    brief.health_score >= 80 
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                      : brief.health_score >= 60 
-                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
-                        : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                  }`}>
-                    {brief.health_status}
-                  </span>
+                  {brief.health_score !== null && brief.health_score !== undefined ? (
+                    <>
+                      <span className={`text-5xl font-black mt-2 tracking-tight ${
+                        brief.health_score >= 80 ? 'text-emerald-400' : brief.health_score >= 60 ? 'text-amber-400' : 'text-rose-400'
+                      }`}>
+                        {brief.health_score}
+                      </span>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full mt-2 border ${
+                        brief.health_score >= 80 
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                          : brief.health_score >= 60 
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      }`}>
+                        {brief.health_status}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-xl font-bold mt-4 text-muted-foreground">
+                        N/A
+                      </span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full mt-3 border bg-muted text-foreground border-border">
+                        Insufficient data
+                      </span>
+                      <span className="text-[10px] text-muted-foreground mt-2 max-w-[150px] leading-relaxed">
+                        Upload business data to generate a health score.
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="md:col-span-2 p-5 bg-background border border-border rounded-xl flex flex-col justify-between">

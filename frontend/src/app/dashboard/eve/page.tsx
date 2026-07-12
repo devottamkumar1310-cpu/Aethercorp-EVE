@@ -1192,7 +1192,9 @@ export default function EVECoocommandCenter() {
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
                     <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Business Health</span>
                     <span className="text-sm font-extrabold text-indigo-200">
-                      {selectedReasoning.evidence_used?.business_health_score || 80}/100
+                      {selectedReasoning.evidence_used?.business_health_score !== undefined && selectedReasoning.evidence_used?.business_health_score !== null
+                        ? `${selectedReasoning.evidence_used.business_health_score}/100` 
+                        : 'N/A'}
                     </span>
                   </div>
                   <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">

@@ -70,7 +70,7 @@ export default function DashboardPage() {
     // Fetch Activity Logs
     fetchActivityLogs(token)
       .then((data) => {
-        setActivityLogs(data.slice(0, 10));
+        setActivityLogs(Array.isArray(data) ? data.slice(0, 10) : []);
       })
       .catch((err) => {
         console.error("Error loading logs:", err);
@@ -94,7 +94,7 @@ export default function DashboardPage() {
     // Fetch Risks
     fetchRisks(token)
       .then((data) => {
-        setRisks(data.risks || []);
+        setRisks(data?.risks || []);
       })
       .catch((err) => {
         console.error("Error loading risks:", err);
@@ -106,7 +106,7 @@ export default function DashboardPage() {
     // Fetch Opportunities
     fetchOpportunities(token)
       .then((data) => {
-        setOpportunities(data.opportunities || []);
+        setOpportunities(data?.opportunities || []);
       })
       .catch((err) => {
         console.error("Error loading opportunities:", err);
@@ -402,7 +402,18 @@ export default function DashboardPage() {
                       summary?.upcoming_deadlines?.map(p => (
                         <tr key={p.id} className="hover:bg-muted/40">
                           <td className="px-4 py-3 font-medium text-primary">{p.name}</td>
-                          <td className="px-4 py-3 text-red-650 font-medium">{p.deadline ? new Date(p.deadline).toLocaleDateString() : 'N/A'}</td>
+                          <td className="px-4 py-3 text-red-650 font-medium">
+                            {(() => {
+                              try {
+                                if (!p.deadline) return "N/A";
+                                const d = new Date(p.deadline);
+                                if (isNaN(d.getTime())) return "N/A";
+                                return d.toLocaleDateString();
+                              } catch {
+                                return "N/A";
+                              }
+                            })()}
+                          </td>
                         </tr>
                       ))
                     )}

@@ -140,12 +140,21 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
                     {/* Timestamp */}
                     <div className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 whitespace-nowrap">
                       <Clock size={11} className="text-muted-foreground" />
-                      {new Date(log.created_at).toLocaleString([], {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
+                      {(() => {
+                        try {
+                          if (!log.created_at) return "N/A";
+                          const d = new Date(log.created_at);
+                          if (isNaN(d.getTime())) return "N/A";
+                          return d.toLocaleString([], {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          });
+                        } catch {
+                          return "N/A";
+                        }
+                      })()}
                     </div>
                   </div>
                 </div>

@@ -95,8 +95,15 @@ class ForecastEngine(BaseEngine):
 
             # 2. Fallback to simulated data if database series is insufficient
             if not sales_series:
+                if context.avg_daily_sales is None or context.avg_daily_sales == 0.0:
+                    return EngineOutput(
+                        engine_name=self.name,
+                        success=False,
+                        errors=["Insufficient sales data to generate forecast."],
+                        confidence_weight=0.0
+                    )
                 # Reconstruct a basic historical sequence from context's avg_daily_sales
-                daily_vel = context.avg_daily_sales if context.avg_daily_sales is not None else 0.0
+                daily_vel = context.avg_daily_sales
                 # Generate a 10-period sequence
                 sales_series = [daily_vel] * 10
             

@@ -363,30 +363,33 @@ class AnalyticsService:
         total_capital = sum(res.get("working_capital_locked", 0.0) for res in successful_results)
         anomalous_skus = sum(1 for res in successful_results if res.get("anomalies"))
         
-        business_health_score = 80
-        business_health_grade = "B"
-        try:
-            health_eng = BusinessHealthEngine()
-            health_context = EngineContext(
-                sku="ORGANIZATION_HEALTH",
-                stock_on_hand=0,
-                lead_time_days=0,
-                avg_daily_sales=0.0,
-                parameters={
-                    "catalog_total_skus": len(items),
-                    "catalog_healthy_skus": healthy_skus,
-                    "catalog_avg_stockout_risk": avg_risk,
-                    "catalog_dead_capital": dead_capital,
-                    "catalog_total_capital": total_capital,
-                    "catalog_anomalous_skus": anomalous_skus
-                }
-            )
-            health_output = run_async_as_sync(health_eng.execute(health_context))
-            if health_output.success:
-                business_health_score = health_output.data.get("health_score", 80)
-                business_health_grade = health_output.data.get("health_grade", "B")
-        except Exception as e:
-            logger.error(f"Failed to calculate catalog health score: {e}")
+        business_health_score = None
+        business_health_grade = "N/A"
+        if len(items) > 0:
+            business_health_score = 80
+            business_health_grade = "B"
+            try:
+                health_eng = BusinessHealthEngine()
+                health_context = EngineContext(
+                    sku="ORGANIZATION_HEALTH",
+                    stock_on_hand=0,
+                    lead_time_days=0,
+                    avg_daily_sales=0.0,
+                    parameters={
+                        "catalog_total_skus": len(items),
+                        "catalog_healthy_skus": healthy_skus,
+                        "catalog_avg_stockout_risk": avg_risk,
+                        "catalog_dead_capital": dead_capital,
+                        "catalog_total_capital": total_capital,
+                        "catalog_anomalous_skus": anomalous_skus
+                    }
+                )
+                health_output = run_async_as_sync(health_eng.execute(health_context))
+                if health_output.success:
+                    business_health_score = health_output.data.get("health_score", 80)
+                    business_health_grade = health_output.data.get("health_grade", "B")
+            except Exception as e:
+                logger.error(f"Failed to calculate catalog health score: {e}")
 
         # Compile Top Risks (Top 5 ranked by priority descending, then impact descending)
         all_risks = [res["risk"] for res in successful_results if res.get("risk")]

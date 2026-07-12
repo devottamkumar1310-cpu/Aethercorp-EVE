@@ -33,8 +33,8 @@ def get_health_score(db: Session, workspace_id: uuid.UUID) -> dict:
 
     if total_clients == 0 and revenue_sum == 0:
         return {
-            "score": score,
-            "status": "warning",
+            "score": None,
+            "status": "Insufficient data",
             "strengths": [],
             "risks": ["No business activity detected."],
             "recommendations": ["Acquire your first client."]

@@ -11,6 +11,9 @@ import uuid
 def generate_summary(db: Session, workspace_id: uuid.UUID) -> dict:
     health = get_health_score(db, workspace_id)
     
+    if health.get("score") is None:
+        return {"summary": "Insufficient data. Connect your data sources to generate an executive summary."}
+
     active_clients = db.query(Client).filter(Client.organization_id == workspace_id, Client.status == "active").count()
     active_projects = db.query(Project).filter(Project.organization_id == workspace_id, Project.status == "active").count()
     
