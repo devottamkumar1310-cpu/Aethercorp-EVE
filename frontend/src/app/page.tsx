@@ -14,9 +14,9 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-secondary flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
       {/* Navbar */}
-      <header className="w-full bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
+      <header className="w-full bg-card border-b border-slate-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
             EVE
@@ -24,12 +24,12 @@ export default function LandingPage() {
           <h1 className="text-xl font-semibold text-foreground tracking-tight">EVE | Inventory Intelligence</h1>
         </div>
         <div className="space-x-4">
-          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/login" className="text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             Sign In
           </Link>
           <Link 
             href="/signup" 
-            className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all shadow-sm"
+            className="text-sm font-semibold bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all shadow-sm"
           >
             Get Started
           </Link>
@@ -39,15 +39,15 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-20 pb-16 flex flex-col items-center justify-center text-center px-6">
         <div className="max-w-4xl space-y-8 relative z-10">
-          <div className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-sm text-foreground animate-fade-in">
-            <Sparkles className="mr-2 h-4 w-4 text-indigo-400" />
+          <div className="inline-flex items-center rounded-full border border-slate-250 dark:border-zinc-850 bg-card px-3 py-1 text-sm text-foreground animate-fade-in">
+            <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
             Inventory Forecasting & Planning Built for Ecommerce Founders
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
             Stop Guessing. <br />
-            <span className="bg-gradient-to-r from-indigo-600 to-indigo-800 dark:from-indigo-405 dark:to-indigo-500 bg-clip-text text-transparent">Start Forecasting.</span>
+            <span className="text-indigo-650 dark:text-indigo-400">Start Forecasting.</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-700 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-750 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
             EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so you can reclaim trapped working capital and scale your brand with confidence.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
@@ -68,7 +68,7 @@ export default function LandingPage() {
         </div>
 
         {/* Backdrop Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/2 rounded-full blur-3xl pointer-events-none" />
       </section>
 
       {/* Product Preview Section */}
