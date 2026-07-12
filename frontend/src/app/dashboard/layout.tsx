@@ -32,7 +32,6 @@ import {
   HelpCircle,
   Clock,
 } from "lucide-react";
-import FeedbackModal from "@/components/business/FeedbackModal";
 import { ProductTour } from "@/components/dashboard/ProductTour";
 
 interface Workspace {
@@ -89,7 +88,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showManualForm, setShowManualForm] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   
@@ -723,16 +721,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {activeWorkspace?.name || "No workspace"}
             </span>
           </div>
-          <button
-            onClick={() => window.open("https://forms.gle/qETMVJfDzHnF86xi7", "_blank")}
-            title={isSidebarCollapsed ? "Give Beta Feedback" : undefined}
-            className={`w-full flex items-center rounded-lg text-xs font-semibold text-muted-foreground hover:text-indigo-400 hover:bg-sidebar-accent transition-all border border-sidebar-border hover:border-sidebar-border bg-sidebar-accent/40 ${
- isSidebarCollapsed ? "justify-start gap-2 px-3 py-2 md:justify-center md:p-2" : "gap-2 px-3 py-2"
- }`}
-          >
-            <MessageSquare size={13} className="text-indigo-400" />
-            <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>Give Beta Feedback</span>
-          </button>
           <div className={`text-[10px] text-slate-550 text-center mt-1 leading-normal ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
           </div>
@@ -1061,11 +1049,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       )}
       
-      <FeedbackModal
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
-        sessionToken={sessionToken}
-      />
+
       
 
       {activeWorkspaceId && <ProductTour />}
