@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Plus, Trash2, Loader2, Target, Activity, Edit2, Check, Ban, Eye, EyeOff, Calendar } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Target, Activity, Edit2, Check, Eye, EyeOff, Calendar } from "lucide-react";
 import { listGoals, addGoal, deleteGoal, updateGoal } from "@/services/executiveService";
 import { BusinessGoalResponse } from "@/types/executive";
 

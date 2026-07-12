@@ -121,7 +121,7 @@ export default function InventoryDashboardPage() {
         const alertData = await alertRes.json();
         setAlerts(alertData);
       }
-    } catch (err: any) {
+    } catch {
       toast.error("Inventory synchronization in progress. Please wait.");
     }
   };

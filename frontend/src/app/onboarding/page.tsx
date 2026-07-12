@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, ArrowRight, Sparkles, Database, Brain, Layers } from "lucide-react";
+import { Building2, ArrowRight, Sparkles, Brain } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 export default function OnboardingPage() {

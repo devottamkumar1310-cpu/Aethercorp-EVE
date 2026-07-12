@@ -14,6 +14,10 @@ from app.core.orchestrator.synthesizer import RecommendationSynthesizer
 from app.fashion.stockout_prediction import predict_stockout
 from app.fashion.reorder_engine import calculate_reorder_quantity
 
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
 @pytest.mark.anyio
 async def test_forecast_engine_weighted_moving_average():
     sales = [10.0, 10.0, 10.0]

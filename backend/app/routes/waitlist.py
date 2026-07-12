@@ -9,6 +9,8 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.models.waitlist import WaitlistEntry
 from app.models.profile import Profile
+from app.core.security import security, verify_supabase_token, verify_workspace_admin
+from fastapi.security import HTTPAuthorizationCredentials
 
 logger = logging.getLogger("eve.waitlist")
 router = APIRouter(prefix="/api/waitlist", tags=["Waitlist & Trial System"])
@@ -25,19 +27,17 @@ class WaitlistJoinRequest(BaseModel):
 
 def get_current_user_optional(
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[Profile]:
     """
     Dependency to resolve the current user if authenticated,
     without raising an HTTP 401 on failure/absence.
     """
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+    if credentials is None:
         return None
-    token = auth_header.split(" ")[1]
     try:
-        import jwt
-        payload = jwt.decode(token, options={"verify_signature": False})
+        payload = verify_supabase_token(request, credentials)
         user_id_str = payload.get("sub")
         if user_id_str:
             user_id = uuid.UUID(user_id_str)
@@ -107,7 +107,8 @@ def join_waitlist(
 
 @router.get("/admin-stats")
 def get_admin_stats(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _admin = Depends(verify_workspace_admin),
 ):
     """
     Operational analytics for admin visibility.

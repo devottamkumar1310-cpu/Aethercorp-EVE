@@ -50,8 +50,6 @@ const fallbackRecommendation: TraceRecord = {
 export default function TraceabilityDashboard() {
   const [traces, setTraces] = useState<TraceRecord[]>([]);
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord>(fallbackRecommendation);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchTraces = async () => {
     try {
@@ -62,7 +60,6 @@ export default function TraceabilityDashboard() {
       const workspaceId = localStorage.getItem("active_workspace_id");
       
       if (!token || !workspaceId) {
-        setLoading(false);
         return;
       }
 
@@ -83,8 +80,6 @@ export default function TraceabilityDashboard() {
       }
     } catch (err: any) {
       console.warn("API load bypassed. Falling back to pre-seeded dataset.", err);
-    } finally {
-      setLoading(false);
     }
   };
 

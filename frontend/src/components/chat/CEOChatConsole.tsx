@@ -16,7 +16,7 @@ export function CEOChatConsole({ onChatResponse, token }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
-    { role: "assistant", content: "Hello! I am EVE, your Enterprise Virtual Executive. How can I help you today?" }
+    { role: "assistant", content: "Hello! I am EVE, your inventory intelligence partner. How can I help you manage your inventory today?" }
   ]);
 
   const handleSend = async () => {

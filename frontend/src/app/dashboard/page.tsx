@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects } from "@/services/businessService";
 import { DashboardSummary, ActivityLog, Client, Project } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
-import { API_BASE_URL } from "@/lib/api";
 
 import { ExecutiveTimeline } from "@/components/dashboard/ExecutiveTimeline";
 
@@ -49,60 +48,72 @@ export default function DashboardPage() {
   const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
-  const fetchAllData = async (token: string) => {
+  const fetchAllData = (token: string) => {
     setLoadingSummary(true);
     setLoadingLogs(true);
     setLoadingTrends(true);
     setLoadingRisks(true);
     setLoadingOpportunities(true);
 
-    const results = await Promise.allSettled([
-      fetchDashboardSummary(token),
-      fetchActivityLogs(token),
-      fetchTrends(token),
-      fetchRisks(token),
-      fetchOpportunities(token)
-    ]);
+    // Fetch Dashboard Summary
+    fetchDashboardSummary(token)
+      .then((data) => {
+        setSummary(data);
+      })
+      .catch((err) => {
+        console.error("Error loading summary:", err);
+      })
+      .finally(() => {
+        setLoadingSummary(false);
+      });
 
-    // Handle Dashboard Summary result
-    if (results[0].status === "fulfilled") {
-      setSummary(results[0].value);
-    } else {
-      console.error("Error loading summary:", results[0].reason);
-    }
-    setLoadingSummary(false);
+    // Fetch Activity Logs
+    fetchActivityLogs(token)
+      .then((data) => {
+        setActivityLogs(data.slice(0, 10));
+      })
+      .catch((err) => {
+        console.error("Error loading logs:", err);
+      })
+      .finally(() => {
+        setLoadingLogs(false);
+      });
 
-    // Handle Activity Logs result
-    if (results[1].status === "fulfilled") {
-      setActivityLogs(results[1].value.slice(0, 10));
-    } else {
-      console.error("Error loading logs:", results[1].reason);
-    }
-    setLoadingLogs(false);
+    // Fetch Trends
+    fetchTrends(token)
+      .then((data) => {
+        setTrends(data);
+      })
+      .catch((err) => {
+        console.error("Error loading trends:", err);
+      })
+      .finally(() => {
+        setLoadingTrends(false);
+      });
 
-    // Handle Trends result
-    if (results[2].status === "fulfilled") {
-      setTrends(results[2].value);
-    } else {
-      console.error("Error loading trends:", results[2].reason);
-    }
-    setLoadingTrends(false);
+    // Fetch Risks
+    fetchRisks(token)
+      .then((data) => {
+        setRisks(data.risks || []);
+      })
+      .catch((err) => {
+        console.error("Error loading risks:", err);
+      })
+      .finally(() => {
+        setLoadingRisks(false);
+      });
 
-    // Handle Risks result
-    if (results[3].status === "fulfilled") {
-      setRisks(results[3].value);
-    } else {
-      console.error("Error loading risks:", results[3].reason);
-    }
-    setLoadingRisks(false);
-
-    // Handle Opportunities result
-    if (results[4].status === "fulfilled") {
-      setOpportunities(results[4].value);
-    } else {
-      console.error("Error loading opportunities:", results[4].reason);
-    }
-    setLoadingOpportunities(false);
+    // Fetch Opportunities
+    fetchOpportunities(token)
+      .then((data) => {
+        setOpportunities(data.opportunities || []);
+      })
+      .catch((err) => {
+        console.error("Error loading opportunities:", err);
+      })
+      .finally(() => {
+        setLoadingOpportunities(false);
+      });
   };
 
   const fetchModalDropdowns = async (token: string) => {
@@ -146,7 +157,7 @@ export default function DashboardPage() {
           }, 50);
         }
         setError(null);
-      } catch (err: any) {
+      } catch {
         setError("Dashboard metrics are currently refreshing. Please try again in a moment.");
         setCheckingAuth(false);
       }
@@ -203,6 +214,19 @@ export default function DashboardPage() {
   if (!activeWorkspace) {
     return null;
   }
+
+  console.log("EVE Dashboard Render State:", {
+    loadingSummary,
+    summary,
+    loadingTrends,
+    trends,
+    loadingRisks,
+    risks,
+    loadingOpportunities,
+    opportunities,
+    loadingLogs,
+    activityLogs
+  });
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans transition-colors duration-200">

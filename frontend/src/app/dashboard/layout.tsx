@@ -31,7 +31,6 @@ import {
   FileText,
   HelpCircle,
   Clock,
-  Lock,
 } from "lucide-react";
 import FeedbackModal from "@/components/business/FeedbackModal";
 import { WaitlistModal } from "@/components/business/WaitlistModal";
@@ -146,10 +145,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return stored;
     };
 
-    let stored = localStorage.getItem("theme") || "dark";
+    let stored = localStorage.getItem("theme") || "executive-light";
     if (!["system", "executive-light", "dark"].includes(stored)) {
-      stored = "dark";
-      localStorage.setItem("theme", "dark");
+      stored = "executive-light";
+      localStorage.setItem("theme", "executive-light");
     }
 
     const active = resolveTheme(stored);
@@ -168,7 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Listen for custom settings theme-changed event
     const handleThemeEvent = () => {
-      const updatedStored = localStorage.getItem("theme") || "dark";
+      const updatedStored = localStorage.getItem("theme") || "executive-light";
       setTheme(updatedStored);
       const activeResolved = resolveTheme(updatedStored);
       document.documentElement.setAttribute("data-theme", activeResolved);
@@ -189,9 +188,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return profile.preferences.theme;
     }
     if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") || "dark";
+      return localStorage.getItem("theme") || "executive-light";
     }
-    return "dark";
+    return "executive-light";
   };
 
   const setThemePreference = (newTheme: string) => {
@@ -466,7 +465,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       setIsCreateModalOpen(false);
       setNewWorkspaceName("");
       window.location.reload();
-    } catch (err: any) {
+    } catch {
       setCreateError("Workspace creation is currently synchronizing. Please try again.");
     } finally {
       setCreateLoading(false);
@@ -492,7 +491,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       localStorage.removeItem("eve_tour_completed");
       
       window.location.reload();
-    } catch (err: any) {
+    } catch {
       setCreateError("Demo environment is currently initializing. Please try again shortly.");
     } finally {
       setDemoLoading(false);
@@ -652,7 +651,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             <span className="font-bold text-foreground text-xs tracking-tight leading-none">EVE PORTAL</span>
-            <span className="text-[9px] text-muted-foreground font-medium tracking-wider uppercase mt-0.5">Enterprise Virtual Executive</span>
+            <span className="text-[9px] text-muted-foreground font-medium tracking-wider uppercase mt-0.5">Inventory Intelligence</span>
           </div>
           
           <button
@@ -948,7 +947,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div className="space-y-3">
                         <h2 className="text-3xl md:text-4xl font-extrabold text-foreground tracking-tight">Welcome to EVE</h2>
                         <p className="text-muted-foreground text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-                          Enterprise Virtual Executive AI OS. Choose how you would like to begin exploring the platform.
+                          Your inventory forecasting and planning platform. Choose how you would like to begin exploring the platform.
                         </p>
                       </div>
 

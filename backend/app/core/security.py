@@ -77,6 +77,8 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
 
         # 2. Attempt Symmetric HS256 Verification (Legacy/Default Supabase)
         try:
+            if not settings.SUPABASE_JWT_SECRET:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication service is not configured.", headers={"WWW-Authenticate": "Bearer"})
             payload = jwt.decode(
                 token,
                 settings.SUPABASE_JWT_SECRET,
@@ -98,6 +100,8 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
         if path.endswith("/api/profile/me"):
             logger.info("JWT verified")
         return payload
+    except HTTPException:
+        raise
     except jwt.ExpiredSignatureError as e:
         reason = f"ExpiredSignatureError: {str(e)}"
         print("AUTH HEADER PRESENT:", bool(auth_header), flush=True)

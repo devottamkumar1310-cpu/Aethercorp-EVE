@@ -63,66 +63,8 @@
    PREMIUM EXECUTIVE SYSTEM THEMES (CSS CUSTOM PROPERTIES)
    ────────────────────────────────────────────────────────────────────────────── */
 
-:root, [data-theme="executive-dark"], [data-theme="dark"] {
-  /* Default: Premium Executive OS Dark Theme */
-  --bg-app: #08080a;
-  --bg-card: #0f0f12;
-  --bg-sidebar: #0c0c0e;
-  --border-accent: #2e2e33;
-  --text-primary: #ffffff;
-  --text-secondary: #e4e4e7;
-  --text-muted: #a1a1aa;
-  --accent-color: #ffffff;
-  --accent-glow: rgba(255, 255, 255, 0.05);
-  --accent-hover: #f4f4f5;
-  --panel-glow: none;
-  --chart-primary: #ffffff;
-  --chart-secondary: #a1a1aa;
-
-  /* Semantic Variables */
-  --background: var(--bg-app);
-  --surface: var(--bg-card);
-  --surface-secondary: var(--bg-sidebar);
-  --border: var(--border-accent);
-  --text-primary: var(--text-primary);
-  --text-secondary: var(--text-secondary);
-  --text-muted: var(--text-muted);
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-
-  /* Tailwind Semantic Mappings */
-  --background: var(--bg-app);
-  --foreground: var(--text-primary);
-  --card: var(--bg-card);
-  --card-foreground: var(--text-primary);
-  --popover: var(--bg-card);
-  --popover-foreground: var(--text-primary);
-  --primary: var(--accent-color);
-  --primary-foreground: #000000;
-  --secondary: var(--bg-sidebar);
-  --secondary-foreground: var(--text-primary);
-  --border: var(--border-accent);
-  --input: var(--border-accent);
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #18181b;
-  --accent-foreground: #ffffff;
-  --ring: #ffffff;
-  --radius: 0.5rem;
-  --sidebar: var(--bg-sidebar);
-  --sidebar-foreground: var(--text-secondary);
-  --sidebar-border: var(--border-accent);
-  --sidebar-primary: var(--accent-color);
-  --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #18181b;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-ring: #ffffff;
-}
-
-[data-theme="executive-light"], [data-theme="light"] {
-  /* Premium Executive OS Light Theme */
+:root, [data-theme="executive-light"], [data-theme="light"] {
+  /* Default: Premium Executive OS Light Theme */
   --bg-app: #fafafa;
   --bg-card: #ffffff;
   --bg-sidebar: #f4f4f5;
@@ -177,6 +119,64 @@
   --sidebar-accent: #f4f4f5;
   --sidebar-accent-foreground: #18181b;
   --sidebar-ring: #18181b;
+}
+
+[data-theme="executive-dark"], [data-theme="dark"] {
+  /* Premium Executive OS Dark Theme Overrides */
+  --bg-app: #08080a;
+  --bg-card: #0f0f12;
+  --bg-sidebar: #0c0c0e;
+  --border-accent: #2e2e33;
+  --text-primary: #ffffff;
+  --text-secondary: #e4e4e7;
+  --text-muted: #a1a1aa;
+  --accent-color: #ffffff;
+  --accent-glow: rgba(255, 255, 255, 0.05);
+  --accent-hover: #f4f4f5;
+  --panel-glow: none;
+  --chart-primary: #ffffff;
+  --chart-secondary: #a1a1aa;
+
+  /* Semantic Variables */
+  --background: var(--bg-app);
+  --surface: var(--bg-card);
+  --surface-secondary: var(--bg-sidebar);
+  --border: var(--border-accent);
+  --text-primary: var(--text-primary);
+  --text-secondary: var(--text-secondary);
+  --text-muted: var(--text-muted);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+
+  /* Tailwind Semantic Mappings */
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --card: var(--bg-card);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--accent-color);
+  --primary-foreground: #000000;
+  --secondary: var(--bg-sidebar);
+  --secondary-foreground: var(--text-primary);
+  --border: var(--border-accent);
+  --input: var(--border-accent);
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #18181b;
+  --accent-foreground: #ffffff;
+  --ring: #ffffff;
+  --radius: 0.5rem;
+  --sidebar: var(--bg-sidebar);
+  --sidebar-foreground: var(--text-secondary);
+  --sidebar-border: var(--border-accent);
+  --sidebar-primary: var(--accent-color);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #18181b;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-ring: #ffffff;
 }
 
 

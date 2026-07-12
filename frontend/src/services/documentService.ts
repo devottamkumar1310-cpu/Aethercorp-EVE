@@ -82,7 +82,7 @@ export async function deleteDocument(documentId: string, token: string): Promise
   return res.json();
 }
 
-export function getDocumentPreviewUrl(documentId: string, token: string): string {
+export function getDocumentPreviewUrl(documentId: string): string {
   // Return the API url directly for iframe/img rendering
   // Append authorization token as a query parameter for standard HTTP requests if needed, 
   // or return the absolute endpoint URL.

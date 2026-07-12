@@ -1,6 +1,6 @@
 import { CashFlowForecast } from "@/types/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, AlertTriangle, ShieldCheck } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Props {

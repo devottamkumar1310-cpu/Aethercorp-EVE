@@ -9,7 +9,7 @@ import {
   fetchActions,
   createSnapshot
 } from "@/services/intelligenceService";
-import { Activity, AlertTriangle, CheckCircle, TrendingUp, Zap, Target } from "lucide-react";
+import { AlertTriangle, CheckCircle, TrendingUp, Zap, Target } from "lucide-react";
 import { toast } from "sonner";
 
 interface IntelligencePanelProps {

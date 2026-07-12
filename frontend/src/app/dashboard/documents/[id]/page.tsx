@@ -13,10 +13,8 @@ import {
   Clock, 
   ShieldAlert, 
   FileText, 
-  Brain, 
   MessageSquare,
   Sparkles,
-  ExternalLink,
   Download,
   AlertTriangle,
   ChevronRight
@@ -31,7 +29,6 @@ export default function DocumentDetailPage() {
 
   const [document, setDocument] = useState<ProcessedDocumentDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sessionToken, setSessionToken] = useState<string>("");
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   const loadDocument = async (token: string) => {
@@ -46,7 +43,7 @@ export default function DocumentDetailPage() {
       } catch (err) {
         console.error("Failed to load document preview blob:", err);
       }
-    } catch (err: any) {
+    } catch {
       toast.error("Document hub is currently processing updates. Please try again.");
       router.push("/dashboard/documents");
     } finally {
@@ -62,7 +59,6 @@ export default function DocumentDetailPage() {
         router.push("/login");
         return;
       }
-      setSessionToken(session.access_token);
       await loadDocument(session.access_token);
     }
     init();
@@ -101,12 +97,12 @@ export default function DocumentDetailPage() {
     
     const formatKey = (key: string) => {
       return key
-        .replace(/_/g, " ")
-        .replace(/\b\w/g, (char) => char.toUpperCase());
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (char) => char.toUpperCase());
     };
 
-    const entries = Object.entries(data).filter(([_, v]) => typeof v !== "object" && v !== null);
-    const arrays = Object.entries(data).filter(([_, v]) => Array.isArray(v));
+    const entries = Object.entries(data).filter((entry) => typeof entry[1] !== "object" && entry[1] !== null);
+    const arrays = Object.entries(data).filter((entry) => Array.isArray(entry[1]));
 
     return (
       <div className="space-y-4">

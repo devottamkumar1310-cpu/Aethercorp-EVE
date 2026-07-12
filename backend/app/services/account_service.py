@@ -120,7 +120,11 @@ class AccountService:
                 logger.error(f"[BACKGROUND CLEANUP] Supabase error: {e}")
 
     @staticmethod
-    def delete_account(db: Session, user_profile: Profile, background_tasks: BackgroundTasks) -> bool:
+    def delete_account(
+        db: Session,
+        user_profile: Profile,
+        background_tasks: BackgroundTasks | None = None,
+    ) -> bool:
         """
         Deletes a user account and all solely-owned workspaces.
         For workspaces with other owners, just removes the user's membership.
@@ -177,10 +181,6 @@ class AccountService:
 
         logger.info("[DELETE] Membership cleanup complete")
         logger.info("[DELETE] Workspace deletion complete")
-
-        # Queue background cleanup for GCS and Supabase
-        logger.info("[DELETE] Queueing background tasks")
-        background_tasks.add_task(AccountService._background_cleanup, user_id, avatar_url, doc_file_paths)
         
         # Step 7: Profile deletion (raw SQL delete to prevent ORM hydration)
         logger.info("[DELETE] Profile deletion")
@@ -191,6 +191,11 @@ class AccountService:
         logger.info("[DELETE] Commit")
         db.commit()
         logger.info("[DELETE] Commit complete")
+
+        if background_tasks is not None:
+            background_tasks.add_task(AccountService._background_cleanup, user_id, avatar_url, doc_file_paths)
+        else:
+            AccountService._background_cleanup(user_id, avatar_url, doc_file_paths)
 
         # Invalidate caches
         from app.core.cache import invalidate_workspace

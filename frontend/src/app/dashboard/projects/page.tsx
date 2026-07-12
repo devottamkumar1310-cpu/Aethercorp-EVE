@@ -64,7 +64,7 @@ export default function ProjectsPage() {
       await deleteProjectAPI(sessionToken, id);
       toast.success("Project deleted successfully");
       loadData(sessionToken);
-    } catch (error: any) {
+    } catch {
       toast.error("Project data is currently syncing. Please try again.");
     }
   };

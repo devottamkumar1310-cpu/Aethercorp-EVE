@@ -58,7 +58,7 @@ export function WaitlistModal({
       } else {
         setError(data.detail || "Something went wrong. Please try again.");
       }
-    } catch (err: any) {
+    } catch {
       setError("Failed to connect to the server. Please check your network.");
     } finally {
       setSubmitting(false);
