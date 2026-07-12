@@ -33,7 +33,6 @@ import {
   Clock,
 } from "lucide-react";
 import FeedbackModal from "@/components/business/FeedbackModal";
-import { WaitlistModal } from "@/components/business/WaitlistModal";
 import { ProductTour } from "@/components/dashboard/ProductTour";
 
 interface Workspace {
@@ -94,8 +93,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   
-  const [hasJoinedWaitlist, setHasJoinedWaitlist] = useState(false);
-  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const getRemainingDays = () => {
@@ -106,15 +103,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return Math.max(0, diffDays);
   };
-
-  useEffect(() => {
-    if (profile?.email && typeof window !== "undefined") {
-      const joined = localStorage.getItem(`eve_joined_waitlist_${profile.email}`);
-      if (joined === "true") {
-        setHasJoinedWaitlist(true);
-      }
-    }
-  }, [profile]);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -870,7 +858,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const showPreExpiry = 
               profile?.subscription_status === "trial" && 
               !isExempt &&
-              !hasJoinedWaitlist && 
               !bannerDismissed && 
               [7, 3, 1].includes(days);
 
@@ -881,17 +868,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="flex items-center gap-2">
                       <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
                       <span>
-                        Your trial has ended. Request an extension or join the waitlist.
+                        Your trial has ended. Please request a trial extension to restore access.
                       </span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setIsWaitlistOpen(true)}
-                        className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-foreground text-xs font-semibold rounded-lg transition-all shadow-md shadow-red-600/10 cursor-pointer"
-                      >
-                        Join Waitlist
-                      </button>
                       <button
                         type="button"
                         onClick={() => {
@@ -910,17 +890,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="flex items-center gap-2">
                       <AlertCircle size={16} className="text-indigo-400 flex-shrink-0" />
                       <span>
-                        Enjoying EVE? Paid plans are coming soon. <strong>{days} {days === 1 ? "day" : "days"} remaining</strong> on your trial. Join the priority waitlist for early access and launch pricing.
+                        Enjoying EVE? Paid plans are coming soon. <strong>{days} {days === 1 ? "day" : "days"} remaining</strong> on your trial.
                       </span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setIsWaitlistOpen(true)}
-                        className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-foreground text-xs font-semibold rounded-lg transition-all shadow-md shadow-indigo-600/10 cursor-pointer"
-                      >
-                        Join Priority Waitlist
-                      </button>
                       <button
                         type="button"
                         onClick={() => setBannerDismissed(true)}
@@ -1094,17 +1067,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         sessionToken={sessionToken}
       />
       
-      <WaitlistModal
-        isOpen={isWaitlistOpen}
-        onClose={() => setIsWaitlistOpen(false)}
-        profile={profile}
-        onSuccess={() => {
-          setHasJoinedWaitlist(true);
-          if (profile?.email) {
-            localStorage.setItem(`eve_joined_waitlist_${profile.email}`, "true");
-          }
-        }}
-      />
+
       {activeWorkspaceId && <ProductTour />}
     </div>
   );

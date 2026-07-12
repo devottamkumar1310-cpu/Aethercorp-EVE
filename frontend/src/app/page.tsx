@@ -316,18 +316,24 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="px-6 py-24 text-center max-w-4xl mx-auto space-y-8">
         <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-          Ready to Optimize Your Inventory?
+          Start Using EVE
         </h2>
         <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-          Upload your files, verify velocities, and reclaim trapped warehouse capital in seconds.
+          Create your workspace and begin analyzing your inventory.
         </p>
-        <div className="pt-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link 
             href="/signup" 
-            className="inline-flex items-center justify-center px-8 py-4 text-base font-bold text-foreground bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-foreground bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
           >
-            Analyze My Inventory
-            <ArrowUpRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            Get Started
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+          <Link 
+            href="/login" 
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
+          >
+            Sign In
           </Link>
         </div>
       </section>

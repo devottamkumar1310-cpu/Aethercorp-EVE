@@ -183,7 +183,7 @@ export default function HelpPage() {
             We are dedicated to building a refined, reliable virtual executive system. If you run into issues, need assistance, or want to share feedback, we are here to help.
           </p>
           
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 max-w-xl">
             <div className="bg-secondary dark:bg-card border border-border dark:border-border p-5 rounded-xl flex flex-col justify-between shadow-sm">
               <div>
                 <h4 className="text-sm font-bold text-foreground dark:text-foreground flex items-center gap-2">
@@ -198,25 +198,6 @@ export default function HelpPage() {
                 className="mt-4 inline-block text-center text-xs font-bold bg-indigo-600/20 hover:bg-indigo-650 text-indigo-400 hover:text-foreground px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
               >
                 aethercorp.support@gmail.com
-              </a>
-            </div>
-            
-            <div className="bg-secondary dark:bg-card border border-border dark:border-border p-5 rounded-xl flex flex-col justify-between shadow-sm">
-              <div>
-                <h4 className="text-sm font-bold text-foreground dark:text-foreground flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" /> Beta Feedback Form
-                </h4>
-                <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-2 leading-relaxed">
-                  Your insights shape EVE's roadmap. Use our quick Google Form to submit feedback, request features, or report UI bugs.
-                </p>
-              </div>
-              <a 
-                href="https://forms.gle/qETMVJfDzHnF86xi7" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-block text-center text-xs font-bold bg-emerald-600/20 hover:bg-emerald-650 text-emerald-400 hover:text-foreground px-4 py-2.5 rounded-lg border border-emerald-500/20 transition-all cursor-pointer"
-              >
-                Open Feedback Form
               </a>
             </div>
           </div>
