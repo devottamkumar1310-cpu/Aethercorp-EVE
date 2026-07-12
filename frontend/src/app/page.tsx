@@ -46,7 +46,7 @@ export default function LandingPage() {
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
             Stop Guessing. <br />
-            <span className="text-indigo-650 dark:text-indigo-400">Start Forecasting.</span>
+            <span className="hero-headline-accent">Start Forecasting.</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-750 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
             EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so you can reclaim trapped working capital and scale your brand with confidence.
