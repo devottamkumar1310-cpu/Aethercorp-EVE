@@ -283,3 +283,8 @@
     border-bottom: 1px solid #2e2e33 !important;
   }
 }
+
+/* Ensure primary actions have pure white text to satisfy accessibility contrast */
+.bg-indigo-600, .bg-indigo-650, .bg-indigo-700, .bg-indigo-800 {
+  color: #ffffff !important;
+}
