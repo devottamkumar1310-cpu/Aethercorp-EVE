@@ -45,7 +45,7 @@ export default function LandingPage() {
           </div>
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
             Stop Guessing. <br />
-            <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">Start Forecasting.</span>
+            <span className="bg-gradient-to-r from-indigo-600 to-indigo-800 dark:from-indigo-405 dark:to-indigo-500 bg-clip-text text-transparent">Start Forecasting.</span>
           </h1>
           <p className="text-lg md:text-xl text-slate-700 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
             EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so you can reclaim trapped working capital and scale your brand with confidence.
@@ -73,7 +73,7 @@ export default function LandingPage() {
 
       {/* Product Preview Section */}
       <section className="px-6 pb-24 max-w-6xl mx-auto w-full">
-        <div className="bg-card rounded-2xl border border-border shadow-2xl overflow-hidden p-6 md:p-8 space-y-6">
+        <div className="bg-slate-50/50 dark:bg-zinc-950/20 rounded-2xl border border-border/80 shadow-inner overflow-hidden p-6 md:p-8 space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-500" />
@@ -81,36 +81,36 @@ export default function LandingPage() {
               <span className="w-3 h-3 rounded-full bg-green-500" />
               <span className="text-xs text-muted-foreground font-mono ml-2">EVE Dashboard Workspace</span>
             </div>
-            <span className="text-xs font-bold text-indigo-400 flex items-center gap-1 uppercase tracking-wider">
+            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 uppercase tracking-wider">
               <Activity size={12} className="animate-pulse" /> Live Analysis
             </span>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {/* Health Overview */}
-            <div className="bg-secondary rounded-xl p-5 border border-border space-y-4">
+            <div className="bg-card rounded-xl p-5 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Inventory Health Score</h3>
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-extrabold text-foreground">84</span>
-                <span className="text-sm font-semibold text-emerald-500 flex items-center"><TrendingUp size={14} className="mr-0.5" /> +2.1%</span>
+                <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-500 flex items-center"><TrendingUp size={14} className="mr-0.5" /> +2.1%</span>
               </div>
               <p className="text-xs text-muted-foreground">Overall inventory efficiency is optimal. Two critical stockout risks detected.</p>
-              <div className="h-1.5 w-full bg-card rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500 rounded-full" style={{ width: '84%' }} />
+              <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-600 rounded-full" style={{ width: '84%' }} />
               </div>
             </div>
 
             {/* Reorders Warning Widget */}
-            <div className="bg-secondary rounded-xl p-5 border border-border space-y-3">
+            <div className="bg-card rounded-xl p-5 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-3">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Critical Action Required</h3>
-              <div className="flex items-start gap-2.5 text-amber-500 bg-amber-500/5 p-3 rounded-lg border border-amber-500/10">
+              <div className="flex items-start gap-2.5 text-amber-600 dark:text-amber-500 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
                 <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
                 <div className="space-y-0.5">
                   <h4 className="text-xs font-bold">2 SKU Bestsellers at Risk</h4>
                   <p className="text-[10px] text-muted-foreground">Classic Cotton Tee (Black/M, L) will run out in 5 days.</p>
                 </div>
               </div>
-              <div className="flex items-start gap-2.5 text-indigo-400 bg-indigo-400/5 p-3 rounded-lg border border-indigo-400/10">
+              <div className="flex items-start gap-2.5 text-indigo-600 dark:text-indigo-400 bg-indigo-400/5 p-3 rounded-lg border border-indigo-400/20">
                 <ShieldCheck size={16} className="mt-0.5 flex-shrink-0" />
                 <div className="space-y-0.5">
                   <h4 className="text-xs font-bold">Trapped Capital Recovered</h4>
@@ -120,7 +120,7 @@ export default function LandingPage() {
             </div>
 
             {/* Trapped Capital overview */}
-            <div className="bg-secondary rounded-xl p-5 border border-border space-y-4">
+            <div className="bg-card rounded-xl p-5 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4">
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Capital Breakdown</h3>
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
@@ -140,8 +140,8 @@ export default function LandingPage() {
           </div>
 
           {/* Table Mockup */}
-          <div className="bg-secondary rounded-xl border border-border overflow-hidden">
-            <div className="px-5 py-3.5 border-b border-border bg-card/50 flex justify-between items-center">
+          <div className="bg-card rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-border bg-slate-50/50 dark:bg-zinc-900/30 flex justify-between items-center">
               <h4 className="text-xs font-bold text-foreground">Recommended Reorders</h4>
               <span className="text-[10px] text-muted-foreground font-mono">2 SKU alerts active</span>
             </div>
@@ -153,7 +153,7 @@ export default function LandingPage() {
                     <th className="px-5 py-3 text-right">Current Stock</th>
                     <th className="px-5 py-3 text-right">Sales Velocity</th>
                     <th className="px-5 py-3 text-right">Days Left</th>
-                    <th className="px-5 py-3 text-right text-indigo-400">Reorder Suggestion</th>
+                    <th className="px-5 py-3 text-right text-indigo-600 dark:text-indigo-400">Reorder Suggestion</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border text-foreground/90 font-mono">
@@ -161,15 +161,15 @@ export default function LandingPage() {
                     <td className="px-5 py-3 font-sans font-medium text-foreground">Classic Cotton Tee - Black / M</td>
                     <td className="px-5 py-3 text-right">12</td>
                     <td className="px-5 py-3 text-right">2.4 / day</td>
-                    <td className="px-5 py-3 text-right text-red-400 font-bold">5</td>
-                    <td className="px-5 py-3 text-right text-indigo-400 font-bold">150 units</td>
+                    <td className="px-5 py-3 text-right text-red-500 dark:text-red-400 font-bold">5</td>
+                    <td className="px-5 py-3 text-right text-indigo-600 dark:text-indigo-400 font-bold">150 units</td>
                   </tr>
                   <tr>
                     <td className="px-5 py-3 font-sans font-medium text-foreground">Heavyweight Hoodie - Gray / L</td>
                     <td className="px-5 py-3 text-right">8</td>
                     <td className="px-5 py-3 text-right">1.6 / day</td>
-                    <td className="px-5 py-3 text-right text-red-400 font-bold">3</td>
-                    <td className="px-5 py-3 text-right text-indigo-400 font-bold">100 units</td>
+                    <td className="px-5 py-3 text-right text-red-500 dark:text-red-400 font-bold">3</td>
+                    <td className="px-5 py-3 text-right text-indigo-600 dark:text-indigo-400 font-bold">100 units</td>
                   </tr>
                 </tbody>
               </table>
