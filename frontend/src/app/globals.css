@@ -295,3 +295,13 @@
 [data-theme] a.bg-indigo-800 {
   color: #ffffff !important;
 }
+
+/* Hero accent headline override to prevent global span resets from muting it */
+[data-theme="executive-light"] .hero-headline-accent,
+[data-theme="light"] .hero-headline-accent {
+  color: #4338ca !important; /* Deep Premium Indigo-700 (5.92:1 contrast) */
+}
+[data-theme="executive-dark"] .hero-headline-accent,
+[data-theme="dark"] .hero-headline-accent {
+  color: #818cf8 !important; /* Premium Indigo-400 (6.16:1 contrast) */
+}
