@@ -37,7 +37,7 @@ export default function PrivacyPolicyPage() {
             <section className="space-y-3">
               <h2 className="text-xl font-semibold text-foreground">1. Introduction</h2>
               <p>
-                Enterprise Virtual Executive ("EVE", "we", "us", or "our") values your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our platform, services, and website. By accessing or using EVE, you agree to the collection and use of information in accordance with this policy.
+                EVE ("we", "us", or "our") values your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our platform, services, and website. By accessing or using EVE, you agree to the collection and use of information in accordance with this policy.
               </p>
             </section>
 
@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <p className="font-medium text-foreground">b. Business and Inventory Data</p>
               <p>
-                To provide our AI-generated business recommendations, deterministic forecasting, and COO workflows, we process documents, financial records, inventory tables, and transaction logs that you upload or integrate into EVE.
+                To provide our AI-generated business recommendations, inventory forecasting, and planning workflows, we process documents, financial records, inventory tables, and transaction logs that you upload or integrate into EVE.
               </p>
               <p className="font-medium text-foreground">c. Usage Data & Cookies</p>
               <p>

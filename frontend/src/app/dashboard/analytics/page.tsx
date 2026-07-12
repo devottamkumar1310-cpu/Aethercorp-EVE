@@ -57,21 +57,27 @@ export default function AnalyticsPage() {
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden p-8">
             <h2 className="text-xl font-bold text-foreground mb-6">Business Metrics Overview</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
+                 <div>
                     <p className="text-sm text-muted-foreground mb-1">Total Conversion Rate</p>
-                    <p className="text-2xl font-bold text-foreground">{(kpis?.active_clients! / Math.max(1, kpis?.clients!) * 100).toFixed(1)}%</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {(((kpis?.active_clients ?? 0) / Math.max(1, kpis?.clients ?? 1)) * 100).toFixed(1)}%
+                    </p>
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground mb-1">Task Velocity</p>
-                    <p className="text-2xl font-bold text-foreground">{(kpis?.completed_tasks! / Math.max(1, kpis?.tasks!) * 100).toFixed(1)}%</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {(((kpis?.completed_tasks ?? 0) / Math.max(1, kpis?.tasks ?? 1)) * 100).toFixed(1)}%
+                    </p>
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground mb-1">Profit Margin</p>
-                    <p className="text-2xl font-bold text-foreground">{(kpis?.profit! / Math.max(1, kpis?.revenue!) * 100).toFixed(1)}%</p>
+                    <p className="text-2xl font-bold text-foreground">
+                        {(((kpis?.profit ?? 0) / Math.max(1, kpis?.revenue ?? 1)) * 100).toFixed(1)}%
+                    </p>
                 </div>
                 <div>
                     <p className="text-sm text-muted-foreground mb-1">Active Projects Load</p>
-                    <p className="text-2xl font-bold text-foreground">{kpis?.active_projects}</p>
+                    <p className="text-2xl font-bold text-foreground">{kpis?.active_projects ?? 0}</p>
                 </div>
             </div>
             <div className="mt-8 pt-8 border-t border-border">

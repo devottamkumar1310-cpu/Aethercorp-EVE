@@ -633,6 +633,29 @@ export default function SettingsPage() {
               </p>
             </div>
 
+            <div className="border-t border-border/60 pt-6 max-w-md">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5 pr-4">
+                  <label className="text-xs font-bold text-foreground block">Developer Telemetry Mode</label>
+                  <span className="text-[11px] text-muted-foreground block leading-relaxed">
+                    Show advanced token counts, estimated costs, and agent logical breakdowns in EVE Chat.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleToggleDeveloperMode(!developerMode)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors cursor-pointer outline-none ${
+                    developerMode ? "bg-indigo-600" : "bg-zinc-700"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-foreground transition-transform ${
+                      developerMode ? "translate-x-6" : "translate-x-1"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
 
           </div>
         </section>

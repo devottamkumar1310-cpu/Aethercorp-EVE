@@ -189,25 +189,21 @@ def test_agent_failure_recovery():
     db_session.close()
 
 
-def test_gemini_service_outage_error():
+def test_gemini_service_rate_limit_degrades_to_mock_mode():
     """
-    Verify that rate-limits (429) or timeouts from Gemini raise GeminiOutageError.
+    Verify that Gemini rate limits degrade to deterministic mock mode instead of hanging or crashing.
     """
     service = GeminiService()
-    service.mock_mode = False # Disable mock mode to trigger API calls
-    
-    # Mock GenAI client to throw resource exhausted error
+    service.mock_mode = False
+
     from unittest.mock import MagicMock
     service.client = MagicMock()
     service.client.models.generate_content.side_effect = Exception("429 RESOURCE_EXHAUSTED")
-    
-    with pytest.raises(GeminiOutageError) as exc_info:
-        asyncio_run(service.generate_text(prompt="Hello", retries=1))
-        
-    assert exc_info.value.status_code == 429
-    assert "RESOURCE_EXHAUSTED" in str(exc_info.value)
 
+    response = asyncio_run(service.generate_text(prompt="Hello", retries=1))
 
+    assert response == "Insufficient business data available for analysis."
+    assert service.mock_mode is True
 def test_prompt_injection_guardrails():
     """
     Verify prompt injection keywords are screened and return warning payloads.

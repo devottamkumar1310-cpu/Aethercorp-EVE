@@ -15,7 +15,7 @@ import logging
 import pandas as pd
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 
@@ -313,17 +313,17 @@ class ProductCreateRequest(BaseModel):
     sku: str
     name: str
     category: str
-    stock_on_hand: int = 0
-    unit_cost: float = 0.0
-    selling_price: float = 0.0
-    reorder_point: int = 10
+    stock_on_hand: int = Field(default=0, ge=0)
+    unit_cost: float = Field(default=0.0, ge=0)
+    selling_price: float = Field(default=0.0, ge=0)
+    reorder_point: int = Field(default=10, ge=0)
     supplier_name: Optional[str] = None
 
 
 class StockUpdateRequest(BaseModel):
     """Request body for updating a product's stock level."""
-    stock_on_hand: int
-    reorder_point: Optional[int] = None
+    stock_on_hand: int = Field(ge=0)
+    reorder_point: Optional[int] = Field(default=None, ge=0)
 
 
 # ---------------------------------------------------------------------------

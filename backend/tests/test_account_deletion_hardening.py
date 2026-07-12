@@ -135,6 +135,8 @@ def test_complete_account_deletion_flow(mock_httpx, db_session):
         confidence_level=0.9
     )
     db_session.add_all([exec_msg, ai_rec])
+    conversation_session_id = session.id
+    executive_conversation_id = exec_conv.id
     db_session.commit()
 
     # 3. Perform Account Deletion
@@ -163,11 +165,11 @@ def test_complete_account_deletion_flow(mock_httpx, db_session):
     assert db_session.query(SystemError).filter(SystemError.organization_id == org_id).first() is None
     assert db_session.query(AuditLog).filter(AuditLog.organization_id == org_id).first() is None
     assert db_session.query(ConversationSession).filter(ConversationSession.organization_id == org_id).first() is None
-    assert db_session.query(ChatMessage).filter(ChatMessage.session_id == session.id).first() is None
+    assert db_session.query(ChatMessage).filter(ChatMessage.session_id == conversation_session_id).first() is None
     assert db_session.query(MemoryEntry).filter(MemoryEntry.organization_id == org_id).first() is None
     assert db_session.query(Expense).filter(Expense.organization_id == org_id).first() is None
     assert db_session.query(IntelligenceSnapshot).filter(IntelligenceSnapshot.organization_id == org_id).first() is None
     assert db_session.query(BusinessGoal).filter(BusinessGoal.organization_id == org_id).first() is None
     assert db_session.query(ExecutiveConversation).filter(ExecutiveConversation.organization_id == org_id).first() is None
-    assert db_session.query(ExecutiveMessage).filter(ExecutiveMessage.conversation_id == exec_conv.id).first() is None
+    assert db_session.query(ExecutiveMessage).filter(ExecutiveMessage.conversation_id == executive_conversation_id).first() is None
     assert db_session.query(AIRecommendation).filter(AIRecommendation.organization_id == org_id).first() is None

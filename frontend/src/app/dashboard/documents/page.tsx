@@ -14,9 +14,6 @@ import {
   Trash2, 
   File, 
   Eye, 
-  AlertTriangle,
-  ArrowRight,
-  TrendingUp,
   Brain
 } from "lucide-react";
 import { toast } from "sonner";
@@ -35,7 +32,7 @@ export default function DocumentHubPage() {
     try {
       const data = await listDocuments(token);
       setDocuments(data);
-    } catch (err: any) {
+    } catch {
       toast.error("Document hub is currently processing updates.");
     }
   };
@@ -120,7 +117,7 @@ export default function DocumentHubPage() {
       const newDoc = await uploadDocument(file, sessionToken);
       toast.success(`${file.name} uploaded successfully. EVE is analyzing it.`, { id: toastId });
       setDocuments(prev => [newDoc, ...prev]);
-    } catch (err: any) {
+    } catch {
       toast.error(
         <div className="flex flex-col gap-0.5">
           <span>Document processing is currently syncing. Please try again in a moment.</span>
@@ -144,7 +141,7 @@ export default function DocumentHubPage() {
       await deleteDocument(docId, sessionToken);
       toast.success("Document deleted.");
       setDocuments(prev => prev.filter(d => d.id !== docId));
-    } catch (err: any) {
+    } catch {
       toast.error("Document deletion is currently synchronizing. Please try again.");
     }
   };

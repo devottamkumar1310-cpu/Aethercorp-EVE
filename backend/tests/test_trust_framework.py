@@ -110,18 +110,18 @@ def test_founder_mode_retains_trust_metrics():
     db_session = TestingSessionLocal()
     org_id = uuid.uuid4()
     user_id = uuid.uuid4()
-    
+
     profile = Profile(id=user_id, email="founder@test.com", hashed_password="pw")
     org = Organization(id=org_id, name="Founder Workspace", slug="founder-workspace")
     membership = Membership(id=uuid.uuid4(), user_id=user_id, organization_id=org_id, role="owner")
-    
+
     db_session.add_all([profile, org, membership])
     db_session.commit()
     db_session.close()
 
     app.dependency_overrides[get_db] = override_get_db
     from app.core.security import get_current_user, get_required_workspace_id
-    
+
     def mock_get_user():
         db = TestingSessionLocal()
         u = db.query(Profile).filter(Profile.id == user_id).first()
@@ -132,8 +132,16 @@ def test_founder_mode_retains_trust_metrics():
     app.dependency_overrides[get_current_user] = mock_get_user
     app.dependency_overrides[get_required_workspace_id] = lambda: org_id
 
-    # Mock the board run to return a synthesis with trust metrics
     from unittest.mock import AsyncMock, patch
+    from app.core.dependency_container import container
+    from app.services.ai.executive_board import ExecutiveBoard
+
+    gemini_service = container.get("gemini_service")
+    original_generate_text = gemini_service.generate_text
+
+    async def mock_generate_text(*args, **kwargs):
+        return "Founder Status"
+
     mock_synthesis = ExecutiveSynthesisResult(
         agent="EVE COO",
         summary="Interpretation",
@@ -144,22 +152,22 @@ def test_founder_mode_retains_trust_metrics():
         findings_by_agent={"Agent": ["Finding"]},
         governance_decisions={"data_sufficiency": "FULL_DATA"}
     )
-    
-    from app.services.ai.executive_board import ExecutiveBoard
-    with patch.object(ExecutiveBoard, "run_board", new_callable=AsyncMock) as mock_run:
-        mock_run.return_value = mock_synthesis
-        
-        # Test request with developer_mode=False (simulating founder view)
-        response = client.post("/api/executive/chat", json={
-            "question": "What is our status?",
-            "developer_mode": False
-        })
-        assert response.status_code == 200
-        msg_data = response.json()["message"]
-        
-        # Verify that trust metrics are NOT stripped
-        assert "confidence_scores" in msg_data["agent_data"]
-        assert "findings_by_agent" in msg_data["agent_data"]
-        assert "governance_decisions" in msg_data["agent_data"]
 
-    app.dependency_overrides.clear()
+    gemini_service.generate_text = mock_generate_text
+    try:
+        with patch.object(ExecutiveBoard, "run_board", new_callable=AsyncMock) as mock_run:
+            mock_run.return_value = mock_synthesis
+
+            response = client.post("/api/executive/chat", json={
+                "question": "What is our status?",
+                "developer_mode": False
+            })
+            assert response.status_code == 200
+            msg_data = response.json()["message"]
+
+            assert "confidence_scores" in msg_data["agent_data"]
+            assert "findings_by_agent" in msg_data["agent_data"]
+            assert "governance_decisions" in msg_data["agent_data"]
+    finally:
+        gemini_service.generate_text = original_generate_text
+        app.dependency_overrides.clear()

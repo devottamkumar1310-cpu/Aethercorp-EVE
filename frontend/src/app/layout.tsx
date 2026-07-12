@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EVE - Enterprise Virtual Executive",
-  description: "Advanced Virtual COO and Intelligence Command Center for D2C Brands.",
+  title: "EVE - Inventory Intelligence",
+  description: "Inventory Intelligence Platform for Ecommerce Founders. Predict stockouts, find dead stock, and get reorder recommendations.",
 };
 
 import { Toaster } from 'sonner';
@@ -27,9 +27,27 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="executive-dark"
+      data-theme="executive-light"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('theme') || 'executive-light';
+                  var active = stored;
+                  if (stored === 'system') {
+                    active = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'executive-light';
+                  }
+                  document.documentElement.setAttribute('data-theme', active);
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster position="top-right" />

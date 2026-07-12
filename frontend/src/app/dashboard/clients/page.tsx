@@ -58,7 +58,7 @@ export default function ClientsPage() {
       await deleteClientAPI(sessionToken, id);
       toast.success("Client deleted successfully");
       loadData(sessionToken);
-    } catch (error: any) {
+    } catch {
       toast.error("Client record is currently syncing. Please try again.");
     }
   };

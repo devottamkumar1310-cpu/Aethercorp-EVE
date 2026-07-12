@@ -114,14 +114,9 @@ def test_waitlist_duplicate_prevention(db_session: Session):
         db_session.commit()
 
 
-def test_admin_stats(db_session: Session):
+def test_admin_stats_requires_authorization(db_session: Session):
     """
-    Test that the admin stats endpoint returns correct aggregations.
+    Admin waitlist analytics must not be publicly readable.
     """
     response = client.get("/api/waitlist/admin-stats")
-    assert response.status_code == 200
-    data = response.json()
-    assert "trials" in data
-    assert "waitlist" in data
-    assert "total" in data["trials"]
-    assert "total_signups" in data["waitlist"]
+    assert response.status_code == 401

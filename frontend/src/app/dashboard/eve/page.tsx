@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
 import { 
-  sendExecutiveChat, 
   sendExecutiveChatStream,
-  listGoals, 
-  getRecommendations,
   listConversations,
   getConversation,
   renameConversation,
@@ -17,14 +14,11 @@ import {
 import { 
   fetchHealth, 
   fetchRisks, 
-  fetchOpportunities, 
-  fetchTrends 
+  fetchOpportunities
 } from "@/services/intelligenceService";
 import { 
   AgentAnalysisResult, 
-  MessageResponse, 
-  BusinessGoalResponse, 
-  AIRecommendationResponse 
+  MessageResponse
 } from "@/types/executive";
 import { DailyBriefModal } from "@/components/executive/DailyBriefModal";
 import { MemoryManagerPanel } from "@/components/executive/MemoryManagerPanel";
@@ -33,18 +27,14 @@ import { RecommendationHistoryPanel } from "@/components/executive/Recommendatio
 import { 
   Brain, 
   Sparkles, 
-  TrendingUp, 
   AlertTriangle, 
-  CheckCircle, 
   Send, 
   Loader2, 
   Target, 
   Database, 
   ShieldAlert, 
   Lightbulb, 
-  Compass, 
   User, 
-  HelpCircle, 
   ArrowRight,
   BookOpen,
   Mic,
@@ -54,7 +44,6 @@ import {
   MessageSquare,
   X,
   FileText,
-  Play,
   Coins
 } from "lucide-react";
 
@@ -245,14 +234,6 @@ export default function EVECoocommandCenter() {
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
-  const [suggestedActions, setSuggestedActions] = useState<string[]>([
-    "What needs my attention?",
-    "Finance summary",
-    "Identify overstock risks",
-    "Pricing optimizations"
-  ]);
-  const [suggestedQuestions, setSuggestedQuestions] = useState<Record<string, string[]> | null>(null);
-
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
 
@@ -263,15 +244,8 @@ export default function EVECoocommandCenter() {
     }
   }, []);
 
-  // Resizable panel widths (percentages)
-  const [rightWidth, setRightWidth] = useState(30);
-
   // Loading stage tracker
   const [loadingStage, setLoadingStage] = useState(0);
-
-  // Responsive layout state
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [leftActiveTab, setLeftActiveTab] = useState<"risks" | "opportunities">("risks");
 
   // Modals & Panels open states
   const [isDailyBriefOpen, setIsDailyBriefOpen] = useState(false);
@@ -281,10 +255,8 @@ export default function EVECoocommandCenter() {
   // Business metrics & data states
   const [healthScore, setHealthScore] = useState<number>(0);
   const [healthStatus, setHealthStatus] = useState<string>("Determining...");
-  const [healthTrends, setHealthTrends] = useState<any>(null);
   const [risks, setRisks] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
-  const [goals, setGoals] = useState<BusinessGoalResponse[]>([]);
   const [overview, setOverview] = useState<any>(null);
 
   const getDynamicSuggestions = () => {
@@ -335,15 +307,7 @@ export default function EVECoocommandCenter() {
     return suggestions;
   };
 
-  // Track if desktop viewport size is active
-  useEffect(() => {
-    const handleResize = () => {
-      setIsDesktop(window.innerWidth >= 1280);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+
 
   // Chat message state
   const [messages, setMessages] = useState<MessageResponse[]>([
@@ -361,24 +325,6 @@ export default function EVECoocommandCenter() {
   // Scroll ref for chat window
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const handleRightMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const startX = e.clientX;
-    const startWidth = rightWidth;
-    const doDrag = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaPercent = (deltaX / window.innerWidth) * 100;
-      const newWidth = Math.max(20, Math.min(45, startWidth - deltaPercent));
-      setRightWidth(newWidth);
-    };
-    const stopDrag = () => {
-      document.removeEventListener("mousemove", doDrag);
-      document.removeEventListener("mouseup", stopDrag);
-    };
-    document.addEventListener("mousemove", doDrag);
-    document.addEventListener("mouseup", stopDrag);
-  };
-
   // Loading stage timer triggers
   useEffect(() => {
     if (!chatLoading) {
@@ -393,15 +339,6 @@ export default function EVECoocommandCenter() {
       clearTimeout(t2);
     };
   }, [chatLoading]);
-
-  // Quick prompt chips
-  const promptChips = [
-    "Analyze Stockout Risk",
-    "Review Dead Inventory",
-    "Generate Replenishment Plan",
-    "Explain Reorder Recommendation",
-    "Show Lowest Performing SKUs"
-  ];
 
   const scrollChatToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -570,17 +507,6 @@ export default function EVECoocommandCenter() {
       console.log(`[TELEMETRY][PERF] Time for Health/Risk/Opportunity Panels: ${(tPanels - tStart).toFixed(2)}ms`);
     }).catch(err => console.error("Panel group load failed", err));
 
-    fetchTrends(token)
-      .then(val => {
-        if (val) setHealthTrends(val);
-      })
-      .catch(err => console.error("Trends load failed:", err));
-
-    listGoals(token)
-      .then(val => {
-        if (val) setGoals(val);
-      })
-      .catch(err => console.error("Goals load failed:", err));
 
     fetch(`${API_BASE_URL}/api/analytics/overview`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -591,18 +517,7 @@ export default function EVECoocommandCenter() {
       })
       .catch(err => console.error("Overview load failed:", err));
 
-      // Fetch suggested questions
-      try {
-        const questionsRes = await fetch(`${API_BASE_URL}/api/executive/suggested-questions`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (questionsRes.ok) {
-          const qData = await questionsRes.json();
-          setSuggestedQuestions(qData);
-        }
-      } catch (err) {
-        console.error("Failed to fetch suggested questions", err);
-      }
+
     } catch (err) {
       console.error("Hydration failed:", err);
     }
@@ -899,57 +814,7 @@ export default function EVECoocommandCenter() {
     }
   };
 
-  useEffect(() => {
-    if (messages.length <= 1) {
-      setSuggestedActions([
-        "What needs my attention?",
-        "Finance summary",
-        "Identify overstock risks",
-        "Pricing optimizations"
-      ]);
-      return;
-    }
 
-    const lastMsg = messages[messages.length - 1];
-    if (lastMsg.role === "user") return;
-
-    const contentLower = lastMsg.content.toLowerCase();
-    const agentData = lastMsg.agent_data as any;
-    const intent = agentData?.intent || "";
-
-    if (intent === "Greeting" || contentLower.includes("hi!") || contentLower.includes("hello!")) {
-      setSuggestedActions([
-        "Show my daily brief",
-        "What needs my attention?",
-        "How is our health score?"
-      ]);
-    } else if (intent === "Finance Query" || contentLower.includes("finance") || contentLower.includes("revenue") || contentLower.includes("cogs")) {
-      setSuggestedActions([
-        "Identify overstock risks",
-        "How to contain expenses?",
-        "Show my health score"
-      ]);
-    } else if (intent === "Inventory Query" || contentLower.includes("inventory") || contentLower.includes("stock") || contentLower.includes("sku")) {
-      setSuggestedActions([
-        "Show top stockout risks",
-        "Suggest reorder quantities",
-        "Pricing optimizations"
-      ]);
-    } else if (intent === "Pricing Query" || contentLower.includes("price") || contentLower.includes("pricing") || contentLower.includes("margins")) {
-      setSuggestedActions([
-        "Simulate price change",
-        "What is our profit margin?",
-        "Identify overstock risks"
-      ]);
-    } else {
-      setSuggestedActions([
-        "What needs my attention?",
-        "Show my daily brief",
-        "Finance summary",
-        "Identify overstock risks"
-      ]);
-    }
-  }, [messages]);
 
   if (loading) {
     return (

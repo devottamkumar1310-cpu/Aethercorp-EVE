@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { HelpCircle, BookOpen, Brain, Play, ShieldAlert, Sparkles, HelpCircle as HelpIcon, TrendingUp, Package, Database } from "lucide-react";
+import { HelpCircle, BookOpen, Brain, Play, TrendingUp, Package, Database } from "lucide-react";
 
 interface HelpTopic {
   id: string;
@@ -20,9 +20,9 @@ export default function HelpPage() {
       icon: BookOpen,
       content: (
         <div className="space-y-4">
-          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Welcome to EVE AI OS</h3>
+          <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Welcome to EVE</h3>
           <p className="text-muted-foreground dark:text-muted-foreground text-sm leading-relaxed">
-            EVE (Enterprise Virtual Executive) is your autonomous Chief Operating Officer. EVE continuously monitors your sales, expenses, and inventory data, and automates executive analysis so you can focus on scaling your brand.
+            EVE is your inventory intelligence platform. EVE analyzes your inventory data, predicts stockouts, and generates planning recommendations so you can focus on scaling your brand.
           </p>
           <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl space-y-2 shadow-sm">
             <h4 className="text-xs font-bold text-indigo-400 uppercase">First Steps:</h4>
@@ -145,11 +145,17 @@ export default function HelpPage() {
     {
       id: "faq",
       title: "FAQ & Troubleshooting",
-      icon: HelpIcon,
+      icon: HelpCircle,
       content: (
         <div className="space-y-4">
           <h3 className="text-xl font-extrabold text-foreground dark:text-foreground border-b border-border dark:border-border pb-3">Frequently Asked Questions</h3>
           <div className="space-y-4 text-sm">
+            <div className="space-y-1">
+              <h4 className="font-bold text-foreground dark:text-foreground">Can you prove this right now?</h4>
+              <p className="text-xs text-muted-foreground dark:text-muted-foreground">
+                Yes. You can upload any supplier invoice, contract, or inventory ledger CSV to the Document Hub and query EVE immediately in the chat console. EVE will instantly extract data, run planning diagnostics, and surface cash-flow impact recommendations.
+              </p>
+            </div>
             <div className="space-y-1">
               <h4 className="font-bold text-foreground dark:text-foreground">How do I restart the interactive guided tour?</h4>
               <p className="text-xs text-muted-foreground dark:text-muted-foreground">Click the "Restart Product Tour" button below at any time to walk through the dashboard step-by-step.</p>

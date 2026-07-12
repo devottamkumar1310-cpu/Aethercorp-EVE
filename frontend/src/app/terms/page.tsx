@@ -37,14 +37,14 @@ export default function TermsOfServicePage() {
             <section className="space-y-3">
               <h2 className="text-xl font-semibold text-foreground">1. Agreement to Terms</h2>
               <p>
-                By creating an account, accessing, or using the Enterprise Virtual Executive ("EVE") platform, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not access or use the services.
+                By creating an account, accessing, or using the EVE platform, you agree to be bound by these Terms of Service. If you do not agree to these terms, do not access or use the services.
               </p>
             </section>
 
             <section className="space-y-3">
               <h2 className="text-xl font-semibold text-foreground">2. Purpose and Scope of Services</h2>
               <p>
-                EVE provides AI-driven analytical tools, data visualization, business intelligence dashboards, and command workflows designed for D2C fashion and inventory operations.
+                EVE provides AI-driven analytical tools, data visualization, business intelligence dashboards, and command workflows designed for D2C and ecommerce inventory operations.
               </p>
             </section>
 

@@ -27,7 +27,7 @@ export default function HealthDashboard() {
       const json = await resp.json();
       setData(json);
       setError(null);
-    } catch (err: any) {
+    } catch {
       setError("System health telemetry is currently syncing. Please wait.");
     } finally {
       setLoading(false);

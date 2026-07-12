@@ -624,7 +624,7 @@ class AnalyticsService:
                         f"Price elasticity: {elasticity}",
                         f"Projected volume change: {qty_change_pct * 100.0:.1f}%",
                         f"Unit cost: ${unit_cost:.2f}",
-                        f"Stockout risk factor: {reorder_metrics['stockout_risk_score']:.1f}%"
+                        f"Stockout risk factor: {stockout_risk_score:.1f}%"
                     ]
                 },
                 "provenance": {

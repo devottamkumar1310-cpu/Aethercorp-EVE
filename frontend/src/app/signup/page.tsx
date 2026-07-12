@@ -103,7 +103,7 @@ export default function SignupPage() {
             </div>
           </div>
           <h2 className="text-2xl font-bold text-foreground text-center mb-2">Create Account</h2>
-          <p className="text-muted-foreground text-center mb-8 text-sm">Start making deterministic decisions</p>
+          <p className="text-muted-foreground text-center mb-8 text-sm">Start forecasting with confidence</p>
 
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { Mail } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -34,7 +33,7 @@ export default function ForgotPasswordPage() {
       } else {
         setError("Failed to send reset link. Please try again later.");
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);

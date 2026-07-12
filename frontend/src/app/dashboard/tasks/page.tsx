@@ -63,7 +63,7 @@ export default function TasksPage() {
       await deleteTaskAPI(sessionToken, id);
       toast.success("Task deleted successfully");
       loadData(sessionToken);
-    } catch (error: any) {
+    } catch {
       toast.error("Task record is currently syncing. Please try again.");
     }
   };

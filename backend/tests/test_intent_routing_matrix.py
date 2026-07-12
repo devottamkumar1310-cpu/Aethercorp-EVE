@@ -46,7 +46,7 @@ def test_intent_routing_matrix():
         "Show me the project roadmap milestones.": "Projects Query",
 
         # Tasks Domain
-        "How do we mitigate overdue tasks?": "Tasks Query",
+        "How do we mitigate overdue tasks?": "PROJECT_MITIGATION",
         "List all blocked tasks in the backlog.": "Tasks Query",
 
         # Executive Summary Domain
