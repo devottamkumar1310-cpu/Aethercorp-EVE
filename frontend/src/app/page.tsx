@@ -29,7 +29,8 @@ export default function LandingPage() {
           </Link>
           <Link 
             href="/signup" 
-            className="text-sm font-semibold bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all shadow-sm"
+            className="text-sm font-semibold bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
+            style={{ color: '#ffffff' }}
           >
             Get Started
           </Link>
