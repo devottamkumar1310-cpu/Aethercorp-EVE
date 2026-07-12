@@ -68,16 +68,16 @@
   --bg-app: #fafafa;
   --bg-card: #ffffff;
   --bg-sidebar: #f4f4f5;
-  --border-accent: #e4e4e7;
+  --border-accent: #d4d4d8; /* Zinc-300 for clearer borders */
   --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
+  --text-secondary: #3f3f46; /* Zinc-700 for high-contrast secondary text (6.5:1) */
+  --text-muted: #5b5b63; /* Darker Zinc-600 for compliant muted text (4.5:1) */
   --accent-color: #18181b;
   --accent-glow: rgba(24, 24, 27, 0.05);
   --accent-hover: #27272a;
   --panel-glow: none;
   --chart-primary: #18181b;
-  --chart-secondary: #71717a;
+  --chart-secondary: #5b5b63;
 
   /* Semantic Variables */
   --background: var(--bg-app);
@@ -88,9 +88,9 @@
   --text-secondary: var(--text-secondary);
   --text-muted: var(--text-muted);
   --success: #10b981;
-  --warning: #f59e0b;
+  --warning: #d97706; /* Darker warning for better contrast */
   --danger: #ef4444;
-  --info: #3b82f6;
+  --info: #2563eb; /* Darker blue for info tags */
 
   /* Tailwind Semantic Mappings */
   --background: var(--bg-app);
@@ -106,7 +106,7 @@
   --border: var(--border-accent);
   --input: var(--border-accent);
   --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted-foreground: var(--text-muted);
   --accent: #f4f4f5;
   --accent-foreground: #18181b;
   --ring: #18181b;

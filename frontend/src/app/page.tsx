@@ -8,7 +8,6 @@ import {
   Upload, 
   Activity, 
   Package, 
-  ArrowUpRight,
   ShieldCheck,
   DollarSign
 } from "lucide-react";
@@ -19,7 +18,7 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="w-full bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-foreground font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
+          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
             EVE
           </div>
           <h1 className="text-xl font-semibold text-foreground tracking-tight">EVE | Inventory Intelligence</h1>
@@ -30,7 +29,7 @@ export default function LandingPage() {
           </Link>
           <Link 
             href="/signup" 
-            className="text-sm font-medium bg-indigo-600 text-foreground px-4 py-2 rounded-md hover:bg-indigo-700 transition-all shadow-sm"
+            className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all shadow-sm"
           >
             Get Started
           </Link>
@@ -48,20 +47,20 @@ export default function LandingPage() {
             Stop Guessing. <br />
             <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">Start Forecasting.</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-slate-700 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
             EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so you can reclaim trapped working capital and scale your brand with confidence.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link 
               href="/signup" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-foreground bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
             >
               Analyze My Inventory
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <Link 
               href="/login" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-foreground bg-card border border-slate-300 dark:border-zinc-700 rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
             >
               View Example Insights
             </Link>
@@ -318,20 +317,20 @@ export default function LandingPage() {
         <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
           Start Using EVE
         </h2>
-        <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+        <p className="text-base md:text-lg text-slate-700 dark:text-zinc-300 max-w-xl mx-auto leading-relaxed">
           Create your workspace and begin analyzing your inventory.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link 
             href="/signup" 
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-foreground bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
           >
             Get Started
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
           <Link 
             href="/login" 
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-medium text-foreground bg-card border border-border rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-medium text-foreground bg-card border border-slate-300 dark:border-zinc-700 rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
           >
             Sign In
           </Link>

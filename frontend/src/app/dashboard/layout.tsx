@@ -25,7 +25,6 @@ import {
   Settings,
   Menu,
   Brain,
-  MessageSquare,
   Sun,
   Moon,
   FileText,
