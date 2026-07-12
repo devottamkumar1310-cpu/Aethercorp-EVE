@@ -78,6 +78,12 @@ class Settings(BaseSettings):
         if self.GEMINI_API_KEY:
             self.GEMINI_MOCK_MODE = False
 
+        if self.ENVIRONMENT == "production" or self.ENV == "production":
+            if not self.SUPABASE_JWT_SECRET:
+                raise ValueError("CRITICAL SECURITY ERROR: SUPABASE_JWT_SECRET must be configured in production environment.")
+            if self.SECRET_KEY == "aethercorp-nexus-super-secret-key-replace-in-production":
+                raise ValueError("CRITICAL SECURITY ERROR: SECRET_KEY must be changed from the default development key in production environment.")
+
 
     # Pydantic Configuration
     model_config = SettingsConfigDict(

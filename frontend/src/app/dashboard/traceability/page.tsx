@@ -18,40 +18,13 @@ interface TraceRecord {
   created_at: string;
 }
 
-// Resilient Pre-seeded Fallback Dataset aligned with Classic Tee dataset
-const fallbackRecommendation: TraceRecord = {
-  id: "rec-123456",
-  organization_id: "demo-org",
-  recommendation_type: "inventory",
-  action: "Trigger immediate reorder of 500 units of Classic Tee (TSHIRT-CLASSIC) fabric rolls to prevent stockout.",
-  confidence_score: 0.95,
-  validation_status: "verified",
-  source_datasets: [
-    "InventoryItem (TSHIRT-CLASSIC)",
-    "Sales Records (June 2026)",
-    "Supplier agreement (Premium Cotton Textiles Ltd)"
-  ],
-  supporting_metrics: {
-    stock: 80,
-    reorder_point: 140,
-    avg_daily_sales: 20.0,
-    estimated_out_of_stock_days: 4.0,
-    lead_time_days: 7.0
-  },
-  reasoning_chain: [
-    "Stock level is checked (current = 80 units). Safety reorder threshold is 140 units.",
-    "Average sales velocity is 20 units/day. Estimated days to absolute stockout is 4.0 days.",
-    "Supplier lead time is 7 days. Ordering now prevents a 3-day stockout gap.",
-    "MOQ from Premium Cotton Textiles is 500 units."
-  ],
-  created_at: "2026-07-05"
-};
-
 export default function TraceabilityDashboard() {
   const [traces, setTraces] = useState<TraceRecord[]>([]);
-  const [selectedTrace, setSelectedTrace] = useState<TraceRecord>(fallbackRecommendation);
+  const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchTraces = async () => {
+    setLoading(true);
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
@@ -60,6 +33,7 @@ export default function TraceabilityDashboard() {
       const workspaceId = localStorage.getItem("active_workspace_id");
       
       if (!token || !workspaceId) {
+        setLoading(false);
         return;
       }
 
@@ -74,12 +48,18 @@ export default function TraceabilityDashboard() {
       }
       
       const json = await resp.json();
+      setTraces(json || []);
       if (json && json.length > 0) {
-        setTraces(json);
         setSelectedTrace(json[0]);
+      } else {
+        setSelectedTrace(null);
       }
     } catch (err: any) {
-      console.warn("API load bypassed. Falling back to pre-seeded dataset.", err);
+      console.warn("API load failed.", err);
+      setTraces([]);
+      setSelectedTrace(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,149 +99,146 @@ export default function TraceabilityDashboard() {
           )}
         </div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-4">
-          
-          {/* Sidebar Recommendation list (Col-Span-1) */}
-          <div className="lg:col-span-1 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Decisions</h3>
-            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
-              
-              {/* Fallback item when empty */}
-              {traces.length === 0 && (
-                <div 
-                  onClick={() => setSelectedTrace(fallbackRecommendation)}
-                  className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
-                    selectedTrace.id === fallbackRecommendation.id 
-                    ? "border-emerald-500 bg-emerald-950/10" 
-                    : "border-border bg-card/30 hover:border-foreground/20"
-                  }`}
-                >
-                  <span className="block text-xs font-semibold text-emerald-400 uppercase tracking-wide">Pre-seeded Fallback</span>
-                  <span className="block text-sm font-bold text-foreground mt-1">{fallbackRecommendation.action}</span>
-                  <span className="block text-[10px] text-muted-foreground mt-2">{fallbackRecommendation.created_at}</span>
-                </div>
-              )}
-
-              {/* Dynamic items */}
-              {traces.map((trace) => (
-                <div 
-                  key={trace.id}
-                  onClick={() => setSelectedTrace(trace)}
-                  className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
-                    selectedTrace.id === trace.id 
-                    ? "border-emerald-500 bg-emerald-950/10" 
-                    : "border-border bg-card/30 hover:border-foreground/20"
-                  }`}
-                >
-                  <span className="block text-xs font-semibold text-indigo-400 uppercase tracking-wide">
-                    {trace.recommendation_type}
-                  </span>
-                  <span className="block text-sm font-bold text-foreground mt-1 truncate">{trace.action}</span>
-                  <span className="block text-[10px] text-muted-foreground mt-2">{trace.created_at}</span>
-                </div>
-              ))}
-
-            </div>
+        {loading ? (
+          <div className="mt-12 text-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto" />
+            <p className="mt-4 text-sm text-muted-foreground">Loading audit traces...</p>
           </div>
-
-          {/* Recommendation Trace Auditing View (Col-Span-3) */}
-          <div className="lg:col-span-3 grid gap-6 md:grid-cols-3">
+        ) : traces.length === 0 ? (
+          <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/20 p-16 text-center max-w-xl mx-auto">
+            <HelpCircle className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+            <h3 className="mt-4 text-lg font-semibold text-foreground">No decisions have been recorded yet.</h3>
+            <p className="mt-2 text-sm text-muted-foreground">This workspace has no decision traceability logs.</p>
+          </div>
+        ) : selectedTrace && (
+          <div className="mt-8 grid gap-8 lg:grid-cols-4">
             
-            {/* The recommendation action (Col-Span-2) */}
-            <div className="md:col-span-2 space-y-6">
+            {/* Sidebar Recommendation list (Col-Span-1) */}
+            <div className="lg:col-span-1 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Decisions</h3>
+              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                
+                {/* Dynamic items */}
+                {traces.map((trace) => (
+                  <div 
+                    key={trace.id}
+                    onClick={() => setSelectedTrace(trace)}
+                    className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
+                      selectedTrace.id === trace.id 
+                      ? "border-emerald-500 bg-emerald-950/10" 
+                      : "border-border bg-card/30 hover:border-foreground/20"
+                    }`}
+                  >
+                    <span className="block text-xs font-semibold text-indigo-400 uppercase tracking-wide">
+                      {trace.recommendation_type}
+                    </span>
+                    <span className="block text-sm font-bold text-foreground mt-1 truncate">{trace.action}</span>
+                    <span className="block text-[10px] text-muted-foreground mt-2">{trace.created_at}</span>
+                  </div>
+                ))}
+
+              </div>
+            </div>
+
+            {/* Recommendation Trace Auditing View (Col-Span-3) */}
+            <div className="lg:col-span-3 grid gap-6 md:grid-cols-3">
               
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/10 p-6 backdrop-blur-md">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-emerald-400" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                      {selectedTrace.recommendation_type.toUpperCase()} RECOMMENDATION
+              {/* The recommendation action (Col-Span-2) */}
+              <div className="md:col-span-2 space-y-6">
+                
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/10 p-6 backdrop-blur-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-emerald-400" />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                        {selectedTrace.recommendation_type.toUpperCase()} RECOMMENDATION
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {selectedTrace.validation_status}
+                    </div>
+                  </div>
+                  
+                  <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground leading-snug">
+                    {selectedTrace.action}
+                  </h2>
+                  <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+                    {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
+                  </p>
+                </div>
+
+                {/* Reasoning Chain Timeline */}
+                <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
+                  <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2 mb-6">
+                    <Compass className="h-4 w-4 text-indigo-400" /> Explainable Reasoning Steps
+                  </h3>
+                  
+                  <div className="relative border-l-2 border-border pl-4 ml-2 space-y-6">
+                    {selectedTrace.reasoning_chain.map((step, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-[25px] mt-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-background"></div>
+                        <h4 className="text-sm font-semibold text-foreground">Step {idx + 1}</h4>
+                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Supporting metrics & details (Right Column) */}
+              <div className="space-y-6">
+                
+                {/* Confidence Score Card */}
+                <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
+                  <span className="text-sm font-medium text-muted-foreground font-semibold">Decision Confidence Score</span>
+                  <p className="mt-3 text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                    {(selectedTrace.confidence_score * 100).toFixed(0)}%
+                  </p>
+                  <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
+                    <Cpu className="h-3.5 w-3.5 text-indigo-400" /> Audited reasoning logic
+                  </div>
+                </div>
+
+                {/* Metrics Checklist */}
+                <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                    <HardDrive className="h-4 w-4 text-indigo-400" /> Supporting Metrics
+                  </h3>
+                  <div className="space-y-3">
+                    {Object.entries(selectedTrace.supporting_metrics).map(([key, value]) => (
+                      <div key={key} className="flex justify-between border-b border-border pb-2 text-sm">
+                        <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                        <span className="font-semibold text-foreground">{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Source Database Records */}
+                <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                    <HelpCircle className="h-4 w-4 text-indigo-400" /> Verified Data Sources
+                  </h3>
+                  <div className="space-y-2.5">
+                    {selectedTrace.source_datasets.map((source, index) => (
+                      <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs">
+                        <span className="block font-semibold text-foreground leading-relaxed">{source}</span>
+                      </div>
+                    ))}
+                    <span className="block text-[10px] text-muted-foreground mt-2 text-center font-medium">
+                      Audited: {selectedTrace.created_at}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    {selectedTrace.validation_status}
-                  </div>
                 </div>
-                
-                <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground leading-snug">
-                  {selectedTrace.action}
-                </h2>
-                <p className="mt-3 text-sm text-slate-300 leading-relaxed">
-                  {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
-                </p>
-              </div>
 
-              {/* Reasoning Chain Timeline */}
-              <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
-                <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2 mb-6">
-                  <Compass className="h-4 w-4 text-indigo-400" /> Explainable Reasoning Steps
-                </h3>
-                
-                <div className="relative border-l-2 border-border pl-4 ml-2 space-y-6">
-                  {selectedTrace.reasoning_chain.map((step, idx) => (
-                    <div key={idx} className="relative">
-                      <div className="absolute -left-[25px] mt-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-background"></div>
-                      <h4 className="text-sm font-semibold text-foreground">Step {idx + 1}</h4>
-                      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{step}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Supporting metrics & details (Right Column) */}
-            <div className="space-y-6">
-              
-              {/* Confidence Score Card */}
-              <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
-                <span className="text-sm font-medium text-muted-foreground font-semibold">Decision Confidence Score</span>
-                <p className="mt-3 text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
-                  {(selectedTrace.confidence_score * 100).toFixed(0)}%
-                </p>
-                <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
-                  <Cpu className="h-3.5 w-3.5 text-indigo-400" /> Audited reasoning logic
-                </div>
-              </div>
-
-              {/* Metrics Checklist */}
-              <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                  <HardDrive className="h-4 w-4 text-indigo-400" /> Supporting Metrics
-                </h3>
-                <div className="space-y-3">
-                  {Object.entries(selectedTrace.supporting_metrics).map(([key, value]) => (
-                    <div key={key} className="flex justify-between border-b border-border pb-2 text-sm">
-                      <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
-                      <span className="font-semibold text-foreground">{String(value)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Source Database Records */}
-              <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                  <HelpCircle className="h-4 w-4 text-indigo-400" /> Verified Data Sources
-                </h3>
-                <div className="space-y-2.5">
-                  {selectedTrace.source_datasets.map((source, index) => (
-                    <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs">
-                      <span className="block font-semibold text-foreground leading-relaxed">{source}</span>
-                    </div>
-                  ))}
-                  <span className="block text-[10px] text-muted-foreground mt-2 text-center font-medium">
-                    Audited: {selectedTrace.created_at}
-                  </span>
-                </div>
               </div>
 
             </div>
 
           </div>
-
-        </div>
+        )}
 
       </div>
     </div>

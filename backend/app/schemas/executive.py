@@ -94,7 +94,7 @@ class BusinessGoalResponse(BaseModel):
         from_attributes = True
 
 class DailyBriefResponse(BaseModel):
-    health_score: float
+    health_score: Optional[float] = None
     health_status: str
     risks: List[Dict[str, Any]]
     opportunities: List[Dict[str, Any]]

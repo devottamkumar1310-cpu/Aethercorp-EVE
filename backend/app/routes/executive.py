@@ -142,8 +142,8 @@ async def daily_brief(
     if data_state in ("NO_DATA", "DATA_INSUFFICIENT"):
         logger.warning(f"Daily Brief blocked due to data sufficiency: {sufficiency_msg}")
         return DailyBriefResponse(
-            health_score=50.0,
-            health_status="warning",
+            health_score=None,
+            health_status="Insufficient data",
             risks=[],
             opportunities=[],
             summary=sufficiency_msg,
@@ -282,7 +282,7 @@ async def daily_brief(
                 })
 
             return DailyBriefResponse(
-                health_score=health.get("score", 50.0),
+                health_score=health.get("score"),
                 health_status=health.get("status", "warning"),
                 risks=risks,
                 opportunities=opportunities,

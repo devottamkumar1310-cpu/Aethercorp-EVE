@@ -11,6 +11,7 @@ from app.models.waitlist import WaitlistEntry
 from app.models.profile import Profile
 from app.core.security import security, verify_supabase_token, verify_workspace_admin
 from fastapi.security import HTTPAuthorizationCredentials
+from app.core.rate_limiter import rate_limit
 
 logger = logging.getLogger("eve.waitlist")
 router = APIRouter(prefix="/api/waitlist", tags=["Waitlist & Trial System"])
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/api/waitlist", tags=["Waitlist & Trial System"])
 
 class WaitlistJoinRequest(BaseModel):
     name: Optional[str] = None
-    email: Optional[str] = None
+    email: str
     company_name: Optional[str] = None
     company_website: Optional[str] = None
     revenue_range: Optional[str] = None
@@ -27,15 +28,11 @@ class WaitlistJoinRequest(BaseModel):
 
 def get_current_user_optional(
     request: Request,
-    db: Session = Depends(get_db),
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[Profile]:
-    """
-    Dependency to resolve the current user if authenticated,
-    without raising an HTTP 401 on failure/absence.
-    """
-    if credentials is None:
+    if not credentials:
         return None
+    db = next(get_db())
     try:
         payload = verify_supabase_token(request, credentials)
         user_id_str = payload.get("sub")
@@ -51,7 +48,8 @@ def get_current_user_optional(
 def join_waitlist(
     body: WaitlistJoinRequest,
     db: Session = Depends(get_db),
-    current_user: Optional[Profile] = Depends(get_current_user_optional)
+    current_user: Optional[Profile] = Depends(get_current_user_optional),
+    _: None = Depends(rate_limit(requests=3, window_seconds=60))
 ):
     """
     Register a user or lead on the priority waitlist.
