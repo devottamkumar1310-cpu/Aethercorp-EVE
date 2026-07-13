@@ -21,6 +21,21 @@ def db_session():
         db.close()
 
 
+@pytest.fixture(autouse=True)
+def setup_waitlist_overrides(db_session):
+    from app.database import get_db
+    old_overrides = dict(app.dependency_overrides)
+    app.dependency_overrides.clear()
+    
+    def _override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = _override_get_db
+    yield
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(old_overrides)
+
+
 def test_profile_trial_defaults(db_session: Session):
     """
     Test that creating a new Profile automatically populates
