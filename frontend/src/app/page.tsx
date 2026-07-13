@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { 
   ArrowRight, 
@@ -9,21 +12,32 @@ import {
   Activity, 
   Package, 
   ShieldCheck,
-  DollarSign
+  DollarSign,
+  Menu,
+  X
 } from "lucide-react";
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
       {/* Navbar */}
-      <header className="w-full bg-card border-b border-slate-200 dark:border-zinc-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
+      <header className="w-full bg-card border-b border-slate-200 dark:border-zinc-800 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
             EVE
           </div>
-          <h1 className="text-xl font-semibold text-foreground tracking-tight">EVE | Inventory Intelligence</h1>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">by AetherCorp</span> <span className="hidden md:inline">| Inventory Intelligence</span>
+          </h1>
         </div>
-        <div className="space-x-4">
+        
+        {/* Desktop Navbar Links */}
+        <div className="hidden md:flex items-center gap-6">
+          <Link href="/pricing" className="text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            Pricing
+          </Link>
           <Link href="/login" className="text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             Sign In
           </Link>
@@ -35,23 +49,59 @@ export default function LandingPage() {
             Get Started
           </Link>
         </div>
+
+        {/* Mobile Hamburger Button */}
+        <button 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none"
+          aria-label="Toggle mobile menu"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Mobile Navigation Drawer / Dropdown */}
+        {mobileMenuOpen && (
+          <div className="absolute top-full left-0 right-0 bg-card border-b border-slate-200 dark:border-zinc-800 p-6 flex flex-col gap-4 shadow-xl z-50 animate-fade-in md:hidden">
+            <Link 
+              href="/pricing" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-base font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
+            >
+              Pricing
+            </Link>
+            <Link 
+              href="/login" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-base font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
+            >
+              Sign In
+            </Link>
+            <Link 
+              href="/signup" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center text-sm font-semibold bg-indigo-600 py-3 rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 text-white"
+            >
+              Get Started
+            </Link>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-16 flex flex-col items-center justify-center text-center px-6">
-        <div className="max-w-4xl space-y-8 relative z-10">
-          <div className="inline-flex items-center rounded-full border border-slate-250 dark:border-zinc-850 bg-card px-3 py-1 text-sm text-foreground animate-fade-in">
+      <section className="relative overflow-hidden pt-16 pb-12 sm:pt-20 sm:pb-16 flex flex-col items-center justify-center text-center px-4 sm:px-6">
+        <div className="max-w-4xl space-y-6 sm:space-y-8 relative z-10">
+          <div className="inline-flex items-center rounded-full border border-slate-200 dark:border-zinc-800 bg-card px-3 py-1 text-xs sm:text-sm text-foreground animate-fade-in">
             <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
-            Inventory Forecasting & Planning Built for Ecommerce Founders
+            Inventory Forecasting & Planning Built for Ecommerce Founders, D2C & Apparel Brands
           </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
             Stop Guessing. <br />
             <span className="hero-headline-accent">Start Forecasting.</span>
           </h1>
-          <p className="text-lg md:text-xl text-slate-750 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-            EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so you can reclaim trapped working capital and scale your brand with confidence.
+          <p className="text-base sm:text-lg md:text-xl text-slate-700 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
+            EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so founder-led ecommerce, D2C, and apparel brands can reclaim trapped working capital and scale with confidence.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md mx-auto sm:max-w-none">
             <Link 
               href="/signup" 
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
@@ -60,7 +110,7 @@ export default function LandingPage() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <Link 
-              href="/login" 
+              href="/demo" 
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-foreground bg-card border border-slate-300 dark:border-zinc-700 rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
             >
               View Example Insights
@@ -69,12 +119,12 @@ export default function LandingPage() {
         </div>
 
         {/* Backdrop Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/2 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
       </section>
 
       {/* Product Preview Section */}
-      <section className="px-6 pb-24 max-w-6xl mx-auto w-full">
-        <div className="bg-slate-50/50 dark:bg-zinc-950/20 rounded-2xl border border-border/80 shadow-inner overflow-hidden p-6 md:p-8 space-y-6">
+      <section className="px-4 sm:px-6 pb-20 sm:pb-24 max-w-6xl mx-auto w-full">
+        <div className="bg-slate-50/50 dark:bg-zinc-950/20 rounded-2xl border border-border/80 shadow-inner overflow-hidden p-4 sm:p-6 md:p-8 space-y-6">
           <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-500" />
@@ -147,7 +197,7 @@ export default function LandingPage() {
               <span className="text-[10px] text-muted-foreground font-mono">2 SKU alerts active</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[500px]">
                 <thead>
                   <tr className="border-b border-border text-muted-foreground font-medium bg-card/10">
                     <th className="px-5 py-3">Product SKU</th>
@@ -180,11 +230,11 @@ export default function LandingPage() {
       </section>
 
       {/* Pain Points Section */}
-      <section className="px-6 py-20 bg-card border-y border-border">
+      <section className="px-4 sm:px-6 py-16 sm:py-20 bg-card border-y border-border">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-3">
-            <h2 className="text-3xl font-extrabold text-foreground tracking-tight">The Three Flaws in Standard Inventory Planning</h2>
-            <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">The Three Flaws in Standard Inventory Planning</h2>
+            <p className="text-muted-foreground text-xs sm:text-sm max-w-xl mx-auto">
               How guesswork, static tables, and lag times eat away at ecommerce margins.
             </p>
           </div>
@@ -224,10 +274,10 @@ export default function LandingPage() {
       </section>
 
       {/* Outcome-focused capabilities */}
-      <section className="px-6 py-24 max-w-5xl mx-auto w-full space-y-16">
+      <section className="px-4 sm:px-6 py-20 sm:py-24 max-w-5xl mx-auto w-full space-y-16">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-extrabold text-foreground tracking-tight">Core Inventory Insights</h2>
-          <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Core Inventory Insights</h2>
+          <p className="text-muted-foreground text-xs sm:text-sm max-w-xl mx-auto">
             Everything you need to predict supply needs and safeguard margins.
           </p>
         </div>
@@ -264,11 +314,11 @@ export default function LandingPage() {
       </section>
 
       {/* 3-step Workflow */}
-      <section className="px-6 py-20 bg-card border-y border-border">
+      <section className="px-4 sm:px-6 py-16 sm:py-20 bg-card border-y border-border">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-3">
-            <h2 className="text-3xl font-extrabold text-foreground tracking-tight">The 3-Step Inventory Workflow</h2>
-            <p className="text-muted-foreground text-sm max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">The 3-Step Inventory Workflow</h2>
+            <p className="text-muted-foreground text-xs sm:text-sm max-w-xl mx-auto">
               How EVE processes raw spreadsheets and supplier files into margin-saving recommendations.
             </p>
           </div>
@@ -314,14 +364,14 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="px-6 py-24 text-center max-w-4xl mx-auto space-y-8">
-        <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
+      <section className="px-4 sm:px-6 py-20 sm:py-24 text-center max-w-4xl mx-auto space-y-8">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
           Start Using EVE
         </h2>
-        <p className="text-base md:text-lg text-slate-700 dark:text-zinc-300 max-w-xl mx-auto leading-relaxed">
+        <p className="text-sm sm:text-base md:text-lg text-slate-700 dark:text-zinc-300 max-w-xl mx-auto leading-relaxed">
           Create your workspace and begin analyzing your inventory.
         </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md mx-auto sm:max-w-none">
           <Link 
             href="/signup" 
             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
@@ -330,20 +380,21 @@ export default function LandingPage() {
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
           <Link 
-            href="/login" 
+            href="/demo" 
             className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-medium text-foreground bg-card border border-slate-300 dark:border-zinc-700 rounded-lg hover:bg-muted transition-all hover:-translate-y-0.5"
           >
-            Sign In
+            View Example Insights
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-card border-t border-border px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
-        <div>
-          &copy; {new Date().getFullYear()} EVE. All rights reserved.
+      <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
+        <div className="text-center md:text-left">
+          &copy; {new Date().getFullYear()} AetherCorp. All rights reserved. EVE is a product of AetherCorp.
         </div>
-        <div className="space-x-4">
+        <div className="flex flex-wrap justify-center gap-4">
+          <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
           <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
           <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
         </div>

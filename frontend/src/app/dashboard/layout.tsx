@@ -748,7 +748,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-3">
               {/* Trial Status Badge */}
               {profile?.subscription_status === "trial" && !isExempt && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-semibold text-indigo-400">
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-semibold text-indigo-400">
                   <Clock size={11} className="animate-pulse" />
                   <span>
                     {(() => {
