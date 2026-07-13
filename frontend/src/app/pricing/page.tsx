@@ -75,9 +75,10 @@ export default function PricingPage() {
               <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
               Private Beta Request
             </h2>
-            <p className="text-xs text-muted-foreground">
-              Submit your interest to get early access, book a 1-on-1 dashboard walkthrough, and lock in early-adopter pricing benefits.
-            </p>
+            <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+              <p>Join the EVE early access waitlist.</p>
+              <p>Get notified when new onboarding slots open and receive updates as the platform evolves.</p>
+            </div>
           </div>
 
           {!submitted ? (
@@ -117,7 +118,7 @@ export default function PricingPage() {
                 disabled={loading}
                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg text-sm transition-all shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20 flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {loading ? "Submitting..." : "Request Invite & Book Demo"}
+                {loading ? "Joining..." : "Join Waitlist"}
                 <ArrowRight size={16} />
               </button>
             </form>
@@ -126,9 +127,9 @@ export default function PricingPage() {
               <div className="h-10 w-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold mx-auto">
                 ✓
               </div>
-              <h3 className="text-sm font-bold text-foreground">Request Received!</h3>
+              <h3 className="text-sm font-bold text-foreground">Added to Waitlist!</h3>
               <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                Thank you for applying. A member of the EVE team will reach out to <strong>{email}</strong> within 24 hours to schedule your demo.
+                Thank you for joining. We will notify you at <strong>{email}</strong> as soon as your onboarding slot is ready and send you updates as the platform evolves.
               </p>
             </div>
           )}
