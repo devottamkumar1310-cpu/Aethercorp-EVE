@@ -276,3 +276,18 @@ def require_workspace_role(minimum_role: str):
         return membership
     return dependency
 
+
+def verify_system_admin(
+    current_user: Profile = Depends(get_current_user)
+) -> Profile:
+    """
+    Verifies that the current user has global platform administrator status.
+    """
+    if current_user.subscription_status != "founder":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="System Administrator privileges required for this operation"
+        )
+    return current_user
+
+
