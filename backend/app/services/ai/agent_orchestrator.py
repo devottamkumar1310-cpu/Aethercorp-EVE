@@ -182,13 +182,22 @@ class AgentOrchestrator:
 
             conversation_history = []
             if conversation_id:
-                history_msgs = db.query(ExecutiveMessage).filter(
-                    ExecutiveMessage.conversation_id == conversation_id
-                ).order_by(ExecutiveMessage.created_at.desc()).limit(6).all()
-                history_msgs.reverse()
-                conversation_history = [
-                    {"role": m.role, "content": m.content} for m in history_msgs
-                ]
+                # Strictly verify conversation belongs to caller's workspace
+                valid_conv = db.query(ExecutiveConversation).filter(
+                    ExecutiveConversation.id == conversation_id,
+                    ExecutiveConversation.organization_id == org_id
+                ).first()
+                if not valid_conv:
+                    conversation_id = None
+                
+                if conversation_id:
+                    history_msgs = db.query(ExecutiveMessage).filter(
+                        ExecutiveMessage.conversation_id == conversation_id
+                    ).order_by(ExecutiveMessage.created_at.desc()).limit(6).all()
+                    history_msgs.reverse()
+                    conversation_history = [
+                        {"role": m.role, "content": m.content} for m in history_msgs
+                    ]
 
             telemetry_token = init_telemetry()
             try:

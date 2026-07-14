@@ -128,11 +128,12 @@ class SecurityHeadersMiddleware:
             if message["type"] == "http.response.start":
                 if scope["method"] != "OPTIONS":
                     headers = message.get("headers", [])
-                    # ASGI headers must be lowercased byte strings
                     headers.append((b"x-content-type-options", b"nosniff"))
                     headers.append((b"x-frame-options", b"DENY"))
                     headers.append((b"referrer-policy", b"strict-origin-when-cross-origin"))
                     headers.append((b"x-xss-protection", b"1; mode=block"))
+                    headers.append((b"strict-transport-security", b"max-age=31536000; includeSubDomains; preload"))
+                    headers.append((b"content-security-policy", b"default-src 'self'; frame-ancestors 'none'; object-src 'none';"))
                     message["headers"] = headers
             await send(message)
 

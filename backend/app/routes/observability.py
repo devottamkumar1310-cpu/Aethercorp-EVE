@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 
 from app.database import get_db
-from app.core.security import get_current_user, get_required_workspace_id, verify_workspace_admin
+from app.core.security import get_current_user, get_required_workspace_id, verify_workspace_admin, verify_system_admin
 from app.models.profile import Profile
 from app.models.executive_conversation import ExecutiveMessage, ExecutiveConversation
 from app.models.client import Client
@@ -291,14 +291,17 @@ def get_analytics(
 @router.post("/backup")
 def trigger_database_backup(
     db: Session = Depends(get_db),
-    admin_check: Any = Depends(verify_workspace_admin)
+    _system_admin: Profile = Depends(verify_system_admin)
 ):
     """
-    On-demand database backup. Requires Workspace Admin role.
+    On-demand database backup. Requires System Administrator privileges.
     """
     from app.services.backup_service import BackupService
     res = BackupService.run_backup(db)
     if res["status"] == "failed":
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=res["error"])
+    
+    # Remove sensitive path details from public response
+    res.pop("filepath", None)
     return res
 

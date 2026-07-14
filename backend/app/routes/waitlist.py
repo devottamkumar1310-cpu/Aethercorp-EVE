@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.models.waitlist import WaitlistEntry
 from app.models.profile import Profile
-from app.core.security import security, verify_supabase_token, verify_workspace_admin
+from app.core.security import security, verify_supabase_token, verify_workspace_admin, verify_system_admin
 from fastapi.security import HTTPAuthorizationCredentials
 from app.core.rate_limiter import rate_limit
 
@@ -106,7 +106,7 @@ def join_waitlist(
 @router.get("/admin-stats")
 def get_admin_stats(
     db: Session = Depends(get_db),
-    _admin = Depends(verify_workspace_admin),
+    _system_admin: Profile = Depends(verify_system_admin),
 ):
     """
     Operational analytics for admin visibility.
