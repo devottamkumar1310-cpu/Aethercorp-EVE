@@ -179,6 +179,13 @@ class AnalyticsService:
                 sales_series_map[pid] = []
             sales_series_map[pid].append(qty)
 
+        valid_items = []
+        for item in items:
+            product = item.product
+            if not product or not product.sku or not product.name or item.stock_on_hand is None or item.stock_on_hand < 0:
+                continue
+            valid_items.append(item)
+
         # 1b. Run orchestrator in batch for maximum performance and alignment
         async def run_inventory_orchestration_batch():
             orchestrator = IntelligenceOrchestrator()
@@ -192,7 +199,7 @@ class AnalyticsService:
             orchestrator.register_engine(ExecutiveSummaryEngine())
             
             tasks = []
-            for item in items:
+            for item in valid_items:
                 product = item.product
                 vel_info = velocities.get(product.sku, {"avg": 0.0, "std_dev": 0.0})
                 sku_sales = sales_series_map.get(product.id, [])
@@ -215,7 +222,7 @@ class AnalyticsService:
         batch_results = run_async_as_sync(run_inventory_orchestration_batch())
 
         # 2. Iterate products to compile metrics
-        for item, pipeline_res in zip(items, batch_results):
+        for item, pipeline_res in zip(valid_items, batch_results):
             product = item.product
             sku = product.sku
             
@@ -243,19 +250,34 @@ class AnalyticsService:
                 margin_at_risk = 0.0
                 working_capital_locked = item.stock_on_hand * (product.unit_cost or 20.0)
                 is_dead = detect_dead_stock(item.stock_on_hand, avg_daily_sales)
+                
+                trace_data = {
+                    "current_inventory": item.stock_on_hand,
+                    "historical_demand": sales_series_map.get(product.id, []),
+                    "forecast_demand": [0.0] * 30,
+                    "trend_confidence": 0.5,
+                    "lead_time": item.lead_time_days,
+                    "safety_stock": 0,
+                    "reorder_point": 0,
+                    "eoq_adjustment": 0,
+                    "revenue_at_risk": 0.0
+                }
             else:
                 opt_out = pipeline_res.get("engine_outputs", {}).get("optimization_engine", {})
                 safety_stock = opt_out.get("data", {}).get("safety_stock", int(avg_daily_sales * item.lead_time_days * 0.5))
                 reorder_point = opt_out.get("data", {}).get("reorder_point", int(avg_daily_sales * item.lead_time_days * 1.5))
                 reorder_qty = pipeline_res.get("recommended_quantity", 0.0)
                 
-                # Predict stockout days using optimized forecast
+                trend_confidence = opt_out.get("data", {}).get("trend_confidence", 1.0)
+                adjusted_forecast = opt_out.get("data", {}).get("adjusted_forecast", avg_daily_sales)
+                
+                # Predict stockout days using optimized forecast (or adjusted forecast)
                 forecast_out = pipeline_res.get("engine_outputs", {}).get("forecast_engine", {})
                 forecast_val = forecast_out.get("data", {}).get("forecast_value", avg_daily_sales)
-                if forecast_val <= 0.001:
+                if adjusted_forecast <= 0.001:
                     days_until_stockout = 999.0
                 else:
-                    days_until_stockout = max(0.0, float(item.stock_on_hand) / forecast_val)
+                    days_until_stockout = max(0.0, float(item.stock_on_hand) / adjusted_forecast)
                     
                 # Stockout risk score calculation matching legacy expectations
                 lead_time = item.lead_time_days
@@ -276,11 +298,38 @@ class AnalyticsService:
                     "reorder_point": int(reorder_point),
                     "recommended_reorder_qty": int(reorder_qty),
                     "days_until_stockout": round(days_until_stockout, 1),
-                    "stockout_risk_score": risk_score
+                    "stockout_risk_score": risk_score,
+                    "size_distribution": opt_out.get("data", {}).get("size_distribution")
                 }
+                
+                trace_data = {
+                    "current_inventory": item.stock_on_hand,
+                    "historical_demand": sales_series_map.get(product.id, []),
+                    "forecast_demand": [float(adjusted_forecast)] * 30,
+                    "trend_confidence": float(trend_confidence),
+                    "lead_time": item.lead_time_days,
+                    "safety_stock": int(safety_stock),
+                    "reorder_point": int(reorder_point),
+                    "eoq_adjustment": int(reorder_qty),
+                    "revenue_at_risk": 0.0 # Will be populated later
+                }
+                
                 confidence_score = pipeline_res.get("confidence_score", 75.0) / 100.0
                 reasoning = pipeline_res.get("reasoning", [])
                 signals = pipeline_res.get("supporting_signals", [])
+                
+                if trend_confidence < 1.0:
+                    pct = int(trend_confidence * 100)
+                    msg = f"Viral Trend Detected (Low Confidence: {pct}%). Reorder scaled down to prevent bulk over-ordering until trend confirms."
+                    if msg not in reasoning:
+                        reasoning.insert(0, msg)
+                    signals.append(f"Adjusted forecast: {adjusted_forecast:.1f} (Raw: {forecast_val:.1f})")
+                
+                if not product.unit_cost or product.unit_cost <= 0:
+                    msg = "Missing Unit Cost: Applied default $20.00 cost assumption. Financial risks may be inaccurate."
+                    if msg not in reasoning:
+                        reasoning.append(msg)
+                    signals.append("Missing COGS Data")
                 
                 # Pull Phase 2 Prioritization metrics
                 priority_score = pipeline_res.get("priority_score", 50)
@@ -290,6 +339,8 @@ class AnalyticsService:
                 margin_at_risk = pipeline_res.get("margin_at_risk", 0.0)
                 working_capital_locked = pipeline_res.get("working_capital_locked", 0.0)
                 is_dead = (inventory_class == "DEAD_STOCK")
+                
+                trace_data["revenue_at_risk"] = revenue_at_risk
             
             # Write metrics back to database for persistence
             item.avg_daily_sales = avg_daily_sales
@@ -342,6 +393,8 @@ class AnalyticsService:
                 "margin_at_risk": margin_at_risk,
                 "working_capital_locked": working_capital_locked,
                 
+                "trace_data": trace_data,
+                
                 "explainability": {
                     "method": "EVE Multi-Engine Orchestrator (Forecast + Optimization + Confidence + Prioritization)",
                     "factors": reasoning + signals
@@ -351,6 +404,79 @@ class AnalyticsService:
                     "calculated_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
                 }
             })
+
+        # --- Variant Aggregation Logic ---
+        aggregated_analyses = {}
+        for analysis in sku_analyses:
+            parent_id = next((item.product.parent_product_id for item in items if item.product.sku == analysis["sku"]), None)
+            group_key = parent_id if parent_id else analysis["sku"]
+            
+            if group_key not in aggregated_analyses:
+                aggregated_analyses[group_key] = analysis.copy()
+                if parent_id:
+                    aggregated_analyses[group_key]["name"] = f"{analysis['name'].split(' - ')[0]}"
+                    aggregated_analyses[group_key]["sku"] = parent_id
+            else:
+                existing = aggregated_analyses[group_key]
+                existing["stock_on_hand"] += analysis["stock_on_hand"]
+                existing["safety_stock"] += analysis["safety_stock"]
+                existing["reorder_point"] += analysis["reorder_point"]
+                existing["reorder_quantity"] += analysis["reorder_quantity"]
+                existing["avg_daily_sales"] += analysis["avg_daily_sales"]
+                
+                if analysis["stockout_risk_score"] > existing["stockout_risk_score"]:
+                    existing["stockout_risk_score"] = analysis["stockout_risk_score"]
+                    existing["days_until_stockout"] = analysis["days_until_stockout"]
+                
+                # Aggregate trace_data
+                if "trace_data" in existing and "trace_data" in analysis:
+                    existing_trace = existing["trace_data"]
+                    new_trace = analysis["trace_data"]
+                    existing_trace["current_inventory"] += new_trace["current_inventory"]
+                    existing_trace["safety_stock"] += new_trace["safety_stock"]
+                    existing_trace["reorder_point"] += new_trace["reorder_point"]
+                    existing_trace["eoq_adjustment"] += new_trace["eoq_adjustment"]
+                    existing_trace["revenue_at_risk"] += new_trace["revenue_at_risk"]
+                    
+                    # Element-wise addition for historical demand arrays
+                    hist1 = existing_trace["historical_demand"]
+                    hist2 = new_trace["historical_demand"]
+                    max_len_hist = max(len(hist1), len(hist2))
+                    summed_hist = []
+                    for i in range(max_len_hist):
+                        val1 = hist1[i] if i < len(hist1) else 0.0
+                        val2 = hist2[i] if i < len(hist2) else 0.0
+                        summed_hist.append(val1 + val2)
+                    existing_trace["historical_demand"] = summed_hist
+                    
+                    # Element-wise addition for forecast demand arrays
+                    fore1 = existing_trace["forecast_demand"]
+                    fore2 = new_trace["forecast_demand"]
+                    max_len_fore = max(len(fore1), len(fore2))
+                    summed_fore = []
+                    for i in range(max_len_fore):
+                        val1 = fore1[i] if i < len(fore1) else 0.0
+                        val2 = fore2[i] if i < len(fore2) else 0.0
+                        summed_fore.append(val1 + val2)
+                    existing_trace["forecast_demand"] = summed_fore
+                    
+                    # Keep minimum trend confidence as safe bound
+                    existing_trace["trend_confidence"] = min(existing_trace["trend_confidence"], new_trace["trend_confidence"])
+                    # Lead time should ideally be the same, max is safer
+                    existing_trace["lead_time"] = max(existing_trace["lead_time"], new_trace["lead_time"])
+                    
+                if analysis["priority_score"] > existing["priority_score"]:
+                    existing["priority_score"] = analysis["priority_score"]
+                
+                existing["revenue_at_risk"] += analysis["revenue_at_risk"]
+                existing["margin_at_risk"] += analysis["margin_at_risk"]
+                existing["working_capital_locked"] += analysis["working_capital_locked"]
+                
+                if analysis["is_dead_stock"] and not existing["is_dead_stock"]:
+                    existing["is_dead_stock"] = True
+                    
+        sku_analyses = list(aggregated_analyses.values())
+        # --------------------------------
 
         db.commit() # Commit updated points
 

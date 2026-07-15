@@ -93,15 +93,30 @@ class BusinessGoalResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class TraceData(BaseModel):
+    current_inventory: int
+    historical_demand: List[float] = []
+    forecast_demand: List[float] = []
+    trend_confidence: float
+    lead_time: int
+    safety_stock: int
+    reorder_point: int
+    eoq_adjustment: int
+    revenue_at_risk: float
+
+class PriorityItem(BaseModel):
+    title: str
+    why: str
+    impact: str
+    action: str
+    size_run: Optional[Dict[str, int]] = None
+    reasoning: List[str] = []
+    trace_data: Optional[TraceData] = None
+
 class DailyBriefResponse(BaseModel):
-    health_score: Optional[float] = None
-    health_status: str
-    risks: List[Dict[str, Any]]
-    opportunities: List[Dict[str, Any]]
-    summary: str
-    recommendations: List[str]
-    urgent_actions: List[str] = []
-    recent_activity: List[Dict[str, Any]] = []
+    revenue_risks: List[PriorityItem] = []
+    capital_risks: List[PriorityItem] = []
+    opportunities: List[PriorityItem] = []
 
 class AIRecommendationResponse(BaseModel):
     id: UUID

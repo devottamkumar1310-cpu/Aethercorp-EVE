@@ -25,6 +25,7 @@ class Product(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
     sku = Column(String, index=True, nullable=False)
+    parent_product_id = Column(String, index=True, nullable=True) # Groups size/color variants
     name = Column(String, nullable=False)
     category = Column(String, nullable=False)  # e.g., Tops, Bottoms, Dresses, Outerwear
     season = Column(String, nullable=True)     # e.g., Summer 2026, Autumn 2026

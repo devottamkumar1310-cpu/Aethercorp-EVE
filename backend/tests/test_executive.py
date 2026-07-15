@@ -170,10 +170,9 @@ def test_daily_brief():
     response = client.get("/api/executive/daily-brief")
     assert response.status_code == 200
     brief = response.json()
-    assert "health_score" in brief
-    assert "health_status" in brief
-    assert "summary" in brief
-    assert "risks" in brief
+    assert "revenue_risks" in brief
+    assert "capital_risks" in brief
+    assert "opportunities" in brief
 
 
 def test_executive_chat():
@@ -261,8 +260,8 @@ def test_daily_brief_fallback_on_503():
         # Should complete successfully (status code 200) because of daily brief deterministic fallback
         assert response.status_code == 200
         data = response.json()
-        assert "summary" in data
-        assert "fallback" in data["summary"].lower()
+        assert "revenue_risks" in data
+        assert "capital_risks" in data
         
     finally:
         gemini_service.generate_structured_response = original_generate_structured
