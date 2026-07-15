@@ -153,7 +153,7 @@ export default function DemoPage() {
   }, [search, categoryFilter, activeTab]);
 
   return (
-    <div className="min-h-screen bg-[#020203] text-white flex flex-col font-sans relative overflow-hidden">
+    <div className="eve-public-shell min-h-screen bg-[#020203] text-white flex flex-col font-sans relative overflow-hidden">
       {/* Background Star field & Glows */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="hero-stars" />
@@ -161,7 +161,7 @@ export default function DemoPage() {
       </div>
 
       {/* Navbar */}
-      <header className="w-full bg-black/40 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 relative z-10">
+      <header className="eve-public-nav w-full bg-black/40 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 relative z-10">
         <div className="flex items-center gap-2">
           <Link href="/" className="h-8 w-8 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black tracking-tighter shadow-md shadow-purple-900/20">
             E

@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 font-sans text-foreground">
+      <div className="eve-auth-shell min-h-screen bg-background flex flex-col items-center justify-center p-4 font-sans text-foreground">
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
         <p className="text-muted-foreground text-sm tracking-wider animate-pulse">Verifying reset credentials...</p>
       </div>
@@ -120,8 +120,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4 font-sans text-foreground">
-      <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden relative">
+    <div className="eve-auth-shell min-h-screen bg-background flex flex-col justify-center items-center p-4 font-sans text-foreground">
+      <div className="eve-auth-card w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden relative">
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="p-8">

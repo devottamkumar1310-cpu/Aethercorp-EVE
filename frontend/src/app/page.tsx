@@ -150,10 +150,11 @@ export default function LandingPage() {
       <div className="shared-preview-pain-points w-full flex flex-col relative z-20">
         
         {/* Product Preview Section */}
-        <section className="px-4 sm:px-6 pb-12 sm:pb-16 max-w-6xl mx-auto w-full relative z-10 -mt-6">
-          <div className="preview-window p-4 sm:p-6 md:p-8 space-y-6">
-          {/* OS Titlebar */}
-          <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+        <section className="landing-story-section landing-story-preview px-4 sm:px-6 pb-12 sm:pb-16 max-w-6xl mx-auto w-full relative z-10 -mt-6">
+          <div className="preview-window-shell">
+            <div className="preview-window p-4 sm:p-6 md:p-8 space-y-6">
+            {/* OS Titlebar */}
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-[#ef4444]/80" />
               <span className="w-3 h-3 rounded-full bg-[#f59e0b]/80" />
@@ -222,36 +223,29 @@ export default function LandingPage() {
 
           {/* Double Column Area */}
           <div className="grid lg:grid-cols-12 gap-6">
-            {/* Executive Insights Feed */}
-            <div className="lg:col-span-5 preview-card p-5 space-y-4 flex flex-col justify-between">
+            {/* Executive Priorities */}
+            <div className="lg:col-span-4 self-start preview-card p-4 space-y-3 flex flex-col">
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Executive Insights</h4>
-                <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2.5">Executive Priorities</h4>
+                <div className="space-y-2.5">
                   <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-rose-500/5 border border-rose-500/15">
-                    <span className="h-2 w-2 rounded-full bg-rose-500 mt-1.5 status-pulse-purple" />
+                    <span className="h-2 w-2 rounded-full bg-rose-500 mt-1.5" />
                     <div>
-                      <p className="text-xs font-bold text-white">3 bestselling SKUs at risk of stockout</p>
+                      <p className="text-xs font-bold text-white">Stockout Risk</p>
                       <p className="text-[10px] text-zinc-400">Replenish Classic Cotton Tee (Black/M, L) within 5 days to avoid $6.2k revenue deficit.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5" />
                     <div>
-                      <p className="text-xs font-bold text-white">$14,200 trapped capital identified</p>
+                      <p className="text-xs font-bold text-white">Trapped Capital Identified</p>
                       <p className="text-[10px] text-zinc-400">Cargo Jogger (Navy/XL) has 180+ days velocity. Clearance campaign suggested.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-purple-500/5 border border-purple-500/15">
                     <span className="h-2 w-2 rounded-full bg-purple-500 mt-1.5" />
                     <div>
-                      <p className="text-xs font-bold text-white">Reorder recommendation generated</p>
-                      <p className="text-[10px] text-zinc-400">Factory orders optimized for 30-day transit lead times with supplier PO matching.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 mt-1.5" />
-                    <div>
-                      <p className="text-xs font-bold text-white">Inventory health improved by 12%</p>
+                      <p className="text-xs font-bold text-white">Inventory Health Improved</p>
                       <p className="text-[10px] text-zinc-400">Overall stockturn increased from 3.1x to 4.4x due to dead stock optimization.</p>
                     </div>
                   </div>
@@ -260,7 +254,7 @@ export default function LandingPage() {
             </div>
 
             {/* Visualizations Column */}
-            <div className="lg:col-span-7 grid md:grid-cols-2 gap-4">
+            <div className="lg:col-span-8 grid md:grid-cols-2 gap-4">
               {/* Health Trend Chart */}
               <div className="preview-card p-4 flex flex-col justify-between">
                 <div>
@@ -407,17 +401,18 @@ export default function LandingPage() {
               </table>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* Transition Divider & Connection Glow */}
-      <div className="relative w-full py-4 flex flex-col items-center">
+      <div className="landing-story-bridge relative w-full py-4 flex flex-col items-center">
         <div className="section-fade-divider" />
         <div className="transition-connector" />
       </div>
 
       {/* Pain Points Section */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 relative z-10">
+      <section className="landing-story-section landing-story-diagnosis px-4 sm:px-6 py-12 sm:py-16 relative z-10">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-3">
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">The Three Flaws in Standard Inventory Planning</h2>
@@ -461,13 +456,13 @@ export default function LandingPage() {
       </section>
 
       {/* Transition Divider & Connection Glow */}
-      <div className="relative w-full py-4 flex flex-col items-center">
+      <div className="landing-story-bridge relative w-full py-4 flex flex-col items-center">
         <div className="section-fade-divider" />
         <div className="transition-connector" />
       </div>
 
       {/* Outcome-focused capabilities */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 max-w-5xl mx-auto w-full space-y-12 relative z-10">
+      <section className="landing-story-section landing-story-intelligence px-4 sm:px-6 py-12 sm:py-16 max-w-5xl mx-auto w-full space-y-12 relative z-10">
         <div className="text-center space-y-3">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Core Inventory Insights</h2>
           <p className="text-xs sm:text-sm max-w-xl mx-auto pain-point-desc">
@@ -519,13 +514,13 @@ export default function LandingPage() {
       </section>
 
       {/* Transition Divider & Connection Glow */}
-      <div className="relative w-full py-4 flex flex-col items-center">
+      <div className="landing-story-bridge relative w-full py-4 flex flex-col items-center">
         <div className="section-fade-divider" />
         <div className="transition-connector" />
       </div>
 
       {/* 3-step Workflow */}
-      <section className="px-4 sm:px-6 py-12 sm:py-16 relative z-10">
+      <section className="landing-story-section landing-story-workflow px-4 sm:px-6 py-12 sm:py-16 relative z-10">
         <div className="max-w-5xl mx-auto space-y-12">
           <div className="text-center space-y-3">
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">The 3-Step Inventory Workflow</h2>
@@ -578,7 +573,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative px-4 sm:px-6 py-20 sm:py-24 text-center overflow-hidden">
+      <section className="landing-story-section landing-story-cta relative px-4 sm:px-6 py-20 sm:py-24 text-center overflow-hidden">
         {/* Ambient Glow behind CTA */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
           <div className="w-[500px] h-[300px] bg-purple-500/10 rounded-full filter blur-[120px] opacity-60" />
@@ -610,7 +605,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-transparent border-t border-white/[0.08] px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-400 gap-4 relative z-10">
+      <footer className="landing-story-footer w-full bg-transparent border-t border-white/[0.08] px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-400 gap-4 relative z-10">
         <div className="text-center md:text-left space-y-1">
           <div>&copy; {new Date().getFullYear()} EVE. All rights reserved.</div>
           <div className="text-zinc-550">Questions? <a href="mailto:support@eveinventory.in" className="text-zinc-300 hover:text-white transition-colors">support@eveinventory.in</a></div>

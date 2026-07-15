@@ -41,8 +41,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-secondary flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-card rounded-2xl shadow-xl overflow-hidden border border-border">
+    <div className="eve-auth-shell min-h-screen bg-secondary flex flex-col justify-center items-center p-4">
+      <div className="eve-auth-card w-full max-w-md bg-card rounded-2xl shadow-xl overflow-hidden border border-border">
         <div className="p-8">
           <div className="flex justify-center mb-6">
             <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center text-foreground font-bold text-xl tracking-tighter">

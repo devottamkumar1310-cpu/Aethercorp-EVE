@@ -79,32 +79,6 @@
   --chart-primary: #18181b;
   --chart-secondary: #5b5b63;
 
-  /* Landing page Light theme custom properties */
-  --premium-landing-bg: #fafafa;
-  --premium-landing-bg-image: 
-    radial-gradient(circle at 50% -20%, rgba(139, 92, 246, 0.08) 0%, transparent 65%),
-    radial-gradient(circle at 15% 30%, rgba(99, 102, 241, 0.04) 0%, transparent 55%),
-    radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.04) 0%, transparent 55%),
-    radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 70%);
-  --premium-glow: radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.01) 50%, transparent 70%);
-  --premium-text-primary: #18181b;
-  --premium-text-secondary: #3f3f46;
-  --premium-text-zinc400: #5b5b63;
-  --premium-text-zinc500: #71717a;
-  --premium-border: rgba(24, 24, 27, 0.08);
-  --premium-border-glow: rgba(139, 92, 246, 0.25);
-  --premium-card-bg: rgba(255, 255, 255, 0.75);
-  --premium-card-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
-  --premium-card-shadow: 
-    0 20px 40px -15px rgba(24, 24, 27, 0.05),
-    0 0 30px -10px rgba(168, 85, 247, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  --premium-kpi-health-bg: #f5f3ff;
-  --premium-kpi-stockout-bg: #fff7ed;
-  --premium-kpi-deadstock-bg: #fef2f2;
-  --premium-kpi-capital-bg: #ecfdf5;
-  --premium-navbar-bg: rgba(250, 250, 250, 0.85);
-
   /* Semantic Variables */
   --background: var(--bg-app);
   --surface: var(--bg-card);
@@ -148,11 +122,11 @@
 }
 
 [data-theme="executive-dark"], [data-theme="dark"] {
-  /* Premium Executive OS Dark Theme Overrides */
-  --bg-app: #08080a;
-  --bg-card: #0f0f12;
-  --bg-sidebar: #0c0c0e;
-  --border-accent: #2e2e33;
+  /* Premium Executive OS Dark Theme Overrides — Deep Navy Foundation */
+  --bg-app: #070a14;
+  --bg-card: #0b1020;
+  --bg-sidebar: #090d1a;
+  --border-accent: #293047;
   --text-primary: #ffffff;
   --text-secondary: #e4e4e7;
   --text-muted: #a1a1aa;
@@ -162,32 +136,6 @@
   --panel-glow: none;
   --chart-primary: #ffffff;
   --chart-secondary: #a1a1aa;
-
-  /* Landing page Dark theme custom properties */
-  --premium-landing-bg: #020203;
-  --premium-landing-bg-image: 
-    radial-gradient(circle at 50% -20%, rgba(20, 20, 35, 0.95) 0%, transparent 65%),
-    radial-gradient(circle at 15% 30%, rgba(30, 27, 75, 0.45) 0%, transparent 55%),
-    radial-gradient(circle at 85% 30%, rgba(30, 27, 75, 0.45) 0%, transparent 55%),
-    radial-gradient(circle at 50% 100%, rgba(76, 29, 149, 0.15) 0%, transparent 70%);
-  --premium-glow: radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.18) 0%, rgba(168, 85, 247, 0.03) 50%, transparent 70%);
-  --premium-text-primary: #ffffff;
-  --premium-text-secondary: #d4d4d8;
-  --premium-text-zinc400: #a1a1aa;
-  --premium-text-zinc500: #71717a;
-  --premium-border: rgba(255, 255, 255, 0.08);
-  --premium-border-glow: rgba(139, 92, 246, 0.5);
-  --premium-card-bg: rgba(255, 255, 255, 0.025);
-  --premium-card-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-  --premium-card-shadow: 
-    0 30px 60px -15px rgba(0, 0, 0, 0.8),
-    0 0 50px -10px rgba(168, 85, 247, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  --premium-kpi-health-bg: rgba(255, 255, 255, 0.025);
-  --premium-kpi-stockout-bg: rgba(255, 255, 255, 0.025);
-  --premium-kpi-deadstock-bg: rgba(255, 255, 255, 0.025);
-  --premium-kpi-capital-bg: rgba(255, 255, 255, 0.025);
-  --premium-navbar-bg: rgba(2, 2, 3, 0.75);
 
   /* Semantic Variables */
   --background: var(--bg-app);
@@ -215,20 +163,20 @@
   --secondary-foreground: var(--text-primary);
   --border: var(--border-accent);
   --input: var(--border-accent);
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #18181b;
+  --muted: #12182a;
+  --muted-foreground: #8892aa;
+  --accent: #0d1120;
   --accent-foreground: #ffffff;
-  --ring: #ffffff;
+  --ring: #7c3aed;
   --radius: 0.5rem;
   --sidebar: var(--bg-sidebar);
   --sidebar-foreground: var(--text-secondary);
   --sidebar-border: var(--border-accent);
   --sidebar-primary: var(--accent-color);
   --sidebar-primary-foreground: #000000;
-  --sidebar-accent: #18181b;
+  --sidebar-accent: #0a0e1a;
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-ring: #ffffff;
+  --sidebar-ring: #7c3aed;
 }
 
 
@@ -421,8 +369,8 @@
 
 .premium-hero-context {
   position: relative;
-  background-color: var(--premium-landing-bg) !important;
-  color: var(--premium-text-primary) !important;
+  background-color: #050713 !important;
+  color: #ffffff !important;
   overflow: hidden;
 }
 
@@ -432,20 +380,20 @@
 .landing-page .premium-hero-context h2,
 .landing-page .premium-hero-context h3,
 .landing-page .premium-hero-context h4,
-.landing-page .premium-hero-context p:not(.subtitle-desc):not(.pain-point-desc),
+.landing-page .premium-hero-context p,
 .landing-page .premium-hero-context span:not(.forecast-gradient),
 .landing-page .premium-hero-context .sparkles-tag {
-  color: var(--premium-text-primary) !important;
+  color: #ffffff !important;
   opacity: 1 !important;
 }
 
 .landing-page .premium-hero-context p.subtitle-desc {
-  color: var(--premium-text-zinc400) !important; /* text-zinc-400 equivalent */
+  color: #a1a1aa !important; /* text-zinc-400 */
 }
 
 .landing-page .premium-hero-context .sparkles-tag {
-  background-color: rgba(168, 85, 247, 0.04) !important;
-  border-color: var(--premium-border) !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .landing-page .premium-hero-context .sparkles-tag span,
@@ -455,12 +403,12 @@
 
 /* Headline gradient & glow styling */
 .forecast-gradient {
-  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #4f46e5 100%) !important;
+  background: linear-gradient(135deg, #d8b4fe 0%, #c084fc 40%, #a855f7 100%) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
   display: inline-block;
-  filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.2));
+  filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.35));
   font-weight: 800;
 }
 
@@ -469,9 +417,13 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background-color: var(--premium-landing-bg);
-  /* Multi-layer premium gradient system mapped to variables */
-  background-image: var(--premium-landing-bg-image);
+  background-color: #050713;
+  /* Multi-layer premium gradient system */
+  background-image: 
+    radial-gradient(circle at 50% -20%, rgba(20, 20, 35, 0.95) 0%, transparent 65%), /* Deep navy */
+    radial-gradient(circle at 15% 30%, rgba(30, 27, 75, 0.45) 0%, transparent 55%),  /* Dark indigo */
+    radial-gradient(circle at 85% 30%, rgba(30, 27, 75, 0.45) 0%, transparent 55%),  /* Dark indigo */
+    radial-gradient(circle at 50% 100%, rgba(76, 29, 149, 0.15) 0%, transparent 70%); /* Subtle purple ambient lighting */
   pointer-events: none;
 }
 
@@ -484,7 +436,7 @@
   width: 90vw;
   height: 50vh;
   max-width: 1000px;
-  background: var(--premium-glow);
+  background: radial-gradient(circle at 50% 100%, rgba(168, 85, 247, 0.18) 0%, rgba(168, 85, 247, 0.03) 50%, transparent 70%);
   filter: blur(80px);
   z-index: 2;
   pointer-events: none;
@@ -499,7 +451,7 @@
   width: 200%;
   height: 350px;
   border-radius: 50%;
-  border-top: 1.5px solid var(--premium-border);
+  border-top: 1.5px solid rgba(168, 85, 247, 0.18);
   background: radial-gradient(ellipse at top, rgba(168, 85, 247, 0.02) 0%, transparent 60%);
   filter: blur(1.5px);
   z-index: 3;
@@ -524,14 +476,14 @@
     radial-gradient(1.1px 1.1px at 62% 78%, rgba(255, 255, 255, 0.5) 100%, transparent),
     radial-gradient(1.3px 1.3px at 88% 72%, rgba(255, 255, 255, 0.75) 100%, transparent);
   background-size: 550px 550px;
-  opacity: 0.15;
+  opacity: 0.25;
   animation: star-twinkle-cycle 8s ease-in-out infinite;
 }
 
 /* Twinkle and drift animations */
 @keyframes star-twinkle-cycle {
-  0%, 100% { opacity: 0.1; }
-  50% { opacity: 0.25; }
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
 }
 
 @keyframes glow-drift-movement {
@@ -545,31 +497,31 @@
 
 /* Premium dark navbar overrides */
 .premium-navbar {
-  background-color: var(--premium-navbar-bg) !important;
+  background-color: rgba(2, 2, 3, 0.75) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border-bottom: 1px solid var(--premium-border) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .landing-page .premium-navbar a:not(.bg-\[\#4F46E5\]) {
-  color: var(--premium-text-zinc400) !important; /* text-zinc-400 */
+  color: #a1a1aa !important; /* text-zinc-400 */
 }
 
 .landing-page .premium-navbar a:not(.bg-\[\#4F46E5\]):hover {
-  color: var(--premium-text-primary) !important;
+  color: #ffffff !important;
 }
 
 .premium-mobile-menu {
-  background-color: var(--premium-navbar-bg) !important;
-  border-color: var(--premium-border) !important;
+  background-color: rgba(2, 2, 3, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .landing-page .premium-navbar .premium-mobile-menu a:not(.bg-\[\#4F46E5\]) {
-  color: var(--premium-text-zinc400) !important;
+  color: #a1a1aa !important;
 }
 
 .landing-page .premium-navbar .premium-mobile-menu a:not(.bg-\[\#4F46E5\]):hover {
-  color: var(--premium-text-primary) !important;
+  color: #ffffff !important;
 }
 
 /* Custom premium buttons */
@@ -604,14 +556,75 @@
    PRODUCT PREVIEW OS UPGRADES
    ────────────────────────────────────────────────────────────────────────────── */
 
-.preview-window {
-  background: var(--premium-card-bg) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border: 1px solid var(--premium-border) !important;
-  border-radius: 24px !important;
-  box-shadow: var(--premium-card-shadow) !important;
+.preview-window-shell {
+  --preview-window-radius: 24px;
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  contain: paint;
+  border-radius: var(--preview-window-radius);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: #070812;
+  background-clip: padding-box;
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  clip-path: inset(0 round 24px);
+  clip-path: inset(0 round var(--preview-window-radius));
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.preview-window-shell::before,
+.preview-window-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.preview-window-shell::before {
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.13) 0%, transparent 35%),
+    radial-gradient(ellipse at 92% 18%, rgba(99, 102, 241, 0.08) 0%, transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.01) 100%),
+    rgba(10, 10, 15, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.preview-window-shell::after {
+  z-index: 3;
+  box-shadow:
+    inset 0 0 42px rgba(168, 85, 247, 0.085),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.preview-window {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: visible;
+}
+
+/* Keep the faux browser titlebar inside the same rounded clipping context. */
+.preview-window > * {
+  position: relative;
+  z-index: 1;
+}
+
+.preview-window > :first-child {
+  border-top-left-radius: calc(var(--preview-window-radius) - 1px);
+  border-top-right-radius: calc(var(--preview-window-radius) - 1px);
+  background-clip: padding-box;
   overflow: hidden;
 }
 
@@ -623,31 +636,32 @@
 .landing-page .preview-window table,
 .landing-page .preview-window th,
 .landing-page .preview-window td {
-  color: var(--premium-text-primary) !important;
+  color: #ffffff !important;
 }
 
 .landing-page .preview-window p.text-muted,
 .landing-page .preview-window span.text-muted,
 .landing-page .preview-window .text-zinc-400 {
-  color: var(--premium-text-zinc400) !important;
+  color: #a1a1aa !important;
 }
 
 .landing-page .preview-window .text-zinc-500 {
-  color: var(--premium-text-zinc500) !important;
+  color: #71717a !important;
 }
 
 /* Dashboard Card */
 .preview-card {
-  background: var(--premium-card-bg) !important;
-  background-image: var(--premium-card-gradient) !important;
-  border: 1px solid var(--premium-border) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 16px;
-  box-shadow: var(--premium-card-shadow) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .preview-card:hover {
   transform: translateY(-2px);
-  border-color: var(--premium-border-glow) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(168, 85, 247, 0.15);
 }
 
 /* Pulse indicator */
@@ -697,11 +711,13 @@
    ────────────────────────────────────────────────────────────────────────────── */
 
 .premium-pain-points-bg {
-  background-color: var(--premium-landing-bg) !important;
-  background-image: var(--premium-landing-bg-image) !important;
-  border-top: 1px solid var(--premium-border) !important;
-  border-bottom: 1px solid var(--premium-border) !important;
-  color: var(--premium-text-primary) !important;
+  background-color: #050713 !important;
+  background-image: 
+    radial-gradient(circle at 30% 20%, rgba(30, 27, 75, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(76, 29, 149, 0.1) 0%, transparent 60%) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
   position: relative;
   overflow: hidden;
 }
@@ -716,7 +732,7 @@
     radial-gradient(1.2px 1.2px at 65% 45%, rgba(255, 255, 255, 0.3) 100%, transparent),
     radial-gradient(1px 1px at 85% 75%, rgba(255, 255, 255, 0.4) 100%, transparent);
   background-size: 400px 400px;
-  opacity: 0.15;
+  opacity: 0.2;
   pointer-events: none;
   z-index: 1;
 }
@@ -726,21 +742,21 @@
 .landing-page .premium-pain-points-bg h3,
 .landing-page .premium-pain-points-bg span,
 .landing-page .premium-pain-points-bg p {
-  color: var(--premium-text-primary) !important;
+  color: #ffffff !important;
   opacity: 1 !important;
 }
 
 .landing-page .premium-pain-points-bg p.pain-point-desc {
-  color: var(--premium-text-zinc400) !important; /* text-zinc-400 */
+  color: #a1a1aa !important; /* text-zinc-400 */
 }
 
 /* Pain Point Premium Cards */
 .pain-point-card {
-  background: var(--premium-card-bg) !important;
-  background-image: var(--premium-card-gradient) !important;
-  border: 1px solid var(--premium-border) !important;
+  background: rgba(255, 255, 255, 0.015) !important;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px;
-  box-shadow: var(--premium-card-shadow) !important;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative;
   z-index: 2;
@@ -748,22 +764,31 @@
 
 .pain-point-card:hover {
   transform: translateY(-4px) !important;
-  background: var(--premium-card-bg) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
 }
 
 /* Red Hover Glow for Stockouts */
 .pain-point-card-red:hover {
   border-color: rgba(239, 68, 68, 0.35) !important;
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(239, 68, 68, 0.15) !important;
 }
 
 /* Amber Hover Glow for Overstock */
 .pain-point-card-amber:hover {
   border-color: rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(245, 158, 11, 0.15) !important;
 }
 
 /* Indigo Hover Glow for Spreadsheets */
 .pain-point-card-indigo:hover {
   border-color: rgba(99, 102, 241, 0.35) !important;
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(99, 102, 241, 0.15) !important;
 }
 
 /* ──────────────────────────────────────────────────────────────────────────────
@@ -771,8 +796,8 @@
    ────────────────────────────────────────────────────────────────────────────── */
 
 .shared-preview-pain-points {
-  background-color: var(--premium-landing-bg) !important;
-  color: var(--premium-text-primary) !important;
+  background-color: #050713 !important;
+  color: #ffffff !important;
   position: relative;
   overflow: hidden;
   z-index: 10;
@@ -783,7 +808,10 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-image: var(--premium-landing-bg-image) !important;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 70%),
+    radial-gradient(circle at 50% 100%, rgba(76, 29, 149, 0.06) 0%, transparent 60%) !important;
   pointer-events: none;
   z-index: 1;
 }
@@ -796,7 +824,9 @@
   transform: translateX(-50%);
   width: 100%;
   height: 250px;
-  background: var(--premium-glow) !important;
+  background: 
+    radial-gradient(ellipse at top, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.02) 40%, transparent 70%),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.03), transparent) !important;
   pointer-events: none;
   z-index: 2;
 }
@@ -814,11 +844,11 @@
 
 /* Insight Cards System */
 .insight-card {
-  background: var(--premium-card-bg) !important;
-  background-image: var(--premium-card-gradient) !important;
-  border: 1px solid var(--premium-border) !important;
+  background: rgba(255, 255, 255, 0.015) !important;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.005) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
   border-radius: 16px;
-  box-shadow: var(--premium-card-shadow) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
   position: relative;
   z-index: 2;
@@ -826,10 +856,426 @@
 
 .insight-card:hover {
   transform: translateY(-2px) !important;
-  border-color: var(--premium-border-glow) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.5), 
+    0 0 15px rgba(168, 85, 247, 0.1) !important;
 }
 
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   EVE UNIFIED VISUAL LANGUAGE SYSTEM
+   Purpose: Bridge Landing Page ↔ Auth ↔ Pricing ↔ Demo ↔ Dashboard
+   into one consistent visual identity.
+   ══════════════════════════════════════════════════════════════════════════════ */
 
+/* ── EVE BRAND PURPLE TOKENS ── */
+:root {
+  /* Canonical brand purple — use these everywhere instead of ad-hoc indigo/violet */
+  --eve-purple-700: #6d28d9;
+  --eve-purple-600: #7c3aed;
+  --eve-purple-500: #8b5cf6;
+  --eve-purple-400: #a78bfa;
+  --eve-purple-300: #c4b5fd;
 
-
+  /* Ambient / glow values */
+  --eve-glow-sm:  rgba(139, 92, 246, 0.08);
+  --eve-glow-md:  rgba(139, 92, 246, 0.15);
+  --eve-glow-lg:  rgba(139, 92, 246, 0.25);
+
+  /* Border tints */
+  --eve-purple-border:       rgba(139, 92, 246, 0.18);
+  --eve-purple-border-hover: rgba(139, 92, 246, 0.32);
+}
+
+/* ── EVE DASHBOARD ATMOSPHERIC BACKGROUND ── */
+/*
+  Apply .eve-dashboard-main to the <main> content wrapper in the dashboard.
+  Adds a subtle dual-corner radial purple glow that echoes the landing page atmosphere
+  without disrupting data readability.
+*/
+.eve-dashboard-main {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse at 85% 0%, rgba(109, 40, 217, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 15% 100%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
+}
+
+/* ── EVE UNIFIED CARD SYSTEM ── */
+/*
+  .eve-card replaces ad-hoc bg-card + border-border combos in the dashboard.
+  Provides a consistent elevation/glow language across KPI, table, modal, and insight cards.
+*/
+.eve-card {
+  background: var(--card);
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.015) 0%, transparent 100%);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.eve-card:hover {
+  border-color: var(--eve-purple-border);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    0 0 14px var(--eve-glow-sm);
+  transform: translateY(-1px);
+}
+
+/* Card header accent — subtle top-edge tint for section headers */
+.eve-card-header {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* KPI card variant — slightly elevated */
+.eve-kpi-card {
+  background: var(--card);
+  background-image: linear-gradient(145deg, rgba(255,255,255,0.02) 0%, transparent 60%);
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.eve-kpi-card:hover {
+  border-color: var(--eve-purple-border);
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.4),
+    0 0 16px var(--eve-glow-sm);
+  transform: translateY(-2px);
+}
+
+/* ── EVE DARK-COMPATIBLE ACTION BUTTON SYSTEM ── */
+/*
+  Use these in place of bg-blue-50/text-blue-700 light-mode button patterns.
+  Each variant is safe for dark and light themes.
+*/
+.eve-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.eve-action-btn:hover {
+  transform: translateY(-0.5px);
+}
+
+/* Blue variant — clients */
+.eve-action-btn-blue {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.08);
+  border-color: rgba(96, 165, 250, 0.18);
+}
+.eve-action-btn-blue:hover {
+  background: rgba(96, 165, 250, 0.14);
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+/* Violet variant — projects / primary actions */
+.eve-action-btn-violet {
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.18);
+}
+.eve-action-btn-violet:hover {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* Cyan variant — tasks */
+.eve-action-btn-cyan {
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.08);
+  border-color: rgba(34, 211, 238, 0.18);
+}
+.eve-action-btn-cyan:hover {
+  background: rgba(34, 211, 238, 0.14);
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+/* Emerald variant — revenue / positive */
+.eve-action-btn-emerald {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  border-color: rgba(52, 211, 153, 0.18);
+}
+.eve-action-btn-emerald:hover {
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* Rose variant — expenses / destructive */
+.eve-action-btn-rose {
+  color: #fb7185;
+  background: rgba(251, 113, 133, 0.08);
+  border-color: rgba(251, 113, 133, 0.18);
+}
+.eve-action-btn-rose:hover {
+  background: rgba(251, 113, 133, 0.14);
+  border-color: rgba(251, 113, 133, 0.3);
+}
+
+/* ── EVE SIDEBAR ATMOSPHERIC DEPTH ── */
+/*
+  Apply to the sidebar <aside> element to add a top-corner purple atmospheric glow
+  that visually bridges the sidebar and the hero section's atmospheric language.
+*/
+.eve-sidebar-atmosphere {
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(109, 40, 217, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 100%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+}
+
+/* ── EVE HEADER ATMOSPHERIC DEPTH ── */
+.eve-header-atmosphere {
+  background-image:
+    linear-gradient(to right, rgba(109, 40, 217, 0.03), transparent 40%, transparent 60%, rgba(99, 102, 241, 0.03));
+}
+
+/* ── EVE STATUS BADGES — DARK COMPATIBLE ── */
+.eve-badge-success {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+}
+
+.eve-badge-warning {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.eve-badge-neutral {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #8892aa;
+  background: rgba(136, 146, 170, 0.08);
+  border: 1px solid rgba(136, 146, 170, 0.15);
+}
+
+/* ── EVE SCROLLBAR — UNIFIED ACROSS ALL SURFACES ── */
+.eve-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+.eve-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.eve-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 9999px;
+}
+.eve-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.35);
+}
+.eve-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(139, 92, 246, 0.2) transparent; }
+
+/* ── DARK THEME TABLE SYSTEM ── */
+/* Replaces divide-slate-100 which is invisible/jarring in dark mode */
+[data-theme="executive-dark"] .eve-table-divider,
+[data-theme="dark"] .eve-table-divider {
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-theme="executive-light"] .eve-table-divider,
+[data-theme="light"] .eve-table-divider {
+  border-color: #e4e4e7 !important;
+}
+
+/* Table row hover — unified across themes */
+.eve-table-row:hover {
+  background: rgba(139, 92, 246, 0.03) !important;
+}
+
+[data-theme="executive-light"] .eve-table-row:hover,
+[data-theme="light"] .eve-table-row:hover {
+  background: rgba(139, 92, 246, 0.04) !important;
+}
+
+/* ── CROSS-PLATFORM SURFACE ALIGNMENT ── */
+/* Shared public/auth shells retain the landing page's quiet atmospheric depth. */
+.eve-public-shell,
+.eve-auth-shell {
+  background-color: #070a14 !important;
+  background-image:
+    radial-gradient(ellipse at 50% -15%, rgba(76, 29, 149, 0.18) 0%, transparent 52%),
+    radial-gradient(ellipse at 12% 92%, rgba(67, 56, 202, 0.08) 0%, transparent 45%),
+    linear-gradient(180deg, #070a14 0%, #090b18 100%) !important;
+}
+
+.eve-public-nav {
+  background-color: rgba(7, 10, 20, 0.78) !important;
+  border-color: rgba(196, 181, 253, 0.12) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02), 0 12px 30px rgba(3, 4, 12, 0.16);
+}
+
+.eve-public-card,
+.eve-auth-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015)) !important;
+  border-color: rgba(196, 181, 253, 0.14) !important;
+  border-radius: 1rem;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.eve-public-card:hover,
+.eve-auth-card:hover {
+  border-color: var(--eve-purple-border-hover) !important;
+}
+
+/* Shared component cards keep their context but use the same edge, elevation, and hover language. */
+[data-slot="card"] {
+  border-color: var(--border);
+  border-radius: 0.75rem;
+  background-image: linear-gradient(145deg, rgba(255, 255, 255, 0.018), transparent 58%);
+  box-shadow: 0 3px 18px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+[data-slot="card"]:hover {
+  border-color: var(--eve-purple-border);
+  box-shadow: 0 7px 26px rgba(0, 0, 0, 0.28), 0 0 16px var(--eve-glow-sm);
+}
+
+.eve-dashboard-main {
+  background-color: #070a14;
+  background-image:
+    radial-gradient(ellipse at 86% -8%, rgba(109, 40, 217, 0.11) 0%, transparent 52%),
+    radial-gradient(ellipse at 8% 100%, rgba(67, 56, 202, 0.07) 0%, transparent 48%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.008), transparent 28%);
+}
+/* ── LANDING STORY CONTINUITY ── */
+/* The hero atmosphere fades into the product workspace instead of ending at a hard section boundary. */
+.premium-hero-context::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 9rem;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, #050713 92%);
+}
+
+/* One low-cost, shared atmosphere carries the diagnosis, intelligence, workflow, and action sequence. */
+.shared-preview-pain-points::before {
+  background-image:
+    linear-gradient(180deg, rgba(139, 92, 246, 0.026) 0%, transparent 18%, rgba(67, 56, 202, 0.018) 44%, transparent 64%, rgba(76, 29, 149, 0.032) 100%),
+    radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.085) 0%, transparent 36%),
+    radial-gradient(ellipse at 12% 36%, rgba(67, 56, 202, 0.05) 0%, transparent 30%),
+    radial-gradient(ellipse at 88% 62%, rgba(109, 40, 217, 0.052) 0%, transparent 32%),
+    radial-gradient(ellipse at 50% 100%, rgba(76, 29, 149, 0.08) 0%, transparent 40%) !important;
+}
+
+/* Dividers remain directional cues, not visual reset points between chapters. */
+.transition-connector {
+  height: 7rem;
+  background:
+    radial-gradient(ellipse at top, rgba(168, 85, 247, 0.045) 0%, rgba(168, 85, 247, 0.01) 44%, transparent 74%),
+    linear-gradient(to bottom, rgba(168, 85, 247, 0.012), transparent) !important;
+  opacity: 0.62;
+}
+
+.section-fade-divider {
+  max-width: 22rem;
+  opacity: 0.34;
+  background: linear-gradient(to right, transparent, rgba(168, 85, 247, 0.16) 36%, rgba(168, 85, 247, 0.16) 64%, transparent) !important;
+}
+
+/* Global story flow refinements keep the landing sections connected without changing layout order. */
+.shared-preview-pain-points::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(168, 85, 247, 0.014) 24%, transparent 43%, rgba(99, 102, 241, 0.012) 64%, transparent 100%);
+}
+
+.landing-story-section {
+  position: relative;
+  z-index: 10;
+}
+
+.landing-story-preview {
+  padding-bottom: clamp(2rem, 4vw, 3rem) !important;
+}
+
+.landing-story-diagnosis,
+.landing-story-intelligence,
+.landing-story-workflow {
+  padding-top: clamp(2.25rem, 4.5vw, 3.25rem) !important;
+  padding-bottom: clamp(2.5rem, 4.75vw, 3.5rem) !important;
+}
+
+.landing-story-workflow {
+  padding-left: max(1.5rem, env(safe-area-inset-left)) !important;
+  padding-right: max(1.5rem, env(safe-area-inset-right)) !important;
+  overflow: visible;
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .landing-story-workflow {
+    padding-left: max(2rem, env(safe-area-inset-left)) !important;
+    padding-right: max(2rem, env(safe-area-inset-right)) !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-story-workflow {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+  }
+}
+
+.landing-story-bridge {
+  padding-top: 0.125rem !important;
+  padding-bottom: 0.125rem !important;
+  min-height: 2.5rem;
+  opacity: 0.78;
+}
+
+.landing-story-bridge:nth-of-type(2),
+.landing-story-bridge:nth-of-type(3) {
+  opacity: 0.58;
+}
+
+.landing-story-cta {
+  padding-top: clamp(4.25rem, 7vw, 5.5rem) !important;
+  padding-bottom: clamp(4.75rem, 7.5vw, 6rem) !important;
+}
+
+.landing-story-footer {
+  border-color: rgba(255, 255, 255, 0.045) !important;
+  background-image: linear-gradient(180deg, rgba(168, 85, 247, 0.012), transparent 70%);
+}

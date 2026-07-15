@@ -94,14 +94,14 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020203] text-white flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
+    <div className="eve-auth-shell min-h-screen bg-[#020203] text-white flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
       {/* Background Star field & Glows */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="hero-stars" />
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-purple-500/10 rounded-full filter blur-[120px] opacity-40" />
       </div>
 
-      <div className="w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl rounded-2xl shadow-2xl relative z-10">
+      <div className="eve-auth-card w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl rounded-2xl shadow-2xl relative z-10">
         <div className="p-8">
           <div className="flex justify-center mb-6">
             <div className="h-12 w-12 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-xl tracking-tighter shadow-md shadow-purple-900/20">

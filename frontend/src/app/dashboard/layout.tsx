@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sessionToken, setSessionToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [loadingStage, setLoadingStage] = useState(0);
-  const [theme, setTheme] = useState("executive-light");
+  const [theme, setTheme] = useState("dark");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
@@ -130,10 +130,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return stored;
     };
 
-    let stored = localStorage.getItem("theme") || "executive-light";
+    let stored = localStorage.getItem("theme") || "dark";
     if (!["system", "executive-light", "dark"].includes(stored)) {
-      stored = "executive-light";
-      localStorage.setItem("theme", "executive-light");
+      stored = "dark";
+      localStorage.setItem("theme", "dark");
     }
 
     const active = resolveTheme(stored);
@@ -173,9 +173,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return profile.preferences.theme;
     }
     if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") || "executive-light";
+      return localStorage.getItem("theme") || "dark";
     }
-    return "executive-light";
+    return "dark";
   };
 
   const setThemePreference = (newTheme: string) => {
@@ -500,7 +500,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-foreground font-sans">
         <div className="w-full max-w-sm bg-card backdrop-blur-md rounded-2xl border border-border p-8 shadow-2xl space-y-6 animate-fade-in">
           <div className="flex justify-center mb-2">
-            <div className="h-14 w-14 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-2xl flex items-center justify-center text-foreground font-bold text-2xl animate-pulse shadow-lg shadow-indigo-500/30">
+            <div className="h-14 w-14 bg-gradient-to-tr from-violet-700 to-purple-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl animate-pulse shadow-lg shadow-violet-600/30">
               EVE
             </div>
           </div>
@@ -512,48 +512,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="space-y-3 pt-2">
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage >= 2 ? (
-                <span className="text-indigo-400 font-bold">✓</span>
+                <span className="text-violet-400 font-bold">✓</span>
               ) : (
-                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+                <div className="h-4 w-4 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
               )}
-              <span className={loadingStage >= 2 ? "text-muted-foreground line-through decoration-indigo-500/50" : "text-foreground font-medium"}>
+              <span className={loadingStage >= 2 ? "text-muted-foreground line-through decoration-violet-500/50" : "text-foreground font-medium"}>
                 Authenticating session
               </span>
             </div>
             
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage >= 3 ? (
-                <span className="text-indigo-400 font-bold">✓</span>
+                <span className="text-violet-400 font-bold">✓</span>
               ) : loadingStage === 2 ? (
-                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+                <div className="h-4 w-4 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
               ) : (
                 <div className="h-2 w-2 rounded-full bg-secondary ml-1" />
               )}
-              <span className={loadingStage >= 3 ? "text-muted-foreground line-through decoration-indigo-500/50" : loadingStage === 2 ? "text-foreground font-medium animate-pulse" : "text-muted-foreground"}>
+              <span className={loadingStage >= 3 ? "text-muted-foreground line-through decoration-violet-500/50" : loadingStage === 2 ? "text-foreground font-medium animate-pulse" : "text-muted-foreground"}>
                 Loading active workspace
               </span>
             </div>
             
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage >= 4 ? (
-                <span className="text-indigo-400 font-bold">✓</span>
+                <span className="text-violet-400 font-bold">✓</span>
               ) : loadingStage === 3 ? (
-                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+                <div className="h-4 w-4 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
               ) : (
                 <div className="h-2 w-2 rounded-full bg-secondary ml-1" />
               )}
-              <span className={loadingStage >= 4 ? "text-muted-foreground line-through decoration-indigo-500/50" : loadingStage === 3 ? "text-foreground font-medium animate-pulse" : "text-muted-foreground"}>
+              <span className={loadingStage >= 4 ? "text-muted-foreground line-through decoration-violet-500/50" : loadingStage === 3 ? "text-foreground font-medium animate-pulse" : "text-muted-foreground"}>
                 Loading business metrics & datasets
               </span>
             </div>
             
             <div className="flex items-center gap-3 text-sm transition-all duration-300">
               {loadingStage === 4 ? (
-                <div className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+                <div className="h-4 w-4 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
               ) : (
                 <div className="h-2 w-2 rounded-full bg-secondary ml-1" />
               )}
-              <span className={loadingStage === 4 ? "text-indigo-300 font-semibold animate-pulse" : "text-muted-foreground"}>
+              <span className={loadingStage === 4 ? "text-violet-300 font-semibold animate-pulse" : "text-muted-foreground"}>
                 Preparing AI Executive portal...
               </span>
             </div>
@@ -587,7 +587,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }
                 window.location.reload();
               }}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
+              className="w-full py-2.5 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
             >
               Retry Connection
             </button>
@@ -618,7 +618,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 flex flex-col transition-all duration-200 ${
+        className={`fixed top-0 left-0 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 flex flex-col transition-all duration-200 eve-sidebar-atmosphere ${
  isSidebarCollapsed ? "w-64 md:w-16" : "w-64"
  } ${
  sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -630,7 +630,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  }`}>
           <div
             onClick={() => router.push("/dashboard/inventory")}
-            className="h-9 w-9 bg-indigo-600 rounded-lg flex items-center justify-center text-foreground font-bold text-sm tracking-tighter cursor-pointer hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 flex-shrink-0"
+            className="h-9 w-9 bg-gradient-to-tr from-violet-700 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:opacity-90 transition-all shadow-md shadow-violet-700/25 flex-shrink-0"
           >
             EVE
           </div>
@@ -686,18 +686,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  isItemDisabled
  ? "opacity-45 cursor-not-allowed text-muted-foreground"
  : active
- ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-[10px]"
+ ? "bg-violet-600/10 text-violet-400 border-l-2 border-violet-500 pl-[10px]"
  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
  } ${
  (item as any).isAI && !active && !isItemDisabled
- ? "hover:bg-indigo-900/30 hover:text-indigo-300"
+ ? "hover:bg-violet-900/30 hover:text-violet-300"
  : ""
  }`}
                     >
-                      <Icon size={15} className={active && !isItemDisabled ? "text-indigo-400" : "text-muted-foreground group-hover:text-muted-foreground"} />
+                      <Icon size={15} className={active && !isItemDisabled ? "text-violet-400" : "text-muted-foreground group-hover:text-muted-foreground"} />
                       <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>{item.label}</span>
                       {(item as any).isAI && (
-                        <span className={`ml-auto text-[9px] font-bold bg-indigo-600 text-foreground px-1.5 py-0.5 rounded-full tracking-wide ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
+                        <span className={`ml-auto text-[9px] font-bold bg-violet-600 text-white px-1.5 py-0.5 rounded-full tracking-wide ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
                       )}
                     </Link>
                   );
@@ -715,7 +715,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  }`}
             title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
           >
-            <Building2 size={14} className="text-indigo-400 flex-shrink-0" />
+            <Building2 size={14} className="text-violet-400 flex-shrink-0" />
             <span className={`text-xs text-muted-foreground font-medium truncate animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
               {activeWorkspace?.name || "No workspace"}
             </span>
@@ -731,7 +731,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
  }`}>
         {/* Top Header */}
-        <header className="sticky top-0 z-20 w-full bg-sidebar border-b border-sidebar-border text-sidebar-foreground transition-colors duration-200">
+        <header className="sticky top-0 z-20 w-full bg-sidebar border-b border-sidebar-border text-sidebar-foreground transition-colors duration-200 eve-header-atmosphere">
           <div className="px-4 py-3 flex items-center justify-between">
             {/* Mobile hamburger */}
             <button
@@ -748,7 +748,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-3">
               {/* Trial Status Badge */}
               {profile?.subscription_status === "trial" && !isExempt && (
-                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] font-semibold text-indigo-400">
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-violet-500/10 border border-violet-500/20 rounded-full text-[11px] font-semibold text-violet-400">
                   <Clock size={11} className="animate-pulse" />
                   <span>
                     {(() => {
@@ -761,8 +761,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
               {/* Theme Toggler */}
               <button
-                onClick={() => setThemePreference(theme === "dark" ? "light" : "dark")}
-                className="p-2 text-muted-foreground hover:text-indigo-400 hover:bg-sidebar-accent rounded-lg transition-all"
+                onClick={() => setThemePreference(theme === "dark" ? "executive-light" : "dark")}
+                className="p-2 text-muted-foreground hover:text-violet-400 hover:bg-sidebar-accent rounded-lg transition-all"
                 title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
               >
                 {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -774,7 +774,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 bg-sidebar-accent/80 hover:bg-sidebar-accent border border-sidebar-border rounded-lg text-sm font-medium text-sidebar-foreground transition-all"
                 >
-                  <Building2 size={14} className="text-indigo-400" />
+                  <Building2 size={14} className="text-violet-400" />
                   <span className="max-w-[140px] truncate">{activeWorkspace?.name || "Select Workspace"}</span>
                   <ChevronDown size={12} className="text-muted-foreground" />
                 </button>
@@ -792,11 +792,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             key={ws.id}
                             onClick={() => handleSwitchWorkspace(ws.id)}
                             className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-sidebar-accent transition-colors ${
- ws.id === activeWorkspaceId ? "text-indigo-400 font-bold" : "text-sidebar-foreground"
+ ws.id === activeWorkspaceId ? "text-violet-400 font-bold" : "text-sidebar-foreground"
  }`}
                           >
                             <span className="truncate">{ws.name}</span>
-                            {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />}
+                            {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
                           </button>
                         ))}
                         {workspaces.length === 0 && (
@@ -806,7 +806,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div className="p-2 border-t border-sidebar-border">
                         <button
                           onClick={() => { setIsDropdownOpen(false); setIsCreateModalOpen(true); }}
-                          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-xs font-semibold transition-all"
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-semibold transition-all"
                         >
                           <Plus size={12} /> Create Workspace
                         </button>
@@ -836,7 +836,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-background text-foreground transition-colors duration-200">
+        <main className="flex-1 overflow-auto bg-background text-foreground transition-colors duration-200 eve-dashboard-main">
           {(() => {
             const days = getRemainingDays();
             const isTrialExpired = profile?.subscription_status === "trial" && days <= 0;
@@ -895,11 +895,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {!activeWorkspaceId && pathname !== "/dashboard/settings" && pathname !== "/dashboard/help" ? (
                   <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 flex flex-col justify-center min-h-[85vh]">
                     <div className="bg-card/80 backdrop-blur-md rounded-3xl border border-border shadow-2xl overflow-hidden p-8 md:p-12 text-center space-y-8 max-w-3xl mx-auto relative">
-                      <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -top-24 -left-24 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
                       <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
                       
                       <div className="flex justify-center">
-                        <div className="h-20 w-20 bg-gradient-to-tr from-indigo-600 to-violet-500 text-foreground rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 animate-pulse">
+                        <div className="h-20 w-20 bg-gradient-to-tr from-violet-700 to-purple-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/25 animate-pulse">
                           <Sparkles size={38} />
                         </div>
                       </div>
@@ -923,24 +923,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <button
                             onClick={handleCreateDemoWorkspace}
                             disabled={demoLoading || createLoading}
-                            className="group relative flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-indigo-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-indigo-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
+                            className="group relative flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-violet-500/40 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-violet-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
                           >
                             {demoLoading && (
                               <div className="absolute inset-0 bg-background backdrop-blur-xs flex items-center justify-center z-10">
                                 <div className="flex flex-col items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
-                                  <span className="text-xs text-indigo-400 font-semibold animate-pulse">Launching demo...</span>
+                                  <div className="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+                                  <span className="text-xs text-violet-400 font-semibold animate-pulse">Launching demo...</span>
                                 </div>
                               </div>
                             )}
-                            <div className="h-10 w-10 bg-indigo-900/30 group-hover:bg-indigo-600/20 text-indigo-400 rounded-lg flex items-center justify-center mb-4 transition-all">
+                            <div className="h-10 w-10 bg-violet-900/30 group-hover:bg-violet-600/20 text-violet-400 rounded-lg flex items-center justify-center mb-4 transition-all">
                               <Sparkles size={20} />
                             </div>
-                            <h4 className="text-base font-bold text-foreground group-hover:text-indigo-400 transition-colors">Option A: Launch Demo Workspace</h4>
+                            <h4 className="text-base font-bold text-foreground group-hover:text-violet-400 transition-colors">Option A: Launch Demo Workspace</h4>
                             <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
                               Explore EVE using a realistic fashion business (<strong>NovaWear Fashion</strong>) with preloaded sales, inventory, customers, expenses, risks, and executive insights.
                             </p>
-                            <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-indigo-400 group-hover:text-indigo-300">
+                            <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-violet-400 group-hover:text-violet-300">
                               Launch Demo & Explore &rarr;
                             </div>
                           </button>
@@ -981,13 +981,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 value={newWorkspaceName}
                                 onChange={(e) => setNewWorkspaceName(e.target.value)}
                                 placeholder="e.g. Acme Clothing"
-                                className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm placeholder-slate-600"
+                                className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm placeholder-slate-600"
                               />
                             </div>
                             <button
                               type="submit"
                               disabled={createLoading || !newWorkspaceName.trim()}
-                              className="w-full flex justify-center items-center py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
+                              className="w-full flex justify-center items-center py-2.5 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md disabled:opacity-50 cursor-pointer"
                             >
                               {createLoading ? "Creating Workspace..." : "Create Workspace"}
                             </button>
@@ -1032,14 +1032,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   value={newWorkspaceName}
                   onChange={(e) => setNewWorkspaceName(e.target.value)}
                   placeholder="e.g. Acme Fashion Corp"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-4 py-2 border border-border text-foreground hover:bg-sidebar-accent rounded-lg text-sm font-semibold">
                   Cancel
                 </button>
-                <button type="submit" disabled={createLoading || !newWorkspaceName.trim()} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-sm font-semibold disabled:opacity-50">
+                <button type="submit" disabled={createLoading || !newWorkspaceName.trim()} className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-semibold disabled:opacity-50">
                   {createLoading ? "Creating..." : "Create Workspace"}
                 </button>
               </div>

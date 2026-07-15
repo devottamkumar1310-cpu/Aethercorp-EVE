@@ -256,11 +256,11 @@ export default function DashboardPage() {
         {/* Global Quick CTAs */}
         <div className="flex flex-wrap gap-3 items-center bg-card p-4 rounded-xl border border-border shadow-sm">
           <span className="font-medium text-foreground mr-2">Create Actions:</span>
-          <button onClick={() => setIsClientModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100:bg-blue-900/30 rounded-md text-sm font-medium transition-colors border border-blue-200 cursor-pointer"><Plus size={16}/> New Client</button>
-          <button onClick={() => setIsProjectModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100:bg-indigo-900/30 rounded-md text-sm font-medium transition-colors border border-indigo-200 cursor-pointer"><Plus size={16}/> New Project</button>
-          <button onClick={() => setIsTaskModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100:bg-cyan-900/30 rounded-md text-sm font-medium transition-colors border border-cyan-200 cursor-pointer"><Plus size={16}/> New Task</button>
-          <button onClick={() => setIsRevenueModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100:bg-green-900/30 rounded-md text-sm font-medium transition-colors border border-green-200 cursor-pointer"><Plus size={16}/> Add Revenue</button>
-          <button onClick={() => setIsExpenseModalOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100:bg-red-900/30 rounded-md text-sm font-medium transition-colors border border-red-200 cursor-pointer"><Plus size={16}/> Add Expense</button>
+          <button onClick={() => setIsClientModalOpen(true)} className="eve-action-btn eve-action-btn-blue"><Plus size={16}/> New Client</button>
+          <button onClick={() => setIsProjectModalOpen(true)} className="eve-action-btn eve-action-btn-violet"><Plus size={16}/> New Project</button>
+          <button onClick={() => setIsTaskModalOpen(true)} className="eve-action-btn eve-action-btn-cyan"><Plus size={16}/> New Task</button>
+          <button onClick={() => setIsRevenueModalOpen(true)} className="eve-action-btn eve-action-btn-emerald"><Plus size={16}/> Add Revenue</button>
+          <button onClick={() => setIsExpenseModalOpen(true)} className="eve-action-btn eve-action-btn-rose"><Plus size={16}/> Add Expense</button>
         </div>
 
         <div className="space-y-6">
@@ -280,19 +280,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {loadingSummary ? (
               [...Array(4)].map((_, i) => (
-                <div key={i} className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between h-28 animate-pulse">
+                <div key={i} className="eve-kpi-card p-5 rounded-xl flex flex-col justify-between h-28 animate-pulse">
                   <div className="h-4 bg-muted rounded w-1/2 mb-3" />
                   <div className="h-8 bg-muted rounded w-3/4" />
                 </div>
               ))
             ) : (
               <>
-                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                <div className="eve-kpi-card p-5 rounded-xl flex flex-col justify-between">
                   <span className="text-sm font-medium text-muted-foreground">Total Clients</span>
                   <span className="text-3xl font-bold text-foreground">{summary?.kpis?.clients || 0}</span>
-                  <span className="text-xs text-green-600 font-medium mt-1">{summary?.kpis?.active_clients || 0} Active</span>
+                  <span className="text-xs text-emerald-400 font-medium mt-1">{summary?.kpis?.active_clients || 0} Active</span>
                 </div>
-                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                <div className="eve-kpi-card p-5 rounded-xl flex flex-col justify-between">
                   <span className="text-sm font-medium text-muted-foreground flex justify-between">
                     Active Projects
                     {loadingTrends ? (
@@ -307,7 +307,7 @@ export default function DashboardPage() {
                   <span className="text-3xl font-bold text-foreground">{summary?.kpis?.projects || 0}</span>
                   <span className="text-xs text-blue-600 font-medium mt-1">{summary?.kpis?.active_projects || 0} Active</span>
                 </div>
-                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                <div className="eve-kpi-card p-5 rounded-xl flex flex-col justify-between">
                   <span className="text-sm font-medium text-muted-foreground flex justify-between">
                     Task Progress
                     {loadingTrends ? (
@@ -322,7 +322,7 @@ export default function DashboardPage() {
                   <span className="text-3xl font-bold text-foreground">{summary?.kpis?.completed_tasks || 0} / {summary?.kpis?.tasks || 0}</span>
                   <span className="text-xs text-muted-foreground font-medium mt-1">Pending vs Total</span>
                 </div>
-                <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex flex-col justify-between">
+                <div className="eve-kpi-card p-5 rounded-xl flex flex-col justify-between">
                   <span className="text-sm font-medium text-muted-foreground flex justify-between">
                     Net Profit
                     {loadingTrends ? (
@@ -343,17 +343,17 @@ export default function DashboardPage() {
 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Clients */}
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-secondary px-4 py-3 border-b border-border font-semibold text-foreground flex justify-between items-center">
+            <div className="eve-card rounded-xl overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-white/[0.05] font-semibold text-foreground flex justify-between items-center" style={{background: 'rgba(255,255,255,0.02)'}}>
                 Recent Clients
-                <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-blue-600 hover:underline cursor-pointer">Add Client</button>
+                <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">Add Client</button>
               </div>
-              <div className="p-0 overflow-x-auto flex-1 scrollbar-thin">
+              <div className="p-0 overflow-x-auto flex-1 eve-scrollbar">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-card border-b border-border text-muted-foreground">
+                  <thead className="border-b border-white/[0.05] text-muted-foreground" style={{background: 'rgba(255,255,255,0.02)'}}>
                     <tr><th className="px-4 py-2 font-medium">Client</th><th className="px-4 py-2 font-medium">Status</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-white/[0.05]">
                     {loadingSummary ? (
                       [...Array(3)].map((_, i) => (
                         <tr key={i} className="animate-pulse">
@@ -363,10 +363,10 @@ export default function DashboardPage() {
                       ))
                     ) : (
                       summary?.recent_clients?.map(c => (
-                        <tr key={c.id} className="hover:bg-muted/40">
-                          <td className="px-4 py-3 font-medium text-primary">{c.company_name}</td>
+                        <tr key={c.id} className="eve-table-row hover:bg-white/[0.02] transition-colors">
+                          <td className="px-4 py-3 font-medium text-foreground">{c.company_name}</td>
                           <td className="px-4 py-3">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-foreground'}`}>{c.status}</span>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase ${c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>{c.status}</span>
                           </td>
                         </tr>
                       ))
@@ -380,17 +380,17 @@ export default function DashboardPage() {
             </div>
 
             {/* Upcoming Deadlines */}
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-secondary px-4 py-3 border-b border-border font-semibold text-foreground flex justify-between items-center">
+            <div className="eve-card rounded-xl overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-white/[0.05] font-semibold text-foreground flex justify-between items-center" style={{background: 'rgba(255,255,255,0.02)'}}>
                 Upcoming Project Deadlines
-                <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-blue-600 hover:underline cursor-pointer">New Project</button>
+                <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">New Project</button>
               </div>
-              <div className="p-0 overflow-x-auto flex-1 scrollbar-thin">
+              <div className="p-0 overflow-x-auto flex-1 eve-scrollbar">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-card border-b border-border text-muted-foreground">
+                  <thead className="border-b border-white/[0.05] text-muted-foreground" style={{background: 'rgba(255,255,255,0.02)'}}>
                     <tr><th className="px-4 py-2 font-medium">Project</th><th className="px-4 py-2 font-medium">Deadline</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-white/[0.05]">
                     {loadingSummary ? (
                       [...Array(3)].map((_, i) => (
                         <tr key={i} className="animate-pulse">
@@ -400,9 +400,9 @@ export default function DashboardPage() {
                       ))
                     ) : (
                       summary?.upcoming_deadlines?.map(p => (
-                        <tr key={p.id} className="hover:bg-muted/40">
-                          <td className="px-4 py-3 font-medium text-primary">{p.name}</td>
-                          <td className="px-4 py-3 text-red-650 font-medium">
+                        <tr key={p.id} className="eve-table-row hover:bg-white/[0.02] transition-colors">
+                          <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
+                          <td className="px-4 py-3 text-rose-400 font-medium">
                             {(() => {
                               try {
                                 if (!p.deadline) return "N/A";
@@ -429,8 +429,8 @@ export default function DashboardPage() {
           {/* EVE Active Alerts Grid */}
           <div className="grid lg:grid-cols-2 gap-6">
             {/* EVE Active Risks */}
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-rose-500/10 dark:bg-rose-950/30 px-4 py-3 border-b border-border font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2">
+            <div className="eve-card rounded-xl overflow-hidden flex flex-col">
+              <div className="bg-rose-500/10 px-4 py-3 border-b border-rose-500/15 font-bold text-rose-400 flex items-center gap-2">
                 <AlertCircle size={15} className="text-rose-500 animate-pulse" />
                 <span>EVE Active Operational Risks</span>
               </div>
@@ -451,8 +451,8 @@ export default function DashboardPage() {
                         className="block p-3 rounded-xl border border-rose-500/10 hover:border-rose-500/35 bg-rose-500/5 hover:bg-rose-500/10 transition-all cursor-pointer"
                       >
                         <div className="flex justify-between items-center gap-2 mb-1">
-                          <span className="font-semibold text-rose-600 dark:text-rose-300 text-xs">{risk.title || "Operational Risk"}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold border border-rose-500/30 uppercase tracking-wide">Mitigate</span>
+                          <span className="font-semibold text-rose-400 text-xs">{risk.title || "Operational Risk"}</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-bold border border-rose-500/30 uppercase tracking-wide">Mitigate</span>
                         </div>
                         <p className="text-muted-foreground text-[11px] leading-relaxed font-normal">{risk.description}</p>
                       </Link>
@@ -463,8 +463,8 @@ export default function DashboardPage() {
             </div>
 
             {/* EVE Active Opportunities */}
-            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-emerald-500/10 dark:bg-emerald-950/30 px-4 py-3 border-b border-border font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+            <div className="eve-card rounded-xl overflow-hidden flex flex-col">
+              <div className="bg-emerald-500/10 px-4 py-3 border-b border-emerald-500/15 font-bold text-emerald-400 flex items-center gap-2">
                 <Sparkles size={15} className="text-emerald-500" />
                 <span>EVE Active Growth Opportunities</span>
               </div>
