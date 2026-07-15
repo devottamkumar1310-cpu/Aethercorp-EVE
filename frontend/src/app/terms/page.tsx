@@ -81,7 +81,7 @@ export default function TermsOfServicePage() {
             <section className="space-y-3">
               <h2 className="text-xl font-semibold text-foreground">6. Limitation of Liability</h2>
               <p>
-                To the maximum extent permitted by law, EVE and its affiliates shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, use, goodwill, or other intangible losses arising out of or related to your use of EVE.
+                To the maximum extent permitted by law, Aethercorp and its affiliates shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, use, goodwill, or other intangible losses arising out of or related to your use of EVE.
               </p>
             </section>
 
@@ -96,7 +96,7 @@ export default function TermsOfServicePage() {
       </main>
 
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground bg-background">
-        &copy; {new Date().getFullYear()} EVE. All rights reserved.
+        &copy; {new Date().getFullYear()} Aethercorp EVE. All rights reserved.
       </footer>
     </div>
   );
