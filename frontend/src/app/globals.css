@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-roboto-mono);
+  --font-heading: var(--font-inter);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -265,7 +265,7 @@
   h1:not(.landing-page *), h2:not(.landing-page *), h3:not(.landing-page *), h4:not(.landing-page *), h5:not(.landing-page *), h6:not(.landing-page *), th:not(.landing-page *), td:not(.landing-page *), strong:not(.landing-page *), .font-bold:not(.landing-page *), .font-extrabold:not(.landing-page *), .text-foreground:not(.landing-page *), .text-primary:not(.landing-page *) {
     color: #ffffff !important;
   }
-  p:not(.landing-page *), span:not(.landing-page *), li:not(.landing-page *), label:not(.landing-page *), .text-xs:not(.landing-page *), .text-sm:not(.landing-page *), .text-muted-foreground:not(.landing-page *), .text-secondary:not(.landing-page *), .text-slate-400:not(.landing-page *), .text-slate-500:not(.landing-page *), .text-slate-850:not(.landing-page *), .text-slate-900:not(.landing-page *), .text-slate-955:not(.landing-page *), .text-slate-800:not(.landing-page *) {
+  p:not(.landing-page *), span:not(.landing-page *), li:not(.landing-page *), label:not(.landing-page *), .text-xs:not(.landing-page *), .text-sm:not(.landing-page *), .text-muted-foreground:not(.landing-page *), .text-secondary:not(.landing-page *), .text-slate-400:not(.landing-page *), .text-slate-500:not(.landing-page *), .text-slate-850:not(.landing-page *), .text-slate-900:not(.landing-page *), .text-slate-950:not(.landing-page *), .text-slate-800:not(.landing-page *) {
     color: #d4d4d8 !important;
   }
   svg:not(.landing-page *) {
@@ -304,127 +304,4 @@
 [data-theme="executive-dark"] .hero-headline-accent,
 [data-theme="dark"] .hero-headline-accent {
   color: #818cf8 !important; /* Premium Indigo-400 (6.16:1 contrast) */
-}
-
-/* Strong readability and high contrast overrides for Hero Section */
-.landing-page {
-  background-color: #F7F7F5 !important;
-}
-
-[data-theme="executive-dark"] .landing-page,
-[data-theme="dark"] .landing-page {
-  background-color: #08080a !important;
-}
-
-.landing-page .hero-headline, 
-.landing-page .hero-headline span {
-  color: #111111 !important; /* Near-black */
-  font-weight: 800 !important;
-  opacity: 1 !important;
-}
-[data-theme="executive-dark"] .landing-page .hero-headline,
-[data-theme="dark"] .landing-page .hero-headline,
-[data-theme="executive-dark"] .landing-page .hero-headline span,
-[data-theme="dark"] .landing-page .hero-headline span {
-  color: #ffffff !important; /* Pure white */
-  font-weight: 800 !important;
-  opacity: 1 !important;
-}
-
-.landing-page .hero-subheadline {
-  color: #4B5563 !important; /* Dark gray */
-  opacity: 1 !important;
-}
-[data-theme="executive-dark"] .landing-page .hero-subheadline,
-[data-theme="dark"] .landing-page .hero-subheadline {
-  color: #cccccc !important; /* Light gray */
-  opacity: 1 !important;
-}
-
-.landing-page .hero-badge-text {
-  color: #4B5563 !important; /* Visible but secondary */
-  opacity: 1 !important;
-}
-[data-theme="executive-dark"] .landing-page .hero-badge-text,
-[data-theme="dark"] .landing-page .hero-badge-text {
-  color: #a1a1aa !important;
-  opacity: 1 !important;
-}
-
-/* Ensure the primary navy CTA stands out clearly */
-.landing-page .bg-slate-900 {
-  background-color: #0f172a !important; /* Navy */
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-.landing-page .bg-slate-900:hover {
-  background-color: #1e293b !important;
-  opacity: 1 !important;
-}
-[data-theme="executive-dark"] .landing-page .bg-white,
-[data-theme="dark"] .landing-page .bg-white {
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  opacity: 1 !important;
-}
-
-/* Dashboard & other sections primary text contrast rules */
-.landing-page h2,
-.landing-page h3,
-.landing-page h4,
-.landing-page th,
-.landing-page td,
-.landing-page strong,
-.landing-page .font-bold {
-  color: #111111 !important;
-  opacity: 1 !important;
-}
-[data-theme="executive-dark"] .landing-page h2,
-[data-theme="executive-dark"] .landing-page h3,
-[data-theme="executive-dark"] .landing-page h4,
-[data-theme="executive-dark"] .landing-page th,
-[data-theme="executive-dark"] .landing-page td,
-[data-theme="executive-dark"] .landing-page strong,
-[data-theme="executive-dark"] .landing-page .font-bold,
-[data-theme="dark"] .landing-page h2,
-[data-theme="dark"] .landing-page h3,
-[data-theme="dark"] .landing-page h4,
-[data-theme="dark"] .landing-page th,
-[data-theme="dark"] .landing-page td,
-[data-theme="dark"] .landing-page strong,
-[data-theme="dark"] .landing-page .font-bold {
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-/* Ensure sub-texts and descriptions are a solid dark gray */
-.landing-page p,
-.landing-page td,
-.landing-page th {
-  color: #4B5563 !important;
-  opacity: 1 !important;
-}
-[data-theme="executive-dark"] .landing-page p,
-[data-theme="executive-dark"] .landing-page td,
-[data-theme="executive-dark"] .landing-page th,
-[data-theme="dark"] .landing-page p,
-[data-theme="dark"] .landing-page td,
-[data-theme="dark"] .landing-page th {
-  color: #cccccc !important;
-  opacity: 1 !important;
-}
-
-/* Enforce borders */
-.landing-page border-slate-200,
-.landing-page border-slate-100,
-.landing-page border-border {
-  border-color: #E5E7EB !important;
-}
-[data-theme="executive-dark"] .landing-page border-slate-200,
-[data-theme="executive-dark"] .landing-page border-slate-100,
-[data-theme="executive-dark"] .landing-page border-border,
-[data-theme="dark"] .landing-page border-slate-200,
-[data-theme="dark"] .landing-page border-slate-100,
-[data-theme="dark"] .landing-page border-border {
-  border-color: #2e2e33 !important;
 }
