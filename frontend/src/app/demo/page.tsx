@@ -153,25 +153,30 @@ export default function DemoPage() {
   }, [search, categoryFilter, activeTab]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-[#020203] text-white flex flex-col font-sans relative overflow-hidden">
+      {/* Background Star field & Glows */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="hero-stars" />
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-purple-500/10 rounded-full filter blur-[120px] opacity-40" />
+      </div>
+
       {/* Navbar */}
-      <header className="w-full bg-card border-b border-slate-200 dark:border-zinc-800 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-opacity-80">
+      <header className="w-full bg-black/40 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 relative z-10">
         <div className="flex items-center gap-2">
-          <Link href="/" className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
-            EVE
+          <Link href="/" className="h-8 w-8 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black tracking-tighter shadow-md shadow-purple-900/20">
+            E
           </Link>
-          <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">Demo Workspace</span>
+          <h1 className="text-lg sm:text-xl font-semibold text-white tracking-tight">
+            EVE <span className="text-xs sm:text-sm font-normal text-zinc-400">Demo Workspace</span>
           </h1>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="/" className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors">
             Home
           </Link>
           <Link 
             href="/signup" 
-            className="text-xs sm:text-sm font-semibold bg-indigo-600 px-3 sm:px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
-            style={{ color: '#ffffff' }}
+            className="text-xs sm:text-sm font-semibold bg-[#4F46E5] hover:bg-[#4F46E5]/90 px-3 sm:px-4 py-2 rounded-lg transition-all text-white shadow-md hover:-translate-y-0.5"
           >
             Create Free Account
           </Link>
@@ -179,56 +184,56 @@ export default function DemoPage() {
       </header>
 
       {/* Demo Warning Banner */}
-      <div className="w-full bg-indigo-600 text-white px-4 py-3 text-center text-xs sm:text-sm font-semibold shadow-inner flex flex-col sm:flex-row items-center justify-center gap-2">
+      <div className="w-full bg-purple-500/10 border-b border-purple-500/20 text-purple-200 px-4 py-3 text-center text-xs sm:text-sm font-semibold relative z-10 flex flex-col sm:flex-row items-center justify-center gap-2">
         <span>⚡ You are viewing simulated sample reports and example insights for a high-growth fashion brand. No sign-up required.</span>
-        <Link href="/signup" className="underline hover:text-indigo-200 flex items-center gap-1">
+        <Link href="/signup" className="underline hover:text-purple-300 flex items-center gap-1">
           Unlock your real dashboard <ArrowRight size={14} />
         </Link>
       </div>
 
       {/* Workspace Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6 relative z-10">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-card p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Inventory Health Score</span>
+          <div className="insight-card p-4 sm:p-5 flex flex-col justify-between">
+            <span className="text-xs sm:text-sm font-medium text-zinc-400">Inventory Health Score</span>
             <div className="flex items-baseline gap-1.5 mt-2">
-              <span className="text-2xl sm:text-3xl font-bold text-foreground">84</span>
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-500 flex items-center"><TrendingUp size={12} className="mr-0.5" /> +2.1%</span>
+              <span className="text-2xl sm:text-3xl font-bold text-white">84</span>
+              <span className="text-xs font-semibold text-emerald-400 flex items-center"><TrendingUp size={12} className="mr-0.5" /> +2.1%</span>
             </div>
-            <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden mt-3">
-              <div className="h-full bg-indigo-600 rounded-full" style={{ width: '84%' }} />
+            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden mt-3">
+              <div className="h-full bg-purple-500 rounded-full" style={{ width: '84%' }} />
             </div>
           </div>
 
-          <div className="bg-card p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Total Inventory Value</span>
+          <div className="insight-card p-4 sm:p-5 flex flex-col justify-between">
+            <span className="text-xs sm:text-sm font-medium text-zinc-400">Total Inventory Value</span>
             <div className="flex items-baseline gap-1 mt-2">
-              <span className="text-2xl sm:text-3xl font-bold text-foreground">$72,920</span>
+              <span className="text-2xl sm:text-3xl font-bold text-white">$72,920</span>
             </div>
-            <span className="text-[10px] text-muted-foreground mt-2">Across 250 active stock variants</span>
+            <span className="text-[10px] text-zinc-500 mt-2">Across 250 active stock variants</span>
           </div>
 
-          <div className="bg-card p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground flex justify-between items-center">
+          <div className="insight-card p-4 sm:p-5 flex flex-col justify-between">
+            <span className="text-xs sm:text-sm font-medium text-zinc-400 flex justify-between items-center">
               Critical Stockouts
-              <AlertTriangle size={14} className="text-amber-500 animate-pulse" />
+              <AlertTriangle size={14} className="text-amber-400 animate-pulse" />
             </span>
             <div className="flex items-baseline gap-1 mt-2">
-              <span className="text-2xl sm:text-3xl font-bold text-amber-600">2 SKUs</span>
+              <span className="text-2xl sm:text-3xl font-bold text-amber-400">2 SKUs</span>
             </div>
-            <span className="text-[10px] text-muted-foreground mt-2">Predicted deficit in under 5 days</span>
+            <span className="text-[10px] text-zinc-500 mt-2">Predicted deficit in under 5 days</span>
           </div>
 
-          <div className="bg-card p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground flex justify-between items-center">
+          <div className="insight-card p-4 sm:p-5 flex flex-col justify-between">
+            <span className="text-xs sm:text-sm font-medium text-zinc-400 flex justify-between items-center">
               Trapped Capital
-              <DollarSign size={14} className="text-red-500" />
+              <DollarSign size={14} className="text-rose-450 text-rose-400" />
             </span>
             <div className="flex items-baseline gap-1 mt-2">
-              <span className="text-2xl sm:text-3xl font-bold text-red-500">$14,200</span>
+              <span className="text-2xl sm:text-3xl font-bold text-rose-400">$14,200</span>
             </div>
-            <span className="text-[10px] text-muted-foreground mt-2">Excess slow-moving stock</span>
+            <span className="text-[10px] text-zinc-500 mt-2">Excess slow-moving stock</span>
           </div>
         </div>
 
@@ -236,70 +241,70 @@ export default function DemoPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Product Table & Filters */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-card rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden p-4 sm:p-6 space-y-4">
+            <div className="insight-card p-4 sm:p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2">
                 <div>
-                  <h2 className="text-lg font-bold text-foreground">Recommended Inventory Action Items</h2>
-                  <p className="text-xs text-muted-foreground">View variant-level sales velocity, days left of stock, and reorder alerts.</p>
+                  <h2 className="text-lg font-bold text-white">Recommended Inventory Action Items</h2>
+                  <p className="text-xs text-zinc-400">View variant-level sales velocity, days left of stock, and reorder alerts.</p>
                 </div>
               </div>
 
               {/* Filters */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
                     type="text"
                     placeholder="Search by SKU or Product Name..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-background border border-slate-200 dark:border-zinc-800 rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <div className="flex items-center gap-1.5 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 bg-background text-xs">
-                    <Filter size={13} className="text-muted-foreground" />
+                  <div className="flex items-center gap-1.5 border border-white/10 rounded-lg px-3 py-2 bg-white/5 text-xs">
+                    <Filter size={13} className="text-zinc-450 text-zinc-400" />
                     <select
                       value={categoryFilter}
                       onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="bg-transparent focus:outline-none text-foreground cursor-pointer"
+                      className="bg-transparent focus:outline-none text-white cursor-pointer select-dark-arrow"
                     >
-                      <option value="All">All Categories</option>
-                      <option value="Tops">Tops</option>
-                      <option value="Bottoms">Bottoms</option>
-                      <option value="Outerwear">Outerwear</option>
+                      <option value="All" className="bg-[#020203] text-white">All Categories</option>
+                      <option value="Tops" className="bg-[#020203] text-white">Tops</option>
+                      <option value="Bottoms" className="bg-[#020203] text-white">Bottoms</option>
+                      <option value="Outerwear" className="bg-[#020203] text-white">Outerwear</option>
                     </select>
                   </div>
                 </div>
               </div>
 
               {/* Tabs */}
-              <div className="flex border-b border-border text-xs gap-4 font-semibold pb-1">
+              <div className="flex border-b border-white/[0.08] text-xs gap-4 font-semibold pb-1">
                 <button 
                   onClick={() => setActiveTab("all")} 
-                  className={`pb-2 border-b-2 transition-all ${activeTab === "all" ? "border-indigo-600 text-indigo-600 dark:text-indigo-400" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  className={`pb-2 border-b-2 transition-all ${activeTab === "all" ? "border-purple-500 text-purple-400" : "border-transparent text-zinc-450 text-zinc-400 hover:text-white"}`}
                 >
                   All Products ({mockProducts.length})
                 </button>
                 <button 
                   onClick={() => setActiveTab("low_stock")} 
-                  className={`pb-2 border-b-2 transition-all ${activeTab === "low_stock" ? "border-amber-500 text-amber-500" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  className={`pb-2 border-b-2 transition-all ${activeTab === "low_stock" ? "border-amber-500 text-amber-500" : "border-transparent text-zinc-450 text-zinc-400 hover:text-white"}`}
                 >
                   Reorder Alerts (2)
                 </button>
                 <button 
                   onClick={() => setActiveTab("dead_stock")} 
-                  className={`pb-2 border-b-2 transition-all ${activeTab === "dead_stock" ? "border-red-500 text-red-500" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                  className={`pb-2 border-b-2 transition-all ${activeTab === "dead_stock" ? "border-rose-500 text-rose-500" : "border-transparent text-zinc-450 text-zinc-400 hover:text-white"}`}
                 >
                   Dead Stock Warnings (2)
                 </button>
               </div>
 
               {/* Table */}
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full text-left text-xs min-w-[600px]">
                   <thead>
-                    <tr className="border-b border-border text-muted-foreground font-medium bg-card/10">
+                    <tr className="border-b border-white/[0.08] text-zinc-400 font-medium bg-white/[0.01]">
                       <th className="px-4 py-3">Product SKU & Name</th>
                       <th className="px-4 py-3">Category</th>
                       <th className="px-4 py-3 text-right">Stock</th>
@@ -308,30 +313,30 @@ export default function DemoPage() {
                       <th className="px-4 py-3 text-right">Reorder Recommendation</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border text-foreground/90 font-mono">
+                  <tbody className="divide-y divide-white/[0.08] text-zinc-200 font-mono">
                     {filteredProducts.map((p) => (
-                      <tr key={p.sku} className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30">
+                      <tr key={p.sku} className="hover:bg-white/[0.02]">
                         <td className="px-4 py-3 font-sans">
-                          <div className="font-semibold text-foreground">{p.name}</div>
-                          <div className="text-[10px] text-muted-foreground">{p.sku}</div>
+                          <div className="font-semibold text-white">{p.name}</div>
+                          <div className="text-[10px] text-zinc-500">{p.sku}</div>
                         </td>
-                        <td className="px-4 py-3 font-sans">{p.category}</td>
-                        <td className="px-4 py-3 text-right">{p.stock}</td>
-                        <td className="px-4 py-3 text-right">{p.velocity} / day</td>
+                        <td className="px-4 py-3 font-sans text-zinc-300">{p.category}</td>
+                        <td className="px-4 py-3 text-right text-zinc-300">{p.stock}</td>
+                        <td className="px-4 py-3 text-right text-zinc-300">{p.velocity} / day</td>
                         <td className={`px-4 py-3 text-right font-bold ${
-                          p.status === "low_stock" ? "text-amber-600 dark:text-amber-500" : 
-                          p.status === "dead_stock" ? "text-red-500" : "text-emerald-600"
+                          p.status === "low_stock" ? "text-amber-400" : 
+                          p.status === "dead_stock" ? "text-rose-400" : "text-emerald-450 text-emerald-400"
                         }`}>
                           {p.daysLeft > 365 ? "365+ days" : `${p.daysLeft} days`}
                         </td>
-                        <td className={`px-4 py-3 text-right font-bold ${p.status === "low_stock" ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground"}`}>
+                        <td className={`px-4 py-3 text-right font-bold ${p.status === "low_stock" ? "text-purple-400" : "text-zinc-500"}`}>
                           {p.reorderSuggestion}
                         </td>
                       </tr>
                     ))}
                     {filteredProducts.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                        <td colSpan={6} className="text-center py-8 text-zinc-500">
                           No products found matching your search.
                         </td>
                       </tr>
@@ -344,23 +349,23 @@ export default function DemoPage() {
 
           {/* Right Column: AI Assistant Mockup */}
           <div className="space-y-4">
-            <div className="bg-card rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col h-[520px]">
-              <div className="bg-indigo-600 text-white p-4 flex items-center gap-2">
+            <div className="insight-card flex flex-col h-[520px] overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex items-center gap-2 shadow-inner">
                 <MessageSquare size={16} />
                 <h3 className="text-sm font-bold">Ask EVE AI Assistant</h3>
               </div>
 
               {/* Chat Log */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+              <div className="flex-1 p-4 overflow-y-auto space-y-3 text-xs custom-scrollbar">
                 {chatLog.map((log, idx) => (
                   <div key={idx} className={`flex flex-col ${log.sender === "user" ? "items-end" : "items-start"}`}>
-                    <span className="text-[9px] text-muted-foreground mb-1 uppercase font-bold">
+                    <span className="text-[9px] text-zinc-500 mb-1 uppercase font-bold">
                       {log.sender === "user" ? "You" : "EVE AI"}
                     </span>
                     <div className={`p-3 rounded-xl max-w-[85%] whitespace-pre-line leading-relaxed ${
                       log.sender === "user" 
-                        ? "bg-indigo-600 text-white rounded-tr-none" 
-                        : "bg-slate-100 dark:bg-zinc-900 text-foreground rounded-tl-none border border-slate-200 dark:border-zinc-800"
+                        ? "bg-purple-600 text-white rounded-tr-none" 
+                        : "bg-white/5 text-zinc-200 rounded-tl-none border border-white/10"
                     }`}>
                       {log.message}
                     </div>
@@ -369,24 +374,24 @@ export default function DemoPage() {
               </div>
 
               {/* Quick Questions */}
-              <div className="p-3 border-t border-border bg-slate-50/50 dark:bg-zinc-900/10 space-y-2">
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Suggested Questions:</div>
+              <div className="p-3 border-t border-white/[0.08] bg-white/[0.01] space-y-2">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Suggested Questions:</div>
                 <div className="flex flex-wrap gap-1.5">
                   <button 
                     onClick={() => handleQuickQuestion("What is my biggest stockout risk?")}
-                    className="text-[10px] px-2.5 py-1 bg-background hover:bg-slate-100 dark:hover:bg-zinc-900 border border-border rounded-full text-foreground transition-all text-left"
+                    className="text-[10px] px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-zinc-350 text-zinc-300 transition-all text-left"
                   >
                     ⚠️ Stockout Risks
                   </button>
                   <button 
                     onClick={() => handleQuickQuestion("How can I free up trapped capital?")}
-                    className="text-[10px] px-2.5 py-1 bg-background hover:bg-slate-100 dark:hover:bg-zinc-900 border border-border rounded-full text-foreground transition-all text-left"
+                    className="text-[10px] px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-zinc-350 text-zinc-300 transition-all text-left"
                   >
                     💰 Free Trapped Capital
                   </button>
                   <button 
                     onClick={() => handleQuickQuestion("Summarize my inventory health.")}
-                    className="text-[10px] px-2.5 py-1 bg-background hover:bg-slate-100 dark:hover:bg-zinc-900 border border-border rounded-full text-foreground transition-all text-left"
+                    className="text-[10px] px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-zinc-350 text-zinc-300 transition-all text-left"
                   >
                     📊 Health Summary
                   </button>
@@ -394,17 +399,17 @@ export default function DemoPage() {
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={handleSendQuery} className="p-3 border-t border-border flex gap-2">
+              <form onSubmit={handleSendQuery} className="p-3 border-t border-white/[0.08] flex gap-2">
                 <input
                   type="text"
                   placeholder="Ask EVE a custom question..."
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-background border border-slate-200 dark:border-zinc-850 rounded-lg text-xs text-foreground focus:outline-none"
+                  className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-purple-500/50"
                 />
                 <button 
                   type="submit"
-                  className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all"
+                  className="px-3 py-2 bg-[#4F46E5] hover:bg-[#4F46E5]/90 text-white rounded-lg text-xs font-bold transition-all shadow-md"
                 >
                   Send
                 </button>
@@ -415,7 +420,7 @@ export default function DemoPage() {
 
         {/* Back Link */}
         <div className="text-center pt-4">
-          <Link href="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-indigo-600 transition-colors">
+          <Link href="/" className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors">
             <ArrowLeft size={12} /> Back to Homepage
           </Link>
         </div>
