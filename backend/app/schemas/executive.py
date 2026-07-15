@@ -103,6 +103,14 @@ class TraceData(BaseModel):
     reorder_point: int
     eoq_adjustment: int
     revenue_at_risk: float
+    
+    # Financials (Sprint 4)
+    unit_cost: float = 0.0
+    selling_price: float = 0.0
+    avg_daily_sales: float = 0.0
+    
+    # Real Size Intelligence (Sprint 2)
+    size_curve_analysis: Optional[Dict[str, float]] = None
 
 class PriorityItem(BaseModel):
     title: str
@@ -112,6 +120,10 @@ class PriorityItem(BaseModel):
     size_run: Optional[Dict[str, int]] = None
     reasoning: List[str] = []
     trace_data: Optional[TraceData] = None
+    
+    # Founder Trust (Sprint 3)
+    confidence_label: Optional[str] = None
+    data_quality_warnings: List[str] = []
 
 class DailyBriefResponse(BaseModel):
     revenue_risks: List[PriorityItem] = []

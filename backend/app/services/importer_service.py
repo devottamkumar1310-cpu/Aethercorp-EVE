@@ -9,6 +9,12 @@ from app.models.supplier import Supplier
 
 logger = logging.getLogger("eve.services.importer_service")
 
+# Import variant detection
+try:
+    from app.fashion.variant_detector import detect_variants
+except ImportError:
+    detect_variants = None
+
 class ImporterService:
     """
     Extensible service for validating, transforming, and importing business datasets
@@ -163,6 +169,14 @@ class ImporterService:
             else:
                 product.name = name
                 product.category = category
+            
+            # Apply explicit CSV columns for variant fields if present
+            if "size" in df.columns and not pd.isna(row.get("size")):
+                product.size = str(row["size"]).strip()
+            if "color" in df.columns and not pd.isna(row.get("color")):
+                product.color = str(row["color"]).strip()
+            if "parent_product_id" in df.columns and not pd.isna(row.get("parent_product_id")):
+                product.parent_product_id = str(row["parent_product_id"]).strip()
                 
             inventory_item = inventory_cache.get(product.id)
             if not inventory_item:
@@ -179,6 +193,23 @@ class ImporterService:
             inventory_item.reorder_point = max(5, int(stock * 0.1))
             success_count += 1
             
+        db.flush()
+        
+        # Auto-detect variants from product names (if no explicit columns provided)
+        has_explicit_variants = "parent_product_id" in df.columns
+        if not has_explicit_variants and detect_variants:
+            product_list = [{"sku": str(r["sku"]).strip(), "name": str(r["name"]).strip()} for _, r in df.iterrows()]
+            detection = detect_variants(product_list)
+            for group in detection.variant_groups:
+                for variant in group.variants:
+                    prod = products_cache.get(variant.sku)
+                    if prod and not prod.parent_product_id:
+                        prod.parent_product_id = variant.parent_product_id
+                        if variant.size and not prod.size:
+                            prod.size = variant.size
+                        if variant.color and not prod.color:
+                            prod.color = variant.color
+        
         db.commit()
         return {
             "status": "success",
@@ -190,6 +221,7 @@ class ImporterService:
             "missing_columns": [],
             "errors": []
         }
+
 
     @classmethod
     def import_sales(cls, db: Session, org_id: Any, df: pd.DataFrame) -> Dict[str, Any]:
@@ -634,6 +666,11 @@ class ImporterService:
             if "unit_cost" in df.columns and not pd.isna(row["unit_cost"]): product.unit_cost = float(row["unit_cost"])
             if "selling_price" in df.columns and not pd.isna(row["selling_price"]): product.selling_price = float(row["selling_price"])
             
+            # Apply explicit CSV columns for variant fields
+            if "size" in df.columns and not pd.isna(row.get("size", float("nan"))): product.size = str(row["size"]).strip()
+            if "color" in df.columns and not pd.isna(row.get("color", float("nan"))): product.color = str(row["color"]).strip()
+            if "parent_product_id" in df.columns and not pd.isna(row.get("parent_product_id", float("nan"))): product.parent_product_id = str(row["parent_product_id"]).strip()
+            
             # Upsert Inventory Item
             inventory_item = inventory_cache.get(product.id)
             if not inventory_item:
@@ -674,6 +711,29 @@ class ImporterService:
             
         if sales_to_add:
             db.add_all(sales_to_add)
+        
+        db.flush()
+        
+        # Auto-detect variants from product names (if no explicit columns provided)
+        has_explicit_variants = "parent_product_id" in df.columns
+        if not has_explicit_variants and detect_variants:
+            product_list = []
+            for _, r in df.iterrows():
+                sku_val = str(r.get("sku", "")).strip()
+                name_val = str(r.get("name", f"Product {sku_val}")).strip()
+                if sku_val and sku_val != "nan":
+                    product_list.append({"sku": sku_val, "name": name_val})
+            if product_list:
+                detection = detect_variants(product_list)
+                for group in detection.variant_groups:
+                    for variant in group.variants:
+                        prod = products_cache.get(variant.sku)
+                        if prod and not prod.parent_product_id:
+                            prod.parent_product_id = variant.parent_product_id
+                            if variant.size and not prod.size:
+                                prod.size = variant.size
+                            if variant.color and not prod.color:
+                                prod.color = variant.color
             
         db.commit()
         return {

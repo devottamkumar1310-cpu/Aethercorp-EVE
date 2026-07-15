@@ -222,6 +222,77 @@ def upload_master_csv(
             content={"status": "error", "message": f"Failed to process master CSV: {str(e)}"}
         )
 
+@router.post("/upload/preview")
+def preview_upload_csv(
+    file: UploadFile = File(...),
+    token_context: dict = Depends(get_current_user_and_tenant),
+    _role = Depends(require_workspace_role("manager"))
+):
+    """
+    Parses a CSV to detect apparel variants, returning the grouping preview
+    without committing anything to the database.
+    """
+    try:
+        from app.fashion.variant_detector import detect_variants
+    except ImportError:
+        return JSONResponse(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            content={"status": "error", "message": "Variant detection module not available."}
+        )
+
+    try:
+        contents = file.file.read()
+        if not contents or len(contents) == 0:
+            return JSONResponse(status_code=400, content={"status": "error", "message": "File is empty."})
+        
+        df = pd.read_csv(io.BytesIO(contents))
+        df.columns = [c.strip().lower() for c in df.columns]
+        
+        if "sku" not in df.columns or "name" not in df.columns:
+            return JSONResponse(status_code=400, content={"status": "error", "message": "CSV must contain 'sku' and 'name' columns."})
+            
+        product_list = []
+        for _, r in df.iterrows():
+            sku_val = str(r.get("sku", "")).strip()
+            name_val = str(r.get("name", "")).strip()
+            if sku_val and sku_val != "nan":
+                product_list.append({"sku": sku_val, "name": name_val})
+                
+        detection = detect_variants(product_list)
+        
+        # Serialize result
+        result = {
+            "detected_variants": [
+                {
+                    "parent_name": group.parent_name,
+                    "parent_id": group.parent_product_id,
+                    "variants": [
+                        {
+                            "sku": v.sku,
+                            "name": v.original_name,
+                            "color": v.color,
+                            "size": v.size
+                        } for v in group.variants
+                    ],
+                    "detected_sizes": group.detected_sizes,
+                    "detected_colors": group.detected_colors
+                } for group in detection.variant_groups
+            ],
+            "unmatched_products": detection.unmatched_products,
+            "total_products": detection.total_products,
+            "total_variants_detected": detection.total_variants_detected,
+            "detection_confidence": detection.detection_confidence
+        }
+        
+        return JSONResponse(status_code=200, content=result)
+        
+    except Exception as e:
+        logger.error(f"Preview Upload Error: {e}", exc_info=e)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"status": "error", "message": f"Failed to parse CSV preview: {str(e)}"}
+        )
+
 
 @router.get("/dashboard")
 def get_inventory_dashboard(

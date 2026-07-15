@@ -151,9 +151,11 @@ async def daily_brief(
                     "why": f"Stockout predicted in {item.get('days_until_stockout', 0)} days.",
                     "impact": f"₹{item.get('revenue_at_risk', 0):,.0f} revenue at risk.",
                     "action": f"Order {item.get('reorder_quantity', 0)} units today.",
-                    "size_run": item.get("size_distribution"),
+                    "size_run": item.get("sales_by_size") or item.get("size_distribution"),
                     "reasoning": item.get("reasoning", []),
-                    "trace_data": item.get("trace_data")
+                    "trace_data": item.get("trace_data"),
+                    "confidence_label": item.get("confidence_label"),
+                    "data_quality_warnings": item.get("data_quality_warnings", [])
                 })
         
         # 2. Map Capital Risks (Dead Stock / Low Margin)
@@ -164,9 +166,11 @@ async def daily_brief(
                     "why": f"Sell Through {item.get('sell_through_rate', 0)}%",
                     "impact": f"₹{item.get('working_capital_locked', 0):,.0f} trapped in inventory.",
                     "action": "Apply 20% markdown.",
-                    "size_run": item.get("size_distribution"),
+                    "size_run": item.get("sales_by_size") or item.get("size_distribution"),
                     "reasoning": item.get("reasoning", []),
-                    "trace_data": item.get("trace_data")
+                    "trace_data": item.get("trace_data"),
+                    "confidence_label": item.get("confidence_label"),
+                    "data_quality_warnings": item.get("data_quality_warnings", [])
                 })
 
         # 3. Map Opportunities (High Sell Through, Price adjustments that increase profit)
@@ -177,9 +181,11 @@ async def daily_brief(
                     "why": f"Sell Through {item.get('sell_through_rate', 0)}%",
                     "impact": "Potential revenue expansion.",
                     "action": "Prioritize replenishment.",
-                    "size_run": item.get("size_distribution"),
+                    "size_run": item.get("sales_by_size") or item.get("size_distribution"),
                     "reasoning": item.get("reasoning", []),
-                    "trace_data": item.get("trace_data")
+                    "trace_data": item.get("trace_data"),
+                    "confidence_label": item.get("confidence_label"),
+                    "data_quality_warnings": item.get("data_quality_warnings", [])
                 })
                 
         for rec in pricing_analysis.get("recommendations", []):

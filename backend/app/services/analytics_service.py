@@ -260,8 +260,14 @@ class AnalyticsService:
                     "safety_stock": 0,
                     "reorder_point": 0,
                     "eoq_adjustment": 0,
-                    "revenue_at_risk": 0.0
+                    "revenue_at_risk": 0.0,
+                    "unit_cost": product.unit_cost or 20.0,
+                    "selling_price": product.selling_price or 50.0,
+                    "avg_daily_sales": avg_daily_sales
                 }
+                
+                data_quality_warnings = ["Fallback triggered: Missing data for full orchestration."]
+                confidence_label = "Low (50%)"
             else:
                 opt_out = pipeline_res.get("engine_outputs", {}).get("optimization_engine", {})
                 safety_stock = opt_out.get("data", {}).get("safety_stock", int(avg_daily_sales * item.lead_time_days * 0.5))
@@ -311,10 +317,21 @@ class AnalyticsService:
                     "safety_stock": int(safety_stock),
                     "reorder_point": int(reorder_point),
                     "eoq_adjustment": int(reorder_qty),
-                    "revenue_at_risk": 0.0 # Will be populated later
+                    "revenue_at_risk": 0.0, # Will be populated later
+                    "unit_cost": product.unit_cost or 20.0,
+                    "selling_price": product.selling_price or 50.0,
+                    "avg_daily_sales": avg_daily_sales
                 }
                 
-                confidence_score = pipeline_res.get("confidence_score", 75.0) / 100.0
+                data_quality_warnings = []
+                confidence_score = pipeline_res.get("confidence_score", 75.0)
+                if confidence_score >= 80:
+                    confidence_label = f"High ({int(confidence_score)}%)"
+                elif confidence_score >= 60:
+                    confidence_label = f"Medium ({int(confidence_score)}%)"
+                else:
+                    confidence_label = f"Low ({int(confidence_score)}%)"
+                    data_quality_warnings.append("Low confidence forecast")
                 reasoning = pipeline_res.get("reasoning", [])
                 signals = pipeline_res.get("supporting_signals", [])
                 
@@ -330,6 +347,10 @@ class AnalyticsService:
                     if msg not in reasoning:
                         reasoning.append(msg)
                     signals.append("Missing COGS Data")
+                    data_quality_warnings.append("Missing COGS Data")
+                    
+                if not sales_qty_map.get(product.id):
+                    data_quality_warnings.append("No historical sales data")
                 
                 # Pull Phase 2 Prioritization metrics
                 priority_score = pipeline_res.get("priority_score", 50)
@@ -373,6 +394,8 @@ class AnalyticsService:
                 "sku": sku,
                 "name": product.name,
                 "category": product.category,
+                "size": getattr(product, 'size', None),
+                "color": getattr(product, 'color', None),
                 "stock_on_hand": item.stock_on_hand,
                 "safety_stock": metrics["safety_stock"],
                 "reorder_point": metrics["reorder_point"],
@@ -394,6 +417,8 @@ class AnalyticsService:
                 "working_capital_locked": working_capital_locked,
                 
                 "trace_data": trace_data,
+                "data_quality_warnings": data_quality_warnings,
+                "confidence_label": confidence_label,
                 
                 "explainability": {
                     "method": "EVE Multi-Engine Orchestrator (Forecast + Optimization + Confidence + Prioritization)",
@@ -474,6 +499,38 @@ class AnalyticsService:
                 
                 if analysis["is_dead_stock"] and not existing["is_dead_stock"]:
                     existing["is_dead_stock"] = True
+            
+            # Track sales by size for the group
+            if analysis.get("size"):
+                if "sales_by_size" not in aggregated_analyses[group_key]:
+                    aggregated_analyses[group_key]["sales_by_size"] = {}
+                
+                # Fetch recent sales for this specific SKU (analysis["sku"])
+                sku_sales = sales_qty_map.get(analysis["sku"], 0)
+                aggregated_analyses[group_key]["sales_by_size"][analysis["size"]] = sku_sales
+                
+        # Perform size curve analysis on aggregated groups
+        try:
+            from app.fashion.size_curve import analyze_size_curve_deviation
+            for group_key, existing in aggregated_analyses.items():
+                if "sales_by_size" in existing and existing["sales_by_size"]:
+                    # Assume equal distribution for current curve if unknown, or infer from current inventory
+                    sales_by_size = existing["sales_by_size"]
+                    total = sum(sales_by_size.values()) or 1
+                    current_curve = {size: count/total for size, count in sales_by_size.items()}
+                    
+                    size_analysis = analyze_size_curve_deviation(
+                        current_curve=current_curve,
+                        sales_by_size=sales_by_size
+                    )
+                    
+                    if "trace_data" in existing:
+                        existing["trace_data"]["size_curve_analysis"] = size_analysis.get("recommended_curve", {})
+                        
+                        if size_analysis.get("deviation_detected"):
+                            existing["explainability"]["factors"].insert(0, f"Size Curve Deviation Detected: {size_analysis.get('reasons')}")
+        except ImportError:
+            logger.warning("Fashion intelligence module not available, skipping size curve analysis.")
                     
         sku_analyses = list(aggregated_analyses.values())
         # --------------------------------

@@ -106,14 +106,23 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
         ("DD-DEAD-104", "Fringe Denim Skirt", 22.0, 26.0, 500, 30, "VendorX", "Denim")
     ]
     
-    # Standard items
+    # Standard items (Apparel Variants)
     standard = []
-    for i in range(1, 5):
-        sku = f"DD-STD-00{i}"
-        unit_cost = round(random.uniform(15.0, 25.0), 2)
-        selling_price = round(unit_cost / 0.75, 2) # low margin ~25%
-        stock = random.randint(30, 80)
-        standard.append((sku, f"Standard Denim Jacket {i}", unit_cost, selling_price, stock, 30, "Standard Mills", "Denim"))
+    
+    # Variant Group 1: Summer Shirt
+    standard.append(("SS-WHT-S", "Summer Shirt - White / S", 12.0, 35.0, 20, 15, "Standard Mills", "Tops"))
+    standard.append(("SS-WHT-M", "Summer Shirt - White / M", 12.0, 35.0, 45, 15, "Standard Mills", "Tops"))
+    standard.append(("SS-WHT-L", "Summer Shirt - White / L", 12.0, 35.0, 10, 15, "Standard Mills", "Tops"))
+    
+    # Variant Group 2: Basic Chinos
+    standard.append(("BC-KHK-30", "Basic Chinos - Khaki / 30", 18.0, 55.0, 15, 20, "Standard Mills", "Bottoms"))
+    standard.append(("BC-KHK-32", "Basic Chinos - Khaki / 32", 18.0, 55.0, 40, 20, "Standard Mills", "Bottoms"))
+    standard.append(("BC-KHK-34", "Basic Chinos - Khaki / 34", 18.0, 55.0, 35, 20, "Standard Mills", "Bottoms"))
+    standard.append(("BC-KHK-36", "Basic Chinos - Khaki / 36", 18.0, 55.0, 5, 20, "Standard Mills", "Bottoms"))
+    
+    # Variant Group 3: Outerwear
+    standard.append(("WJ-BLK-M", "Winter Jacket - Black / M", 45.0, 120.0, 8, 30, "Outerwear Co", "Outerwear"))
+    standard.append(("WJ-BLK-L", "Winter Jacket - Black / L", 45.0, 120.0, 12, 30, "Outerwear Co", "Outerwear"))
 
     # Extra D2C items to eliminate catalog disconnects
     extra_items = [
@@ -145,8 +154,8 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
             # Select item dynamically by SKU prefixes/values instead of brittle index positions
             choices = []
             
-            # Standard items
-            std_choices = [c for c in costs if c["sku"].startswith("DD-STD-")]
+            # Standard items and apparel variants
+            std_choices = [c for c in costs if c["sku"].startswith("DD-STD-") or c["sku"].startswith("SS-") or c["sku"].startswith("BC-") or c["sku"].startswith("WJ-")]
             choices.extend(std_choices)
             
             # TSHIRT-CLASSIC also sells regularly (finished garment)
