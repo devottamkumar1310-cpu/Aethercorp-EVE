@@ -25,7 +25,7 @@ export default function LandingPage() {
       {/* Navbar */}
       <header className="w-full bg-[#F7F7F5] dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-800 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
+          <div className="h-8 w-8 bg-[#0f172a] rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm">
             EVE
           </div>
           <h1 className="text-lg sm:text-xl font-bold text-[#111111] dark:text-white tracking-tight">
@@ -35,16 +35,15 @@ export default function LandingPage() {
         
         {/* Desktop Navbar Links */}
         <div className="hidden md:flex items-center gap-6">
-          <Link href="/pricing" className="text-sm font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-indigo-650 dark:hover:text-indigo-400 transition-colors">
+          <Link href="/pricing" className="text-sm font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-[#0f172a] dark:hover:text-white transition-colors">
             Pricing
           </Link>
-          <Link href="/login" className="text-sm font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-indigo-650 dark:hover:text-indigo-400 transition-colors">
+          <Link href="/login" className="text-sm font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-[#0f172a] dark:hover:text-white transition-colors">
             Sign In
           </Link>
           <Link 
             href="/signup" 
-            className="text-sm font-semibold bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
-            style={{ color: '#ffffff' }}
+            className="text-sm font-semibold bg-[#0f172a] hover:bg-[#1e293b] px-4 py-2 rounded-lg transition-all shadow-md hover:-translate-y-0.5 text-white"
           >
             Get Started
           </Link>
@@ -53,7 +52,7 @@ export default function LandingPage() {
         {/* Mobile Hamburger Button */}
         <button 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-[#4B5563] dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none"
+          className="md:hidden p-2 text-[#4B5563] dark:text-zinc-300 hover:text-[#0f172a] focus:outline-none"
           aria-label="Toggle mobile menu"
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -65,21 +64,21 @@ export default function LandingPage() {
             <Link 
               href="/pricing" 
               onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
+              className="text-base font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-[#0f172a] transition-colors py-1"
             >
               Pricing
             </Link>
             <Link 
               href="/login" 
               onClick={() => setMobileMenuOpen(false)}
-              className="text-base font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors py-1"
+              className="text-base font-semibold text-[#4B5563] dark:text-zinc-300 hover:text-[#0f172a] transition-colors py-1"
             >
               Sign In
             </Link>
             <Link 
               href="/signup" 
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center text-sm font-semibold bg-indigo-600 py-3 rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 text-white"
+              className="w-full text-center text-sm font-semibold bg-[#0f172a] py-3 rounded-lg hover:bg-[#1e293b] transition-all shadow-md text-white"
             >
               Get Started
             </Link>
@@ -90,11 +89,11 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-12 sm:pt-20 sm:pb-16 flex flex-col items-center justify-center text-center px-4 sm:px-6">
         <div className="max-w-4xl space-y-6 sm:space-y-8 relative z-10">
-          <div className="inline-flex items-center rounded-full border border-[#E5E7EB] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3 py-1 text-xs sm:text-sm text-[#4B5563] dark:text-zinc-300 shadow-sm">
-            <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
+          <div className="inline-flex items-center rounded-full border border-[#E5E7EB] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-1 text-xs sm:text-sm text-[#4B5563] dark:text-zinc-300 shadow-sm font-medium">
+            <Sparkles className="mr-2 h-4 w-4 text-[#0f172a] dark:text-indigo-400" />
             Inventory Forecasting & Planning Built for Ecommerce Founders, D2C & Apparel Brands
           </div>
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-[#111111] dark:text-white leading-tight opacity-1">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-bold tracking-tight text-[#111111] dark:text-white leading-tight opacity-1">
             Stop Guessing. <br />
             <span className="text-[#111111] dark:text-white opacity-1">Start Forecasting.</span>
           </h1>
@@ -104,14 +103,14 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md mx-auto sm:max-w-none">
             <Link 
               href="/signup" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white bg-[#0f172a] hover:bg-[#1e293b] border border-transparent rounded-lg transition-all shadow-md hover:-translate-y-0.5"
             >
               Analyze My Inventory
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <Link 
               href="/demo" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-[#4B5563] dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:-translate-y-0.5"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-[#4B5563] dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-805 transition-all hover:-translate-y-0.5"
             >
               View Example Insights
             </Link>
@@ -127,7 +126,7 @@ export default function LandingPage() {
               <span className="w-3 h-3 rounded-full bg-red-500" />
               <span className="w-3 h-3 rounded-full bg-yellow-500" />
               <span className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="text-xs text-[#6B7280] dark:text-zinc-550 font-mono ml-2">EVE Dashboard Workspace</span>
+              <span className="text-xs text-[#6B7280] dark:text-zinc-500 font-mono ml-2">EVE Dashboard Workspace</span>
             </div>
             <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 uppercase tracking-wider">
               <Activity size={12} className="animate-pulse" /> Live Analysis
@@ -155,14 +154,14 @@ export default function LandingPage() {
                 <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
                 <div className="space-y-0.5">
                   <h4 className="text-xs font-bold text-amber-800 dark:text-amber-300">2 SKU Bestsellers at Risk</h4>
-                  <p className="text-[10px] text-amber-750 dark:text-amber-400/80">Classic Cotton Tee (Black/M, L) will run out in 5 days.</p>
+                  <p className="text-[10px] text-[#4B5563] dark:text-[#a1a1aa] font-medium">Classic Cotton Tee (Black/M, L) will run out in 5 days.</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5 text-indigo-700 bg-indigo-50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-250 dark:border-indigo-900/40">
                 <ShieldCheck size={16} className="mt-0.5 flex-shrink-0" />
                 <div className="space-y-0.5">
                   <h4 className="text-xs font-bold text-indigo-800 dark:text-indigo-300">Trapped Capital Recovered</h4>
-                  <p className="text-[10px] text-indigo-750 dark:text-indigo-400/80">$14,200 in excess Cargo Jogger stock flagged for promo.</p>
+                  <p className="text-[10px] text-[#4B5563] dark:text-[#a1a1aa] font-medium">$14,200 in excess Cargo Jogger stock flagged for promo.</p>
                 </div>
               </div>
             </div>
@@ -196,7 +195,7 @@ export default function LandingPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs min-w-[500px]">
                 <thead>
-                  <tr className="border-b border-[#E5E7EB] dark:border-zinc-800 text-[#4B5563] dark:text-zinc-450 font-medium bg-slate-50/10">
+                  <tr className="border-b border-[#E5E7EB] dark:border-zinc-800 text-[#4B5563] dark:text-zinc-400 font-medium">
                     <th className="px-5 py-3">Product SKU</th>
                     <th className="px-5 py-3 text-right">Current Stock</th>
                     <th className="px-5 py-3 text-right">Sales Velocity</th>
@@ -237,7 +236,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="space-y-3 p-2 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl shadow-sm p-5">
+            <div className="bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl shadow-sm p-6 space-y-4">
               <div className="h-10 w-10 bg-red-500/10 border border-red-500/20 text-red-600 rounded-lg flex items-center justify-center">
                 <AlertTriangle size={20} />
               </div>
@@ -247,7 +246,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="space-y-3 p-2 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl shadow-sm p-5">
+            <div className="bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl shadow-sm p-6 space-y-4">
               <div className="h-10 w-10 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-lg flex items-center justify-center">
                 <DollarSign size={20} />
               </div>
@@ -257,8 +256,8 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="space-y-3 p-2 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl shadow-sm p-5">
-              <div className="h-10 w-10 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 rounded-lg flex items-center justify-center">
+            <div className="bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl shadow-sm p-6 space-y-4">
+              <div className="h-10 w-10 bg-[#0f172a]/10 border border-[#0f172a]/20 text-[#0f172a] rounded-lg flex items-center justify-center">
                 <Package size={20} />
               </div>
               <h3 className="text-base font-bold text-[#111111] dark:text-white">Spreadsheet Inaccuracy</h3>
@@ -322,9 +321,9 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8 relative">
             {/* Step 1 */}
-            <div className="space-y-3 p-4 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl relative shadow-sm">
-              <span className="absolute top-4 right-4 text-xs font-mono text-indigo-650 dark:text-indigo-400 font-bold">STEP 01</span>
-              <div className="h-8 w-8 bg-indigo-500/10 text-indigo-600 rounded-md flex items-center justify-center">
+            <div className="space-y-3 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl relative shadow-sm p-6">
+              <span className="absolute top-4 right-4 text-xs font-mono text-[#0f172a] dark:text-indigo-400 font-bold">STEP 01</span>
+              <div className="h-8 w-8 bg-[#0f172a]/10 text-[#0f172a] rounded-md flex items-center justify-center">
                 <Upload size={16} />
               </div>
               <h3 className="text-sm font-bold text-[#111111] dark:text-white">Upload Data</h3>
@@ -334,9 +333,9 @@ export default function LandingPage() {
             </div>
 
             {/* Step 2 */}
-            <div className="space-y-3 p-4 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl relative shadow-sm">
-              <span className="absolute top-4 right-4 text-xs font-mono text-indigo-650 dark:text-indigo-400 font-bold">STEP 02</span>
-              <div className="h-8 w-8 bg-indigo-500/10 text-indigo-600 rounded-md flex items-center justify-center">
+            <div className="space-y-3 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl relative shadow-sm p-6">
+              <span className="absolute top-4 right-4 text-xs font-mono text-[#0f172a] dark:text-indigo-400 font-bold">STEP 02</span>
+              <div className="h-8 w-8 bg-[#0f172a]/10 text-[#0f172a] rounded-md flex items-center justify-center">
                 <Activity size={16} />
               </div>
               <h3 className="text-sm font-bold text-[#111111] dark:text-white">Scan Health</h3>
@@ -346,9 +345,9 @@ export default function LandingPage() {
             </div>
 
             {/* Step 3 */}
-            <div className="space-y-3 p-4 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl relative shadow-sm">
-              <span className="absolute top-4 right-4 text-xs font-mono text-indigo-650 dark:text-indigo-400 font-bold">STEP 03</span>
-              <div className="h-8 w-8 bg-indigo-500/10 text-indigo-600 rounded-md flex items-center justify-center">
+            <div className="space-y-3 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-800 rounded-xl relative shadow-sm p-6">
+              <span className="absolute top-4 right-4 text-xs font-mono text-[#0f172a] dark:text-indigo-400 font-bold">STEP 03</span>
+              <div className="h-8 w-8 bg-[#0f172a]/10 text-[#0f172a] rounded-md flex items-center justify-center">
                 <CheckCircle size={16} />
               </div>
               <h3 className="text-sm font-bold text-[#111111] dark:text-white">Reorder Recommendations</h3>
@@ -371,14 +370,14 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md mx-auto sm:max-w-none">
           <Link 
             href="/signup" 
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-bold text-white bg-[#0f172a] hover:bg-[#1e293b] border border-transparent rounded-lg transition-all shadow-md hover:-translate-y-0.5 group"
           >
             Get Started
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
           <Link 
             href="/demo" 
-            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-medium text-[#4B5563] dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all hover:-translate-y-0.5"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 text-base font-medium text-[#4B5563] dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-700 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all hover:-translate-y-0.5"
           >
             View Example Insights
           </Link>
