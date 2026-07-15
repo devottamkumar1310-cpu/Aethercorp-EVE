@@ -86,12 +86,62 @@ class ForecastEngine(BaseEngine):
                 
                 if product:
                     # Query sales records ordered by date
-                    records = context.db.query(SalesRecord.quantity).filter(
+                    records = context.db.query(SalesRecord.date, SalesRecord.quantity).filter(
                         SalesRecord.organization_id == org_id,
                         SalesRecord.product_id == product.id
                     ).order_by(SalesRecord.date.asc()).all()
                     
-                    sales_series = [float(r[0]) for r in records if r[0] is not None]
+                    # 1. Aggregate by date and floor at 0 (Returns Handling)
+                    daily_sales = {}
+                    for date_val, qty in records:
+                        if qty is None: continue
+                        dt_str = date_val.strftime("%Y-%m-%d") if hasattr(date_val, "strftime") else str(date_val)
+                        daily_sales[dt_str] = daily_sales.get(dt_str, 0.0) + float(qty)
+                    
+                    sorted_dates = sorted(daily_sales.keys())
+                    raw_series = [max(0.0, daily_sales[dt]) for dt in sorted_dates]
+                    
+                    # 2. IQR Outlier Smoothing with Viral Trend Bypass
+                    baseline_demand = 0.0
+                    trend_duration_days = 0
+                    if len(raw_series) >= 4:
+                        sorted_vals = sorted(raw_series)
+                        q1 = sorted_vals[len(sorted_vals) // 4]
+                        q3 = sorted_vals[(len(sorted_vals) * 3) // 4]
+                        iqr = q3 - q1
+                        upper_fence = q3 + 1.5 * iqr
+                        
+                        baseline_demand = float(q3)
+                        
+                        # Calculate active trend at the end of the series
+                        n_len = len(raw_series)
+                        active_trend_days = 0
+                        for i in range(n_len - 1, -1, -1):
+                            if raw_series[i] > upper_fence:
+                                active_trend_days += 1
+                            else:
+                                break
+                        trend_duration_days = active_trend_days if active_trend_days >= 2 else 0
+                        
+                        sales_series = []
+                        for i, val in enumerate(raw_series):
+                            if val > upper_fence:
+                                # Check adjacent chronological days for sustained trend
+                                prev_is_high = (i > 0 and raw_series[i-1] > upper_fence)
+                                next_is_high = (i < n_len - 1 and raw_series[i+1] > upper_fence)
+                                
+                                if prev_is_high or next_is_high:
+                                    # It's part of a consecutive trend (viral/seasonal), DO NOT CAP
+                                    sales_series.append(val)
+                                else:
+                                    # Isolated wholesale spike, CAP IT
+                                    sales_series.append(upper_fence)
+                            else:
+                                sales_series.append(val)
+                    else:
+                        sales_series = raw_series
+                        baseline_demand = context.avg_daily_sales or 0.0
+                        trend_duration_days = 0
 
             # 2. Fallback to simulated data if database series is insufficient
             if not sales_series:
@@ -130,7 +180,9 @@ class ForecastEngine(BaseEngine):
                 "zeros_ratio": round(zeros_ratio, 2),
                 "mean_demand": round(sum(sales_series) / n, 2) if n > 0 else 0.0,
                 "max_demand": max(sales_series) if sales_series else 0.0,
-                "min_demand": min(sales_series) if sales_series else 0.0
+                "min_demand": min(sales_series) if sales_series else 0.0,
+                "baseline_demand": baseline_demand if 'baseline_demand' in locals() else (context.avg_daily_sales or 0.0),
+                "trend_duration_days": trend_duration_days if 'trend_duration_days' in locals() else 0
             }
 
             return EngineOutput(

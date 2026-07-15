@@ -56,33 +56,32 @@ export interface BusinessGoalResponse {
   created_at: string;
 }
 
+export interface TraceData {
+  current_inventory: number;
+  historical_demand: number[];
+  forecast_demand: number[];
+  trend_confidence: number;
+  lead_time: number;
+  safety_stock: number;
+  reorder_point: number;
+  eoq_adjustment: number;
+  revenue_at_risk: number;
+}
+
+export interface PriorityItem {
+  title: string;
+  why: string;
+  impact: string;
+  action: string;
+  size_run?: Record<string, number>;
+  reasoning?: string[];
+  trace_data?: TraceData;
+}
+
 export interface DailyBriefResponse {
-  health_score: number;
-  health_status: string;
-  risks: Array<{
-    id?: string;
-    description: string;
-    impact_level?: 'high' | 'medium' | 'low' | string;
-    category?: string;
-    [key: string]: any;
-  }>;
-  opportunities: Array<{
-    id?: string;
-    description: string;
-    value_potential?: number;
-    impact_level?: 'high' | 'medium' | 'low' | string;
-    category?: string;
-    [key: string]: any;
-  }>;
-  summary: string;
-  recommendations: string[];
-  urgent_actions?: string[];
-  recent_activity?: Array<{
-    id: string;
-    action: string;
-    description?: string;
-    created_at?: string;
-  }>;
+  revenue_risks: PriorityItem[];
+  capital_risks: PriorityItem[];
+  opportunities: PriorityItem[];
 }
 
 export interface AIRecommendationResponse {

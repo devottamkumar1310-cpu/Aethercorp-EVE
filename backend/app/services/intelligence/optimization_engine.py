@@ -22,9 +22,22 @@ class OptimizationEngine(BaseEngine):
             lead_time = context.lead_time_days
             stock = context.stock_on_hand
             
+            # Trend Confidence Scaling
+            trend_duration_days = context.parameters.get("trend_duration_days", 0)
+            baseline_demand = context.parameters.get("baseline_demand", avg_sales)
+            
+            trend_confidence = 1.0
+            adjusted_forecast = avg_sales
+            if trend_duration_days > 0:
+                trend_confidence = min(1.0, trend_duration_days / 14.0)
+                adjusted_forecast = (baseline_demand * (1.0 - trend_confidence)) + (avg_sales * trend_confidence)
+            
+            effective_avg_sales = adjusted_forecast
+            
             # 1. Estimate demand standard deviation
             sales_std_dev = 0.0
             unit_cost = 20.0
+            size_distribution = None
             
             if "sales_series_override" in context.parameters:
                 sales_series = [float(x) for x in context.parameters["sales_series_override"]]
@@ -47,6 +60,11 @@ class OptimizationEngine(BaseEngine):
                 if product:
                     unit_cost = product.unit_cost if product.unit_cost > 0 else 20.0
                     
+                    if product.size_curve and isinstance(product.size_curve, dict):
+                        total_ratio = sum(product.size_curve.values())
+                        if total_ratio > 0:
+                            size_distribution = {k: v / total_ratio for k, v in product.size_curve.items()}
+                    
                     # Compute actual std_dev
                     records = context.db.query(SalesRecord.quantity).filter(
                         SalesRecord.organization_id == org_id,
@@ -61,7 +79,7 @@ class OptimizationEngine(BaseEngine):
 
             # 2. Safety Stock = Z * std_dev * sqrt(lead_time)
             # Service level factor Z = 1.65 (95% service level)
-            lead_time_demand = avg_sales * lead_time
+            lead_time_demand = effective_avg_sales * lead_time
             if sales_std_dev <= 0.001:
                 # Fallback: 50% of lead time demand
                 safety_stock = math.ceil(lead_time_demand * 0.5)
@@ -74,7 +92,7 @@ class OptimizationEngine(BaseEngine):
             # 4. Economic Order Quantity (EOQ)
             # EOQ = sqrt(2 * D * S / H)
             # D = annual demand, S = setup cost ($50), H = holding cost (20% of unit cost)
-            annual_demand = avg_sales * 365.0
+            annual_demand = effective_avg_sales * 365.0
             setup_cost = 50.0
             holding_cost = max(1.0, unit_cost * 0.20)
             
@@ -84,16 +102,22 @@ class OptimizationEngine(BaseEngine):
                 eoq = 0
                 
             # Establish operational minimum ordering levels
-            reorder_quantity = max(10, eoq) if avg_sales > 0 else 0
+            reorder_quantity = max(10, eoq) if effective_avg_sales > 0 else 0
+
+            output_data = {
+                "reorder_quantity": float(reorder_quantity),
+                "safety_stock": float(safety_stock),
+                "reorder_point": float(reorder_point),
+                "trend_confidence": float(trend_confidence),
+                "adjusted_forecast": float(adjusted_forecast)
+            }
+            if size_distribution:
+                output_data["size_distribution"] = {k: math.ceil(reorder_quantity * v) for k, v in size_distribution.items()}
 
             return EngineOutput(
                 engine_name=self.name,
                 success=True,
-                data={
-                    "reorder_quantity": float(reorder_quantity),
-                    "safety_stock": float(safety_stock),
-                    "reorder_point": float(reorder_point)
-                },
+                data=output_data,
                 confidence_weight=0.95
             )
             

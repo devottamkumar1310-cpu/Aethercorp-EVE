@@ -26,6 +26,9 @@ class IntelligenceOrchestrator:
                 if output.success:
                     if name == "forecast_engine":
                         context.parameters["forecast_value"] = output.data.get("forecast_value")
+                        metrics = output.data.get("supporting_metrics", {})
+                        context.parameters["trend_duration_days"] = metrics.get("trend_duration_days", 0)
+                        context.parameters["baseline_demand"] = metrics.get("baseline_demand", 0.0)
                     elif name == "optimization_engine":
                         context.parameters["reorder_point"] = output.data.get("reorder_point")
                         context.parameters["safety_stock"] = output.data.get("safety_stock")

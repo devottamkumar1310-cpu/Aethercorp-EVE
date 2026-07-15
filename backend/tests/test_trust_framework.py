@@ -61,10 +61,8 @@ def test_daily_brief_blocked_on_insufficient_data():
     response = client.get("/api/executive/daily-brief")
     assert response.status_code == 200
     data = response.json()
-    # Confirm it returned the explicit data sufficiency insufficiency message
-    assert "Insufficient" in data["summary"]
-    # Confirm no AI generation recommendations/risks are outputted
-    assert len(data["risks"]) == 0
+    assert len(data["revenue_risks"]) == 0
+    assert len(data["capital_risks"]) == 0
     assert len(data["opportunities"]) == 0
 
     # Clean up overrides

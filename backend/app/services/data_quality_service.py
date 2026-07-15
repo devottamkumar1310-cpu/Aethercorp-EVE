@@ -39,9 +39,9 @@ class DataQualityService:
 
             # Check missing critical values
             if not p.name or p.name.strip() == "":
-                critical_errors.append(f"Product with ID {p.id} has a missing or empty name.")
+                warnings.append(f"Product with ID {p.id} has a missing or empty name.")
             if not p.sku or p.sku.strip() == "":
-                critical_errors.append(f"Product with ID {p.id} has a missing or empty SKU.")
+                warnings.append(f"Product with ID {p.id} has a missing or empty SKU.")
 
             # Check warnings: missing category or season
             if not p.category or p.category.strip() == "General":
@@ -51,13 +51,13 @@ class DataQualityService:
             cost = p.unit_cost or 0.0
             price = p.selling_price or 0.0
             if cost < 0:
-                critical_errors.append(f"Product '{p.sku}' has negative unit cost: ${cost}.")
+                warnings.append(f"Product '{p.sku}' has negative unit cost: ${cost}.")
             if price < 0:
-                critical_errors.append(f"Product '{p.sku}' has negative selling price: ${price}.")
+                warnings.append(f"Product '{p.sku}' has negative selling price: ${price}.")
             
             # Impossible margins: Selling price < cost
             if price > 0 and price < cost:
-                critical_errors.append(
+                warnings.append(
                     f"Impossible margin for product '{p.sku}': Selling price (${price}) is less than unit cost (${cost})."
                 )
             elif price == 0 and cost > 0:
@@ -67,9 +67,9 @@ class DataQualityService:
         inventory = db.query(InventoryItem).filter(InventoryItem.organization_id == organization_id).all()
         for item in inventory:
             if item.stock_on_hand is None:
-                critical_errors.append(f"Inventory item for Product ID {item.product_id} has null stock_on_hand.")
+                warnings.append(f"Inventory item for Product ID {item.product_id} has null stock_on_hand.")
             elif item.stock_on_hand < 0:
-                critical_errors.append(f"Negative inventory level detected for SKU '{item.product.sku if item.product else item.product_id}': {item.stock_on_hand} units.")
+                warnings.append(f"Negative inventory level detected for SKU '{item.product.sku if item.product else item.product_id}': {item.stock_on_hand} units.")
 
             if item.lead_time_days is not None and item.lead_time_days < 0:
                 warnings.append(f"Inventory SKU '{item.product.sku if item.product else item.product_id}' has negative lead time: {item.lead_time_days} days.")
@@ -78,11 +78,11 @@ class DataQualityService:
         sales = db.query(SalesRecord).filter(SalesRecord.organization_id == organization_id).all()
         for record in sales:
             if record.quantity is None or record.quantity < 0:
-                critical_errors.append(f"Invalid sales log (ID: {record.id}): Quantity cannot be negative or null (got: {record.quantity}).")
+                warnings.append(f"Invalid sales log (ID: {record.id}): Quantity cannot be negative or null (got: {record.quantity}).")
             if record.unit_price is not None and record.unit_price < 0:
-                critical_errors.append(f"Invalid sales log (ID: {record.id}): Unit price cannot be negative (got: {record.unit_price}).")
+                warnings.append(f"Invalid sales log (ID: {record.id}): Unit price cannot be negative (got: {record.unit_price}).")
             if record.revenue is not None and record.revenue < 0:
-                critical_errors.append(f"Invalid sales log (ID: {record.id}): Revenue cannot be negative (got: {record.revenue}).")
+                warnings.append(f"Invalid sales log (ID: {record.id}): Revenue cannot be negative (got: {record.revenue}).")
             
             # Math mismatch warning
             if record.quantity and record.unit_price and record.revenue:

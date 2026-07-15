@@ -133,178 +133,78 @@ async def daily_brief(
     workspace_id: uuid.UUID = Depends(get_required_workspace_id),
     _: None = Depends(rate_limit(requests=5, window_seconds=60))
 ):
-    from app.services.business_analytics_service import BusinessAnalyticsService
-    from app.orchestration.validator import ExecutiveGovernanceValidator
-    
-    overview = BusinessAnalyticsService.get_overview(db, workspace_id)
-    data_state, sufficiency_msg, available_domains = ExecutiveGovernanceValidator.validate_data_sufficiency(overview)
-    
-    if data_state in ("NO_DATA", "DATA_INSUFFICIENT"):
-        logger.warning(f"Daily Brief blocked due to data sufficiency: {sufficiency_msg}")
-        return DailyBriefResponse(
-            health_score=None,
-            health_status="Insufficient data",
-            risks=[],
-            opportunities=[],
-            summary=sufficiency_msg,
-            recommendations=["Please complete onboarding: Connect data sources or upload CSVs."],
-            urgent_actions=["Upload business data to unlock EVE reasoning."],
-            recent_activity=[]
-        )
-
-    finance_agent = FinanceAgent()
-    operations_agent = OperationsAgent()
-    coo_agent = COOAgent()
+    from app.services.analytics_service import AnalyticsService
     
     try:
-        # Gather health score, risks, and opportunities from unified orchestrator analytics
-        from app.services.analytics_service import AnalyticsService
         inv_analysis = AnalyticsService.get_inventory_analysis(db, workspace_id)
+        pricing_analysis = AnalyticsService.get_pricing_analysis(db, workspace_id)
         
-        health = {
-            "score": float(inv_analysis.get("business_health_score", 80)),
-            "status": "healthy" if inv_analysis.get("business_health_score", 80) >= 80 else "warning",
-            "recommendations": inv_analysis.get("top_actions", [])
-        }
+        revenue_risks = []
+        capital_risks = []
+        opportunities = []
         
-        risks_list = []
-        for r in inv_analysis.get("top_risks", []):
-            risks_list.append({
-                "severity": "high" if r.get("priority", 50) >= 70 else "medium",
-                "title": r.get("title", "Stockout Risk"),
-                "description": f"SKU {r.get('sku')} has priority score {r.get('priority')} and impact of ₹{r.get('impact'):,.0f}."
-            })
-            
-        opps_list = []
-        for o in inv_analysis.get("top_opportunities", []):
-            opps_list.append({
-                "title": "Optimization Opportunity",
-                "description": o.get("description", "")
-            })
-
-        # Compile sub-agent analyses asynchronously
-        finance_result = await finance_agent.analyze(db, workspace_id, "Analyze financial health for daily brief.")
-        operations_result = await operations_agent.analyze(db, workspace_id, "Analyze operational performance for daily brief.")
+        # 1. Map Revenue Risks (Stockouts)
+        for item in inv_analysis.get("items_at_risk", []):
+            if item.get("stockout_risk_score", 0) >= 50 and not item.get("is_dead_stock"):
+                revenue_risks.append({
+                    "title": f"Reorder {item.get('name', item.get('sku'))}",
+                    "why": f"Stockout predicted in {item.get('days_until_stockout', 0)} days.",
+                    "impact": f"₹{item.get('revenue_at_risk', 0):,.0f} revenue at risk.",
+                    "action": f"Order {item.get('reorder_quantity', 0)} units today.",
+                    "size_run": item.get("size_distribution"),
+                    "reasoning": item.get("reasoning", []),
+                    "trace_data": item.get("trace_data")
+                })
         
-        # Run COO master synthesizer
-        coo_result = await coo_agent.analyze(
-            db=db,
-            org_id=workspace_id,
-            question="Generate a daily brief summarizing company operations, risks, and opportunities.",
-            finance_result=finance_result,
-            operations_result=operations_result,
-            health=health
-        )
-        
-        # Save recommendations
-        save_recommendation(db, workspace_id, "coo", coo_result)
-        
-        # Calculate urgent actions
-        urgent_actions = inv_analysis.get("top_actions", [])
-        
-        # Calculate recent activity
-        from app.services.activity_service import ActivityService
-        activities = ActivityService.get_activities(db, workspace_id, limit=5)
-        recent_activity = []
-        for act in activities:
-            recent_activity.append({
-                "id": str(act.id),
-                "action": act.action,
-                "description": act.description,
-                "created_at": (act.created_at.replace(tzinfo=datetime.timezone.utc) if act.created_at.tzinfo is None else act.created_at).isoformat() if act.created_at else None
-            })
-
-        return DailyBriefResponse(
-            health_score=health["score"],
-            health_status=health["status"],
-            risks=risks_list,
-            opportunities=opps_list,
-            summary=coo_result.summary,
-            recommendations=health["recommendations"],
-            urgent_actions=urgent_actions,
-            recent_activity=recent_activity
-        )
-    except Exception as e:
-        err_str = str(e)
-        error_type = "GENERIC_ERROR"
-        status_code = 500
-        
-        if "RESOURCE_EXHAUSTED" in err_str or "429" in err_str:
-            error_type = "RESOURCE_EXHAUSTED"
-            status_code = 429
-        elif "Timeout" in err_str or "timed out" in err_str:
-            error_type = "TIMEOUT"
-            status_code = 504
-        elif "Gemini" in err_str or "API_KEY" in err_str or "API key" in err_str:
-            error_type = "GEMINI_ERROR"
-            status_code = 503
-            
-        import datetime
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        logger.error(
-            f"[AI COO DAILY BRIEF ERROR] workspace_id={workspace_id} user_id={current_user.id} model=gemini-2.5-flash "
-            f"error_type={error_type} timestamp={timestamp} error_msg={err_str}"
-        )
-        
-        # Fallback daily brief compiled deterministically
-        try:
-            logger.info(f"Triggering daily-brief deterministic fallback analysis for workspace {workspace_id}")
-            health = get_health_score(db, workspace_id)
-            risks_data = detect_risks(db, workspace_id)
-            opportunities_data = detect_opportunities(db, workspace_id)
-            
-            risks = risks_data.get("risks", [])
-            opportunities = opportunities_data.get("opportunities", [])
-            recommendations = health.get("recommendations", [])
-            
-            summary = (
-                f"EVE Daily Brief (Fallback Mode): Your current business health score is {health.get('score', 50.0)} ({health.get('status', 'warning')}). "
-                f"Operational metrics have been processed locally. Please review the listed risks and opportunities for active items."
-            )
-            
-            # Fallback urgent actions and activity
-            urgent_actions = []
-            for r in risks:
-                if r.get("impact_level") == "high":
-                    urgent_actions.append(f"Mitigate risk: {r.get('description')}")
-            if not urgent_actions:
-                urgent_actions.append("Verify local warehouse and inventory catalog consistency.")
-                
-            from app.services.activity_service import ActivityService
-            activities = ActivityService.get_activities(db, workspace_id, limit=5)
-            recent_activity = []
-            for act in activities:
-                recent_activity.append({
-                    "id": str(act.id),
-                    "action": act.action,
-                    "description": act.description,
-                    "created_at": (act.created_at.replace(tzinfo=datetime.timezone.utc) if act.created_at.tzinfo is None else act.created_at).isoformat() if act.created_at else None
+        # 2. Map Capital Risks (Dead Stock / Low Margin)
+        for item in inv_analysis.get("dead_stock", []):
+            if len(capital_risks) < 3:
+                capital_risks.append({
+                    "title": f"Liquidate {item.get('name', item.get('sku'))}",
+                    "why": f"Sell Through {item.get('sell_through_rate', 0)}%",
+                    "impact": f"₹{item.get('working_capital_locked', 0):,.0f} trapped in inventory.",
+                    "action": "Apply 20% markdown.",
+                    "size_run": item.get("size_distribution"),
+                    "reasoning": item.get("reasoning", []),
+                    "trace_data": item.get("trace_data")
                 })
 
-            return DailyBriefResponse(
-                health_score=health.get("score"),
-                health_status=health.get("status", "warning"),
-                risks=risks,
-                opportunities=opportunities,
-                summary=summary,
-                recommendations=recommendations,
-                urgent_actions=urgent_actions,
-                recent_activity=recent_activity
-            )
-        except Exception as fallback_err:
-            logger.critical(f"Daily brief fallback failed: {fallback_err}", exc_info=True)
-            detail_msg = "An unexpected error occurred."
-            if error_type == "RESOURCE_EXHAUSTED":
-                detail_msg = "EVE is temporarily busy. Please retry in a few moments."
-            elif error_type == "TIMEOUT":
-                detail_msg = "Request timed out. Please try again."
-            elif error_type == "GEMINI_ERROR":
-                detail_msg = "AI analysis is temporarily unavailable."
+        # 3. Map Opportunities (High Sell Through, Price adjustments that increase profit)
+        for item in inv_analysis.get("opportunities", []):
+            if len(opportunities) < 3:
+                opportunities.append({
+                    "title": f"Double Down On {item.get('name', item.get('sku'))}",
+                    "why": f"Sell Through {item.get('sell_through_rate', 0)}%",
+                    "impact": "Potential revenue expansion.",
+                    "action": "Prioritize replenishment.",
+                    "size_run": item.get("size_distribution"),
+                    "reasoning": item.get("reasoning", []),
+                    "trace_data": item.get("trace_data")
+                })
                 
-            raise HTTPException(
-                status_code=status_code,
-                detail=detail_msg
-            )
+        for rec in pricing_analysis.get("recommendations", []):
+            if rec.get("projected_profit_impact", 0) > 0 and rec.get("price_change_percentage", 0) > 0:
+                opportunities.append({
+                    "title": f"Optimize Price for {rec.get('name', rec.get('sku'))}",
+                    "why": f"High elasticity.",
+                    "impact": f"Potential ₹{rec.get('projected_profit_impact', 0):,.0f} additional profit.",
+                    "action": f"Increase price by {rec.get('price_change_percentage', 0)}%."
+                })
+            
+        # Sort and limit
+        # Sort by impact numerically if possible, else just take top 5
+        revenue_risks = revenue_risks[:5]
+        capital_risks = capital_risks[:5]
+        opportunities = opportunities[:5]
+        
+        return DailyBriefResponse(
+            revenue_risks=revenue_risks,
+            capital_risks=capital_risks,
+            opportunities=opportunities
+        )
+    except Exception as e:
+        logger.error(f"Daily brief error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to compile daily brief.")
 
 @router.get("/goals", response_model=List[BusinessGoalResponse])
 def get_goals(
