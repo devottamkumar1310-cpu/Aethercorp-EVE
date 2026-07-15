@@ -29,7 +29,7 @@ export default function LandingPage() {
             EVE
           </div>
           <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">by AetherCorp</span> <span className="hidden md:inline">| Inventory Intelligence</span>
+            EVE
           </h1>
         </div>
         
@@ -90,24 +90,24 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-12 sm:pt-20 sm:pb-16 flex flex-col items-center justify-center text-center px-4 sm:px-6">
         <div className="max-w-4xl space-y-6 sm:space-y-8 relative z-10">
-          <div className="inline-flex items-center rounded-full border border-slate-200 dark:border-zinc-800 bg-card px-3 py-1 text-xs sm:text-sm text-foreground animate-fade-in">
+          <div className="inline-flex items-center rounded-full border border-slate-200 dark:border-zinc-800 bg-card px-3 py-1 text-xs sm:text-sm text-foreground animate-fade-in font-medium">
             <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
-            Inventory Forecasting & Planning Built for Ecommerce Founders, D2C & Apparel Brands
+            Built for ecommerce founders.
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-foreground leading-tight">
-            Stop Guessing. <br />
-            <span className="hero-headline-accent">Start Forecasting.</span>
+            Stop Stockouts and Dead Inventory <br />
+            <span className="hero-headline-accent">Before They Cost You Money</span>
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-slate-700 dark:text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-            EVE predicts stockouts, identifies dead stock, and generates size-level reorder recommendations so founder-led ecommerce, D2C, and apparel brands can reclaim trapped working capital and scale with confidence.
+            EVE analyzes your inventory and shows what to reorder, what is becoming dead stock, and where cash is trapped.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full max-w-md mx-auto sm:max-w-none">
             <Link 
-              href="/signup" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-medium text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5"
+              href="/demo" 
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-base font-bold text-white bg-indigo-600 border border-transparent rounded-lg hover:bg-indigo-700 transition-all shadow-md shadow-indigo-600/20 hover:-translate-y-0.5 group"
             >
-              Analyze My Inventory
-              <ArrowRight className="ml-2 h-4 w-4" />
+              Try Demo
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               href="/demo" 
@@ -130,7 +130,7 @@ export default function LandingPage() {
               <span className="w-3 h-3 rounded-full bg-red-500" />
               <span className="w-3 h-3 rounded-full bg-yellow-500" />
               <span className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="text-xs text-muted-foreground font-mono ml-2">EVE Dashboard Workspace</span>
+              <span className="text-xs text-muted-foreground font-mono ml-2">NovaWear Dashboard</span>
             </div>
             <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 uppercase tracking-wider">
               <Activity size={12} className="animate-pulse" /> Live Analysis
@@ -157,15 +157,15 @@ export default function LandingPage() {
               <div className="flex items-start gap-2.5 text-amber-600 dark:text-amber-500 bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
                 <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
                 <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold">2 SKU Bestsellers at Risk</h4>
-                  <p className="text-[10px] text-muted-foreground">Classic Cotton Tee (Black/M, L) will run out in 5 days.</p>
+                  <h4 className="text-xs font-bold">Stockout Risk: Cargo Pants</h4>
+                  <p className="text-[10px] text-muted-foreground">11 days remaining. Reorder 300 units.</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5 text-indigo-600 dark:text-indigo-400 bg-indigo-400/5 p-3 rounded-lg border border-indigo-400/20">
                 <ShieldCheck size={16} className="mt-0.5 flex-shrink-0" />
                 <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold">Trapped Capital Recovered</h4>
-                  <p className="text-[10px] text-muted-foreground">$14,200 in excess Cargo Jogger stock flagged for promo.</p>
+                  <h4 className="text-xs font-bold">Dead Stock: Black Oversized Tee</h4>
+                  <p className="text-[10px] text-muted-foreground">120 units unsold. Run promotion, reduce reorder frequency.</p>
                 </div>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" /> Excess Trapped Capital</span>
-                  <span className="font-semibold text-foreground">$18,450</span>
+                  <span className="font-semibold text-foreground">$11,200</span>
                 </div>
               </div>
             </div>
@@ -209,22 +209,40 @@ export default function LandingPage() {
                 </thead>
                 <tbody className="divide-y divide-border text-foreground/90 font-mono">
                   <tr>
-                    <td className="px-5 py-3 font-sans font-medium text-foreground">Classic Cotton Tee - Black / M</td>
-                    <td className="px-5 py-3 text-right">12</td>
-                    <td className="px-5 py-3 text-right">2.4 / day</td>
-                    <td className="px-5 py-3 text-right text-red-500 dark:text-red-400 font-bold">5</td>
-                    <td className="px-5 py-3 text-right text-indigo-600 dark:text-indigo-400 font-bold">150 units</td>
+                    <td className="px-5 py-3 font-sans font-medium text-foreground">Cargo Pants</td>
+                    <td className="px-5 py-3 text-right">45</td>
+                    <td className="px-5 py-3 text-right">4.1 / day</td>
+                    <td className="px-5 py-3 text-right text-red-500 dark:text-red-400 font-bold">11</td>
+                    <td className="px-5 py-3 text-right text-indigo-600 dark:text-indigo-400 font-bold">300 units</td>
                   </tr>
                   <tr>
-                    <td className="px-5 py-3 font-sans font-medium text-foreground">Heavyweight Hoodie - Gray / L</td>
-                    <td className="px-5 py-3 text-right">8</td>
-                    <td className="px-5 py-3 text-right">1.6 / day</td>
-                    <td className="px-5 py-3 text-right text-red-500 dark:text-red-400 font-bold">3</td>
-                    <td className="px-5 py-3 text-right text-indigo-600 dark:text-indigo-400 font-bold">100 units</td>
+                    <td className="px-5 py-3 font-sans font-medium text-foreground">Black Oversized Tee</td>
+                    <td className="px-5 py-3 text-right">120</td>
+                    <td className="px-5 py-3 text-right">0.2 / day</td>
+                    <td className="px-5 py-3 text-right text-amber-500 font-bold">600+</td>
+                    <td className="px-5 py-3 text-right text-muted-foreground font-bold">Run Promo ($2,800 trapped)</td>
                   </tr>
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing / Founding Customer Section */}
+      <section className="px-4 sm:px-6 py-16 sm:py-20 bg-indigo-600 dark:bg-indigo-900 border-y border-indigo-700 dark:border-indigo-800 text-white">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Founding Customer Program</h2>
+          <p className="text-indigo-100 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+            Free for the first 10 ecommerce brands. In exchange for your honest product feedback, you'll get full access to EVE at zero cost while we build the ultimate inventory platform together.
+          </p>
+          <div className="pt-4">
+            <Link 
+              href="/signup" 
+              className="inline-flex items-center justify-center px-8 py-3.5 text-base font-bold text-indigo-600 bg-white border border-transparent rounded-lg hover:bg-slate-50 transition-all shadow-md hover:-translate-y-0.5"
+            >
+              Claim Your Spot
+            </Link>
           </div>
         </div>
       </section>
@@ -276,7 +294,7 @@ export default function LandingPage() {
       {/* Outcome-focused capabilities */}
       <section className="px-4 sm:px-6 py-20 sm:py-24 max-w-5xl mx-auto w-full space-y-16">
         <div className="text-center space-y-3">
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Core Inventory Insights</h2>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Understand Inventory Risk Instantly</h2>
           <p className="text-muted-foreground text-xs sm:text-sm max-w-xl mx-auto">
             Everything you need to predict supply needs and safeguard margins.
           </p>
@@ -284,31 +302,55 @@ export default function LandingPage() {
 
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-card border border-border p-6 rounded-2xl space-y-3">
-            <h3 className="text-base font-bold text-foreground">Predictive Stockout Alerts</h3>
+            <h3 className="text-base font-bold text-foreground">Know What To Reorder</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               EVE monitors variant-level sales velocities daily. The moment a bestseller shows accelerated demand relative to lead times, an alert is triggered outlining unit deficit and reorder deadline.
             </p>
           </div>
 
           <div className="bg-card border border-border p-6 rounded-2xl space-y-3">
-            <h3 className="text-base font-bold text-foreground">Trapped Capital Calculator</h3>
+            <h3 className="text-base font-bold text-foreground">See Trapped Cash</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Scan your warehouses instantly for excess items trapping cash. Get actionable recommendations to defer next PO drafts, run targeted size promos, or renegotiate minimum order quantities.
             </p>
           </div>
 
           <div className="bg-card border border-border p-6 rounded-2xl space-y-3">
-            <h3 className="text-base font-bold text-foreground">Automated Supplier Planning</h3>
+            <h3 className="text-base font-bold text-foreground">Prevent Stockouts</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Upload factory price lists and lead times. EVE matches historical velocity data to automate reorder sheets, aligning recommendations perfectly with supplier shipping requirements.
             </p>
           </div>
 
           <div className="bg-card border border-border p-6 rounded-2xl space-y-3">
-            <h3 className="text-base font-bold text-foreground">Document Intelligence</h3>
+            <h3 className="text-base font-bold text-foreground">Identify Dead Inventory</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Upload supplier invoices or packing lists. EVE extracts products, volumes, and costs, cross-referencing them against your inventory records to verify accuracy.
+              Stop guessing which variants are dragging down profitability. EVE spots dead stock trends early so you can pivot marketing spend before products become unsellable.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Who Is EVE For Section */}
+      <section className="px-4 sm:px-6 py-16 sm:py-20 bg-slate-50/50 dark:bg-zinc-900/20 border-y border-border">
+        <div className="max-w-4xl mx-auto space-y-10 text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">Who Is EVE For?</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 text-sm font-medium text-foreground">
+            <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-center gap-2 shadow-sm">
+              <CheckCircle size={16} className="text-indigo-500" /> Shopify brands
+            </div>
+            <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-center gap-2 shadow-sm">
+              <CheckCircle size={16} className="text-indigo-500" /> D2C apparel brands
+            </div>
+            <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-center gap-2 shadow-sm text-center">
+              <CheckCircle size={16} className="text-indigo-500 flex-shrink-0" /> Founders managing inventory manually
+            </div>
+            <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-center gap-2 shadow-sm">
+              <CheckCircle size={16} className="text-indigo-500" /> Brands with 10+ SKUs
+            </div>
+            <div className="p-4 bg-card border border-border rounded-xl flex items-center justify-center gap-2 shadow-sm">
+              <CheckCircle size={16} className="text-indigo-500" /> Growing ecommerce businesses
+            </div>
           </div>
         </div>
       </section>
@@ -389,9 +431,10 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
-        <div className="text-center md:text-left">
-          &copy; {new Date().getFullYear()} AetherCorp. All rights reserved. EVE is a product of AetherCorp.
+      <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
+        <div className="text-center md:text-left space-y-2">
+          <div>&copy; {new Date().getFullYear()} EVE. All rights reserved. Built for ecommerce founders.</div>
+          <div className="font-medium text-foreground">Questions? support@eveinventory.in</div>
         </div>
         <div className="flex flex-wrap justify-center gap-4">
           <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
