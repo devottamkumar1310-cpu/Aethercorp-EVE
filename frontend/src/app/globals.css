@@ -307,45 +307,65 @@
 }
 
 /* Strong readability and high contrast overrides for Hero Section */
+.landing-page {
+  background-color: #F7F7F5 !important;
+}
+
+[data-theme="executive-dark"] .landing-page,
+[data-theme="dark"] .landing-page {
+  background-color: #08080a !important;
+}
+
 .landing-page .hero-headline, 
 .landing-page .hero-headline span {
   color: #111111 !important; /* Near-black */
+  font-weight: 800 !important;
+  opacity: 1 !important;
 }
 [data-theme="executive-dark"] .landing-page .hero-headline,
 [data-theme="dark"] .landing-page .hero-headline,
 [data-theme="executive-dark"] .landing-page .hero-headline span,
 [data-theme="dark"] .landing-page .hero-headline span {
   color: #ffffff !important; /* Pure white */
+  font-weight: 800 !important;
+  opacity: 1 !important;
 }
 
 .landing-page .hero-subheadline {
-  color: #444444 !important; /* Dark gray */
+  color: #4B5563 !important; /* Dark gray */
+  opacity: 1 !important;
 }
 [data-theme="executive-dark"] .landing-page .hero-subheadline,
 [data-theme="dark"] .landing-page .hero-subheadline {
   color: #cccccc !important; /* Light gray */
+  opacity: 1 !important;
 }
 
 .landing-page .hero-badge-text {
-  color: #666666 !important; /* Visible but secondary */
+  color: #4B5563 !important; /* Visible but secondary */
+  opacity: 1 !important;
 }
 [data-theme="executive-dark"] .landing-page .hero-badge-text,
 [data-theme="dark"] .landing-page .hero-badge-text {
-  color: #999999 !important; /* Darker gray for dark theme */
+  color: #a1a1aa !important;
+  opacity: 1 !important;
 }
 
 /* Ensure the primary navy CTA stands out clearly */
 .landing-page .bg-slate-900 {
   background-color: #0f172a !important; /* Navy */
   color: #ffffff !important;
+  opacity: 1 !important;
 }
 .landing-page .bg-slate-900:hover {
   background-color: #1e293b !important;
+  opacity: 1 !important;
 }
 [data-theme="executive-dark"] .landing-page .bg-white,
 [data-theme="dark"] .landing-page .bg-white {
   background-color: #ffffff !important;
   color: #000000 !important;
+  opacity: 1 !important;
 }
 
 /* Dashboard & other sections primary text contrast rules */
@@ -357,6 +377,7 @@
 .landing-page strong,
 .landing-page .font-bold {
   color: #111111 !important;
+  opacity: 1 !important;
 }
 [data-theme="executive-dark"] .landing-page h2,
 [data-theme="executive-dark"] .landing-page h3,
@@ -373,13 +394,15 @@
 [data-theme="dark"] .landing-page strong,
 [data-theme="dark"] .landing-page .font-bold {
   color: #ffffff !important;
+  opacity: 1 !important;
 }
 
 /* Ensure sub-texts and descriptions are a solid dark gray */
 .landing-page p,
 .landing-page td,
 .landing-page th {
-  color: #444444 !important;
+  color: #4B5563 !important;
+  opacity: 1 !important;
 }
 [data-theme="executive-dark"] .landing-page p,
 [data-theme="executive-dark"] .landing-page td,
@@ -388,4 +411,20 @@
 [data-theme="dark"] .landing-page td,
 [data-theme="dark"] .landing-page th {
   color: #cccccc !important;
+  opacity: 1 !important;
+}
+
+/* Enforce borders */
+.landing-page border-slate-200,
+.landing-page border-slate-100,
+.landing-page border-border {
+  border-color: #E5E7EB !important;
+}
+[data-theme="executive-dark"] .landing-page border-slate-200,
+[data-theme="executive-dark"] .landing-page border-slate-100,
+[data-theme="executive-dark"] .landing-page border-border,
+[data-theme="dark"] .landing-page border-slate-200,
+[data-theme="dark"] .landing-page border-slate-100,
+[data-theme="dark"] .landing-page border-border {
+  border-color: #2e2e33 !important;
 }

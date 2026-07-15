@@ -21,9 +21,9 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="landing-page min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
+    <div className="landing-page min-h-screen bg-[#F7F7F5] dark:bg-zinc-950 flex flex-col font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200">
       {/* Navigation */}
-      <header className="w-full bg-slate-50/80 dark:bg-zinc-950/80 border-b border-slate-200/60 dark:border-zinc-900/60 px-6 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
+      <header className="w-full bg-[#F7F7F5] dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-900 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="h-7 w-7 bg-slate-900 dark:bg-white rounded-md flex items-center justify-center text-white dark:text-black font-extrabold text-sm tracking-tighter">
             E
@@ -35,10 +35,10 @@ export default function LandingPage() {
         
         {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-6">
-          <Link href="/pricing" className="text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <Link href="/pricing" className="text-sm font-medium text-[#4B5563] dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors">
             Pricing
           </Link>
-          <Link href="/login" className="text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <Link href="/login" className="text-sm font-medium text-[#4B5563] dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors">
             Sign In
           </Link>
           <Link 
@@ -52,7 +52,7 @@ export default function LandingPage() {
         {/* Mobile Menu Button */}
         <button 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-1.5 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white focus:outline-none"
+          className="md:hidden p-1.5 text-slate-650 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white focus:outline-none"
           aria-label="Toggle mobile menu"
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -60,18 +60,18 @@ export default function LandingPage() {
 
         {/* Mobile Nav */}
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-slate-50 dark:bg-zinc-950 border-b border-slate-200 dark:border-zinc-900 p-6 flex flex-col gap-4 shadow-xl z-50 md:hidden">
+          <div className="absolute top-full left-0 right-0 bg-[#F7F7F5] dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-900 p-6 flex flex-col gap-4 shadow-xl z-50 md:hidden">
             <Link 
               href="/pricing" 
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-medium text-slate-700 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white py-1"
+              className="text-sm font-medium text-[#4B5563] dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white py-1"
             >
               Pricing
             </Link>
             <Link 
               href="/login" 
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-medium text-slate-700 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white py-1"
+              className="text-sm font-medium text-[#4B5563] dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white py-1"
             >
               Sign In
             </Link>
@@ -88,11 +88,9 @@ export default function LandingPage() {
 
       {/* Hero & Product Preview Wrapper (Connected Layout) */}
       <section className="relative overflow-hidden pt-8 pb-10 md:pt-10 md:pb-16 flex flex-col items-center text-center px-6 max-w-6xl mx-auto w-full">
-        {/* Subtle grid pattern background */}
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
         <div className="max-w-4xl space-y-4 relative z-10">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900/90 px-3.5 py-1 text-xs font-semibold backdrop-blur-sm">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-3.5 py-1 text-xs font-semibold">
             <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
             <span className="hero-badge-text">Inventory intelligence for modern ecommerce founders</span>
           </div>
@@ -102,7 +100,7 @@ export default function LandingPage() {
             <span className="hero-headline text-slate-900 dark:text-white">Start Forecasting.</span>
           </h1>
 
-          <p className="hero-subheadline text-base sm:text-lg md:text-xl text-slate-700 dark:text-zinc-200 max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="hero-subheadline text-base sm:text-lg md:text-xl text-[#4B5563] dark:text-zinc-200 max-w-2xl mx-auto leading-relaxed font-medium">
             EVE predicts stockouts, identifies dead stock, and generates size-level recommendations so you can reclaim trapped cash and scale with absolute confidence.
           </p>
 
@@ -116,7 +114,7 @@ export default function LandingPage() {
             </Link>
             <Link 
               href="/demo" 
-              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-slate-850 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-slate-850 dark:text-zinc-300 bg-white dark:bg-zinc-900 border border-[#E5E7EB] dark:border-zinc-850 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/80 transition-all"
             >
               View Example Insights
             </Link>
@@ -125,9 +123,8 @@ export default function LandingPage() {
 
         {/* Dashboard Preview - Sits Higher, connected visually */}
         <div className="mt-8 md:mt-10 w-full relative group">
-          <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 via-purple-500/5 to-transparent rounded-xl blur-2xl -z-10 opacity-70" />
           
-          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800/85 shadow-2xl overflow-hidden p-4 sm:p-5 md:p-6 space-y-5 text-left">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-[#E5E7EB] dark:border-zinc-800 shadow-2xl overflow-hidden p-4 sm:p-5 md:p-6 space-y-5 text-left">
             {/* Header / Window controls */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800/80 pb-3">
               <div className="flex items-center gap-2">
