@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { 
   ArrowRight, 
@@ -19,6 +19,17 @@ import {
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <div className="landing-page min-h-screen bg-white dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
@@ -62,29 +73,36 @@ export default function LandingPage() {
 
           {/* Mobile Navigation Drawer / Dropdown */}
           {mobileMenuOpen && (
-            <div className="absolute top-full left-0 right-0 premium-mobile-menu border-b border-[#E5E7EB] dark:border-zinc-800 p-6 flex flex-col gap-4 shadow-xl z-50 md:hidden">
-              <Link 
-                href="/pricing" 
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-base font-semibold transition-colors py-1"
-              >
-                Pricing
-              </Link>
-              <Link 
-                href="/login" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-base font-semibold transition-colors py-1"
-              >
-                Sign In
-              </Link>
-              <Link 
-                href="/signup" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center text-sm font-semibold bg-[#4F46E5] hover:bg-[#4F46E5] py-3 rounded-lg transition-all shadow-md text-white"
-              >
-                Get Started
-              </Link>
-            </div>
+              />
+              <div className="absolute top-full left-0 right-0 premium-mobile-menu border-b border-[#E5E7EB] dark:border-zinc-800 p-6 flex flex-col gap-4 shadow-xl z-50 md:hidden">
+                <Link 
+                  href="/pricing" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-semibold transition-colors py-1"
+                >
+                  Pricing
+                </Link>
+                <Link 
+                  href="/login" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-base font-semibold transition-colors py-1"
+                >
+                  Sign In
+                </Link>
+                <Link 
+                  href="/signup" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center text-sm font-semibold bg-[#4F46E5] hover:bg-[#4F46E5] py-3 rounded-lg transition-all shadow-md text-white"
+                >
+                  Get Started
+                </Link>
+              </div>
+            </>
           )}
         </header>
 
@@ -518,7 +536,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8 relative">
             {/* Desktop Connective Flow Line */}
-            <div className="hidden md:block absolute top-[36px] left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/25 to-transparent z-0" />
+            <div className="hidden md:block absolute top-[44px] left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/25 to-transparent z-0" />
 
             {/* Step 1 */}
             <div className="insight-card p-6 space-y-4 relative z-10">
