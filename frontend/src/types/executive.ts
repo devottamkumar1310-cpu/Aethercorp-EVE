@@ -66,6 +66,14 @@ export interface TraceData {
   reorder_point: number;
   eoq_adjustment: number;
   revenue_at_risk: number;
+  
+  // Financials (Sprint 4)
+  unit_cost?: number;
+  selling_price?: number;
+  avg_daily_sales?: number;
+  
+  // Real Size Intelligence (Sprint 2)
+  size_curve_analysis?: Record<string, number>;
 }
 
 export interface PriorityItem {
@@ -76,6 +84,10 @@ export interface PriorityItem {
   size_run?: Record<string, number>;
   reasoning?: string[];
   trace_data?: TraceData;
+  
+  // Founder Trust (Sprint 3)
+  confidence_label?: string;
+  data_quality_warnings?: string[];
 }
 
 export interface DailyBriefResponse {

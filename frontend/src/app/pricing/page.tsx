@@ -28,9 +28,9 @@ export default function PricingPage() {
           <Link href="/" className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
             EVE
           </Link>
-          <Link href="/" className="text-lg sm:text-xl font-semibold text-foreground tracking-tight hover:opacity-90">
-            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">by AetherCorp</span>
-          </Link>
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+            EVE
+          </h1>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           <Link href="/" className="text-sm font-semibold text-slate-700 dark:text-zinc-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
@@ -138,8 +138,9 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
-        <div className="text-center md:text-left">
-          &copy; {new Date().getFullYear()} AetherCorp. All rights reserved. EVE is a product of AetherCorp.
+        <div className="text-center md:text-left space-y-1">
+          <div>&copy; {new Date().getFullYear()} EVE. All rights reserved.</div>
+          <div className="text-muted-foreground">Questions? support@eveinventory.in</div>
         </div>
         <div className="flex flex-wrap justify-center gap-4">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>

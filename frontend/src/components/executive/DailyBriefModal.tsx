@@ -110,7 +110,7 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
           </div>
 
           {/* Variables Table */}
-          <div className="bg-secondary/30 rounded-lg p-3 border border-border/50 text-xs">
+          <div className="bg-secondary/30 rounded-lg p-3 border border-border/50 text-xs flex flex-col justify-between">
             <table className="w-full text-left">
               <tbody className="divide-y divide-border/50">
                 <tr><td className="py-1.5 text-muted-foreground">Current Inventory</td><td className="py-1.5 font-medium text-right text-foreground">{trace.current_inventory}</td></tr>
@@ -121,18 +121,76 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
                 <tr><td className="py-1.5 text-muted-foreground font-semibold">Recommended Order Qty</td><td className="py-1.5 font-bold text-right text-indigo-400">{trace.eoq_adjustment}</td></tr>
               </tbody>
             </table>
+            
+            {/* Sprint 4: Purchase Impact Panel */}
+            {trace.unit_cost && trace.selling_price && trace.eoq_adjustment > 0 && (
+              <div className="mt-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                <h5 className="font-semibold text-emerald-400 mb-2 flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5" /> What If I Order?</h5>
+                <div className="flex justify-between items-center text-xs mb-1">
+                  <span className="text-muted-foreground">Total Cost</span>
+                  <span className="font-medium text-foreground">₹{(trace.eoq_adjustment * trace.unit_cost).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs mb-1">
+                  <span className="text-muted-foreground">Est. Revenue</span>
+                  <span className="font-medium text-foreground">₹{(trace.eoq_adjustment * trace.selling_price).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs border-t border-emerald-500/20 pt-1 mt-1">
+                  <span className="text-emerald-400/80 font-medium">Projected Margin</span>
+                  <span className="font-bold text-emerald-400">₹{(trace.eoq_adjustment * (trace.selling_price - trace.unit_cost)).toLocaleString()}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Sprint 2: Real Size Intelligence Panel */}
+        {trace.size_curve_analysis && Object.keys(trace.size_curve_analysis).length > 0 && (
+          <div className="mt-4 border-t border-border/50 pt-4">
+             <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                Apparel Size Intelligence
+             </h4>
+             <div className="bg-secondary/30 rounded-lg p-3 border border-border/50 flex gap-4 overflow-x-auto">
+               {Object.entries(trace.size_curve_analysis).map(([size, pct]) => (
+                 <div key={size} className="flex flex-col items-center flex-shrink-0">
+                    <div className="h-16 w-8 bg-black/40 rounded-sm relative overflow-hidden flex items-end">
+                       <div className="w-full bg-indigo-500/80" style={{ height: `${pct * 100}%` }} />
+                    </div>
+                    <span className="text-[10px] font-bold mt-1 text-foreground">{size}</span>
+                    <span className="text-[10px] text-muted-foreground">{(pct * 100).toFixed(0)}%</span>
+                 </div>
+               ))}
+               <div className="ml-auto my-auto text-xs text-muted-foreground max-w-[200px] border-l border-border/50 pl-4">
+                 EVE automatically shifted the recommended ratio based on real sales velocity for this specific variant group.
+               </div>
+             </div>
+          </div>
+        )}
       </div>
     );
   };
 
-  const renderPriorityCard = (item: PriorityItem, icon: React.ReactNode, bgClass: string, textClass: string) => (
-    <div key={item.title} className={`p-4 border rounded-xl flex flex-col gap-3 ${bgClass}`}>
-      <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
-        {icon}
-        {item.title}
-      </h3>
+  const renderPriorityCard = (item: PriorityItem, icon: React.ReactNode, bgClass: string, textClass: string) => {
+    let confColor = "text-muted-foreground border-border";
+    if (item.confidence_label?.includes("High")) confColor = "text-emerald-400 border-emerald-500/20 bg-emerald-500/10";
+    if (item.confidence_label?.includes("Medium")) confColor = "text-amber-400 border-amber-500/20 bg-amber-500/10";
+    if (item.confidence_label?.includes("Low")) confColor = "text-rose-400 border-rose-500/20 bg-rose-500/10";
+
+    return (
+      <div key={item.title} className={`p-4 border rounded-xl flex flex-col gap-3 ${bgClass}`}>
+        <div className="flex items-start justify-between">
+          <h3 className={`text-sm font-semibold flex items-center gap-2 ${textClass}`}>
+            {icon}
+            {item.title}
+          </h3>
+          
+          {/* Sprint 3: Confidence Badge */}
+          {item.confidence_label && (
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${confColor}`}>
+              {item.confidence_label} Confidence
+            </span>
+          )}
+        </div>
       <div className="space-y-1.5 text-sm">
         <p><span className="text-muted-foreground font-medium">Why:</span> <span className="text-foreground">{item.why}</span></p>
         <p><span className="text-muted-foreground font-medium">Impact:</span> <span className="text-foreground">{item.impact}</span></p>
@@ -163,6 +221,19 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
           </div>
         )}
         
+        {/* Sprint 3: Data Quality Warnings */}
+        {item.data_quality_warnings && item.data_quality_warnings.length > 0 && (
+          <div className="mt-2 p-2 rounded bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-start gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-1">
+              <span className="font-bold">Data Quality Warning:</span>
+              <ul className="list-disc pl-3">
+                {item.data_quality_warnings.map((w, idx) => <li key={idx}>{w}</li>)}
+              </ul>
+            </div>
+          </div>
+        )}
+        
         {item.trace_data && (
           <div className="mt-2 pt-2 flex justify-end">
             <button 
@@ -178,7 +249,8 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
       
       {expandedExplanation === item.title && item.trace_data && renderTracePanel(item.trace_data)}
     </div>
-  );
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background backdrop-blur-sm animate-in fade-in duration-200">

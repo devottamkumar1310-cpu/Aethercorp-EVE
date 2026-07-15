@@ -86,14 +86,14 @@ export default function PrivacyPolicyPage() {
               <p>
                 If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us at:
               </p>
-              <p className="text-indigo-400">aethercorp.support@gmail.com</p>
+              <p className="text-indigo-400">support@eveinventory.in</p>
             </section>
           </div>
         </div>
       </main>
 
       <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground bg-background">
-        &copy; {new Date().getFullYear()} Aethercorp EVE. All rights reserved.
+        &copy; {new Date().getFullYear()} EVE. All rights reserved.
       </footer>
     </div>
   );

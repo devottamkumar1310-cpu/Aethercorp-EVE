@@ -122,7 +122,7 @@ export default function DocumentHubPage() {
         <div className="flex flex-col gap-0.5">
           <span>Document processing is currently syncing. Please try again in a moment.</span>
           <span className="text-[10px] text-muted-foreground leading-normal">
-            Need help? Contact <a href="mailto:aethercorp.support@gmail.com" className="underline text-indigo-450 hover:text-indigo-350">aethercorp.support@gmail.com</a> or use our <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="underline text-indigo-450 hover:text-indigo-350">Feedback Form</a>.
+            Need help? Contact <a href="mailto:support@eveinventory.in" className="underline text-indigo-450 hover:text-indigo-350">support@eveinventory.in</a> or use our <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="underline text-indigo-450 hover:text-indigo-350">Feedback Form</a>.
           </span>
         </div>,
         { id: toastId, duration: 8000 }

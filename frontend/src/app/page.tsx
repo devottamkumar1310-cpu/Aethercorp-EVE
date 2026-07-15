@@ -29,7 +29,7 @@ export default function LandingPage() {
             EVE
           </div>
           <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">by AetherCorp</span> <span className="hidden md:inline">| Inventory Intelligence</span>
+            EVE <span className="hidden md:inline">| Inventory Intelligence</span>
           </h1>
         </div>
         
@@ -390,8 +390,9 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
-        <div className="text-center md:text-left">
-          &copy; {new Date().getFullYear()} AetherCorp. All rights reserved. EVE is a product of AetherCorp.
+        <div className="text-center md:text-left space-y-1">
+          <div>&copy; {new Date().getFullYear()} EVE. All rights reserved.</div>
+          <div className="text-muted-foreground">Questions? support@eveinventory.in</div>
         </div>
         <div className="flex flex-wrap justify-center gap-4">
           <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>

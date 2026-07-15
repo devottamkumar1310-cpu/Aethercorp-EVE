@@ -269,7 +269,7 @@ export default function SignupPage() {
           Terms of Service
         </Link>
         <span>&bull;</span>
-        <a href="mailto:aethercorp.support@gmail.com" className="hover:text-foreground transition-colors">
+        <a href="mailto:support@eveinventory.in" className="hover:text-foreground transition-colors">
           Contact
         </a>
       </footer>
