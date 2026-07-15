@@ -64,20 +64,20 @@
    ────────────────────────────────────────────────────────────────────────────── */
 
 :root, [data-theme="executive-light"], [data-theme="light"] {
-  /* Default: Premium Executive OS Light Theme */
-  --bg-app: #fafafa;
+  /* Default: Premium Executive OS Light Theme - Avoid pure white page background */
+  --bg-app: hsl(240 20% 98%);
   --bg-card: #ffffff;
   --bg-sidebar: #f4f4f5;
-  --border-accent: #d4d4d8; /* Zinc-300 for clearer borders */
-  --text-primary: #18181b;
-  --text-secondary: #3f3f46; /* Zinc-700 for high-contrast secondary text (6.5:1) */
-  --text-muted: #5b5b63; /* Darker Zinc-600 for compliant muted text (4.5:1) */
-  --accent-color: #18181b;
-  --accent-glow: rgba(24, 24, 27, 0.05);
-  --accent-hover: #27272a;
+  --border-accent: #e4e4e7; /* Cleaner Zinc border */
+  --text-primary: #09090b;
+  --text-secondary: #27272a;
+  --text-muted: #71717a;
+  --accent-color: #09090b;
+  --accent-glow: rgba(9, 9, 11, 0.05);
+  --accent-hover: #18181b;
   --panel-glow: none;
-  --chart-primary: #18181b;
-  --chart-secondary: #5b5b63;
+  --chart-primary: #09090b;
+  --chart-secondary: #71717a;
 
   /* Semantic Variables */
   --background: var(--bg-app);
@@ -88,9 +88,9 @@
   --text-secondary: var(--text-secondary);
   --text-muted: var(--text-muted);
   --success: #10b981;
-  --warning: #d97706; /* Darker warning for better contrast */
+  --warning: #d97706;
   --danger: #ef4444;
-  --info: #2563eb; /* Darker blue for info tags */
+  --info: #2563eb;
 
   /* Tailwind Semantic Mappings */
   --background: var(--bg-app);
@@ -108,17 +108,17 @@
   --muted: #f4f4f5;
   --muted-foreground: var(--text-muted);
   --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --ring: #18181b;
+  --accent-foreground: #09090b;
+  --ring: #09090b;
   --radius: 0.5rem;
   --sidebar: var(--bg-sidebar);
   --sidebar-foreground: var(--text-secondary);
   --sidebar-border: var(--border-accent);
   --sidebar-primary: var(--accent-color);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-ring: #18181b;
+  --sidebar-accent: #e4e4e7;
+  --sidebar-accent-foreground: #09090b;
+  --sidebar-ring: #09090b;
 }
 
 [data-theme="executive-dark"], [data-theme="dark"] {
@@ -369,9 +369,15 @@
 
 .premium-hero-context {
   position: relative;
-  background-color: #050713 !important;
-  color: #ffffff !important;
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
   overflow: hidden;
+}
+
+[data-theme="executive-light"] .premium-hero-context,
+[data-theme="light"] .premium-hero-context {
+  background-color: hsl(240 20% 98%) !important;
+  color: #09090b !important;
 }
 
 /* Override general landing-page layout text colors to maintain high contrast in premium hero context */
@@ -387,8 +393,30 @@
   opacity: 1 !important;
 }
 
+[data-theme="executive-light"] .landing-page .premium-hero-context h1,
+[data-theme="executive-light"] .landing-page .premium-hero-context h1 span:not(.forecast-gradient),
+[data-theme="executive-light"] .landing-page .premium-hero-context h2,
+[data-theme="executive-light"] .landing-page .premium-hero-context h3,
+[data-theme="executive-light"] .landing-page .premium-hero-context h4,
+[data-theme="executive-light"] .landing-page .premium-hero-context p,
+[data-theme="executive-light"] .landing-page .premium-hero-context span:not(.forecast-gradient),
+[data-theme="light"] .landing-page .premium-hero-context h1,
+[data-theme="light"] .landing-page .premium-hero-context h1 span:not(.forecast-gradient),
+[data-theme="light"] .landing-page .premium-hero-context h2,
+[data-theme="light"] .landing-page .premium-hero-context h3,
+[data-theme="light"] .landing-page .premium-hero-context h4,
+[data-theme="light"] .landing-page .premium-hero-context p,
+[data-theme="light"] .landing-page .premium-hero-context span:not(.forecast-gradient) {
+  color: #09090b !important;
+}
+
 .landing-page .premium-hero-context p.subtitle-desc {
   color: #a1a1aa !important; /* text-zinc-400 */
+}
+
+[data-theme="executive-light"] .landing-page .premium-hero-context p.subtitle-desc,
+[data-theme="light"] .landing-page .premium-hero-context p.subtitle-desc {
+  color: #4b5563 !important;
 }
 
 .landing-page .premium-hero-context .sparkles-tag {
@@ -396,9 +424,23 @@
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
+[data-theme="executive-light"] .landing-page .premium-hero-context .sparkles-tag,
+[data-theme="light"] .landing-page .premium-hero-context .sparkles-tag {
+  background-color: rgba(109, 40, 217, 0.06) !important;
+  border-color: rgba(109, 40, 217, 0.12) !important;
+  color: #6d28d9 !important;
+}
+
 .landing-page .premium-hero-context .sparkles-tag span,
 .landing-page .premium-hero-context .sparkles-tag svg {
   color: #a78bfa !important; /* lighter purple for light/dark compatibility */
+}
+
+[data-theme="executive-light"] .landing-page .premium-hero-context .sparkles-tag span,
+[data-theme="executive-light"] .landing-page .premium-hero-context .sparkles-tag svg,
+[data-theme="light"] .landing-page .premium-hero-context .sparkles-tag span,
+[data-theme="light"] .landing-page .premium-hero-context .sparkles-tag svg {
+  color: #6d28d9 !important;
 }
 
 /* Headline gradient & glow styling */
@@ -412,11 +454,25 @@
   font-weight: 800;
 }
 
+[data-theme="executive-light"] .forecast-gradient,
+[data-theme="light"] .forecast-gradient {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  filter: none !important;
+}
+
 /* Background system */
 .hero-premium-bg {
   position: absolute;
   inset: 0;
   z-index: 1;
+  pointer-events: none;
+}
+
+[data-theme="executive-dark"] .hero-premium-bg,
+[data-theme="dark"] .hero-premium-bg {
   background-color: #050713;
   /* Multi-layer premium gradient system */
   background-image: 
@@ -424,7 +480,12 @@
     radial-gradient(circle at 15% 30%, rgba(30, 27, 75, 0.45) 0%, transparent 55%),  /* Dark indigo */
     radial-gradient(circle at 85% 30%, rgba(30, 27, 75, 0.45) 0%, transparent 55%),  /* Dark indigo */
     radial-gradient(circle at 50% 100%, rgba(76, 29, 149, 0.15) 0%, transparent 70%); /* Subtle purple ambient lighting */
-  pointer-events: none;
+}
+
+[data-theme="executive-light"] .hero-premium-bg,
+[data-theme="light"] .hero-premium-bg {
+  background-color: hsl(240 20% 98%) !important;
+  background-image: linear-gradient(135deg, rgba(124, 58, 237, 0.10), rgba(168, 85, 247, 0.04)) !important;
 }
 
 /* Ambient glow layer (purple ambient lighting) */
@@ -441,6 +502,11 @@
   z-index: 2;
   pointer-events: none;
   animation: glow-drift-movement 20s ease-in-out infinite alternate;
+}
+
+[data-theme="executive-light"] .hero-ambient-glow,
+[data-theme="light"] .hero-ambient-glow {
+  background: none !important;
 }
 
 /* Horizon curve effect at bottom of hero section */
@@ -1161,12 +1227,19 @@
 }
 
 .eve-dashboard-main {
-  background-color: #070a14;
+  background-color: var(--background);
   background-image:
     radial-gradient(ellipse at 86% -8%, rgba(109, 40, 217, 0.11) 0%, transparent 52%),
     radial-gradient(ellipse at 8% 100%, rgba(67, 56, 202, 0.07) 0%, transparent 48%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.008), transparent 28%);
 }
+
+[data-theme="executive-light"] .eve-dashboard-main,
+[data-theme="light"] .eve-dashboard-main {
+  background-color: var(--background);
+  background-image: none !important;
+}
+
 /* ── LANDING STORY CONTINUITY ── */
 /* The hero atmosphere fades into the product workspace instead of ending at a hard section boundary. */
 .premium-hero-context::after {
@@ -1179,6 +1252,11 @@
   z-index: 4;
   pointer-events: none;
   background: linear-gradient(to bottom, transparent, #050713 92%);
+}
+
+[data-theme="executive-light"] .premium-hero-context::after,
+[data-theme="light"] .premium-hero-context::after {
+  background: linear-gradient(to bottom, transparent, hsl(240 20% 98%) 92%) !important;
 }
 
 /* One low-cost, shared atmosphere carries the diagnosis, intelligence, workflow, and action sequence. */
