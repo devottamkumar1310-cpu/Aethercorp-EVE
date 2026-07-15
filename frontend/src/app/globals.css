@@ -239,47 +239,47 @@
 /* Global Contrast & Readability Overrides */
 [data-theme="executive-light"], [data-theme="light"] {
   /* Enforce Light Mode Rule: Primary = near black, Secondary = dark gray */
-  h1, h2, h3, h4, h5, h6, th, td, strong, .font-bold, .font-extrabold, .text-foreground, .text-primary {
+  h1:not(.landing-page *), h2:not(.landing-page *), h3:not(.landing-page *), h4:not(.landing-page *), h5:not(.landing-page *), h6:not(.landing-page *), th:not(.landing-page *), td:not(.landing-page *), strong:not(.landing-page *), .font-bold:not(.landing-page *), .font-extrabold:not(.landing-page *), .text-foreground:not(.landing-page *), .text-primary:not(.landing-page *) {
     color: #18181b !important;
   }
-  p, span, li, label, .text-xs, .text-sm, .text-muted-foreground, .text-secondary, .text-slate-400, .text-slate-500 {
+  p:not(.landing-page *), span:not(.landing-page *), li:not(.landing-page *), label:not(.landing-page *), .text-xs:not(.landing-page *), .text-sm:not(.landing-page *), .text-muted-foreground:not(.landing-page *), .text-secondary:not(.landing-page *), .text-slate-400:not(.landing-page *), .text-slate-500:not(.landing-page *) {
     color: #4b5563 !important;
   }
-  svg {
+  svg:not(.landing-page *) {
     stroke: #18181b !important;
     color: #18181b !important;
   }
-  .border-border, .border-accent, .border-border\/60, .border-border\/80 {
+  .border-border:not(.landing-page *), .border-accent:not(.landing-page *), .border-border\/60:not(.landing-page *), .border-border\/80:not(.landing-page *) {
     border-color: #e4e4e7 !important;
   }
-  th {
+  th:not(.landing-page *) {
     background-color: #f4f4f5 !important;
   }
-  td {
+  td:not(.landing-page *) {
     border-bottom: 1px solid #e4e4e7 !important;
   }
 }
 
 [data-theme="executive-dark"], [data-theme="dark"] {
   /* Enforce Dark Mode Rule: Primary = white, Secondary = light gray */
-  h1, h2, h3, h4, h5, h6, th, td, strong, .font-bold, .font-extrabold, .text-foreground, .text-primary {
+  h1:not(.landing-page *), h2:not(.landing-page *), h3:not(.landing-page *), h4:not(.landing-page *), h5:not(.landing-page *), h6:not(.landing-page *), th:not(.landing-page *), td:not(.landing-page *), strong:not(.landing-page *), .font-bold:not(.landing-page *), .font-extrabold:not(.landing-page *), .text-foreground:not(.landing-page *), .text-primary:not(.landing-page *) {
     color: #ffffff !important;
   }
-  p, span, li, label, .text-xs, .text-sm, .text-muted-foreground, .text-secondary, .text-slate-400, .text-slate-500, .text-slate-850, .text-slate-900, .text-slate-950, .text-slate-800 {
+  p:not(.landing-page *), span:not(.landing-page *), li:not(.landing-page *), label:not(.landing-page *), .text-xs:not(.landing-page *), .text-sm:not(.landing-page *), .text-muted-foreground:not(.landing-page *), .text-secondary:not(.landing-page *), .text-slate-400:not(.landing-page *), .text-slate-500:not(.landing-page *), .text-slate-850:not(.landing-page *), .text-slate-900:not(.landing-page *), .text-slate-955:not(.landing-page *), .text-slate-800:not(.landing-page *) {
     color: #d4d4d8 !important;
   }
-  svg {
+  svg:not(.landing-page *) {
     stroke: #ffffff !important;
     color: #ffffff !important;
   }
-  .border-border, .border-accent, .border-border\/60, .border-border\/80 {
+  .border-border:not(.landing-page *), .border-accent:not(.landing-page *), .border-border\/60:not(.landing-page *), .border-border\/80:not(.landing-page *) {
     border-color: #2e2e33 !important;
   }
-  th {
+  th:not(.landing-page *) {
     background-color: #0c0c0e !important;
     border-bottom: 1px solid #2e2e33 !important;
   }
-  td {
+  td:not(.landing-page *) {
     border-bottom: 1px solid #2e2e33 !important;
   }
 }
@@ -304,4 +304,88 @@
 [data-theme="executive-dark"] .hero-headline-accent,
 [data-theme="dark"] .hero-headline-accent {
   color: #818cf8 !important; /* Premium Indigo-400 (6.16:1 contrast) */
+}
+
+/* Strong readability and high contrast overrides for Hero Section */
+.landing-page .hero-headline, 
+.landing-page .hero-headline span {
+  color: #111111 !important; /* Near-black */
+}
+[data-theme="executive-dark"] .landing-page .hero-headline,
+[data-theme="dark"] .landing-page .hero-headline,
+[data-theme="executive-dark"] .landing-page .hero-headline span,
+[data-theme="dark"] .landing-page .hero-headline span {
+  color: #ffffff !important; /* Pure white */
+}
+
+.landing-page .hero-subheadline {
+  color: #444444 !important; /* Dark gray */
+}
+[data-theme="executive-dark"] .landing-page .hero-subheadline,
+[data-theme="dark"] .landing-page .hero-subheadline {
+  color: #cccccc !important; /* Light gray */
+}
+
+.landing-page .hero-badge-text {
+  color: #666666 !important; /* Visible but secondary */
+}
+[data-theme="executive-dark"] .landing-page .hero-badge-text,
+[data-theme="dark"] .landing-page .hero-badge-text {
+  color: #999999 !important; /* Darker gray for dark theme */
+}
+
+/* Ensure the primary navy CTA stands out clearly */
+.landing-page .bg-slate-900 {
+  background-color: #0f172a !important; /* Navy */
+  color: #ffffff !important;
+}
+.landing-page .bg-slate-900:hover {
+  background-color: #1e293b !important;
+}
+[data-theme="executive-dark"] .landing-page .bg-white,
+[data-theme="dark"] .landing-page .bg-white {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Dashboard & other sections primary text contrast rules */
+.landing-page h2,
+.landing-page h3,
+.landing-page h4,
+.landing-page th,
+.landing-page td,
+.landing-page strong,
+.landing-page .font-bold {
+  color: #111111 !important;
+}
+[data-theme="executive-dark"] .landing-page h2,
+[data-theme="executive-dark"] .landing-page h3,
+[data-theme="executive-dark"] .landing-page h4,
+[data-theme="executive-dark"] .landing-page th,
+[data-theme="executive-dark"] .landing-page td,
+[data-theme="executive-dark"] .landing-page strong,
+[data-theme="executive-dark"] .landing-page .font-bold,
+[data-theme="dark"] .landing-page h2,
+[data-theme="dark"] .landing-page h3,
+[data-theme="dark"] .landing-page h4,
+[data-theme="dark"] .landing-page th,
+[data-theme="dark"] .landing-page td,
+[data-theme="dark"] .landing-page strong,
+[data-theme="dark"] .landing-page .font-bold {
+  color: #ffffff !important;
+}
+
+/* Ensure sub-texts and descriptions are a solid dark gray */
+.landing-page p,
+.landing-page td,
+.landing-page th {
+  color: #444444 !important;
+}
+[data-theme="executive-dark"] .landing-page p,
+[data-theme="executive-dark"] .landing-page td,
+[data-theme="executive-dark"] .landing-page th,
+[data-theme="dark"] .landing-page p,
+[data-theme="dark"] .landing-page td,
+[data-theme="dark"] .landing-page th {
+  color: #cccccc !important;
 }
