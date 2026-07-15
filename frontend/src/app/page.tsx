@@ -150,7 +150,7 @@ export default function LandingPage() {
       <div className="shared-preview-pain-points w-full flex flex-col relative z-20">
         
         {/* Product Preview Section */}
-        <section className="landing-story-section landing-story-preview px-4 sm:px-6 pb-12 sm:pb-16 max-w-6xl mx-auto w-full relative z-10 -mt-6">
+        <section className="landing-story-section landing-story-preview px-4 sm:px-6 pb-12 sm:pb-16 max-w-7xl mx-auto w-full relative z-10 ">
           <div className="preview-window-shell">
             <div className="preview-window p-4 sm:p-6 md:p-8 space-y-6">
             {/* OS Titlebar */}
@@ -531,7 +531,6 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8 relative">
             {/* Desktop Connective Flow Line */}
-            <div className="hidden md:block absolute top-[44px] left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-purple-500/25 to-transparent z-0" />
 
             {/* Step 1 */}
             <div className="insight-card p-6 space-y-4 relative z-10">
