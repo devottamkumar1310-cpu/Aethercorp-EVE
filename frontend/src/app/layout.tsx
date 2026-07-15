@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from 'sonner';
+import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({
   children,
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster position="top-right" />
+        <Analytics />
       </body>
     </html>
   );
