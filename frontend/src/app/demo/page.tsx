@@ -27,24 +27,24 @@ interface Product {
 
 const mockProducts: Product[] = [
   {
-    sku: "TEE-BLK-O",
-    name: "Black Oversized Tee",
+    sku: "TEE-BLK-M",
+    name: "Classic Cotton Tee - Black / M",
     category: "Tops",
-    stock: 120,
-    velocity: 0.2,
-    daysLeft: 600,
-    reorderSuggestion: "Run Promotion (Reduce frequency)",
-    status: "dead_stock",
-    trappedCapital: 2800
+    stock: 12,
+    velocity: 2.4,
+    daysLeft: 5,
+    reorderSuggestion: "150 units",
+    status: "low_stock",
+    trappedCapital: 0
   },
   {
-    sku: "PNT-CAR-O",
-    name: "Cargo Pants",
-    category: "Bottoms",
-    stock: 45,
-    velocity: 4.1,
-    daysLeft: 11,
-    reorderSuggestion: "300 units",
+    sku: "HD-GRY-L",
+    name: "Heavyweight Hoodie - Gray / L",
+    category: "Outerwear",
+    stock: 8,
+    velocity: 1.6,
+    daysLeft: 3,
+    reorderSuggestion: "100 units",
     status: "low_stock",
     trappedCapital: 0
   },
@@ -52,12 +52,12 @@ const mockProducts: Product[] = [
     sku: "JOG-CAR-S",
     name: "Cargo Jogger - Olive / S",
     category: "Bottoms",
-    stock: 140,
+    stock: 180,
     velocity: 0.1,
-    daysLeft: 1400,
+    daysLeft: 1800,
     reorderSuggestion: "0 units (Suspend PO)",
     status: "dead_stock",
-    trappedCapital: 5600
+    trappedCapital: 5400
   },
   {
     sku: "JOG-CAR-M",
@@ -108,11 +108,11 @@ export default function DemoPage() {
   const handleQuickQuestion = (question: string) => {
     let response = "I'm analyzing the inventory dataset now...";
     if (question.includes("stockout")) {
-      response = "Our highest stockout risk is: \n1. PNT-CAR-O (Cargo Pants) has only 45 units left, which will run out in 11 days based on velocity of 4.1/day. \n\nI recommend ordering 300 units immediately to avoid stockouts.";
+      response = "Our highest stockout risks are: \n1. TEE-BLK-M (Classic Cotton Tee - Black / M) has only 12 units left, which will run out in 5 days based on velocity of 2.4/day. \n2. HD-GRY-L (Heavyweight Hoodie - Gray / L) has only 8 units left, which will run out in 3 days. \n\nI recommend ordering 150 units of Black/M Tee and 100 units of Gray/L Hoodie immediately to avoid stockouts.";
     } else if (question.includes("capital") || question.includes("trapped")) {
-      response = "You have $8,400 in trapped working capital inside overstocked items: \n- Black Oversized Tee ($2,800 trapped, 120 unsold units). \n- Cargo Jogger ($5,600 trapped). \n\nRecommended Action: Run a promotion and reduce reorder frequency.";
+      response = "You have $14,200 in trapped working capital inside overstocked items: \n- Cargo Jogger (Olive/S, Olive/M) has excessive stock (180 and 220 units) with almost zero velocity. \n\nRecommended Action: Defer the next PO draft and run a targeted promo/discount to recover this capital.";
     } else if (question.includes("health")) {
-      response = "The overall Inventory Health Score is 84/100, which is optimal but requires an immediate reorder of Cargo Pants to protect your velocity.";
+      response = "The overall Inventory Health Score is 84/100, which is optimal but requires immediate reorders for two top-selling items to protect your velocity.";
     }
 
     setChatLog((prev) => [
@@ -133,9 +133,9 @@ export default function DemoPage() {
       let response = "EVE is currently simulating this answer using local workspace metrics. Try one of the quick questions below for concrete inventory recommendations.";
       const queryLower = userMsg.toLowerCase();
       if (queryLower.includes("stockout") || queryLower.includes("risk") || queryLower.includes("run out")) {
-        response = "Our highest stockout risk is Cargo Pants (11 days left). Recommended reorder: 300 units.";
+        response = "Our highest stockout risks are Classic Cotton Tee (Black/M, 5 days left) and Heavyweight Hoodie (Gray/L, 3 days left). Recommended reorder: 150 & 100 units respectively.";
       } else if (queryLower.includes("capital") || queryLower.includes("trapped") || queryLower.includes("overstock") || queryLower.includes("excess")) {
-        response = "We flagged $8,400 in trapped capital, specifically in Black Oversized Tee ($2,800). I recommend running a promotion.";
+        response = "We flagged $14,200 in trapped capital in the Cargo Jogger range (Olive/S & M variants). I recommend pausing pending production runs and scheduling a liquidation event.";
       }
       setChatLog((prev) => [...prev, { sender: "eve", message: response }]);
     }, 600);
@@ -161,7 +161,7 @@ export default function DemoPage() {
             EVE
           </Link>
           <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
-            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">NovaWear Demo</span>
+            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">Demo Workspace</span>
           </h1>
         </div>
         <div className="flex items-center gap-4">
@@ -226,7 +226,7 @@ export default function DemoPage() {
               <DollarSign size={14} className="text-red-500" />
             </span>
             <div className="flex items-baseline gap-1 mt-2">
-              <span className="text-2xl sm:text-3xl font-bold text-red-500">$8,400</span>
+              <span className="text-2xl sm:text-3xl font-bold text-red-500">$14,200</span>
             </div>
             <span className="text-[10px] text-muted-foreground mt-2">Excess slow-moving stock</span>
           </div>
