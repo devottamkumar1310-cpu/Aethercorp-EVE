@@ -298,7 +298,7 @@
 
 /* Custom visual system rules for landing-page layout */
 .landing-page {
-  background-color: #ffffff !important;
+  background-color: #F7F7F5 !important;
 }
 [data-theme="executive-dark"] .landing-page,
 [data-theme="dark"] .landing-page {

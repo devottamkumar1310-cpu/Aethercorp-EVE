@@ -21,9 +21,9 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="landing-page min-h-screen bg-white dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
+    <div className="landing-page min-h-screen bg-[#F7F7F5] dark:bg-zinc-950 flex flex-col font-sans transition-colors duration-200">
       {/* Navbar */}
-      <header className="w-full bg-white dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-800 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+      <header className="w-full bg-[#F7F7F5] dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-800 px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm shadow-indigo-600/30">
             EVE
@@ -60,7 +60,7 @@ export default function LandingPage() {
 
         {/* Mobile Navigation Drawer / Dropdown */}
         {mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-800 p-6 flex flex-col gap-4 shadow-xl z-50 md:hidden">
+          <div className="absolute top-full left-0 right-0 bg-[#F7F7F5] dark:bg-zinc-950 border-b border-[#E5E7EB] dark:border-zinc-800 p-6 flex flex-col gap-4 shadow-xl z-50 md:hidden">
             <Link 
               href="/pricing" 
               onClick={() => setMobileMenuOpen(false)}
@@ -385,7 +385,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-white dark:bg-zinc-950 border-t border-[#E5E7EB] dark:border-zinc-800 px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-[#6B7280] gap-4">
+      <footer className="w-full bg-[#F7F7F5] dark:bg-zinc-950 border-t border-[#E5E7EB] dark:border-zinc-800 px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-[#6B7280] gap-4">
         <div className="text-center md:text-left space-y-1">
           <div>&copy; {new Date().getFullYear()} EVE. All rights reserved.</div>
           <div className="text-[#6B7280]">Questions? <a href="mailto:support@eveinventory.in" className="hover:text-[#111111] dark:hover:text-white">support@eveinventory.in</a></div>
