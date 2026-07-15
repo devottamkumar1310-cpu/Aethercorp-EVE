@@ -78,7 +78,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sessionToken, setSessionToken] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [loadingStage, setLoadingStage] = useState(0);
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState("executive-light");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");

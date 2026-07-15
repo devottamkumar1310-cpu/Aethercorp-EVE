@@ -75,8 +75,8 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState("profile");
 
   // Theme states
-  const [themeState, setThemeState] = useState("dark");
-
+  const [themeState, setThemeState] = useState("executive-light");
+  
   const router = useRouter();
   const supabase = createClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,11 +85,11 @@ export default function SettingsPage() {
     if (typeof window !== "undefined") {
       setDeveloperMode(localStorage.getItem("developer_mode") === "true");
       
-      let activeTheme = localStorage.getItem("theme") || "dark";
+      let activeTheme = localStorage.getItem("theme") || "executive-light";
       if (!["system", "executive-light", "dark"].includes(activeTheme)) {
-        activeTheme = "dark";
-        localStorage.setItem("theme", "dark");
-        document.documentElement.setAttribute("data-theme", "dark");
+        activeTheme = "executive-light";
+        localStorage.setItem("theme", "executive-light");
+        document.documentElement.setAttribute("data-theme", "executive-light");
         window.dispatchEvent(new Event("theme-changed"));
       }
       setThemeState(activeTheme);
