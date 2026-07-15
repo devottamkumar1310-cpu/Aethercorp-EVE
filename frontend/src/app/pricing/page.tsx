@@ -29,7 +29,7 @@ export default function PricingPage() {
             EVE
           </Link>
           <Link href="/" className="text-lg sm:text-xl font-semibold text-foreground tracking-tight hover:opacity-90">
-            EVE <span className="text-xs sm:text-sm font-normal text-muted-foreground">by AetherCorp</span>
+            EVE
           </Link>
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
@@ -139,7 +139,7 @@ export default function PricingPage() {
       {/* Footer */}
       <footer className="w-full bg-card border-t border-border px-4 sm:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
         <div className="text-center md:text-left">
-          &copy; {new Date().getFullYear()} AetherCorp. All rights reserved. EVE is a product of AetherCorp.
+          &copy; {new Date().getFullYear()} EVE. All rights reserved.
         </div>
         <div className="flex flex-wrap justify-center gap-4">
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
