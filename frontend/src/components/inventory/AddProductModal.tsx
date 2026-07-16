@@ -74,12 +74,21 @@ export function AddProductModal({ isOpen, onClose, token, onSuccess }: AddProduc
 
   return (
     <div className="fixed inset-0 bg-background backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-lg bg-card dark:bg-card rounded-2xl shadow-2xl border border-border dark:border-border overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-product-title"
+        className="w-full max-w-lg bg-card dark:bg-card rounded-2xl shadow-2xl border border-border dark:border-border overflow-hidden"
+      >
         <div className="px-6 py-4 border-b border-border dark:border-border flex items-center justify-between bg-secondary dark:bg-background">
-          <h3 className="text-lg font-bold text-foreground dark:text-foreground flex items-center gap-2">
+          <h3 id="add-product-title" className="text-lg font-bold text-foreground dark:text-foreground flex items-center gap-2">
             <Package className="text-indigo-650 dark:text-indigo-400" size={20} /> Add Product
           </h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary dark:hover:bg-slate-850 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground">
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-secondary dark:hover:bg-slate-850 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Close add product dialog"
+          >
             <X size={18} />
           </button>
         </div>
@@ -108,10 +117,10 @@ export function AddProductModal({ isOpen, onClose, token, onSuccess }: AddProduc
           </div>
           {field("supplier_name", "Supplier Name (optional)", "text", "e.g. Textile Co.")}
           <div className="flex justify-end gap-2 pt-2 border-t border-border dark:border-border">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground hover:bg-secondary dark:hover:bg-secondary rounded-lg text-sm font-semibold">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground hover:bg-secondary dark:hover:bg-secondary rounded-lg text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-2">
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               {loading && <Loader2 className="animate-spin" size={14} />}
               {loading ? "Adding..." : "Add Product"}
             </button>
