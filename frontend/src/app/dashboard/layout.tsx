@@ -641,15 +641,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           
           <button
             onClick={toggleSidebar}
-            className="ml-auto p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-sidebar-accent transition-colors hidden md:block"
+            className="ml-auto p-1 text-muted-foreground hover:text-foreground rounded-lg hover:bg-sidebar-accent transition-colors hidden md:block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isSidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
 
           <button
             onClick={() => setSidebarOpen(false)}
-            className="ml-auto text-muted-foreground hover:text-muted-foreground md:hidden"
+            className="ml-auto text-muted-foreground hover:text-muted-foreground md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-lg p-1"
+            aria-label="Close navigation menu"
           >
             <X size={16} />
           </button>
@@ -736,7 +738,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Mobile hamburger */}
             <button
               onClick={() => setSidebarOpen(true)}
-              className="md:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent rounded-lg transition-colors"
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Open navigation menu"
             >
               <Menu size={18} />
             </button>
@@ -762,8 +765,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {/* Theme Toggler */}
               <button
                 onClick={() => setThemePreference(theme === "dark" ? "executive-light" : "dark")}
-                className="p-2 text-muted-foreground hover:text-violet-400 hover:bg-sidebar-accent rounded-lg transition-all"
+                className="p-2 text-muted-foreground hover:text-violet-400 hover:bg-sidebar-accent rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
               >
                 {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
               </button>
@@ -772,7 +776,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-sidebar-accent/80 hover:bg-sidebar-accent border border-sidebar-border rounded-lg text-sm font-medium text-sidebar-foreground transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-sidebar-accent/80 hover:bg-sidebar-accent border border-sidebar-border rounded-lg text-sm font-medium text-sidebar-foreground transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label="Switch workspace"
+                  aria-expanded={isDropdownOpen}
+                  aria-haspopup="listbox"
                 >
                   <Building2 size={14} className="text-violet-400" />
                   <span className="max-w-[140px] truncate">{activeWorkspace?.name || "Select Workspace"}</span>
@@ -826,8 +833,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-muted-foreground hover:text-red-400 hover:bg-sidebar-accent rounded-lg transition-all"
+                className="p-2 text-muted-foreground hover:text-red-400 hover:bg-sidebar-accent rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 title="Sign Out"
+                aria-label="Sign out"
               >
                 <LogOut size={16} />
               </button>

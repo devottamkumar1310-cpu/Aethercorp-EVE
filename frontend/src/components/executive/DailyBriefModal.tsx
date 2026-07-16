@@ -254,7 +254,13 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden bg-card border border-border rounded-2xl shadow-2xl flex flex-col">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="daily-brief-title"
+        aria-describedby="daily-brief-description"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden bg-card border border-border rounded-2xl shadow-2xl flex flex-col"
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card backdrop-blur-md">
           <div className="flex items-center gap-2">
@@ -262,13 +268,14 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
               <Sparkles size={18} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Today's Priorities</h2>
-              <p className="text-xs text-muted-foreground">Actionable intelligence powered by EVE</p>
+              <h2 id="daily-brief-title" className="text-lg font-bold text-foreground">Today's Priorities</h2>
+              <p id="daily-brief-description" className="text-xs text-muted-foreground">Actionable intelligence powered by EVE</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all"
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Close daily brief"
           >
             <X size={18} />
           </button>
@@ -352,7 +359,8 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
               <button
                 type="submit"
                 disabled={!followUpText.trim()}
-                className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground text-foreground rounded-xl transition-all shadow-lg flex items-center justify-center"
+                className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground text-foreground rounded-xl transition-all shadow-lg flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label="Send follow-up question"
               >
                 <Send size={16} />
               </button>
