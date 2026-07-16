@@ -1,8 +1,11 @@
 import uuid
+import logging
 from typing import List, Optional, Any
 from sqlalchemy.orm import Session
 from app.models.executive_memory import BusinessGoal
 from app.models.ai_recommendation import AIRecommendation
+
+logger = logging.getLogger("eve.services.ai.memory_service")
 
 def get_memory_context(db: Session, org_id: uuid.UUID) -> List[str]:
     """Returns active business goals formatted as a list of strings."""
@@ -126,6 +129,18 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
             "agent_source": agent_source
         })
 
+        # Build or reconstruct raw_prompt for auditability
+        raw_prompt_built = data.get("raw_prompt")
+        if not raw_prompt_built and data.get("summary"):
+            raw_prompt_built = (
+                f"[RECONSTRUCTED PROMPT SNAPSHOT]\n"
+                f"Agent: {agent_source}\n"
+                f"Summary input: {str(data.get('summary', ''))[:500]}"
+            )
+
+        # Use the synthesis summary as the raw_response if the model didn't carry one
+        raw_response_built = data.get("raw_response") or str(data.get("summary", ""))[:2000]
+
         RecommendationTraceService.create_trace(
             db=db,
             org_id=org_id,
@@ -141,10 +156,10 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
             created_from_query=True if data.get("user_id") else False,
             source_agent=agent_source,
             llm_provider=data.get("llm_provider", "google"),
-            llm_model=data.get("llm_model", "gemini-1.5-pro"),
-            llm_model_version=data.get("llm_model_version", "gemini-1.5-pro-001"),
-            raw_prompt=data.get("raw_prompt"),
-            raw_response=data.get("raw_response"),
+            llm_model=data.get("llm_model", "gemini-2.5-flash"),
+            llm_model_version=data.get("llm_model_version", "gemini-2.5-flash-latest"),
+            raw_prompt=raw_prompt_built,
+            raw_response=raw_response_built,
             input_metrics=data.get("input_metrics"),
             business_rules=data.get("business_rules"),
             calculations=data.get("calculations")

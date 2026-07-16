@@ -48,6 +48,12 @@ class RecommendationTrace(Base):
     business_rules = Column(JSON, nullable=True)
     calculations = Column(JSON, nullable=True)
 
+    # Phase 2 Hardening: Evidence Consistency & Trust Score
+    evidence_validation_status = Column(String, nullable=True)  # SUPPORTED, PARTIALLY_SUPPORTED, UNSUPPORTED
+    evidence_validation_reason = Column(Text, nullable=True)
+    confidence_governance_flag = Column(String, nullable=True)  # OK, HIGH_CONFIDENCE_WEAK_EVIDENCE, LOW_CONFIDENCE
+    trust_score = Column(Float, nullable=True)  # 0-100
+
     # Relationships
     organization = relationship("Organization", back_populates="recommendation_traces")
     audit_events = relationship("RecommendationAuditEvent", back_populates="trace", cascade="all, delete-orphan")

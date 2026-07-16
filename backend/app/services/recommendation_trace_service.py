@@ -4,6 +4,7 @@ from app.models.recommendation_trace import RecommendationTrace
 from app.models.recommendation_audit_event import RecommendationAuditEvent
 from app.services.ai.prompt_injection_guard import PromptInjectionGuard
 from app.services.ai.recommendation_validator import RecommendationValidator
+from app.services.ai.recommendation_evidence_validator import RecommendationEvidenceValidator
 
 
 class RecommendationTraceService:
@@ -37,19 +38,21 @@ class RecommendationTraceService:
         response_timestamp=None,
         input_metrics: dict = None,
         business_rules: list = None,
-        calculations: list = None
+        calculations: list = None,
     ) -> RecommendationTrace:
         """
         Creates and persists a detailed decision recommendation trace in the database.
+        Phase 2 additions: confidence governance, evidence consistency validation, trust score.
         """
         snapshot = evidence_snapshot if evidence_snapshot is not None else metrics
-        
+        val_reason = None
+
         # 1. Prompt Injection Check
         if raw_prompt:
             is_injected, injection_reason = PromptInjectionGuard.detect(raw_prompt)
             if is_injected:
                 status = "REJECTED"
-        
+
         # 2. Trace Integrity Validation
         if status != "REJECTED":
             val_status, val_reason = RecommendationValidator.validate(
@@ -58,11 +61,11 @@ class RecommendationTraceService:
                 action=action,
                 reasoning_chain=reasoning,
                 source_datasets=sources,
-                input_metrics=input_metrics
+                input_metrics=input_metrics,
             )
-            
-            # If user generated, never default to VERIFIED/VALIDATED automatically without rules. 
-            # If it passed validation, we mark it VALIDATED. 
+
+            # If user generated, never default to VERIFIED/VALIDATED automatically without rules.
+            # If it passed validation, we mark it VALIDATED.
             # If created from query and passes, maybe USER_PROMPTED but we'll use VALIDATED if true.
             if val_status == "REJECTED":
                 status = "REJECTED"
@@ -73,6 +76,46 @@ class RecommendationTraceService:
                     status = "VALIDATED"
         else:
             val_reason = injection_reason
+
+        # 3. Confidence Governance
+        evidence_count = len(evidence_snapshot or {})
+        confidence_flag = "OK"
+        if confidence > 0.85 and evidence_count < 2:
+            confidence_flag = "HIGH_CONFIDENCE_WEAK_EVIDENCE"
+        elif confidence < 0.4:
+            confidence_flag = "LOW_CONFIDENCE"
+
+        # 4. Evidence Consistency
+        evidence_status, evidence_reason = RecommendationEvidenceValidator.validate(
+            action=action,
+            evidence_snapshot=snapshot,
+            input_metrics=input_metrics,
+        )
+
+        # 5. (reserved for future pipeline step)
+
+        # 6. Trust Score — composite 0-100 float
+        evidence_quality = (
+            30 if evidence_status == "SUPPORTED"
+            else (15 if evidence_status == "PARTIALLY_SUPPORTED" else 0)
+        )
+        validation_pts = (
+            25 if status == "VALIDATED"
+            else (10 if status == "USER_PROMPTED" else 0)
+        )
+        confidence_pts = (
+            20 if confidence_flag == "OK"
+            else (5 if confidence_flag == "HIGH_CONFIDENCE_WEAK_EVIDENCE" else 10)
+        )
+        data_pts = (
+            15 if evidence_count >= 5
+            else (10 if evidence_count >= 3 else (5 if evidence_count >= 1 else 0))
+        )
+        prompt_pts = (
+            10 if not created_from_query
+            else (5 if status != "REJECTED" else 0)
+        )
+        trust_score = float(evidence_quality + validation_pts + confidence_pts + data_pts + prompt_pts)
 
         trace = RecommendationTrace(
             id=uuid.uuid4(),
@@ -102,28 +145,34 @@ class RecommendationTraceService:
             response_timestamp=response_timestamp,
             input_metrics=input_metrics,
             business_rules=business_rules,
-            calculations=calculations
+            calculations=calculations,
+            # Phase 2 Hardening
+            evidence_validation_status=evidence_status,
+            evidence_validation_reason=evidence_reason,
+            confidence_governance_flag=confidence_flag,
+            trust_score=trust_score,
         )
         db.add(trace)
-        db.flush() # flush to get trace.id
-        
-        # 3. Create Audit Events
+        db.flush()  # flush to get trace.id
+
+        # Audit Events
         created_event = RecommendationAuditEvent(
             trace_id=trace.id,
             event_type="CREATED",
             user_id=triggered_by_user_id,
-            details={"trigger_type": trigger_type}
+            details={"trigger_type": trigger_type},
         )
         db.add(created_event)
-        
+
         status_event = RecommendationAuditEvent(
             trace_id=trace.id,
             event_type=status,
             user_id=triggered_by_user_id,
-            details={"reason": val_reason} if val_reason else {}
+            details={"reason": val_reason} if val_reason else {},
         )
         db.add(status_event)
 
         db.commit()
         db.refresh(trace)
         return trace
+

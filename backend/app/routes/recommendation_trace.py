@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models.recommendation_trace import RecommendationTrace
 from app.models.recommendation_audit_event import RecommendationAuditEvent
 from app.core.security import get_required_workspace_id, require_workspace_role
+from app.models.organization import Membership
 
 router = APIRouter(prefix="/api/recommendations", tags=["Recommendation Traceability"])
 
@@ -40,6 +41,7 @@ class RecommendationTraceResponse(BaseModel):
     temperature: Optional[float] = None
     top_p: Optional[float] = None
     top_k: Optional[int] = None
+    # PROTECTED FIELDS — admin/owner only
     system_prompt_hash: Optional[str] = None
     raw_prompt: Optional[str] = None
     raw_response: Optional[str] = None
@@ -50,8 +52,20 @@ class RecommendationTraceResponse(BaseModel):
     business_rules: Optional[List[str]] = None
     calculations: Optional[List[str]] = None
 
+    # Phase 2 Hardening
+    evidence_validation_status: Optional[str] = None
+    evidence_validation_reason: Optional[str] = None
+    confidence_governance_flag: Optional[str] = None
+    trust_score: Optional[float] = None
+
     class Config:
         from_attributes = True
+
+
+
+def is_privileged_role(membership: Membership) -> bool:
+    """Return True for roles that may view protected LLM provenance fields."""
+    return membership.role in ("admin", "owner")
 
 
 @router.get("", response_model=List[RecommendationTraceResponse])
@@ -60,7 +74,7 @@ def list_recommendation_traces(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     workspace_id: uuid.UUID = Depends(get_required_workspace_id),
-    _role = Depends(require_workspace_role("employee"))
+    membership: Membership = Depends(require_workspace_role("employee"))
 ):
     """
     List all recommendation audit traces for the active organization workspace.
@@ -95,13 +109,17 @@ def list_recommendation_traces(
             temperature=t.temperature,
             top_p=t.top_p,
             top_k=t.top_k,
-            system_prompt_hash=t.system_prompt_hash,
-            raw_prompt=t.raw_prompt,
-            raw_response=t.raw_response,
+            system_prompt_hash=t.system_prompt_hash if is_privileged_role(membership) else None,
+            raw_prompt=t.raw_prompt if is_privileged_role(membership) else None,
+            raw_response=t.raw_response if is_privileged_role(membership) else None,
             response_timestamp=t.response_timestamp,
             input_metrics=t.input_metrics,
             business_rules=t.business_rules,
-            calculations=t.calculations
+            calculations=t.calculations,
+            evidence_validation_status=t.evidence_validation_status,
+            evidence_validation_reason=t.evidence_validation_reason,
+            confidence_governance_flag=t.confidence_governance_flag,
+            trust_score=t.trust_score,
         ))
     return res
 
@@ -111,7 +129,7 @@ def get_recommendation_trace(
     trace_id: uuid.UUID,
     db: Session = Depends(get_db),
     workspace_id: uuid.UUID = Depends(get_required_workspace_id),
-    _role = Depends(require_workspace_role("employee"))
+    membership: Membership = Depends(require_workspace_role("employee"))
 ):
     """
     Get detailed audit trace for a specific decision recommendation.
@@ -158,11 +176,15 @@ def get_recommendation_trace(
         temperature=trace.temperature,
         top_p=trace.top_p,
         top_k=trace.top_k,
-        system_prompt_hash=trace.system_prompt_hash,
-        raw_prompt=trace.raw_prompt,
-        raw_response=trace.raw_response,
+        system_prompt_hash=trace.system_prompt_hash if is_privileged_role(membership) else None,
+        raw_prompt=trace.raw_prompt if is_privileged_role(membership) else None,
+        raw_response=trace.raw_response if is_privileged_role(membership) else None,
         response_timestamp=trace.response_timestamp,
         input_metrics=trace.input_metrics,
         business_rules=trace.business_rules,
-        calculations=trace.calculations
+        calculations=trace.calculations,
+        evidence_validation_status=trace.evidence_validation_status,
+        evidence_validation_reason=trace.evidence_validation_reason,
+        confidence_governance_flag=trace.confidence_governance_flag,
+        trust_score=trace.trust_score,
     )

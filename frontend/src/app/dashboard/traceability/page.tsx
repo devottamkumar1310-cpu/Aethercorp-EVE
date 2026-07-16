@@ -23,6 +23,10 @@ interface TraceRecord {
   input_metrics?: Record<string, any>;
   business_rules?: string[];
   calculations?: string[];
+  trust_score?: number;
+  confidence_governance_flag?: string;
+  evidence_validation_status?: string;
+  evidence_validation_reason?: string;
 }
 
 export default function TraceabilityDashboard() {
@@ -295,10 +299,57 @@ export default function TraceabilityDashboard() {
               {/* Supporting metrics & details (Right Column) */}
               <div className="space-y-6">
                 
+                {/* Trust Score & Governance (Phase 2) */}
+                {(selectedTrace.trust_score !== undefined || selectedTrace.confidence_governance_flag) && (
+                  <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center space-y-4">
+                    <div>
+                      <span className="text-sm font-medium text-muted-foreground font-semibold block">Decision Trust Score</span>
+                      <p className={`mt-2 text-5xl font-extrabold tracking-tight bg-clip-text text-transparent ${
+                        (selectedTrace.trust_score ?? 0) < 50 ? 'bg-gradient-to-r from-red-400 to-rose-400' :
+                        (selectedTrace.trust_score ?? 0) < 80 ? 'bg-gradient-to-r from-amber-400 to-yellow-400' :
+                        'bg-gradient-to-r from-emerald-400 to-teal-400'
+                      }`}>
+                        {selectedTrace.trust_score !== undefined ? `${Math.round(selectedTrace.trust_score)}/100` : "N/A"}
+                      </p>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Based on evidence, validation, risk & rules
+                      </div>
+                    </div>
+                    
+                    {selectedTrace.confidence_governance_flag && (
+                      <div className="pt-4 border-t border-border/50 text-left">
+                        <span className="text-xs uppercase text-muted-foreground block mb-1">Confidence Flag</span>
+                        <div className={`text-xs font-semibold px-2 py-1 rounded inline-block ${
+                          selectedTrace.confidence_governance_flag === 'OK' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {selectedTrace.confidence_governance_flag.replace(/_/g, ' ')}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {selectedTrace.evidence_validation_status && (
+                      <div className="pt-2 text-left">
+                        <span className="text-xs uppercase text-muted-foreground block mb-1">Evidence Status</span>
+                        <div className={`text-xs font-semibold px-2 py-1 rounded inline-block ${
+                          selectedTrace.evidence_validation_status === 'SUPPORTED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          selectedTrace.evidence_validation_status === 'PARTIALLY_SUPPORTED' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                          'bg-red-500/10 text-red-400 border border-red-500/20'
+                        }`}>
+                          {selectedTrace.evidence_validation_status.replace(/_/g, ' ')}
+                        </div>
+                        {selectedTrace.evidence_validation_reason && (
+                          <p className="text-[10px] text-muted-foreground mt-1">{selectedTrace.evidence_validation_reason}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Confidence Score Card */}
                 <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
-                  <span className="text-sm font-medium text-muted-foreground font-semibold">Decision Confidence Score</span>
-                  <p className={`mt-3 text-5xl font-extrabold tracking-tight bg-clip-text text-transparent ${selectedTrace.validation_status === 'REJECTED' ? 'bg-gradient-to-r from-red-400 to-rose-400' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}>
+                  <span className="text-sm font-medium text-muted-foreground font-semibold">LLM Confidence Level</span>
+                  <p className={`mt-3 text-5xl font-extrabold tracking-tight bg-clip-text text-transparent ${selectedTrace.validation_status === 'REJECTED' ? 'bg-gradient-to-r from-red-400 to-rose-400' : 'bg-gradient-to-r from-indigo-400 to-blue-400'}`}>
                     {(selectedTrace.confidence_score * 100).toFixed(0)}%
                   </p>
                   <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">

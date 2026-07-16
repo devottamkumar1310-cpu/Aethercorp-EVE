@@ -41,6 +41,19 @@ class ExecutiveSynthesisResult(BaseModel):
     governance_decisions: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Audited governance validation logs")
     recommendation_details: Optional[ExecutiveRecommendation] = None
 
+    # LLM Provenance — populated by agent execution layer
+    llm_provider: Optional[str] = "google"
+    llm_model: Optional[str] = "gemini-2.5-flash"
+    llm_model_version: Optional[str] = None
+    temperature: Optional[float] = None
+    top_p: Optional[float] = None
+    top_k: Optional[int] = None
+    raw_prompt: Optional[str] = None
+    raw_response: Optional[str] = None
+    response_timestamp: Optional[datetime] = None
+    # Origin
+    user_id: Optional[str] = None
+
 class GeminiExecutiveSynthesisResult(BaseModel):
     agent: str = Field(default="COO Lead", description="The name of the agent synthesizing the results")
     summary: str = Field(description="Final synthesized COO executive recommendation")

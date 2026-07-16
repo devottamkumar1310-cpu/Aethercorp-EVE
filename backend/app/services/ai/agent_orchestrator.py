@@ -211,6 +211,15 @@ class AgentOrchestrator:
                     conversation_history=conversation_history,
                     intent=intent
                 )
+                # Stamp LLM provenance onto the result so it flows through model_dump()
+                coo_result.llm_provider = "google"
+                coo_result.llm_model = "gemini-2.5-flash"
+                coo_result.llm_model_version = "gemini-2.5-flash-latest"
+                coo_result.temperature = 1.0
+                coo_result.top_k = 64
+                coo_result.top_p = 0.95
+                coo_result.response_timestamp = datetime.datetime.utcnow()
+                coo_result.user_id = str(user_id) if user_id else None
             except Exception as e:
                 err_str = str(e)
                 error_type = "GENERIC_ERROR"
@@ -859,6 +868,16 @@ class AgentOrchestrator:
                 "working_capital_locked": working_capital_locked
             }
         )
+        # Stamp LLM provenance on the streaming-path result
+        import datetime as _dt
+        coo_result.llm_provider = "google"
+        coo_result.llm_model = "gemini-2.5-flash"
+        coo_result.llm_model_version = "gemini-2.5-flash-latest"
+        coo_result.temperature = 1.0
+        coo_result.top_k = 64
+        coo_result.top_p = 0.95
+        coo_result.response_timestamp = _dt.datetime.utcnow()
+        coo_result.user_id = str(user_id) if user_id else None
 
         # Save assistant message
         assistant_msg = ExecutiveMessage(

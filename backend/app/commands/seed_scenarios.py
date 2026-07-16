@@ -635,7 +635,13 @@ def seed_demo_workspace_data(db, org_id):
                 "Supplier lead time is 7 days. Ordering now prevents a 3-day stockout gap.",
                 "MOQ from Premium Cotton Textiles is 500 units."
             ],
-            status="verified"
+            trigger_type="SYSTEM_GENERATED",
+            source_agent="inventory_agent",
+            llm_provider="google",
+            llm_model="gemini-2.5-flash",
+            input_metrics={"stock": 80, "reorder_point": 140, "avg_daily_sales": 20.0, "lead_time": 7},
+            business_rules=["stock < reorder_point", "days_of_cover < lead_time"],
+            calculations=["days_of_cover = 80 / 20 = 4 days", "gap = lead_time - days_of_cover = 7 - 4 = 3 days"]
         )
         RecommendationTraceService.create_trace(
             db=db,
@@ -650,7 +656,13 @@ def seed_demo_workspace_data(db, org_id):
                 "Paying before 2026-07-14 triggers a 2% discount, saving $55.0 on the total balance of $2,750.",
                 "Available cash flow is $48,000, which easily covers the invoice with zero impact on operational runway."
             ],
-            status="verified"
+            trigger_type="SYSTEM_GENERATED",
+            source_agent="finance_agent",
+            llm_provider="google",
+            llm_model="gemini-2.5-flash",
+            input_metrics={"invoice_amount": 2750.0, "discount_pct": 2.0, "available_cash_flow": 48000.0},
+            business_rules=["early_payment_terms = 2/10 Net 30", "payment_before_deadline_triggers_discount"],
+            calculations=["discount_savings = 2750.0 * 0.02 = 55.0", "cash_remaining = 48000 - 2750 = 45250"]
         )
     except Exception as trace_err:
         print(f"  Warning: Failed to seed recommendation traces: {trace_err}")
