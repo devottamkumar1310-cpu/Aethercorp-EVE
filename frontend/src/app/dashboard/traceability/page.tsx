@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass, ListRestart } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass, ListRestart, AlertTriangle, ShieldAlert, CheckCircle, Database } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
@@ -15,15 +15,24 @@ interface TraceRecord {
   source_datasets: string[];
   supporting_metrics: Record<string, any>;
   reasoning_chain: string[];
+  evidence_snapshot: Record<string, any>;
   created_at: string;
+  trigger_type?: string;
+  source_agent?: string;
+  llm_model?: string;
+  input_metrics?: Record<string, any>;
+  business_rules?: string[];
+  calculations?: string[];
 }
 
 export default function TraceabilityDashboard() {
   const [traces, setTraces] = useState<TraceRecord[]>([]);
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const limit = 20;
 
-  const fetchTraces = async () => {
+  const fetchTraces = async (pageIndex: number = 0) => {
     setLoading(true);
     try {
       const supabase = createClient();
@@ -42,7 +51,8 @@ export default function TraceabilityDashboard() {
         "X-Workspace-Id": workspaceId
       };
 
-      const resp = await fetch("/api/recommendations", { headers });
+      const offset = pageIndex * limit;
+      const resp = await fetch(`/api/recommendations?limit=${limit}&offset=${offset}`, { headers });
       if (!resp.ok) {
         throw new Error(`Failed to load recommendations (HTTP ${resp.status})`);
       }
@@ -54,6 +64,7 @@ export default function TraceabilityDashboard() {
       } else {
         setSelectedTrace(null);
       }
+      setPage(pageIndex);
     } catch (err: any) {
       console.warn("API load failed.", err);
       setTraces([]);
@@ -64,8 +75,27 @@ export default function TraceabilityDashboard() {
   };
 
   useEffect(() => {
-    fetchTraces();
+    fetchTraces(0);
   }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "VALIDATED": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      case "REJECTED": return "text-red-400 bg-red-500/10 border-red-500/20";
+      case "USER_PROMPTED": return "text-blue-400 bg-blue-500/10 border-blue-500/20";
+      case "GENERATED": 
+      default:
+        return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "VALIDATED": return <CheckCircle className="h-3.5 w-3.5" />;
+      case "REJECTED": return <ShieldAlert className="h-3.5 w-3.5" />;
+      default: return <CheckCircle2 className="h-3.5 w-3.5" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-6 text-foreground lg:p-10">
@@ -89,14 +119,29 @@ export default function TraceabilityDashboard() {
               Audit the calculations, data integrity sources, and AI reasoning chain behind EVE recommendations.
             </p>
           </div>
-          {traces.length > 0 && (
+          <div className="flex items-center gap-2">
             <button 
-              onClick={fetchTraces}
-              className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 bg-indigo-950/10 px-3 py-1.5 rounded-lg transition cursor-pointer"
+              onClick={() => fetchTraces(page > 0 ? page - 1 : 0)}
+              disabled={page === 0}
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg disabled:opacity-50 transition"
+            >
+              Prev
+            </button>
+            <span className="text-xs font-medium">Page {page + 1}</span>
+            <button 
+              onClick={() => fetchTraces(page + 1)}
+              disabled={traces.length < limit}
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg disabled:opacity-50 transition"
+            >
+              Next
+            </button>
+            <button 
+              onClick={() => fetchTraces(page)}
+              className="ml-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 bg-indigo-950/10 px-3 py-1.5 rounded-lg transition cursor-pointer"
             >
               <ListRestart className="h-3.5 w-3.5" /> Refresh List
             </button>
-          )}
+          </div>
         </div>
 
         {loading ? (
@@ -116,7 +161,7 @@ export default function TraceabilityDashboard() {
             {/* Sidebar Recommendation list (Col-Span-1) */}
             <div className="lg:col-span-1 space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Decisions</h3>
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+              <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
                 
                 {/* Dynamic items */}
                 {traces.map((trace) => (
@@ -145,28 +190,76 @@ export default function TraceabilityDashboard() {
               
               {/* The recommendation action (Col-Span-2) */}
               <div className="md:col-span-2 space-y-6">
+
+                {/* Warning Banner */}
+                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex gap-3 items-start backdrop-blur-md">
+                  <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-500">AI-generated recommendation.</h4>
+                    <p className="text-xs text-amber-500/80 mt-1">Review evidence and calculations before taking action. Explanations may not encompass all business variables.</p>
+                  </div>
+                </div>
                 
-                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/10 p-6 backdrop-blur-md">
+                <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5 text-emerald-400" />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
+                      <Sparkles className="h-5 w-5 text-indigo-400" />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
                         {selectedTrace.recommendation_type.toUpperCase()} RECOMMENDATION
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
+                    <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${getStatusColor(selectedTrace.validation_status)}`}>
+                      {getStatusIcon(selectedTrace.validation_status)}
                       {selectedTrace.validation_status}
                     </div>
                   </div>
                   
-                  <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground leading-snug">
+                  <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground leading-snug">
                     {selectedTrace.action}
                   </h2>
                   <p className="mt-3 text-sm text-slate-300 leading-relaxed">
                     {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
                   </p>
+                  
+                  {/* Metadata Bar */}
+                  <div className="mt-6 flex flex-wrap gap-4 pt-4 border-t border-border/50 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                    <div><span className="opacity-50 block mb-1">Trigger</span> <span className="text-foreground">{selectedTrace.trigger_type || "UNKNOWN"}</span></div>
+                    <div><span className="opacity-50 block mb-1">Agent</span> <span className="text-foreground">{selectedTrace.source_agent || "COO"}</span></div>
+                    <div><span className="opacity-50 block mb-1">Model</span> <span className="text-foreground">{selectedTrace.llm_model || "gemini"}</span></div>
+                    <div><span className="opacity-50 block mb-1">Timestamp</span> <span className="text-foreground">{selectedTrace.created_at}</span></div>
+                  </div>
                 </div>
+
+                {/* True Trace Structure: Rules & Calculations */}
+                {((selectedTrace.business_rules && selectedTrace.business_rules.length > 0) || (selectedTrace.calculations && selectedTrace.calculations.length > 0)) && (
+                  <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
+                    <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2 mb-4">
+                      <Database className="h-4 w-4 text-indigo-400" /> True Decision Trace
+                    </h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      {selectedTrace.business_rules && selectedTrace.business_rules.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Applied Rules</h4>
+                          <ul className="space-y-2 list-disc list-inside text-sm text-foreground">
+                            {selectedTrace.business_rules.map((rule, idx) => (
+                              <li key={idx} className="font-mono text-xs">{rule}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {selectedTrace.calculations && selectedTrace.calculations.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Calculations</h4>
+                          <ul className="space-y-2 list-disc list-inside text-sm text-foreground">
+                            {selectedTrace.calculations.map((calc, idx) => (
+                              <li key={idx} className="font-mono text-xs">{calc}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Reasoning Chain Timeline */}
                 <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
@@ -185,6 +278,18 @@ export default function TraceabilityDashboard() {
                   </div>
                 </div>
 
+                {/* Evidence Snapshot (Raw) */}
+                {Object.keys(selectedTrace.evidence_snapshot || {}).length > 0 && (
+                  <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
+                      Evidence Snapshot
+                    </h3>
+                    <pre className="text-[10px] font-mono text-muted-foreground bg-black/40 p-4 rounded-lg overflow-x-auto">
+                      {JSON.stringify(selectedTrace.evidence_snapshot, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
               </div>
 
               {/* Supporting metrics & details (Right Column) */}
@@ -193,7 +298,7 @@ export default function TraceabilityDashboard() {
                 {/* Confidence Score Card */}
                 <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
                   <span className="text-sm font-medium text-muted-foreground font-semibold">Decision Confidence Score</span>
-                  <p className="mt-3 text-5xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+                  <p className={`mt-3 text-5xl font-extrabold tracking-tight bg-clip-text text-transparent ${selectedTrace.validation_status === 'REJECTED' ? 'bg-gradient-to-r from-red-400 to-rose-400' : 'bg-gradient-to-r from-emerald-400 to-teal-400'}`}>
                     {(selectedTrace.confidence_score * 100).toFixed(0)}%
                   </p>
                   <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
@@ -201,20 +306,22 @@ export default function TraceabilityDashboard() {
                   </div>
                 </div>
 
-                {/* Metrics Checklist */}
-                <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                    <HardDrive className="h-4 w-4 text-indigo-400" /> Supporting Metrics
-                  </h3>
-                  <div className="space-y-3">
-                    {Object.entries(selectedTrace.supporting_metrics).map(([key, value]) => (
-                      <div key={key} className="flex justify-between border-b border-border pb-2 text-sm">
-                        <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
-                        <span className="font-semibold text-foreground">{String(value)}</span>
-                      </div>
-                    ))}
+                {/* Input Metrics Checklist */}
+                {(selectedTrace.input_metrics || selectedTrace.supporting_metrics) && (
+                  <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
+                      <HardDrive className="h-4 w-4 text-indigo-400" /> Evaluated Metrics
+                    </h3>
+                    <div className="space-y-3">
+                      {Object.entries(selectedTrace.input_metrics || selectedTrace.supporting_metrics).map(([key, value]) => (
+                        <div key={key} className="flex justify-between border-b border-border/50 pb-2 text-sm">
+                          <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                          <span className="font-semibold text-foreground truncate max-w-[100px] text-right" title={String(value)}>{String(value)}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Source Database Records */}
                 <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
@@ -223,12 +330,12 @@ export default function TraceabilityDashboard() {
                   </h3>
                   <div className="space-y-2.5">
                     {selectedTrace.source_datasets.map((source, index) => (
-                      <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs">
+                      <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs break-words">
                         <span className="block font-semibold text-foreground leading-relaxed">{source}</span>
                       </div>
                     ))}
                     <span className="block text-[10px] text-muted-foreground mt-2 text-center font-medium">
-                      Audited: {selectedTrace.created_at}
+                      Trace ID: {selectedTrace.id.slice(0, 8)}
                     </span>
                   </div>
                 </div>

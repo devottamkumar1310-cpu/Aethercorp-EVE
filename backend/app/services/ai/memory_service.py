@@ -134,7 +134,20 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
             confidence=float(confidence_level) if confidence_level else 1.0,
             sources=list(metrics_dict.keys()) if metrics_dict else ["AI Context"],
             metrics=metrics_dict,
-            reasoning=[reasoning] if reasoning else ["EVE COO analyzed historical context and recommended action."]
+            reasoning=[reasoning] if reasoning else ["EVE COO analyzed historical context and recommended action."],
+            # Provenance extraction (if available in result)
+            triggered_by_user_id=data.get("user_id"),
+            trigger_type="USER_PROMPT" if data.get("user_id") else "SYSTEM_GENERATED",
+            created_from_query=True if data.get("user_id") else False,
+            source_agent=agent_source,
+            llm_provider=data.get("llm_provider", "google"),
+            llm_model=data.get("llm_model", "gemini-1.5-pro"),
+            llm_model_version=data.get("llm_model_version", "gemini-1.5-pro-001"),
+            raw_prompt=data.get("raw_prompt"),
+            raw_response=data.get("raw_response"),
+            input_metrics=data.get("input_metrics"),
+            business_rules=data.get("business_rules"),
+            calculations=data.get("calculations")
         )
     except Exception as e:
         logger.warning(f"Failed to generate RecommendationTrace in memory_service: {e}")

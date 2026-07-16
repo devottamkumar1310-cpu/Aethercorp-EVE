@@ -20,6 +20,7 @@ from .executive_conversation import ExecutiveConversation, ExecutiveMessage
 from .ai_recommendation import AIRecommendation
 from .system_error import SystemError
 from .recommendation_trace import RecommendationTrace
+from .recommendation_audit_event import RecommendationAuditEvent
 from .waitlist import WaitlistEntry
 
 # This ensures all models are imported and registered with SQLAlchemy's Base.metadata
