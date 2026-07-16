@@ -42,7 +42,7 @@ export default function HealthDashboard() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <div className="flex min-h-screen items-center justify-center bg-[#090b10] text-foreground">
         <div className="flex flex-col items-center gap-3">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
           <p className="text-sm font-medium text-muted-foreground">Loading system metrics...</p>
@@ -53,7 +53,7 @@ export default function HealthDashboard() {
 
   if (error || !data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground p-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#090b10] text-foreground p-6">
         <div className="max-w-md rounded-2xl border border-red-500/20 bg-red-950/10 p-6 text-center backdrop-blur-xl">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500">
             ⚠️
@@ -74,13 +74,13 @@ export default function HealthDashboard() {
   const isHealthy = data.status === "healthy";
 
   return (
-    <div className="min-h-screen bg-background p-6 font-sans text-foreground lg:p-10">
+    <div className="min-h-screen bg-[#090b10] p-6 font-sans text-foreground lg:p-10">
       <div className="mx-auto max-w-6xl">
         
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-muted-foreground bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
               System Operations Health
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -102,7 +102,7 @@ export default function HealthDashboard() {
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           
           {/* Database Card */}
-          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-[#121620]/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Database Connection</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.database === "healthy" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
@@ -114,7 +114,7 @@ export default function HealthDashboard() {
           </div>
 
           {/* Storage Card */}
-          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-[#121620]/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Storage Ingestion API</span>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.storage === "healthy" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
@@ -126,7 +126,7 @@ export default function HealthDashboard() {
           </div>
 
           {/* Alerting Metric */}
-          <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
+          <div className="rounded-2xl border border-border bg-[#121620]/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Error Telemetry Gateway</span>
               <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
@@ -139,7 +139,7 @@ export default function HealthDashboard() {
         </div>
 
         {/* Resources Section */}
-        <div className="mt-8 rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md lg:p-8">
+        <div className="mt-8 rounded-2xl border border-border bg-[#121620]/40 p-6 backdrop-blur-md lg:p-8">
           <h2 className="text-xl font-bold tracking-tight text-foreground">System Resource Usage</h2>
           
           <div className="mt-6 grid gap-6 md:grid-cols-3">

@@ -344,16 +344,16 @@ export default function DashboardPage() {
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Clients */}
             <div className="eve-card rounded-xl overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-border bg-secondary/40 font-semibold text-foreground flex justify-between items-center">
+              <div className="px-4 py-3 border-b border-white/[0.05] font-semibold text-foreground flex justify-between items-center" style={{background: 'rgba(255,255,255,0.02)'}}>
                 Recent Clients
                 <button onClick={() => setIsClientModalOpen(true)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">Add Client</button>
               </div>
               <div className="p-0 overflow-x-auto flex-1 eve-scrollbar">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-border bg-secondary/40 text-muted-foreground">
+                  <thead className="border-b border-white/[0.05] text-muted-foreground" style={{background: 'rgba(255,255,255,0.02)'}}>
                     <tr><th className="px-4 py-2 font-medium">Client</th><th className="px-4 py-2 font-medium">Status</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-white/[0.05]">
                     {loadingSummary ? (
                       [...Array(3)].map((_, i) => (
                         <tr key={i} className="animate-pulse">
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                       ))
                     ) : (
                       summary?.recent_clients?.map(c => (
-                        <tr key={c.id} className="eve-table-row hover:bg-muted/40 transition-colors">
+                        <tr key={c.id} className="eve-table-row hover:bg-white/[0.02] transition-colors">
                           <td className="px-4 py-3 font-medium text-foreground">{c.company_name}</td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase ${c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>{c.status}</span>
@@ -381,16 +381,16 @@ export default function DashboardPage() {
 
             {/* Upcoming Deadlines */}
             <div className="eve-card rounded-xl overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-border bg-secondary/40 font-semibold text-foreground flex justify-between items-center">
+              <div className="px-4 py-3 border-b border-white/[0.05] font-semibold text-foreground flex justify-between items-center" style={{background: 'rgba(255,255,255,0.02)'}}>
                 Upcoming Project Deadlines
                 <button onClick={() => setIsProjectModalOpen(true)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">New Project</button>
               </div>
               <div className="p-0 overflow-x-auto flex-1 eve-scrollbar">
                 <table className="w-full text-left text-sm">
-                  <thead className="border-b border-border bg-secondary/40 text-muted-foreground">
+                  <thead className="border-b border-white/[0.05] text-muted-foreground" style={{background: 'rgba(255,255,255,0.02)'}}>
                     <tr><th className="px-4 py-2 font-medium">Project</th><th className="px-4 py-2 font-medium">Deadline</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-white/[0.05]">
                     {loadingSummary ? (
                       [...Array(3)].map((_, i) => (
                         <tr key={i} className="animate-pulse">
@@ -400,7 +400,7 @@ export default function DashboardPage() {
                       ))
                     ) : (
                       summary?.upcoming_deadlines?.map(p => (
-                        <tr key={p.id} className="eve-table-row hover:bg-muted/40 transition-colors">
+                        <tr key={p.id} className="eve-table-row hover:bg-white/[0.02] transition-colors">
                           <td className="px-4 py-3 font-medium text-foreground">{p.name}</td>
                           <td className="px-4 py-3 text-rose-400 font-medium">
                             {(() => {
