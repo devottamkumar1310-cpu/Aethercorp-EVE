@@ -32,6 +32,7 @@ import {
   Clock,
 } from "lucide-react";
 import { ProductTour } from "@/components/dashboard/ProductTour";
+import ProactiveAnalysisBanner from "@/components/dashboard/ProactiveAnalysisBanner";
 
 interface Workspace {
   id: string;
@@ -91,6 +92,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [initError, setInitError] = useState<string | null>(null);
   
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [showAnalysisBanner, setShowAnalysisBanner] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("eve_analysis_pending") === "1";
+    }
+    return false;
+  });
+  const [analysisOrgId, setAnalysisOrgId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("eve_analysis_org_id") || null;
+    }
+    return null;
+  });
 
   const getRemainingDays = () => {
     if (!profile?.trial_end_date) return 0;
@@ -117,6 +130,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setIsSidebarCollapsed(true);
       }
     }
+  }, []);
+
+  // Listen for eve_analysis_started event from CSV upload pages
+  useEffect(() => {
+    const handleAnalysisStarted = () => {
+      const orgId = localStorage.getItem("eve_analysis_org_id");
+      if (orgId) {
+        setAnalysisOrgId(orgId);
+        setShowAnalysisBanner(true);
+      }
+    };
+    window.addEventListener("eve_analysis_started", handleAnalysisStarted);
+    return () => window.removeEventListener("eve_analysis_started", handleAnalysisStarted);
   }, []);
 
   // Theme Sync on Mount — resolves 'system' to the actual OS preference.
@@ -474,7 +500,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       // Clear tour state so they get the tour
       localStorage.removeItem("eve_tour_completed");
-      
+
+      // Persist analysis banner state across reload
+      localStorage.setItem("eve_analysis_pending", "1");
+      localStorage.setItem("eve_analysis_org_id", data.organization_id);
+
       window.location.reload();
     } catch {
       setCreateError("Demo environment is currently initializing. Please try again shortly.");
@@ -1005,7 +1035,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                   </div>
                 ) : (
-                  children
+                  <>
+                    {activeWorkspaceId && showAnalysisBanner && (
+                      <ProactiveAnalysisBanner
+                        organizationId={analysisOrgId ?? activeWorkspaceId}
+                        sessionToken={sessionToken}
+                        onComplete={() => {
+                          localStorage.removeItem("eve_analysis_pending");
+                          localStorage.removeItem("eve_analysis_org_id");
+                          router.refresh();
+                        }}
+                        onDismiss={() => {
+                          setShowAnalysisBanner(false);
+                          localStorage.removeItem("eve_analysis_pending");
+                          localStorage.removeItem("eve_analysis_org_id");
+                          router.push("/dashboard/traceability");
+                        }}
+                      />
+                    )}
+                    {children}
+                  </>
                 )}
               </>
             );

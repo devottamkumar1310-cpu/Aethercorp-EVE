@@ -10,7 +10,7 @@ import uuid
 # ==============================================================================
 
 import datetime
-from sqlalchemy import Column, String, ForeignKey, UUID
+from sqlalchemy import Column, String, ForeignKey, UUID, JSON
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -26,6 +26,9 @@ class Organization(Base):
     slug = Column(String, unique=True, index=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    # Stores progress state for background proactive analysis
+    analysis_status = Column(JSON, nullable=True)
 
     # Relationships
     memberships = relationship("Membership", back_populates="organization", cascade="all, delete-orphan")

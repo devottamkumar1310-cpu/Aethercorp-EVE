@@ -1,13 +1,14 @@
 import re
 import uuid as _uuid
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
+from app.services.ai.proactive_analysis_service import ProactiveAnalysisService
 
 logger = logging.getLogger("eve.routes.organization")
 router = APIRouter(prefix="/api/organization", tags=["organization"])
@@ -103,7 +104,7 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
 @router.post("/onboard-demo")
-def onboard_demo(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
+def onboard_demo(background_tasks: BackgroundTasks, current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
     name = "NovaWear Fashion"
 
     # Idempotency guard: return existing demo workspace if the user already owns one.
@@ -148,9 +149,21 @@ def onboard_demo(current_user: Profile = Depends(get_current_user), db: Session 
         logger = logging.getLogger("eve.organization")
         logger.error(f"Seeding demo workspace data failed: {e}", exc_info=True)
 
+    background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org.id, current_user.id)
+
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
-
+@router.get("/{org_id}/analysis-status")
+def get_analysis_status(
+    org_id: str,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
+):
+    org = db.query(Organization).filter(Organization.id == org_id).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+        
+    return org.analysis_status or {"status": "none", "step": 0}
 
 @router.delete("/{org_id}")
 def delete_workspace(

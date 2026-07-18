@@ -150,6 +150,14 @@ export default function InventoryDashboardPage() {
       toast.success(`Master file processed!`, { id: toastId });
       setImportSummary({ ...result, type: "master" });
       setShowImportSummary(true);
+      // Trigger proactive analysis banner
+      const activeWorkspace = localStorage.getItem("active_workspace_id");
+      if (activeWorkspace) {
+        localStorage.setItem("eve_analysis_pending", "1");
+        localStorage.setItem("eve_analysis_org_id", activeWorkspace);
+        // Force layout to re-read localStorage by dispatching a storage event
+        window.dispatchEvent(new Event("eve_analysis_started"));
+      }
       await loadData(sessionToken);
     } catch (err: any) {
       let parsedSummary = null;

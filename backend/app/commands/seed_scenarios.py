@@ -592,81 +592,8 @@ def seed_demo_workspace_data(db, org_id):
     )
     db.add_all([msg2_1, msg2_2])
 
-    # 4. Seed Sample AI Recommendations
-    rec1 = AIRecommendation(
-        id=uuid.uuid4(),
-        organization_id=org_id,
-        agent_source="coo",
-        recommendation="Trigger immediate reorder of 500 units of Classic Tee (TSHIRT-CLASSIC) fabric rolls to prevent stockout.",
-        reasoning_summary="Current stock on hand (80 units) will support only 4 days of sales, while the supplier lead time is 7 days.",
-        data_used=["InventoryItem (TSHIRT-CLASSIC)", "Sales Records"],
-        risk_factors=["Revenue loss of ~$12,500 due to stockout"],
-        opportunity_factors=["Optimize logistics cost by bundling shipments"],
-        confidence_level=0.95,
-        expected_outcome="Maintain uninterrupted D2C sales operations."
-    )
-    rec2 = AIRecommendation(
-        id=uuid.uuid4(),
-        organization_id=org_id,
-        agent_source="finance",
-        recommendation="Approve payment for invoice INV-2026-0001 early to capture 2% terms discount.",
-        reasoning_summary="Paying before 2026-07-14 saves $55.0 on cotton rolls invoice with no adverse cash flow impact.",
-        data_used=["ProcessedDocument (INV-2026-0001)"],
-        risk_factors=["Late fees if delayed beyond 30 days"],
-        opportunity_factors=["Capture 2% early settlement discount"],
-        confidence_level=0.98,
-        expected_outcome="Save $55.0 on textile vendor costs."
-    )
-    db.add_all([rec1, rec2])
-    db.flush()
-
-    try:
-        RecommendationTraceService.create_trace(
-            db=db,
-            org_id=org_id,
-            rec_type="inventory",
-            action=rec1.recommendation,
-            confidence=0.95,
-            sources=["InventoryItem (TSHIRT-CLASSIC)", "Sales Records"],
-            metrics={"stock": 80, "reorder_point": 140, "lead_time": 7, "avg_daily_sales": 20.0},
-            reasoning=[
-                "Classic Tee stock is 80 units.",
-                "Sales velocity is 20 units/day. Estimated stockout in 4 days.",
-                "Supplier lead time is 7 days. Ordering now prevents a 3-day stockout gap.",
-                "MOQ from Premium Cotton Textiles is 500 units."
-            ],
-            trigger_type="SYSTEM_GENERATED",
-            source_agent="inventory_agent",
-            llm_provider="google",
-            llm_model="gemini-2.5-flash",
-            input_metrics={"stock": 80, "reorder_point": 140, "avg_daily_sales": 20.0, "lead_time": 7},
-            business_rules=["stock < reorder_point", "days_of_cover < lead_time"],
-            calculations=["days_of_cover = 80 / 20 = 4 days", "gap = lead_time - days_of_cover = 7 - 4 = 3 days"]
-        )
-        RecommendationTraceService.create_trace(
-            db=db,
-            org_id=org_id,
-            rec_type="margin",
-            action=rec2.recommendation,
-            confidence=0.98,
-            sources=["ProcessedDocument (INV-2026-0001)"],
-            metrics={"invoice_amount": 2750.0, "discount_pct": 2.0, "discount_savings": 55.0, "early_payment_deadline": "2026-07-14"},
-            reasoning=[
-                "Supplier Invoice INV-2026-0001 for Premium Cotton Textiles has early payment terms of 2/10 Net 30.",
-                "Paying before 2026-07-14 triggers a 2% discount, saving $55.0 on the total balance of $2,750.",
-                "Available cash flow is $48,000, which easily covers the invoice with zero impact on operational runway."
-            ],
-            trigger_type="SYSTEM_GENERATED",
-            source_agent="finance_agent",
-            llm_provider="google",
-            llm_model="gemini-2.5-flash",
-            input_metrics={"invoice_amount": 2750.0, "discount_pct": 2.0, "available_cash_flow": 48000.0},
-            business_rules=["early_payment_terms = 2/10 Net 30", "payment_before_deadline_triggers_discount"],
-            calculations=["discount_savings = 2750.0 * 0.02 = 55.0", "cash_remaining = 48000 - 2750 = 45250"]
-        )
-    except Exception as trace_err:
-        print(f"  Warning: Failed to seed recommendation traces: {trace_err}")
-
+    # 4. Proactive AI Recommendations will be triggered by background task during onboarding
+    
     db.commit()
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):

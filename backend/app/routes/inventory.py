@@ -13,7 +13,7 @@ import io
 import datetime
 import logging
 import pandas as pd
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -42,7 +42,8 @@ def upload_inventory_csv(
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
     _: None = Depends(rate_limit(requests=10, window_seconds=60)),
-    _role = Depends(require_workspace_role("manager"))
+    _role = Depends(require_workspace_role("manager")),
+    background_tasks: BackgroundTasks = None
 ):
     """
     Uploads and parses inventory.csv.
@@ -74,6 +75,8 @@ def upload_inventory_csv(
         report = ImporterService.import_inventory(db, org_id, df)
         if report["status"] == "error":
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        if background_tasks:
+            background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org_id, token_context.get("user_id"))
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Inventory Upload Error: {e}", exc_info=e)
@@ -89,7 +92,8 @@ def upload_sales_csv(
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
     _: None = Depends(rate_limit(requests=10, window_seconds=60)),
-    _role = Depends(require_workspace_role("manager"))
+    _role = Depends(require_workspace_role("manager")),
+    background_tasks: BackgroundTasks = None
 ):
     """
     Uploads and parses sales.csv.
@@ -121,6 +125,8 @@ def upload_sales_csv(
         report = ImporterService.import_sales(db, org_id, df)
         if report["status"] == "error":
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        if background_tasks:
+            background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org_id, token_context.get("user_id"))
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Sales Upload Error: {e}", exc_info=e)
@@ -136,7 +142,8 @@ def upload_product_costs_csv(
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
     _: None = Depends(rate_limit(requests=10, window_seconds=60)),
-    _role = Depends(require_workspace_role("manager"))
+    _role = Depends(require_workspace_role("manager")),
+    background_tasks: BackgroundTasks = None
 ):
     """
     Uploads and parses product_cost.csv / costs.csv.
@@ -165,9 +172,11 @@ def upload_product_costs_csv(
                 content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
             )
 
-        report = ImporterService.import_costs(db, org_id, df)
+        report = ImporterService.import_product_costs(db, org_id, df)
         if report["status"] == "error":
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        if background_tasks:
+            background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org_id, token_context.get("user_id"))
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Costs Upload Error: {e}", exc_info=e)
@@ -182,7 +191,8 @@ def upload_master_csv(
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
     _: None = Depends(rate_limit(requests=10, window_seconds=60)),
-    _role = Depends(require_workspace_role("manager"))
+    _role = Depends(require_workspace_role("manager")),
+    background_tasks: BackgroundTasks = None
 ):
     """
     Uploads and parses a master CSV (e.g. Shopify export).
@@ -214,6 +224,8 @@ def upload_master_csv(
         report = ImporterService.import_master(db, org_id, df)
         if report["status"] == "error":
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
+        if background_tasks:
+            background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org_id, token_context.get("user_id"))
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=report)
     except Exception as e:
         logger.error(f"Master Upload Error: {e}", exc_info=e)
