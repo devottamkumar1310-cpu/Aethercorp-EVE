@@ -39,7 +39,7 @@ def detect_risks(db: Session, workspace_id: uuid.UUID) -> dict:
     overdue_projects = db.query(Project).filter(
         Project.organization_id == workspace_id,
         Project.status == "active",
-        Project.deadline != None,
+        Project.deadline is not None,
         Project.deadline < now.strftime("%Y-%m-%d")
     ).all()
     
@@ -54,7 +54,7 @@ def detect_risks(db: Session, workspace_id: uuid.UUID) -> dict:
     overdue_tasks = db.query(Task).filter(
         Task.organization_id == workspace_id,
         Task.status != "completed",
-        Task.due_date != None,
+        Task.due_date is not None,
         Task.due_date < now.strftime("%Y-%m-%d")
     ).all()
     

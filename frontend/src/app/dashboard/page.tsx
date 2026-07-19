@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects } from "@/services/businessService";
 import { DashboardSummary, ActivityLog, Client, Project } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
+import { devLog } from "@/lib/logger";
 
 import { ExecutiveTimeline } from "@/components/dashboard/ExecutiveTimeline";
 
@@ -168,7 +169,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!checkingAuth && !loadingSummary && !loadingLogs && !loadingTrends) {
       const duration = performance.now() - startTime;
-      console.log(`[EVE LATENCY AUDIT] Dashboard fully interactive in: ${duration.toFixed(2)}ms`);
+      devLog(`[EVE LATENCY AUDIT] Dashboard fully interactive in: ${duration.toFixed(2)}ms`);
     }
   }, [checkingAuth, loadingSummary, loadingLogs, loadingTrends]);
 
@@ -215,7 +216,7 @@ export default function DashboardPage() {
     return null;
   }
 
-  console.log("EVE Dashboard Render State:", {
+  devLog("EVE Dashboard Render State:", {
     loadingSummary,
     summary,
     loadingTrends,

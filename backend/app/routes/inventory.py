@@ -28,6 +28,7 @@ from app.core.rate_limiter import rate_limit
 from app.fashion.gmroi import calculate_gmroi
 from app.fashion.sell_through import calculate_sell_through_rate
 from app.fashion.inventory_turnover import calculate_inventory_turnover
+from app.services.ai.proactive_analysis_service import ProactiveAnalysisService
 
 logger = logging.getLogger("eve.routes.inventory")
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
@@ -172,7 +173,7 @@ def upload_product_costs_csv(
                 content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
             )
 
-        report = ImporterService.import_product_costs(db, org_id, df)
+        report = ImporterService.import_costs(db, org_id, df)
         if report["status"] == "error":
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=report)
         if background_tasks:

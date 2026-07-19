@@ -61,7 +61,7 @@ export default function HealthDashboard() {
           <h3 className="text-lg font-semibold text-foreground">Health Monitor Offline</h3>
           <p className="mt-2 text-sm text-red-200/80">{error || "Check backend API connection."}</p>
           <button
-            onClick={fetchHealth}
+            onClick={() => fetchHealth()}
             className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-foreground transition hover:bg-red-500"
           >
             Retry Connection

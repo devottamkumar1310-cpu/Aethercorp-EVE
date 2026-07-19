@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Loader2, AlertCircle, X, Sparkles } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -37,69 +37,85 @@ export default function ProactiveAnalysisBanner({
   const [recommendationCount, setRecommendationCount] = useState(0);
   const [visible, setVisible] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  const onDismissRef = useRef(onDismiss);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onDismissRef.current = onDismiss;
+  }, [onComplete, onDismiss]);
 
   useEffect(() => {
     if (dismissed) return;
 
-    let isMounted = true;
+    const controller = new AbortController();
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     let pollCount = 0;
+    let completedNotified = false;
     const MAX_POLLS = 90; // 3 minutes max
 
     const checkStatus = async () => {
-      if (!isMounted || pollCount > MAX_POLLS) return;
+      if (controller.signal.aborted || pollCount >= MAX_POLLS) return;
       pollCount++;
+      let shouldContinue = true;
 
       try {
         const res = await fetch(
           `${API_BASE_URL}/api/organization/${organizationId}/analysis-status`,
-          { headers: { Authorization: `Bearer ${sessionToken}` } }
+          {
+            headers: { Authorization: `Bearer ${sessionToken}` },
+            signal: controller.signal,
+          }
         );
-        if (!res.ok || !isMounted) return;
+        if (!res.ok || controller.signal.aborted) return;
 
         const data: AnalysisStatus = await res.json();
+        if (controller.signal.aborted) return;
 
-        if (isMounted) {
-          setStatus(data.status ?? "in_progress");
-          setStep(data.step ?? 0);
+        const nextStatus = data.status ?? "in_progress";
+        setStatus(nextStatus);
+        setStep(data.step ?? 0);
 
-          if (data.status === "failed") {
-            setError(data.error ?? "An unknown error occurred.");
-          } else if (data.status === "completed") {
-            setRecommendationCount(data.recommendations_count ?? 0);
-            if (onComplete) onComplete();
-          }
+        if (nextStatus === "failed") {
+          setError(data.error ?? "An unknown error occurred.");
+          shouldContinue = false;
         }
-      } catch {
-        // Silently ignore polling errors
+
+        if (nextStatus === "completed") {
+          setRecommendationCount(data.recommendations_count ?? 0);
+          if (!completedNotified) {
+            completedNotified = true;
+            onCompleteRef.current?.();
+          }
+          shouldContinue = false;
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      } finally {
+        if (shouldContinue && !controller.signal.aborted && pollCount < MAX_POLLS) {
+          timeoutId = setTimeout(checkStatus, 2000);
+        }
       }
     };
 
     checkStatus();
 
-    const interval = setInterval(() => {
-      if (status === "completed" || status === "failed" || !isMounted) {
-        clearInterval(interval);
-        return;
-      }
-      checkStatus();
-    }, 2000);
-
     return () => {
-      isMounted = false;
-      clearInterval(interval);
+      controller.abort();
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [organizationId, sessionToken, dismissed, status, onComplete]);
+  }, [organizationId, sessionToken, dismissed]);
 
   const handleViewRecommendations = () => {
     setDismissed(true);
     setVisible(false);
-    if (onDismiss) onDismiss();
+    onDismissRef.current?.();
   };
 
   const handleDismiss = () => {
     setDismissed(true);
     setVisible(false);
-    if (onDismiss) onDismiss();
+    onDismissRef.current?.();
   };
 
   if (!visible) return null;

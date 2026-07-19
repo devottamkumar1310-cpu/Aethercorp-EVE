@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { getDocumentDetails, fetchDocumentPreviewBlob } from "@/services/documentService";
 import { ProcessedDocumentDetail } from "@/types/document";
@@ -252,9 +253,12 @@ export default function DocumentDetailPage() {
           <div className="flex-1 bg-background p-4 flex items-center justify-center relative min-h-[450px]">
             {previewUrl ? (
               document.content_type.startsWith("image/") ? (
-                <img 
+                <Image
                   src={previewUrl} 
                   alt={document.filename} 
+                  width={800}
+                  height={600}
+                  unoptimized
                   className="max-w-full max-h-[500px] object-contain rounded-lg shadow-md"
                 />
               ) : document.content_type === "application/pdf" ? (

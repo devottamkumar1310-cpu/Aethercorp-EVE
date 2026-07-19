@@ -14,7 +14,7 @@ from app.models.inventory import InventoryItem
 from app.models.audit_log import AuditLog
 from app.services.analytics_service import AnalyticsService
 from app.services.data_quality_service import DataQualityError
-from app.services.gemini_service import GeminiService, GeminiOutageError
+from app.services.gemini_service import GeminiService
 from app.services.audit_logger import AuditLogger
 from app.orchestration.orchestrator import Orchestrator
 from app.orchestration.task_graph import TaskGraph

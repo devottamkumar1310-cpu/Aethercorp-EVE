@@ -8,7 +8,7 @@
 
 import re
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 
 logger = logging.getLogger("eve.fashion.variant_detector")

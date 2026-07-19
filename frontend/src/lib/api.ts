@@ -1,3 +1,5 @@
+import { devLog } from "@/lib/logger";
+
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || "";
 if (!rawUrl && typeof window !== "undefined") {
   console.warn(
@@ -12,7 +14,7 @@ export const API_BASE_URL =
     .replace(/\/api$/, "");
 
 if (typeof window !== "undefined") {
-  console.log(`[EVE Config] API Base URL resolved to: ${API_BASE_URL}`);
+  devLog(`[EVE Config] API Base URL resolved to: ${API_BASE_URL}`);
 }
 
 /**
@@ -48,4 +50,4 @@ export async function apiFetch(url: string, options: RequestInit = {}): Promise<
     throw new Error("Session expired. Please sign in again.");
   }
   return res;
-}
+}

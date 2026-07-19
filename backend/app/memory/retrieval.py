@@ -46,7 +46,7 @@ class VectorRetrievalService:
                 # Note: cosine_distance is 1 - cosine_similarity. So lower distance means higher similarity.
                 results = db.query(MemoryEntry).filter(
                     MemoryEntry.organization_id == organization_id,
-                    MemoryEntry.embedding != None
+                    MemoryEntry.embedding is not None
                 ).order_by(
                     MemoryEntry.embedding.cosine_distance(query_vector)
                 ).limit(limit).all()

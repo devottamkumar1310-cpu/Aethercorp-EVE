@@ -75,6 +75,10 @@ def override_get_required_workspace_id():
 # Override dependencies in FastAPI with proper cleanup to prevent test pollution
 @pytest.fixture(autouse=True, scope="module")
 def manage_overrides():
+    from unittest.mock import patch
+    patcher = patch("app.services.ai.proactive_analysis_service.ProactiveAnalysisService.generate_baseline_recommendations_async", return_value=None)
+    patcher.start()
+    
     saved_overrides = app.dependency_overrides.copy()
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
@@ -83,6 +87,7 @@ def manage_overrides():
     yield
     app.dependency_overrides.clear()
     app.dependency_overrides.update(saved_overrides)
+    patcher.stop()
 
 client = TestClient(app)
 

@@ -104,7 +104,7 @@ export default function FinancePage() {
               <div className="text-4xl font-bold text-foreground">${kpis?.revenue?.toLocaleString() || 0}</div>
             </div>
             <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-center items-center">
-              <div className="flex items-center gap-2 text-red-655 font-medium mb-2"><ArrowDownRight size={20}/> Total Expenses</div>
+              <div className="flex items-center gap-2 text-red-600 font-medium mb-2"><ArrowDownRight size={20}/> Total Expenses</div>
               <div className="text-4xl font-bold text-foreground">${kpis?.expenses?.toLocaleString() || 0}</div>
             </div>
             <div className="bg-blue-600 p-6 rounded-xl border border-blue-700 shadow-md flex flex-col justify-center items-center text-foreground">

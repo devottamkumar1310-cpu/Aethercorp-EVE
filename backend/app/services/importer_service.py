@@ -45,7 +45,7 @@ class ImporterService:
                 org_id = uuid.UUID(org_id)
             except ValueError:
                 pass
-        original_cols = list(df.columns)
+        list(df.columns)
         df.columns = [c.strip().lower() for c in df.columns]
         
         # 1. Missing columns validation
@@ -96,11 +96,9 @@ class ImporterService:
                 continue
 
             # Stock level validations
-            stock_found = False
             for alias in ["stock_on_hand", "quantity", "stock"]:
                 if alias in df.columns:
                     stock_val = row[alias]
-                    stock_found = True
                     if pd.isna(stock_val):
                         errors.append({"row": row_num, "column": alias, "value": None, "message": "Stock level cannot be empty."})
                     else:
@@ -236,7 +234,7 @@ class ImporterService:
                 org_id = uuid.UUID(org_id)
             except ValueError:
                 pass
-        original_cols = list(df.columns)
+        list(df.columns)
         df.columns = [c.strip().lower() for c in df.columns]
         
         # 1. Schema check
@@ -315,11 +313,9 @@ class ImporterService:
                     errors.append({"row": row_num, "column": qty_col, "value": str(qty_val), "message": "Quantity must be an integer."})
 
             # Unit Price validation (if exists)
-            price_found = False
             for alias in ["unit_price", "price", "selling_price"]:
                 if alias in df.columns:
                     p_val = row[alias]
-                    price_found = True
                     if not pd.isna(p_val):
                         try:
                             val = float(p_val)
@@ -429,7 +425,7 @@ class ImporterService:
                 org_id = uuid.UUID(org_id)
             except ValueError:
                 pass
-        original_cols = list(df.columns)
+        list(df.columns)
         df.columns = [c.strip().lower() for c in df.columns]
         
         # 1. Schema Check
@@ -638,7 +634,7 @@ class ImporterService:
         products_cache = {p.sku: p for p in db.query(Product).filter(Product.organization_id == org_id).all()}
         existing_items = db.query(InventoryItem).filter(InventoryItem.organization_id == org_id).all()
         inventory_cache = {item.product_id: item for item in existing_items}
-        suppliers_cache = {s.name: s for s in db.query(Supplier).filter(Supplier.organization_id == org_id).all()}
+        {s.name: s for s in db.query(Supplier).filter(Supplier.organization_id == org_id).all()}
         
         sales_to_add = []
         success_count = 0

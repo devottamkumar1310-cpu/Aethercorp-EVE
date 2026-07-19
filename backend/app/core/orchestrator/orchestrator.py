@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any
 from app.core.orchestrator.base_engine import BaseEngine, EngineContext, EngineOutput
 from app.core.orchestrator.synthesizer import RecommendationSynthesizer
 

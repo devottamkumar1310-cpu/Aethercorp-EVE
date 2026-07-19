@@ -335,7 +335,7 @@ async def run_evaluator():
 def generate_report(results, truth):
     # Calculate scores based on ground truth alignment
     # Let's write the report structure
-    report_path = os.path.join(os.path.dirname(__file__), "../../../C:/Users/Devottam/.gemini/antigravity/brain/f524667d-b961-4186-b7d4-9706f18588cf/eve_performance_audit_report.md")
+    os.path.join(os.path.dirname(__file__), "../../../C:/Users/Devottam/.gemini/antigravity/brain/f524667d-b961-4186-b7d4-9706f18588cf/eve_performance_audit_report.md")
     # Actually let's use the absolute path in artifacts directory directly
     abs_report_path = "C:/Users/Devottam/.gemini/antigravity/brain/f524667d-b961-4186-b7d4-9706f18588cf/eve_performance_audit_report.md"
     

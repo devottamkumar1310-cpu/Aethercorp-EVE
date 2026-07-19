@@ -22,8 +22,6 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.document import ProcessedDocument
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
-from app.models.ai_recommendation import AIRecommendation
-from app.services.recommendation_trace_service import RecommendationTraceService
 
 DEV_ORG_ID = uuid.UUID("ea337dee-5c68-41ae-bb08-45afe771db8a")
 DIPTI_ORG_ID = uuid.UUID("dbbb6f95-f4e7-4bb4-b8c3-b776aca126cf")
@@ -34,7 +32,6 @@ def generate_healthy_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFram
     
     # 1. Products & Inventory
     products = []
-    inventory = []
     costs = []
     
     categories = ["Dresses", "Outerwear", "Knitwear", "Activewear"]
@@ -91,7 +88,6 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     
     # 1. Products & Inventory (High dead stock, out-of-stock bestsellers)
     products = []
-    inventory = []
     costs = []
     
     # Bestsellers (out of stock)
@@ -216,7 +212,6 @@ def seed_finance_and_clients(db, org_id, is_healthy=True):
     print(f"Seeding clients and ledger for Org: {org_id}...")
     
     # 1. Clients
-    client_statuses = ["active", "lead", "inactive"]
     clients_data = []
     
     for i in range(1, 8):

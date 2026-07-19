@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
+import { devLog } from "@/lib/logger";
 import Link from "next/link";
 import {
   Building2,
@@ -288,7 +289,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           // Single retry after a brief delay to absorb async provisioning lag
           // (e.g. demo workspace DB commit not yet visible at query time).
           // One attempt only — no polling, no loops.
-          console.log("[EVE] Workspaces empty on first fetch — retrying once after 1500ms");
+          devLog("[EVE] Workspaces empty on first fetch - retrying once after 1500ms");
           await new Promise<void>((resolve) => setTimeout(resolve, 1500));
           try {
             const retryRes = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
@@ -297,7 +298,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             if (retryRes.ok) {
               const retryData: Workspace[] = await retryRes.json();
               if (retryData.length > 0) {
-                console.log("[EVE] Retry succeeded — workspaces found:", retryData.length);
+                devLog("[EVE] Retry succeeded - workspaces found:", retryData.length);
                 setWorkspaces(retryData);
                 const storedId = localStorage.getItem("active_workspace_id");
                 if (storedId && retryData.some((w) => w.id === storedId)) {
@@ -348,14 +349,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     let mounted = true;
     async function init() {
-      console.log("[TELEMETRY][PERF] Dashboard Layout Init Start");
+      devLog("[TELEMETRY][PERF] Dashboard Layout Init Start");
       const tStart = performance.now();
       const supabase = createClient();
       setLoadingStage(1); // Authenticating
       
       const proceedWithSession = async (token: string) => {
         const tHydrate = performance.now();
-        console.log(`[TELEMETRY][PERF] Session Hydration Duration: ${(tHydrate - tStart).toFixed(2)}ms`);
+        devLog(`[TELEMETRY][PERF] Session Hydration Duration: ${(tHydrate - tStart).toFixed(2)}ms`);
         setSessionToken(token);
         sessionTokenRef.current = token; // Eagerly sync ref so onAuthStateChange guard works before React re-render
         const isAlreadyInitialized =
@@ -401,8 +402,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }
         } finally {
           const tFinish = performance.now();
-          console.log(`[TELEMETRY][PERF] Workspace/Profile Load Duration: ${(tFinish - tHydrate).toFixed(2)}ms`);
-          console.log(`[TELEMETRY][PERF] Time to Dashboard Interactive: ${(tFinish - tStart).toFixed(2)}ms`);
+          devLog(`[TELEMETRY][PERF] Workspace/Profile Load Duration: ${(tFinish - tHydrate).toFixed(2)}ms`);
+          devLog(`[TELEMETRY][PERF] Time to Dashboard Interactive: ${(tFinish - tStart).toFixed(2)}ms`);
           if (mounted) setLoading(false);
         }
       };

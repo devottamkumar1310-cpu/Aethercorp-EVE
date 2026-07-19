@@ -20,21 +20,14 @@ from app.schemas.executive import (
     ExecutiveConversationUpdate
 )
 from app.services.ai.agent_orchestrator import AgentOrchestrator
-from app.services.ai.finance_agent import FinanceAgent
-from app.services.ai.operations_agent import OperationsAgent
-from app.services.ai.coo_agent import COOAgent
 from app.services.ai.memory_service import (
     save_goal,
     list_goals,
     delete_goal,
     update_goal,
     get_influencing_goals,
-    get_recent_recommendations,
-    save_recommendation
+    get_recent_recommendations
 )
-from app.services.business_health_service import get_health_score
-from app.services.risk_detection_service import detect_risks
-from app.services.opportunity_service import detect_opportunities
 
 import logging
 logger = logging.getLogger("eve.routes.executive")
@@ -192,7 +185,7 @@ async def daily_brief(
             if rec.get("projected_profit_impact", 0) > 0 and rec.get("price_change_percentage", 0) > 0:
                 opportunities.append({
                     "title": f"Optimize Price for {rec.get('name', rec.get('sku'))}",
-                    "why": f"High elasticity.",
+                    "why": "High elasticity.",
                     "impact": f"Potential ₹{rec.get('projected_profit_impact', 0):,.0f} additional profit.",
                     "action": f"Increase price by {rec.get('price_change_percentage', 0)}%."
                 })

@@ -169,7 +169,7 @@ def test_failed_and_orphaned_cleanup(setup_upload_data):
     Verifies that files deleted or orphaned are cleaned up from the storage disk.
     """
     db = TestingSessionLocal()
-    org_id = setup_upload_data["org_id"]
+    setup_upload_data["org_id"]
     
     # Create a local file in 'uploads' directory
     os.makedirs("uploads", exist_ok=True)

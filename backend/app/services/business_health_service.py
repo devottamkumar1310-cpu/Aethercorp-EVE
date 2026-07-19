@@ -14,8 +14,8 @@ def get_health_score(db: Session, workspace_id: uuid.UUID) -> dict:
     total_clients = db.query(Client).filter(Client.organization_id == workspace_id).count()
     active_clients = db.query(Client).filter(Client.organization_id == workspace_id, Client.status == "active").count()
     
-    total_projects = db.query(Project).filter(Project.organization_id == workspace_id).count()
-    active_projects = db.query(Project).filter(Project.organization_id == workspace_id, Project.status == "active").count()
+    db.query(Project).filter(Project.organization_id == workspace_id).count()
+    db.query(Project).filter(Project.organization_id == workspace_id, Project.status == "active").count()
     
     total_tasks = db.query(Task).filter(Task.organization_id == workspace_id).count()
     completed_tasks = db.query(Task).filter(Task.organization_id == workspace_id, Task.status == "completed").count()

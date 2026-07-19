@@ -1,5 +1,4 @@
 import uuid
-import re
 import time
 import logging
 import asyncio
@@ -12,7 +11,6 @@ from app.schemas.executive import ExecutiveSynthesisResult
 from app.services.ai.executive_board import ExecutiveBoard
 from app.core.dependency_container import container
 from app.services.ai.conversation_layer import ConversationLayer
-from app.services.ai.executive_formatter import ExecutiveFormatter
 from app.services.localization.translator import LocalizationService
 from app.services.audit_logger import AuditLogger
 
@@ -461,7 +459,7 @@ class AgentOrchestrator:
             latency_ms = int((time.time() - start_time) * 1000)
             telemetry = get_telemetry()
             
-            agent_data = coo_result.model_dump()
+            agent_data = coo_result.model_dump(mode="json")
             agent_data["telemetry"] = {
                 "prompt_tokens": telemetry.get("prompt_tokens", 0),
                 "completion_tokens": telemetry.get("completion_tokens", 0),
@@ -507,7 +505,7 @@ class AgentOrchestrator:
         from app.services.business_health_service import get_health_score
         from app.services.ai.memory_service import get_memory_context
         
-        start_time = time.time()
+        time.time()
         print("STEP A - request received", flush=True)
         
         # 1. Intent Classifier & Data sufficiency check
@@ -884,7 +882,7 @@ class AgentOrchestrator:
             conversation_id=conversation.id,
             role="assistant",
             content=full_text,
-            agent_data=coo_result.model_dump()
+            agent_data=coo_result.model_dump(mode="json")
         )
         db.add(assistant_msg)
         db.commit()

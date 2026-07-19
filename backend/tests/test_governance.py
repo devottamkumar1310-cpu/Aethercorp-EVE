@@ -409,7 +409,6 @@ def test_evidence_validation_and_suppression():
     from app.models.product import Product
     from app.models.client import Client
     from app.models.project import Project
-    from app.models.task import Task
     
     db_session = TestingSessionLocal()
     try:

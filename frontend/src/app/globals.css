@@ -1352,3 +1352,31 @@
   border-color: rgba(255, 255, 255, 0.045) !important;
   background-image: linear-gradient(180deg, rgba(168, 85, 247, 0.012), transparent 70%);
 }
+
+/* Custom contrast fix for Add Product button specifically in light mode themes */
+[data-theme="light"] .add-product-btn,
+[data-theme="executive-light"] .add-product-btn {
+  color: #ffffff !important;
+}
+[data-theme="light"] .add-product-btn svg,
+[data-theme="executive-light"] .add-product-btn svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+/* Ensure all children (text, bold tags, SVGs) inside primary action backgrounds are forced to white */
+[data-theme] .bg-indigo-600 *,
+[data-theme] .bg-indigo-650 *,
+[data-theme] .bg-indigo-700 *,
+[data-theme] .bg-indigo-800 *,
+[data-theme] .bg-blue-600 * {
+  color: #ffffff !important;
+}
+[data-theme] .bg-indigo-600 svg,
+[data-theme] .bg-indigo-650 svg,
+[data-theme] .bg-indigo-700 svg,
+[data-theme] .bg-indigo-800 svg,
+[data-theme] .bg-blue-600 svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}

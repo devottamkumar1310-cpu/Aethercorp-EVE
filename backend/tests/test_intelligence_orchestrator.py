@@ -10,7 +10,6 @@ from app.services.intelligence.financial_engine import FinancialEngine
 from app.services.intelligence.business_health_engine import BusinessHealthEngine
 from app.services.intelligence.action_engine import ActionEngine
 from app.services.intelligence.executive_summary_engine import ExecutiveSummaryEngine
-from app.core.orchestrator.synthesizer import RecommendationSynthesizer
 from app.fashion.stockout_prediction import predict_stockout
 from app.fashion.reorder_engine import calculate_reorder_quantity
 
@@ -47,7 +46,7 @@ async def test_forecast_engine_selection_rules():
         parameters={"sales_series_override": [10.0, 12.0, 11.0]}
     )
     res_wma = await engine.execute(context_wma)
-    assert res_wma.success == True
+    assert res_wma.success
     assert res_wma.data["selected_model"] == "weighted_moving_average"
 
     # 2. Continuous demand (zeros < 0.3) should choose Exponential Smoothing
@@ -57,7 +56,7 @@ async def test_forecast_engine_selection_rules():
         parameters={"sales_series_override": [10.0, 12.0, 11.0, 14.0, 13.0, 12.0]}
     )
     res_es = await engine.execute(context_es)
-    assert res_es.success == True
+    assert res_es.success
     assert res_es.data["selected_model"] == "exponential_smoothing"
 
     # 3. Intermittent demand (zeros >= 0.3) should choose Croston
@@ -67,7 +66,7 @@ async def test_forecast_engine_selection_rules():
         parameters={"sales_series_override": [0.0, 0.0, 10.0, 0.0, 0.0, 10.0]}
     )
     res_croston = await engine.execute(context_croston)
-    assert res_croston.success == True
+    assert res_croston.success
     assert res_croston.data["selected_model"] == "croston"
 
 @pytest.mark.anyio
@@ -75,7 +74,7 @@ async def test_optimization_engine():
     engine = OptimizationEngine()
     context = EngineContext(sku="SKU_OPT", avg_daily_sales=10.0, lead_time_days=10)
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert "reorder_quantity" in res.data
     assert "safety_stock" in res.data
     assert "reorder_point" in res.data
@@ -86,7 +85,7 @@ async def test_confidence_engine():
     engine = ConfidenceEngine()
     context = EngineContext(sku="SKU_CONF", avg_daily_sales=10.0)
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert "confidence_score" in res.data
     assert "data_quality" in res.data
     assert "confidence_factors" in res.data
@@ -138,7 +137,7 @@ async def test_classification_engine():
         }
     )
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert res.data["inventory_class"] in ["HEALTHY", "SLOW_MOVING", "AT_RISK", "DEAD_STOCK"]
     assert res.data["abc_class"] == "A"
     assert res.data["rfm_score"] > 0
@@ -154,7 +153,7 @@ async def test_anomaly_engine():
         parameters={"sales_series_override": [2.0]*20 + [15.0]*3}
     )
     res_surge = await engine.execute(context_surge)
-    assert res_surge.success == True
+    assert res_surge.success
     assert any(a["type"] == "DEMAND_SURGE" for a in res_surge.data["anomalies"])
     assert res_surge.data["severity"] in ["LOW", "MEDIUM", "HIGH"]
 
@@ -169,13 +168,12 @@ async def test_financial_engine():
         parameters={"unit_cost_override": 10.0}
     )
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert res.data["working_capital_locked"] == 500.0
     assert res.data["revenue_at_risk"] > 0.0
 
 @pytest.mark.anyio
 async def test_business_health_engine():
-    from app.services.intelligence.business_health_engine import BusinessHealthEngine
     engine = BusinessHealthEngine()
     
     # Test batch parameters (healthy ratio 100%, 0 risk, 0 dead capital, 0 anomalies)
@@ -192,7 +190,7 @@ async def test_business_health_engine():
         }
     )
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert res.data["health_score"] == 100
     assert res.data["health_grade"] == "A"
 
@@ -209,7 +207,7 @@ async def test_action_engine():
         }
     )
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert any("Reorder SKU_ALERT" in action for action in res.data["actions"])
 
 @pytest.mark.anyio
@@ -226,7 +224,7 @@ async def test_executive_summary_engine():
         }
     )
     res = await engine.execute(context)
-    assert res.success == True
+    assert res.success
     assert res.data["risk"] is not None
     assert res.data["risk"]["sku"] == "SKU_RISK"
     assert res.data["risk"]["impact"] == 1500.0

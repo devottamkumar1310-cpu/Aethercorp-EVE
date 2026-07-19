@@ -420,7 +420,7 @@ class ExecutiveBoard:
             
             # If forecasting ran, create scenario-specific actions
             if "forecasting" in results:
-                forecast_data = results["forecasting"]
+                results["forecasting"]
                 q_low = question.lower()
                 if "price" in q_low:
                     priorities.append(StrategicPriority(
@@ -529,7 +529,6 @@ class ExecutiveBoard:
         from app.services.opportunity_service import detect_opportunities
         from app.services.trend_service import calculate_trends
         from app.services.business_analytics_service import BusinessAnalyticsService
-        from app.models.inventory import InventoryItem
         from app.models.product import Product
         from app.orchestration.validator import ExecutiveGovernanceValidator
         
@@ -598,7 +597,7 @@ class ExecutiveBoard:
         status = health.get("status", "warning")
         
         risks = [r.get("title", r["description"]) if isinstance(r, dict) else str(r) for r in risks_data.get("risks", [])]
-        opportunities = [o.get("title", o["description"]) if isinstance(o, dict) else str(o) for o in opps_data.get("opportunities", [])]
+        [o.get("title", o["description"]) if isinstance(o, dict) else str(o) for o in opps_data.get("opportunities", [])]
         
         # Load live database metrics for high-fidelity deterministic recommendations
         from app.services.analytics_service import AnalyticsService
@@ -705,7 +704,7 @@ class ExecutiveBoard:
                     business_object="Project Roster"
                 ))
 
-            expected_impact = f"Bypass lead-time constraints to resolve SKU bottlenecks and protect active order volumes."
+            expected_impact = "Bypass lead-time constraints to resolve SKU bottlenecks and protect active order volumes."
             findings_by_agent = {"COO Agent": ["Supply chain capacity variance", f"Low stock SKU alerts: {len(low_stock)}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.92}
@@ -713,7 +712,7 @@ class ExecutiveBoard:
         elif any(kw in q_lower for kw in ["profit", "margin", "cost", "expense", "pricing", "hurt", "loss", "cogs", "profitable", "revenue"]):
             # Profitability / Financial Leakage Intent
             revenue = overview.get("revenue", 0.0)
-            expenses = overview.get("expenses", 0.0)
+            overview.get("expenses", 0.0)
             profit = overview.get("profit", 0.0)
             margin = (profit / revenue * 100.0) if revenue > 0 else 0.0
             
@@ -789,7 +788,7 @@ class ExecutiveBoard:
                     business_object="Task Roster"
                 ))
 
-            expected_impact = f"Optimize capital efficiency to lift monthly net margins by up to 5%."
+            expected_impact = "Optimize capital efficiency to lift monthly net margins by up to 5%."
             findings_by_agent = {"COO Agent": [f"Profit Margin: {margin:.1f}%", f"Overstock capital lockup: ${total_capital_locked:,.2f}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.94}
@@ -859,7 +858,7 @@ class ExecutiveBoard:
                 business_object="Supplier Roster"
             ))
 
-            expected_impact = f"Free up storage capacity and reduce overall stockout revenue exposure to $0.00."
+            expected_impact = "Free up storage capacity and reduce overall stockout revenue exposure to $0.00."
             findings_by_agent = {"COO Agent": [f"Low stock count: {low_stock_count}", f"Revenue-at-risk: ${total_rev_at_risk:,.2f}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.90}
@@ -928,7 +927,7 @@ class ExecutiveBoard:
                 business_object="Client Roster"
             ))
 
-            expected_impact = f"Reactivate client accounts and secure stable recurring contract lines."
+            expected_impact = "Reactivate client accounts and secure stable recurring contract lines."
             findings_by_agent = {"COO Agent": [f"Active Clients: {active_clients}", f"Inactive Clients: {inactive_clients}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.89}

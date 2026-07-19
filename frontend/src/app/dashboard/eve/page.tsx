@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
+import { devLog } from "@/lib/logger";
 import { 
   sendExecutiveChatStream,
   listConversations,
@@ -20,9 +22,19 @@ import {
   AgentAnalysisResult, 
   MessageResponse
 } from "@/types/executive";
-import { DailyBriefModal } from "@/components/executive/DailyBriefModal";
-import { MemoryManagerPanel } from "@/components/executive/MemoryManagerPanel";
-import { RecommendationHistoryPanel } from "@/components/executive/RecommendationHistoryPanel";
+
+const DailyBriefModal = dynamic(
+  () => import("@/components/executive/DailyBriefModal").then((mod) => mod.DailyBriefModal),
+  { ssr: false }
+);
+const MemoryManagerPanel = dynamic(
+  () => import("@/components/executive/MemoryManagerPanel").then((mod) => mod.MemoryManagerPanel),
+  { ssr: false }
+);
+const RecommendationHistoryPanel = dynamic(
+  () => import("@/components/executive/RecommendationHistoryPanel").then((mod) => mod.RecommendationHistoryPanel),
+  { ssr: false }
+);
 
 import { 
   Brain, 
@@ -435,7 +447,7 @@ export default function EVECoocommandCenter() {
   const hydrateDashboard = async (token: string) => {
     try {
       const tStart = performance.now();
-      console.log("[TELEMETRY][PERF] AI Workspace hydrateDashboard Start");
+      devLog("[TELEMETRY][PERF] AI Workspace hydrateDashboard Start");
 
     // 1. Fetch Conversations (Critical for chat interactivity)
     listConversations(token)
@@ -481,7 +493,7 @@ export default function EVECoocommandCenter() {
           } as any);
         }
         const tChat = performance.now();
-        console.log(`[TELEMETRY][PERF] Time to Chat Interactive: ${(tChat - tStart).toFixed(2)}ms`);
+        devLog(`[TELEMETRY][PERF] Time to Chat Interactive: ${(tChat - tStart).toFixed(2)}ms`);
       })
       .catch(err => console.error("Conversations load failed:", err));
 
@@ -504,7 +516,7 @@ export default function EVECoocommandCenter() {
         })
     ]).then(() => {
       const tPanels = performance.now();
-      console.log(`[TELEMETRY][PERF] Time for Health/Risk/Opportunity Panels: ${(tPanels - tStart).toFixed(2)}ms`);
+      devLog(`[TELEMETRY][PERF] Time for Health/Risk/Opportunity Panels: ${(tPanels - tStart).toFixed(2)}ms`);
     }).catch(err => console.error("Panel group load failed", err));
 
 
@@ -557,7 +569,7 @@ export default function EVECoocommandCenter() {
         console.error("EVE setup error:", err);
       } finally {
         setLoading(false);
-        console.log(`[TELEMETRY][PERF] AI Workspace Time to First Render Triggered`);
+        devLog(`[TELEMETRY][PERF] AI Workspace Time to First Render Triggered`);
       }
     }
     initialize();
@@ -1889,31 +1901,37 @@ export default function EVECoocommandCenter() {
         </div>
 
       {/* Render Daily Brief Modal */}
-      <DailyBriefModal 
-        isOpen={isDailyBriefOpen} 
-        onClose={() => setIsDailyBriefOpen(false)} 
-        token={sessionToken} 
-        onAskFollowUp={handleFollowUpQuestion} 
-      />
+      {isDailyBriefOpen && (
+        <DailyBriefModal
+          isOpen={isDailyBriefOpen}
+          onClose={() => setIsDailyBriefOpen(false)}
+          token={sessionToken}
+          onAskFollowUp={handleFollowUpQuestion}
+        />
+      )}
 
       {/* Render long-term memory drawers */}
-      <MemoryManagerPanel 
-        isOpen={isMemoryOpen} 
-        onClose={() => {
-          setIsMemoryOpen(false);
-          if (sessionToken) {
-            hydrateDashboard(sessionToken);
-          }
-        }} 
-        token={sessionToken} 
-      />
+      {isMemoryOpen && (
+        <MemoryManagerPanel
+          isOpen={isMemoryOpen}
+          onClose={() => {
+            setIsMemoryOpen(false);
+            if (sessionToken) {
+              hydrateDashboard(sessionToken);
+            }
+          }}
+          token={sessionToken}
+        />
+      )}
 
       {/* Render recommendation history drawer */}
-      <RecommendationHistoryPanel 
-        isOpen={isRecommendationsOpen} 
-        onClose={() => setIsRecommendationsOpen(false)} 
-        token={sessionToken} 
-      />
+      {isRecommendationsOpen && (
+        <RecommendationHistoryPanel
+          isOpen={isRecommendationsOpen}
+          onClose={() => setIsRecommendationsOpen(false)}
+          token={sessionToken}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (

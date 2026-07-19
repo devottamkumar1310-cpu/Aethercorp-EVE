@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { devLog } from '@/lib/logger'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
@@ -9,10 +10,7 @@ export async function GET(request: Request) {
   const errorParam = searchParams.get('error')
   const errorDescription = searchParams.get('error_description')
 
-  // Detailed logging for debugging in production
-  console.log(`[AUTH CALLBACK] [START] Incoming request URL: ${request.url}`)
-  console.log(`[AUTH CALLBACK] [START] Origin: ${origin}, Code present: ${!!code}, Next destination: ${next}`)
-  console.log(`[AUTH CALLBACK] [START] Extracted Query Parameters:`, Object.fromEntries(searchParams.entries()))
+  devLog(`[AUTH CALLBACK] [START] Code present: ${!!code}, Next destination: ${next}`)
 
   // 1. If Supabase redirected with an explicit error in query parameters
   if (errorParam || errorDescription) {
@@ -45,7 +43,7 @@ export async function GET(request: Request) {
       }
     )
     
-    console.log(`[AUTH CALLBACK] [EXCHANGE] Exchanging code for session...`)
+    devLog(`[AUTH CALLBACK] [EXCHANGE] Exchanging code for session...`)
     const t0 = performance.now();
     
     // We can extract session directly from the exchange result instead of calling getSession() again.
@@ -57,26 +55,26 @@ export async function GET(request: Request) {
     }
 
     const session = exchangeData?.session;
-    console.log(`[AUTH CALLBACK] [SUCCESS] Session created: ${!!session}, User: ${session?.user?.email || "unknown"}`)
+    devLog(`[AUTH CALLBACK] [SUCCESS] Session created: ${!!session}`)
 
     // Sync with backend immediately after OAuth code exchange
     try {
       if (session) {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        console.log(`[AUTH CALLBACK] [SYNC] Syncing with backend: ${apiUrl}/api/auth/sync`)
+        devLog(`[AUTH CALLBACK] [SYNC] Syncing with backend auth endpoint`)
         const syncResponse = await fetch(`${apiUrl}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
-        console.log(`[AUTH CALLBACK] [SYNC] Backend sync response status: ${syncResponse.status}`)
+        devLog(`[AUTH CALLBACK] [SYNC] Backend sync response status: ${syncResponse.status}`)
         const t1 = performance.now();
-        console.log(`[TELEMETRY][PERF] OAuth Callback & Backend Sync Duration: ${(t1 - t0).toFixed(2)}ms`);
+        devLog(`[TELEMETRY][PERF] OAuth Callback & Backend Sync Duration: ${(t1 - t0).toFixed(2)}ms`);
       }
     } catch (syncError) {
       console.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
     }
 
-    console.log(`[AUTH CALLBACK] [REDIRECT] Exchange successful. Redirecting to: ${origin}${next}`)
+    devLog(`[AUTH CALLBACK] [REDIRECT] Exchange successful.`)
     return NextResponse.redirect(`${origin}${next}`)
   }
 

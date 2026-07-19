@@ -41,9 +41,9 @@ export default function LandingPage() {
             <div className="h-8 w-8 bg-[#4F46E5] rounded-md flex items-center justify-center text-white font-bold tracking-tighter shadow-sm">
               EVE
             </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight">
+            <span className="text-lg sm:text-xl font-bold tracking-tight">
               <span className="logo-text text-[#818cf8]">EVE</span> <span className="logo-subtext hidden md:inline text-white">| Inventory Intelligence</span>
-            </h1>
+            </span>
           </div>
           
           {/* Desktop Navbar Links */}

@@ -1,5 +1,4 @@
 """Tests for the variant detection logic."""
-import pytest
 from app.fashion.variant_detector import detect_variants, _parse_variant_name
 
 

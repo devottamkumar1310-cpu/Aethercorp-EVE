@@ -25,20 +25,38 @@ export default function DocumentHubPage() {
   const [sessionToken, setSessionToken] = useState<string>("");
   const [dragActive, setDragActive] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [pollTrigger, setPollTrigger] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const loadDocs = async (token: string) => {
-    try {
-      const data = await listDocuments(token);
-      setDocuments(data);
-    } catch {
-      toast.error("Document hub is currently processing updates.");
-    }
-  };
-
   useEffect(() => {
-    let intervalId: any;
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const shouldPoll = (items: ProcessedDocument[]) =>
+      items.length === 0 ||
+      items.some(
+        (d) => d.status !== "completed" && d.status !== "success" && d.status !== "failure"
+      );
+
+    const schedulePoll = (token: string, delay = 5000) => {
+      timeoutId = setTimeout(async () => {
+        if (cancelled) return;
+        try {
+          const data = await listDocuments(token);
+          if (cancelled) return;
+          setDocuments(data);
+          if (shouldPoll(data)) {
+            schedulePoll(token);
+          }
+        } catch {
+          if (!cancelled) {
+            schedulePoll(token);
+          }
+        }
+      }, delay);
+    };
+
     async function init() {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
@@ -50,27 +68,29 @@ export default function DocumentHubPage() {
       
       const activeWorkspace = localStorage.getItem("active_workspace_id");
       if (activeWorkspace) {
-        await loadDocs(session.access_token);
-        
-        // Auto-poll if any document is processing, uploaded, classified, or validated
-        intervalId = setInterval(async () => {
-          const hasProcessing = documents.some(
-            d => d.status !== "completed" && d.status !== "success" && d.status !== "failure"
-          );
-          if (hasProcessing || documents.length === 0) {
-            const data = await listDocuments(session.access_token);
+        try {
+          const data = await listDocuments(session.access_token);
+          if (!cancelled) {
             setDocuments(data);
+            if (shouldPoll(data)) {
+              schedulePoll(session.access_token);
+            }
           }
-        }, 5000);
+        } catch {
+          if (!cancelled) {
+            toast.error("Document hub is currently processing updates.");
+          }
+        }
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     }
     init();
 
     return () => {
-      if (intervalId) clearInterval(intervalId);
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [router, documents.some(d => d.status !== "completed" && d.status !== "success" && d.status !== "failure")]);
+  }, [router, pollTrigger]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -117,6 +137,7 @@ export default function DocumentHubPage() {
       const newDoc = await uploadDocument(file, sessionToken);
       toast.success(`${file.name} uploaded successfully. EVE is analyzing it.`, { id: toastId });
       setDocuments(prev => [newDoc, ...prev]);
+      setPollTrigger((value) => value + 1);
     } catch {
       toast.error(
         <div className="flex flex-col gap-0.5">

@@ -1,8 +1,5 @@
-import math
 import uuid
-from typing import Dict, Any, List
 from app.core.orchestrator.base_engine import BaseEngine, EngineContext, EngineOutput
-from app.models.inventory import SalesRecord
 from app.models.product import Product
 
 class ClassificationEngine(BaseEngine):
@@ -13,7 +10,7 @@ class ClassificationEngine(BaseEngine):
     async def execute(self, context: EngineContext) -> EngineOutput:
         try:
             sales_series = context.parameters.get("sales_series_override", [])
-            unit_cost = context.parameters.get("unit_cost_override", 20.0)
+            context.parameters.get("unit_cost_override", 20.0)
             
             selling_price = 40.0
             recency_days = 365
@@ -30,7 +27,6 @@ class ClassificationEngine(BaseEngine):
                 ).first()
                 if product:
                     selling_price = product.selling_price or 40.0
-                    unit_cost = product.unit_cost or 20.0
             
             # Recency calculation
             if "recency_override" in context.parameters:

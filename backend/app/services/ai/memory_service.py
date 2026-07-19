@@ -11,7 +11,7 @@ def get_memory_context(db: Session, org_id: uuid.UUID) -> List[str]:
     """Returns active business goals formatted as a list of strings."""
     goals = db.query(BusinessGoal).filter(
         BusinessGoal.organization_id == org_id,
-        BusinessGoal.is_active == True
+        BusinessGoal.is_active
     ).all()
     context_strings = []
     for g in goals:
@@ -207,7 +207,7 @@ def get_influencing_goals(
     """Determines which active goals influenced the recommendation using type and text matching."""
     active_goals = db.query(BusinessGoal).filter(
         BusinessGoal.organization_id == org_id,
-        BusinessGoal.is_active == True
+        BusinessGoal.is_active
     ).all()
     
     influenced = []

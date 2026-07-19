@@ -34,7 +34,7 @@ for user in db.query(Profile).all():
             
             trace = risk.trace_data
             if trace:
-                print(f"\nTRACE DATA:")
+                print("\nTRACE DATA:")
                 print(f"- Recommended Qty: {trace.eoq_adjustment}")
                 print(f"- Unit Cost: {trace.unit_cost}")
                 print(f"- Selling Price: {trace.selling_price}")

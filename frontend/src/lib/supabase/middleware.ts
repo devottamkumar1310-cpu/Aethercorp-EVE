@@ -72,6 +72,14 @@ export async function updateSession(request: NextRequest) {
       console.log(`[MIDDLEWARE] [REDIRECT] Authenticated user redirected away from auth page to: ${url.pathname}`)
       return NextResponse.redirect(url)
     }
+
+    // Redirect authenticated users from home page or dashboard root to dashboard/inventory
+    if (isConfirmed && (pathname === '/' || pathname === '/dashboard' || pathname === '/dashboard/')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard/inventory'
+      console.log(`[MIDDLEWARE] [REDIRECT] Authenticated user on ${pathname} redirected to: ${url.pathname}`)
+      return NextResponse.redirect(url)
+    }
   } else {
     // Protect /dashboard and /onboarding for unauthenticated users
     if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/onboarding')) {

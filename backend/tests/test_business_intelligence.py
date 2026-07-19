@@ -7,13 +7,13 @@ from app.fashion.inventory_turnover import calculate_inventory_turnover
 
 def test_detect_dead_stock():
     # Dead stock: zero sales
-    assert detect_dead_stock(100, 0.0, 30) == True
+    assert detect_dead_stock(100, 0.0, 30)
     # Not dead stock: high velocity
-    assert detect_dead_stock(100, 10.0, 30) == False
+    assert not detect_dead_stock(100, 10.0, 30)
     # Threshold reached: 30 days of supply
-    assert detect_dead_stock(30, 1.0, 30) == True
+    assert detect_dead_stock(30, 1.0, 30)
     # Threshold not reached: 29 days of supply
-    assert detect_dead_stock(29, 1.0, 30) == False
+    assert not detect_dead_stock(29, 1.0, 30)
 
 def test_predict_stockout():
     # 100 items / 10 a day = 10 days

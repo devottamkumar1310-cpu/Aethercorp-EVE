@@ -3,7 +3,6 @@ import uuid
 from app.database import Base, engine
 from tests.test_executive import TestingSessionLocal, seed_business_data
 from app.models.organization import Organization
-from app.models.project import Project
 from app.services.analytics_service import AnalyticsService
 
 def run():

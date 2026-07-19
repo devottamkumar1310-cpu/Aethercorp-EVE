@@ -1,7 +1,6 @@
 import pandas as pd
 from app.database import SessionLocal
 from app.models.profile import Profile
-from app.models.organization import Organization
 from app.models.product import Product
 from app.services.importer_service import ImporterService
 import uuid

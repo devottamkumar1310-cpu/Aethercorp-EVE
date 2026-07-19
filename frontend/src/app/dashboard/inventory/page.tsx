@@ -390,7 +390,7 @@ export default function InventoryDashboardPage() {
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-foreground rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer add-product-btn"
         >
           <Plus size={16} /> Add Product
         </button>

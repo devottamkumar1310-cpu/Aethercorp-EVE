@@ -12,8 +12,6 @@ from typing import List, Dict, Any, Optional
 from app.core.dependency_container import container
 from app.services.shopify_mapper import (
     ShopifyProductMapper,
-    ShopifyInventoryMapper,
-    ShopifyOrderMapper,
     ShopifyConnectionConfig,
 )
 

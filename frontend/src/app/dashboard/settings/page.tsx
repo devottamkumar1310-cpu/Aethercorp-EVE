@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import {
   User,
@@ -466,9 +467,9 @@ export default function SettingsPage() {
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-border pb-6">
               <div className="relative h-20 w-20 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-foreground text-2xl font-bold overflow-hidden border-2 border-border shadow-md group">
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="Preview avatar" className="h-full w-full object-cover" />
+                  <Image src={avatarPreview} alt="Preview avatar" width={80} height={80} unoptimized className="h-full w-full object-cover" />
                 ) : avatarUrl ? (
-                  <img src={avatarUrl.startsWith("gs://") ? "/favicon.ico" : avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                  <Image src={avatarUrl.startsWith("gs://") ? "/favicon.ico" : avatarUrl} alt="Avatar" width={80} height={80} unoptimized className="h-full w-full object-cover" />
                 ) : (
                   fullName ? fullName.slice(0, 2).toUpperCase() : "U"
                 )}

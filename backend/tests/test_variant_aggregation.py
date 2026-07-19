@@ -1,4 +1,3 @@
-import pytest
 import uuid
 from unittest.mock import MagicMock
 from app.services.analytics_service import AnalyticsService

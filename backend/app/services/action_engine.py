@@ -28,7 +28,7 @@ def generate_actions(db: Session, workspace_id: uuid.UUID) -> dict:
             overdue_projects = db.query(Project).filter(
                 Project.organization_id == workspace_id,
                 Project.status == "active",
-                Project.deadline != None,
+                Project.deadline is not None,
                 Project.deadline < now_str
             ).all()
             for p in overdue_projects:
@@ -37,7 +37,7 @@ def generate_actions(db: Session, workspace_id: uuid.UUID) -> dict:
             overdue_tasks = db.query(Task).filter(
                 Task.organization_id == workspace_id,
                 Task.status != "completed",
-                Task.due_date != None,
+                Task.due_date is not None,
                 Task.due_date < now_str
             ).count()
             actions.append({"priority": "medium", "action": f"Follow up on {overdue_tasks} overdue tasks."})

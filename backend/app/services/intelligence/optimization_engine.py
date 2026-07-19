@@ -1,7 +1,6 @@
 import logging
 import math
 import uuid
-from typing import Optional, Any
 from app.core.orchestrator.base_engine import BaseEngine, EngineContext, EngineOutput
 from app.models.product import Product
 from app.models.inventory import SalesRecord
@@ -20,7 +19,6 @@ class OptimizationEngine(BaseEngine):
                 avg_sales = context.avg_daily_sales
 
             lead_time = context.lead_time_days
-            stock = context.stock_on_hand
             
             # Trend Confidence Scaling
             trend_duration_days = context.parameters.get("trend_duration_days", 0)

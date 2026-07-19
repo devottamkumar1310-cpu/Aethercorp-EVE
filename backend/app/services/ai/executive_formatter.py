@@ -1180,7 +1180,6 @@ class ExecutiveFormatter:
     @classmethod
     def get_biggest_operational_risk(cls, db, org_id) -> str:
         from app.models.project import Project
-        from app.models.task import Task
         import datetime
         
         projects = db.query(Project).filter(Project.organization_id == org_id).all()
@@ -1229,14 +1228,14 @@ class ExecutiveFormatter:
             )
             
         return (
-            f"Issue:\n"
-            f"No critical operational risks detected.\n\n"
-            f"Cause:\n"
-            f"All systems are operating within normal parameters.\n\n"
-            f"Mitigation:\n"
-            f"Continue monitoring standard project and inventory metrics.\n\n"
-            f"Impact:\n"
-            f"Maintain stable operations."
+            "Issue:\n"
+            "No critical operational risks detected.\n\n"
+            "Cause:\n"
+            "All systems are operating within normal parameters.\n\n"
+            "Mitigation:\n"
+            "Continue monitoring standard project and inventory metrics.\n\n"
+            "Impact:\n"
+            "Maintain stable operations."
         )
 
     @classmethod

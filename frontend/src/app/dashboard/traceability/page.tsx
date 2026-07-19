@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass, ListRestart, AlertTriangle, ShieldAlert, CheckCircle, Database } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { API_BASE_URL } from "@/lib/api";
 
 interface TraceRecord {
   id: string;
@@ -36,7 +37,7 @@ export default function TraceabilityDashboard() {
   const [page, setPage] = useState(0);
   const limit = 20;
 
-  const fetchTraces = async (pageIndex: number = 0) => {
+  const fetchTraces = async (pageIndex: number = 0, signal?: AbortSignal) => {
     setLoading(true);
     try {
       const supabase = createClient();
@@ -56,7 +57,10 @@ export default function TraceabilityDashboard() {
       };
 
       const offset = pageIndex * limit;
-      const resp = await fetch(`/api/recommendations?limit=${limit}&offset=${offset}`, { headers });
+      const resp = await fetch(`${API_BASE_URL}/api/recommendations?limit=${limit}&offset=${offset}`, {
+        headers,
+        signal,
+      });
       if (!resp.ok) {
         throw new Error(`Failed to load recommendations (HTTP ${resp.status})`);
       }
@@ -70,16 +74,21 @@ export default function TraceabilityDashboard() {
       }
       setPage(pageIndex);
     } catch (err: any) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       console.warn("API load failed.", err);
       setTraces([]);
       setSelectedTrace(null);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchTraces(0);
+    const controller = new AbortController();
+    fetchTraces(0, controller.signal);
+    return () => controller.abort();
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -169,10 +178,12 @@ export default function TraceabilityDashboard() {
                 
                 {/* Dynamic items */}
                 {traces.map((trace) => (
-                  <div 
+                  <button
+                    type="button"
                     key={trace.id}
                     onClick={() => setSelectedTrace(trace)}
-                    className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer ${
+                    aria-current={selectedTrace.id === trace.id ? "true" : undefined}
+                    className={`w-full text-left rounded-xl p-3.5 border transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                       selectedTrace.id === trace.id 
                       ? "border-emerald-500 bg-emerald-950/10" 
                       : "border-border bg-card/30 hover:border-foreground/20"
@@ -183,7 +194,7 @@ export default function TraceabilityDashboard() {
                     </span>
                     <span className="block text-sm font-bold text-foreground mt-1 truncate">{trace.action}</span>
                     <span className="block text-[10px] text-muted-foreground mt-2">{trace.created_at}</span>
-                  </div>
+                  </button>
                 ))}
 
               </div>
