@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
       <div className="eve-auth-card w-full max-w-md bg-card rounded-2xl shadow-xl overflow-hidden border border-border">
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center text-foreground font-bold text-xl tracking-tighter">
+            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center !text-white [&_svg]:!text-white [&_svg]:!stroke-white font-bold text-xl tracking-tighter">
               EVE
             </div>
           </div>

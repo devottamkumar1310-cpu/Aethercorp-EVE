@@ -217,7 +217,7 @@ export default function DocumentHubPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="p-4 bg-indigo-500/10 rounded-full border border-indigo-500/20 text-indigo-400">
+            <div className="p-4 bg-indigo-500/10 rounded-full border border-indigo-500/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white">
               <UploadCloud className="h-10 w-10" />
             </div>
             <div>
@@ -312,7 +312,7 @@ export default function DocumentHubPage() {
                     </td>
                     <td className="p-4">
                       {doc.status === "uploaded" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full text-xs font-semibold animate-pulse">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-blue-500/20 rounded-full text-xs font-semibold animate-pulse">
                           Uploaded
                         </span>
                       )}
@@ -322,7 +322,7 @@ export default function DocumentHubPage() {
                         </span>
                       )}
                       {doc.status === "classified" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs font-semibold animate-pulse">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 rounded-full text-xs font-semibold animate-pulse">
                           Classified
                         </span>
                       )}
@@ -332,14 +332,14 @@ export default function DocumentHubPage() {
                         </span>
                       )}
                       {(doc.status === "completed" || doc.status === "success") && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-400 border border-green-500/20 rounded-full text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-green-500/20 rounded-full text-xs font-semibold">
                           <CheckCircle className="h-3 w-3" /> Completed
                         </span>
                       )}
                       {doc.status === "failure" && (
                         <span 
                           title="Processing anomaly detected"
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-full text-xs font-semibold cursor-help"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-red-500/20 rounded-full text-xs font-semibold cursor-help"
                         >
                           <XCircle className="h-3 w-3" /> Failed
                         </span>
@@ -349,13 +349,13 @@ export default function DocumentHubPage() {
                       <div className="flex items-center justify-end gap-3 opacity-80 group-hover:opacity-100 transition-opacity">
                         <Link 
                           href={`/dashboard/documents/${doc.id}`}
-                          className="p-1.5 bg-card hover:bg-indigo-500/10 text-muted-foreground hover:text-indigo-400 border border-border rounded-lg transition-all"
+                          className="p-1.5 bg-card hover:bg-indigo-500/10 text-muted-foreground hover:!text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-border rounded-lg transition-all"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
                         <button 
                           onClick={() => handleDelete(doc.id, doc.filename)}
-                          className="p-1.5 bg-card hover:bg-red-500/10 text-muted-foreground hover:text-red-400 border border-border rounded-lg transition-all"
+                          className="p-1.5 bg-card hover:bg-red-500/10 text-muted-foreground hover:!text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-border rounded-lg transition-all"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

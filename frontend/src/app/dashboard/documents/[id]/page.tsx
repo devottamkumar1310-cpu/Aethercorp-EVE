@@ -366,7 +366,7 @@ export default function DocumentDetailPage() {
                       return (
                         <div key={i} className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-xl space-y-2 flex flex-col justify-between sm:flex-row sm:items-center sm:gap-4">
                           <p className="text-xs text-emerald-200/90 leading-relaxed flex-1">{oppDesc}</p>
-                          <Link href="/dashboard/eve" className="text-[10px] font-bold px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-lg text-emerald-300 transition-all text-center whitespace-nowrap">
+                          <Link href="/dashboard/eve" className="text-[10px] font-bold px-2.5 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-lg !text-white [&_svg]:!text-white [&_svg]:!stroke-white transition-all text-center whitespace-nowrap">
                             Draft Negotiation Prompt
                           </Link>
                         </div>
@@ -388,11 +388,11 @@ export default function DocumentDetailPage() {
                         <div key={i} className="p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl space-y-2 flex flex-col justify-between sm:flex-row sm:items-center sm:gap-4">
                           <p className="text-xs text-indigo-200/90 leading-relaxed flex-1">{recDesc}</p>
                           {isPayment ? (
-                            <Link href="/dashboard/finance" className="text-[10px] font-bold px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-lg text-indigo-300 transition-all text-center whitespace-nowrap">
+                            <Link href="/dashboard/finance" className="text-[10px] font-bold px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-lg !text-white [&_svg]:!text-white [&_svg]:!stroke-white transition-all text-center whitespace-nowrap">
                               Log Discount Expense
                             </Link>
                           ) : (
-                            <Link href="/dashboard/eve" className="text-[10px] font-bold px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-lg text-indigo-300 transition-all text-center whitespace-nowrap">
+                            <Link href="/dashboard/eve" className="text-[10px] font-bold px-2.5 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/25 border border-indigo-500/30 rounded-lg !text-white [&_svg]:!text-white [&_svg]:!stroke-white transition-all text-center whitespace-nowrap">
                               Execute via EVE AI
                             </Link>
                           )}
@@ -416,7 +416,7 @@ export default function DocumentDetailPage() {
                 <h3 className="font-bold text-base text-foreground flex items-center gap-2">
                   <ShieldAlert className="h-5 w-5 text-emerald-400" /> Quality Validation
                 </h3>
-                <span className="text-xs font-extrabold px-3 py-1 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                <span className="text-xs font-extrabold px-3 py-1 rounded-full border bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/20">
                   Score: {(document.quality_assessment as any).quality_score || 0}%
                 </span>
               </div>
@@ -502,9 +502,9 @@ export default function DocumentDetailPage() {
                     <div key={stage.key} className="flex flex-col items-center gap-2 flex-1 relative text-center">
                       <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-[10px] font-bold transition-all duration-305 ${
  stepStatus === "completed"
- ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
+ ? "bg-emerald-500/10 border-emerald-500 !text-white [&_svg]:!text-white [&_svg]:!stroke-white"
  : stepStatus === "active"
- ? "bg-indigo-500/10 border-indigo-500 text-indigo-400 animate-pulse shadow-[0_0_12px_rgba(99,102,241,0.3)]"
+ ? "bg-indigo-500/10 border-indigo-500 !text-white [&_svg]:!text-white [&_svg]:!stroke-white animate-pulse shadow-[0_0_12px_rgba(99,102,241,0.3)]"
  : stepStatus === "failed"
  ? "bg-rose-500/10 border-rose-500 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.3)]"
  : "bg-card border-border text-muted-foreground"

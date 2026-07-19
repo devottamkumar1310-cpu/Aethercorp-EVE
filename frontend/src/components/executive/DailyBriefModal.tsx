@@ -264,7 +264,7 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+            <div className="p-1.5 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg border border-indigo-500/20">
               <Sparkles size={18} />
             </div>
             <div>
@@ -359,7 +359,7 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
               <button
                 type="submit"
                 disabled={!followUpText.trim()}
-                className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground text-foreground rounded-xl transition-all shadow-lg flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl transition-all shadow-lg flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Send follow-up question"
               >
                 <Send size={16} />

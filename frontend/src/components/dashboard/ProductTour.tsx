@@ -134,7 +134,7 @@ export function ProductTour() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-indigo-600/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white flex items-center justify-center">
               <Sparkles size={16} />
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">EVE Platform Tour</span>
@@ -150,7 +150,7 @@ export function ProductTour() {
         {/* Content */}
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600 text-foreground rounded-xl">
+            <div className="p-2.5 bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl">
               <Icon size={20} />
             </div>
             <h3 className="text-base font-bold text-foreground">{step.title}</h3>
@@ -212,7 +212,7 @@ export function ProductTour() {
             
             <button
               onClick={handleNext}
-              className="flex items-center gap-1 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-xs font-semibold transition-all cursor-pointer"
+              className="flex items-center gap-1 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-xs font-semibold transition-all cursor-pointer"
             >
               {currentStep === tourSteps.length - 1 ? "Finish" : "Next"}
               <ChevronRight size={14} />

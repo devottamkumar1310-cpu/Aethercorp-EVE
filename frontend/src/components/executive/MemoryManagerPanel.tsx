@@ -140,7 +140,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
           {/* Header */}
           <div className="px-6 py-5 border-b border-border bg-card backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+              <div className="p-1.5 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg border border-indigo-500/20">
                 <Target size={18} />
               </div>
               <div>
@@ -204,7 +204,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
               <button
                 type="submit"
                 disabled={addingGoal || !description.trim()}
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground text-foreground rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {addingGoal ? (
                   <>
@@ -304,7 +304,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                               <button
                                 onClick={() => handleEditSave(g.id)}
                                 disabled={isUpdating || !editDescription.trim()}
-                                className="p-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 rounded transition-all flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 cursor-pointer"
+                                className="p-1 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:bg-emerald-500/20 border border-emerald-500/20 rounded transition-all flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 cursor-pointer"
                               >
                                 {isUpdating ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
                                 Save
@@ -362,8 +362,8 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                           <div className="flex flex-wrap items-center gap-2 pr-12">
                             {/* Type Badge */}
                             <div className={`p-1.5 py-0.5 rounded border text-[9px] uppercase font-bold tracking-wider ${
-                              g.goal_type === 'profitability' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                              g.goal_type === 'growth' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                              g.goal_type === 'profitability' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/20' :
+                              g.goal_type === 'growth' ? 'bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/20' :
                               g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                               'bg-slate-500/10 text-muted-foreground border-slate-500/20'
                             }`}>
@@ -373,7 +373,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                             {/* Status Badge */}
                             <div className={`p-1.5 py-0.5 rounded border text-[9px] uppercase font-bold tracking-wider ${
                               g.is_active 
-                                ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' 
+                                ? 'bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/20' 
                                 : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                             }`}>
                               {g.is_active ? 'Active' : 'Disabled'}

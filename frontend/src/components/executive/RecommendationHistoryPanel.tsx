@@ -45,7 +45,7 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
     const s = source.toLowerCase();
     if (s === "finance") {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20 rounded-md">
           Finance Agent
         </span>
       );
@@ -69,7 +69,7 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
       );
     } else {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 rounded-md">
           COO Synthesis
         </span>
       );
@@ -89,7 +89,7 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
           {/* Header */}
           <div className="px-6 py-5 border-b border-border bg-card backdrop-blur-md flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+              <div className="p-1.5 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg border border-indigo-500/20">
                 <Sparkles size={18} />
               </div>
               <div>
@@ -154,8 +154,8 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
                               key={g.id}
                               title={g.description}
                               className={`text-[9px] font-bold px-2 py-0.5 rounded-full border cursor-help ${
-                                g.goal_type === 'profitability' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                                g.goal_type === 'growth' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                                g.goal_type === 'profitability' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/20' :
+                                g.goal_type === 'growth' ? 'bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/20' :
                                 g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                                 'bg-slate-500/10 text-muted-foreground border-slate-500/20'
                               }`}

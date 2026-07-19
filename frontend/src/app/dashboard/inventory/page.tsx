@@ -322,7 +322,7 @@ export default function InventoryDashboardPage() {
           {/* Three-step visual onboarding guide */}
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-4 text-left">
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
-              <div className="h-8 w-8 bg-indigo-500/10 text-indigo-400 rounded-lg flex items-center justify-center font-bold text-sm">1</div>
+              <div className="h-8 w-8 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg flex items-center justify-center font-bold text-sm">1</div>
               <h4 className="font-bold text-foreground text-sm">Upload Stock Data</h4>
               <p className="text-muted-foreground text-xs leading-relaxed">
                 Export your products from Shopify or download our template, and upload the CSV here.
@@ -336,7 +336,7 @@ export default function InventoryDashboardPage() {
               </p>
             </div>
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
-              <div className="h-8 w-8 bg-emerald-500/10 text-emerald-400 rounded-lg flex items-center justify-center font-bold text-sm">3</div>
+              <div className="h-8 w-8 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg flex items-center justify-center font-bold text-sm">3</div>
               <h4 className="font-bold text-foreground text-sm">Take Smart Action</h4>
               <p className="text-muted-foreground text-xs leading-relaxed">
                 Let EVE generate restocking purchase orders, price adjustments, and supplier requests.
@@ -346,7 +346,7 @@ export default function InventoryDashboardPage() {
 
           {/* Call to Actions */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 max-w-md mx-auto">
-            <label className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-indigo-550/40 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-550/10 text-indigo-400 hover:text-indigo-300 rounded-xl text-sm font-semibold cursor-pointer transition-all text-center">
+            <label className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-indigo-550/40 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-550/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:text-indigo-300 rounded-xl text-sm font-semibold cursor-pointer transition-all text-center">
               {uploadingMaster ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload size={16} />}
               <span>{uploadingMaster ? "Uploading..." : "Upload Master CSV"}</span>
               <input
@@ -390,7 +390,7 @@ export default function InventoryDashboardPage() {
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer add-product-btn"
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer add-product-btn"
         >
           <Plus size={16} /> Add Product
         </button>
@@ -407,7 +407,7 @@ export default function InventoryDashboardPage() {
             </p>
             <p className="text-[10px] text-muted-foreground mt-1">Total cost of stock on hand</p>
           </div>
-          <div className="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center">
+          <div className="h-10 w-10 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl flex items-center justify-center">
             <DollarSign size={20} />
           </div>
         </div>
@@ -455,7 +455,7 @@ export default function InventoryDashboardPage() {
               Purchase {alerts?.low_stock?.reduce((sum, item) => sum + item.shortage, 0).toLocaleString() || 0} units suggested
             </p>
           </div>
-          <div className="h-10 w-10 bg-indigo-500/10 text-indigo-500 rounded-xl flex items-center justify-center">
+          <div className="h-10 w-10 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl flex items-center justify-center">
             <TrendingUp size={20} />
           </div>
         </div>
@@ -638,7 +638,7 @@ export default function InventoryDashboardPage() {
  : tab.id === "reorder" && (tab.count || 0) > 0
  ? "bg-amber-100 text-amber-700"
  : tab.id === "dead" && (tab.count || 0) > 0
- ? "bg-red-100 text-red-700"
+ ? "bg-red-100 !text-red-900"
  : "bg-secondary text-muted-foreground"
  }`}>
                       {tab.count ?? 0}
@@ -813,7 +813,7 @@ export default function InventoryDashboardPage() {
                     <td className="px-5 py-3 text-right font-bold text-amber-700">{p.stock_on_hand.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right text-muted-foreground">{p.reorder_point.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 !text-red-900">
                         <AlertTriangle size={10} /> -{p.shortage}
                       </span>
                     </td>

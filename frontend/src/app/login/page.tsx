@@ -94,7 +94,7 @@ function LoginForm() {
               </div>
             )}
             {infoMessage && !error && (
-              <div className="p-3 bg-emerald-500/10 text-emerald-400 text-sm rounded-md border border-emerald-500/25">
+              <div className="p-3 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-md border border-emerald-500/25">
                 {infoMessage}
               </div>
             )}

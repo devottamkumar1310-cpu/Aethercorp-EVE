@@ -125,10 +125,10 @@ export default function TasksPage() {
                   <tr key={t.id} className="hover:bg-muted/40 group">
                     <td className="px-6 py-4 font-medium text-primary">{t.title}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-muted text-foreground'}`}>{t.priority}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.priority === 'high' ? 'bg-red-100 !text-red-900' : 'bg-muted text-foreground'}`}>{t.priority}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-750'}`}>{t.status.replace('_', ' ')}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 !text-amber-900'}`}>{t.status.replace('_', ' ')}</span>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{t.due_date ? new Date(t.due_date).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">

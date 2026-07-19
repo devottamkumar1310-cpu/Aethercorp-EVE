@@ -120,7 +120,7 @@ export function AddProductModal({ isOpen, onClose, token, onSuccess }: AddProduc
             <button type="button" onClick={onClose} className="px-4 py-2 border border-border dark:border-border text-foreground dark:text-muted-foreground hover:bg-secondary dark:hover:bg-secondary rounded-lg text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               Cancel
             </button>
-            <button type="submit" disabled={loading} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <button type="submit" disabled={loading} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               {loading && <Loader2 className="animate-spin" size={14} />}
               {loading ? "Adding..." : "Add Product"}
             </button>

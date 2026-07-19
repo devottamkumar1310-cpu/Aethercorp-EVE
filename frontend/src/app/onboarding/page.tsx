@@ -125,7 +125,7 @@ export default function OnboardingPage() {
       <div className="w-full max-w-xl bg-background/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-border overflow-hidden z-10">
         <div className="p-8 md:p-10">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-foreground font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/20">
+            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center !text-white [&_svg]:!text-white [&_svg]:!stroke-white font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/20">
               EVE
             </div>
           </div>
@@ -138,7 +138,7 @@ export default function OnboardingPage() {
           </p>
 
           {error && (
-            <div className="p-3 mb-6 bg-red-500/10 text-red-300 text-sm rounded-xl border border-red-500/20">
+            <div className="p-3 mb-6 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-xl border border-red-500/20">
               {error}
             </div>
           )}
@@ -150,11 +150,11 @@ export default function OnboardingPage() {
               disabled={loading || loadingDemo}
               className="w-full text-left p-5 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
             >
-              <div className="absolute top-3 right-3 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-full px-2 py-0.5 text-[10px] font-semibold flex items-center gap-1">
+              <div className="absolute top-3 right-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 rounded-full px-2 py-0.5 text-[10px] font-semibold flex items-center gap-1">
                 <Sparkles size={10} /> Recommended
               </div>
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
                   <Brain size={24} />
                 </div>
                 <div>

@@ -237,7 +237,7 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold tracking-tight text-foreground">Operational Dashboard</h1>
             <p className="text-xs text-muted-foreground">Automated brand metrics, project tracking, and executive intelligence feed.</p>
           </div>
-          <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
+          <div className="flex items-center gap-2 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -367,7 +367,7 @@ export default function DashboardPage() {
                         <tr key={c.id} className="eve-table-row hover:bg-muted/40 transition-colors">
                           <td className="px-4 py-3 font-medium text-foreground">{c.company_name}</td>
                           <td className="px-4 py-3">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase ${c.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>{c.status}</span>
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase ${c.status === 'active' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'}`}>{c.status}</span>
                           </td>
                         </tr>
                       ))
@@ -465,7 +465,7 @@ export default function DashboardPage() {
 
             {/* EVE Active Opportunities */}
             <div className="eve-card rounded-xl overflow-hidden flex flex-col">
-              <div className="bg-emerald-500/10 px-4 py-3 border-b border-emerald-500/15 font-bold text-emerald-400 flex items-center gap-2">
+              <div className="bg-emerald-500/10 px-4 py-3 border-b border-emerald-500/15 font-bold !text-white [&_svg]:!text-white [&_svg]:!stroke-white flex items-center gap-2">
                 <Sparkles size={15} className="text-emerald-500" />
                 <span>EVE Active Growth Opportunities</span>
               </div>
@@ -487,7 +487,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex justify-between items-center gap-2 mb-1">
                           <span className="font-semibold text-emerald-600 dark:text-emerald-300 text-xs">{opp.title || "Growth Opportunity"}</span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/30 uppercase tracking-wide">Execute</span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:!text-white [&_svg]:!text-white [&_svg]:!stroke-white font-bold border border-emerald-500/30 uppercase tracking-wide">Execute</span>
                         </div>
                         <p className="text-muted-foreground text-[11px] leading-relaxed font-normal">{opp.description}</p>
                       </Link>

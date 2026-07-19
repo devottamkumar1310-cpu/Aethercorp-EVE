@@ -443,7 +443,7 @@ export default function LandingPage() {
             </div>
 
             <div className="pain-point-card pain-point-card-indigo p-6 space-y-4">
-              <div className="h-10 w-10 bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-indigo-500/10 border border-indigo-500/25 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg flex items-center justify-center">
                 <Package size={20} />
               </div>
               <h3 className="text-base font-bold">Spreadsheet Inaccuracy</h3>
@@ -482,7 +482,7 @@ export default function LandingPage() {
           </div>
 
           <div className="insight-card p-6 space-y-4">
-            <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 rounded-lg flex items-center justify-center">
+            <div className="h-10 w-10 bg-emerald-500/10 border border-emerald-500/25 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg flex items-center justify-center">
               <DollarSign size={20} />
             </div>
             <h3 className="text-base font-bold">Trapped Capital Calculator</h3>

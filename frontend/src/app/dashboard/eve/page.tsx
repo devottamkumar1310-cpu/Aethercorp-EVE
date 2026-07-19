@@ -389,7 +389,7 @@ export default function EVECoocommandCenter() {
 
     if (triggeredOutcome) {
       return (
-        <div className="mt-2 p-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-[9px] font-semibold animate-fade-in flex items-center gap-1">
+        <div className="mt-2 p-1.5 bg-emerald-500/10 border border-emerald-500/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-[9px] font-semibold animate-fade-in flex items-center gap-1">
           <span>✓</span>
           <span>{triggeredOutcome}</span>
         </div>
@@ -407,7 +407,7 @@ export default function EVECoocommandCenter() {
                 [actionKey]: "Success: Exported 3 SKUs to CSV (TSHIRT-CLASSIC, HOODIE-WINTER, BENCH-PROD-0)"
               }));
             }}
-            className="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 hover:border-indigo-500/50 text-indigo-300 rounded text-[9px] font-bold cursor-pointer transition-all"
+            className="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 hover:border-indigo-500/50 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded text-[9px] font-bold cursor-pointer transition-all"
           >
             Export SKU List
           </button>
@@ -421,7 +421,7 @@ export default function EVECoocommandCenter() {
                 [actionKey]: "Success: Generated discount campaign for BENCH-PROD-0 (30% discount suggested)"
               }));
             }}
-            className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-300 rounded text-[9px] font-bold cursor-pointer transition-all"
+            className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 hover:border-emerald-500/50 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded text-[9px] font-bold cursor-pointer transition-all"
           >
             Generate Discount Campaign
           </button>
@@ -920,7 +920,7 @@ export default function EVECoocommandCenter() {
                     key={c.id}
                     className={`group w-full p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between relative ${
  isActive
- ? "bg-indigo-600/10 text-indigo-200 border-indigo-500/30"
+ ? "bg-indigo-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/30"
  : "bg-background/45 text-muted-foreground border-border/60 hover:bg-muted/40 hover:text-foreground"
  }`}
                   >
@@ -1012,12 +1012,12 @@ export default function EVECoocommandCenter() {
                 <MessageSquare size={12} /> History
               </button>
             )}
-            <div className="p-2 bg-indigo-600 rounded-xl text-foreground shadow-md shadow-indigo-600/30">
+            <div className="p-2 bg-indigo-600 rounded-xl !text-white [&_svg]:!text-white [&_svg]:!stroke-white shadow-md shadow-indigo-600/30">
               <Brain size={18} />
             </div>
             <div>
               <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Active</span>
+                EVE Agent Network <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/30">Active</span>
               </h2>
               <p className="text-[10px] text-secondary">Queries route automatically to COO, Finance & Operations agents</p>
             </div>
@@ -1080,7 +1080,7 @@ export default function EVECoocommandCenter() {
                 onClick={() => setLanguage("en")}
                 className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  language === "en" 
- ? "bg-indigo-600 text-foreground shadow-md" 
+ ? "bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white shadow-md" 
  : "text-muted-foreground hover:text-foreground"
  }`}
                 title="English Language"
@@ -1092,7 +1092,7 @@ export default function EVECoocommandCenter() {
                 onClick={() => setLanguage("hi")}
                 className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  language === "hi" 
- ? "bg-indigo-600 text-foreground shadow-md" 
+ ? "bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white shadow-md" 
  : "text-muted-foreground hover:text-foreground"
  }`}
                 title="Hindi Translation"
@@ -1110,7 +1110,7 @@ export default function EVECoocommandCenter() {
                 onClick={() => setShowTelemetry(!showTelemetry)}
                 className={`text-[10px] font-bold px-2 py-1.5 rounded-lg border transition-all flex items-center gap-1 cursor-pointer ${
  showTelemetry 
- ? "bg-indigo-600 text-foreground border-indigo-500 shadow-md shadow-indigo-600/20" 
+ ? "bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500 shadow-md shadow-indigo-600/20" 
  : "bg-background text-muted-foreground border-border hover:text-foreground hover:border-border"
  }`}
                 title="Toggle Advanced Telemetry"
@@ -1128,7 +1128,7 @@ export default function EVECoocommandCenter() {
                   onClick={() => setChatMode("smart")}
                   className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  chatMode === "smart" 
- ? "bg-indigo-600 text-foreground shadow-md" 
+ ? "bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white shadow-md" 
  : "text-muted-foreground hover:text-foreground"
  }`}
                   title="Fast query routing"
@@ -1140,7 +1140,7 @@ export default function EVECoocommandCenter() {
                   onClick={() => setChatMode("full")}
                   className={`text-[10px] font-bold px-2 py-1 rounded transition-all cursor-pointer ${
  chatMode === "full" 
- ? "bg-indigo-600 text-foreground shadow-md" 
+ ? "bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white shadow-md" 
  : "text-muted-foreground hover:text-foreground"
  }`}
                   title="Deep sub-agent aggregation"
@@ -1169,7 +1169,7 @@ export default function EVECoocommandCenter() {
                 {selectedReasoning?.confidence_category && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
                     selectedReasoning.confidence_category === "High Confidence"
-                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                      ? "bg-emerald-500/15 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/30"
                       : selectedReasoning.confidence_category === "Medium Confidence"
                       ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
                       : "bg-rose-500/15 text-rose-350 border-rose-500/30"
@@ -1180,7 +1180,7 @@ export default function EVECoocommandCenter() {
                 {selectedReasoning?.risk_classification && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
                     selectedReasoning.risk_classification === "Low Risk"
-                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                      ? "bg-emerald-500/15 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/30"
                       : "bg-rose-500/15 text-rose-300 border-rose-500/30"
                   }`}>
                     {selectedReasoning.risk_classification}
@@ -1188,7 +1188,7 @@ export default function EVECoocommandCenter() {
                 )}
                 <button
                   onClick={() => setIsInsightsOpen(false)}
-                  className="p-1 hover:bg-indigo-500/15 text-slate-300 hover:text-indigo-300 rounded-lg transition-all cursor-pointer"
+                  className="p-1 hover:bg-indigo-500/15 text-slate-300 hover:!text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg transition-all cursor-pointer"
                   title="Collapse Panel"
                 >
                   <X size={13} />
@@ -1390,7 +1390,7 @@ export default function EVECoocommandCenter() {
                 >
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
  isAssistant 
- ? "bg-indigo-600 text-foreground border border-indigo-500/20" 
+ ? "bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20" 
  : "bg-muted text-muted-foreground border border-border"
  }`}>
                     {isAssistant ? <Brain size={14} /> : <User size={14} />}
@@ -1400,7 +1400,7 @@ export default function EVECoocommandCenter() {
                     {/* Active agent badges for assistant */}
                     {isAssistant && msg.id !== "welcome-msg" && (
                       <div className="flex flex-wrap gap-1.5 items-center mb-1">
-                        <span className="text-[9px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        <span className="text-[9px] font-bold bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                           {agentData?.agent || "COO Lead"}
                         </span>
                         {agentData?.confidence !== undefined && (
@@ -1429,7 +1429,7 @@ export default function EVECoocommandCenter() {
                     <div className={`text-sm leading-relaxed space-y-2.5 ${
  isAssistant 
  ? "bg-transparent text-foreground border-none shadow-none px-1 py-0" 
- : "bg-indigo-600/10 text-indigo-100 border border-indigo-500/15 px-3.5 py-2 rounded-2xl shadow-sm"
+ : "bg-indigo-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/15 px-3.5 py-2 rounded-2xl shadow-sm"
  }`}>
                       {isAssistant ? (
                         <>
@@ -1572,7 +1572,7 @@ export default function EVECoocommandCenter() {
                                         <div key={agentName} className="flex items-center gap-1.5">
                                           <span className="capitalize text-muted-foreground font-medium">{agentName}:</span>
                                           <span className="text-muted-foreground">{data.latency_ms}ms</span>
-                                          <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                          <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white' : 'bg-rose-500/10 text-rose-400'}`}>
                                             {data.status}
                                           </span>
                                         </div>
@@ -1629,7 +1629,7 @@ export default function EVECoocommandCenter() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-2 rounded-xl text-[10px] font-bold shadow-sm">
+                    <div className="flex items-center gap-2 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20 px-3 py-2 rounded-xl text-[10px] font-bold shadow-sm">
                       <span className="relative flex h-1.5 w-1.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -1742,7 +1742,7 @@ export default function EVECoocommandCenter() {
  
             {chatLoading && (
               <div className="flex gap-3 max-w-[80%] mr-auto animate-fade-in">
-                <div className="w-8 h-8 rounded-xl bg-indigo-600 text-foreground border border-indigo-500/20 flex items-center justify-center flex-shrink-0 animate-pulse">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 flex items-center justify-center flex-shrink-0 animate-pulse">
                   <Brain size={14} />
                 </div>
                 <div className="space-y-1.5 flex-1">
@@ -1755,7 +1755,7 @@ export default function EVECoocommandCenter() {
                   ) : (
                     <>
                       <div className="flex gap-1 items-center mb-1">
-                        <span className="text-[9px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.2 rounded-full animate-pulse">
+                        <span className="text-[9px] font-semibold bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 px-1.5 py-0.2 rounded-full animate-pulse">
                           EVE COO Executing...
                         </span>
                       </div>
@@ -1889,7 +1889,7 @@ export default function EVECoocommandCenter() {
               <button
                 type="submit"
                 disabled={chatLoading || !inputMessage.trim()}
-                className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground text-foreground rounded-xl transition-all shadow-lg flex items-center justify-center flex-shrink-0 cursor-pointer"
+                className="p-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900/50 disabled:text-muted-foreground !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl transition-all shadow-lg flex items-center justify-center flex-shrink-0 cursor-pointer"
               >
                 <Send size={16} />
               </button>

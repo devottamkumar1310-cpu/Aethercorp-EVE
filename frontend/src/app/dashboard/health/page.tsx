@@ -55,7 +55,7 @@ export default function HealthDashboard() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground p-6">
         <div className="max-w-md rounded-2xl border border-red-500/20 bg-red-950/10 p-6 text-center backdrop-blur-xl">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white">
             ⚠️
           </div>
           <h3 className="text-lg font-semibold text-foreground">Health Monitor Offline</h3>
@@ -105,7 +105,7 @@ export default function HealthDashboard() {
           <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Database Connection</span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.database === "healthy" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.database === "healthy" ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white"}`}>
                 {data.database}
               </span>
             </div>
@@ -117,7 +117,7 @@ export default function HealthDashboard() {
           <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Storage Ingestion API</span>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.storage === "healthy" ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${data.storage === "healthy" ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white"}`}>
                 {data.storage}
               </span>
             </div>
@@ -129,7 +129,7 @@ export default function HealthDashboard() {
           <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">Error Telemetry Gateway</span>
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold !text-white [&_svg]:!text-white [&_svg]:!stroke-white">
                 active
               </span>
             </div>

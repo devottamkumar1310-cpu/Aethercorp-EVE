@@ -116,7 +116,7 @@ function VerifyEmailForm() {
             <button
               onClick={handleResend}
               disabled={loading || cooldown > 0}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-300 text-foreground rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-300 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-sm font-semibold transition-all shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
             >
               {loading ? (
                 <>

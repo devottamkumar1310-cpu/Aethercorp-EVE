@@ -149,7 +149,7 @@ export default function ActivityPage() {
                 </div>
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <span className="text-[10px] font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full tracking-wider shadow-sm">
+                    <span className="text-[10px] font-bold uppercase bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 px-2 py-0.5 rounded-full tracking-wider shadow-sm">
                       {getReadableEntity(log.entity_type)}
                     </span>
                     <span className="text-foreground font-bold text-sm">

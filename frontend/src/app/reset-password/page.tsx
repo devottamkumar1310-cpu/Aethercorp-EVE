@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
         
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center text-foreground font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/30">
+            <div className="h-12 w-12 bg-indigo-600 rounded-lg flex items-center justify-center !text-white [&_svg]:!text-white [&_svg]:!stroke-white font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/30">
               EVE
             </div>
           </div>
@@ -141,7 +141,7 @@ export default function ResetPasswordPage() {
           )}
 
           {successMsg && (
-            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl flex items-start gap-2 mb-6">
+            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-xs rounded-xl flex items-start gap-2 mb-6">
               <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
@@ -188,31 +188,31 @@ export default function ResetPasswordPage() {
                     {/* Rules Checklist */}
                     <ul className="space-y-1.5 text-[11px] text-muted-foreground mt-2">
                       <li className="flex items-center gap-1.5">
-                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasMinLength ? "bg-emerald-500/10 text-emerald-400" : "bg-card text-muted-foreground"}`}>
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasMinLength ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-card text-muted-foreground"}`}>
                           {hasMinLength ? "✓" : "✕"}
                         </span>
                         <span>At least 8 characters</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasUppercase ? "bg-emerald-500/10 text-emerald-400" : "bg-card text-muted-foreground"}`}>
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasUppercase ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-card text-muted-foreground"}`}>
                           {hasUppercase ? "✓" : "✕"}
                         </span>
                         <span>At least one uppercase letter (A-Z)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasLowercase ? "bg-emerald-500/10 text-emerald-400" : "bg-card text-muted-foreground"}`}>
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasLowercase ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-card text-muted-foreground"}`}>
                           {hasLowercase ? "✓" : "✕"}
                         </span>
                         <span>At least one lowercase letter (a-z)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasNumber ? "bg-emerald-500/10 text-emerald-400" : "bg-card text-muted-foreground"}`}>
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasNumber ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-card text-muted-foreground"}`}>
                           {hasNumber ? "✓" : "✕"}
                         </span>
                         <span>At least one number (0-9)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasSpecialChar ? "bg-emerald-500/10 text-emerald-400" : "bg-card text-muted-foreground"}`}>
+                        <span className={`w-3.5 h-3.5 flex items-center justify-center rounded-full text-[9px] font-bold ${hasSpecialChar ? "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white" : "bg-card text-muted-foreground"}`}>
                           {hasSpecialChar ? "✓" : "✕"}
                         </span>
                         <span>At least one special character (!@#$%^&*)</span>

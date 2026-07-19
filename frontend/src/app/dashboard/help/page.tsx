@@ -195,7 +195,7 @@ export default function HelpPage() {
               </div>
               <a 
                 href="mailto:aethercorp.support@gmail.com" 
-                className="mt-4 inline-block text-center text-xs font-bold bg-indigo-600/20 hover:bg-indigo-650 text-indigo-400 hover:text-foreground px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
+                className="mt-4 inline-block text-center text-xs font-bold bg-indigo-600/20 hover:bg-indigo-650 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:!text-white px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
               >
                 aethercorp.support@gmail.com
               </a>
@@ -227,7 +227,7 @@ export default function HelpPage() {
         
         <button
           onClick={restartTour}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-foreground rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl text-sm font-semibold transition-all shadow-lg shadow-indigo-600/10 cursor-pointer"
         >
           <Play size={16} /> Restart Product Tour
         </button>
@@ -245,7 +245,7 @@ export default function HelpPage() {
                 onClick={() => setActiveTab(t.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all text-left ${
  activeTab === t.id
- ? "bg-indigo-50 dark:bg-indigo-600/15 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20"
+ ? "bg-indigo-50 dark:bg-indigo-600/15 text-indigo-700 dark:!text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-200 dark:border-indigo-500/20"
  : "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-foreground hover:bg-secondary dark:hover:bg-background/80"
  }`}
               >
