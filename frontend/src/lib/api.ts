@@ -3,10 +3,8 @@ import { devLog } from "@/lib/logger";
 
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || "";
 if (!rawUrl && typeof window !== "undefined") {
-if (!rawUrl && typeof window !== "undefined") {
   logger.warn(
-    "[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to localhost (http://127.0.0.1:8000). " +
-    "This will fail in production/Vercel unless local forwarding is active."
+    "[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to default production backend."
   );
 }
 
