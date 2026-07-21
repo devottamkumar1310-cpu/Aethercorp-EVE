@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects } from "@/services/businessService";
@@ -62,7 +63,7 @@ export default function DashboardPage() {
         setSummary(data);
       })
       .catch((err) => {
-        console.error("Error loading summary:", err);
+        logger.error("Error loading summary:", err);
       })
       .finally(() => {
         setLoadingSummary(false);
@@ -74,7 +75,7 @@ export default function DashboardPage() {
         setActivityLogs(Array.isArray(data) ? data.slice(0, 10) : []);
       })
       .catch((err) => {
-        console.error("Error loading logs:", err);
+        logger.error("Error loading logs:", err);
       })
       .finally(() => {
         setLoadingLogs(false);
@@ -86,7 +87,7 @@ export default function DashboardPage() {
         setTrends(data);
       })
       .catch((err) => {
-        console.error("Error loading trends:", err);
+        logger.error("Error loading trends:", err);
       })
       .finally(() => {
         setLoadingTrends(false);
@@ -98,7 +99,7 @@ export default function DashboardPage() {
         setRisks(data?.risks || []);
       })
       .catch((err) => {
-        console.error("Error loading risks:", err);
+        logger.error("Error loading risks:", err);
       })
       .finally(() => {
         setLoadingRisks(false);
@@ -110,7 +111,7 @@ export default function DashboardPage() {
         setOpportunities(data?.opportunities || []);
       })
       .catch((err) => {
-        console.error("Error loading opportunities:", err);
+        logger.error("Error loading opportunities:", err);
       })
       .finally(() => {
         setLoadingOpportunities(false);
@@ -126,7 +127,7 @@ export default function DashboardPage() {
       setClientsList(clients);
       setProjectsList(projects);
     } catch (err) {
-      console.error("Error loading dropdown data:", err);
+      logger.error("Error loading dropdown data:", err);
     }
   };
 

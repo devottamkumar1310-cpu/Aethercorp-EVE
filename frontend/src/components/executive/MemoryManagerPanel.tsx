@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { X, Plus, Trash2, Loader2, Target, Activity, Edit2, Check, Eye, EyeOff, Calendar } from "lucide-react";
@@ -36,7 +37,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
       const data = await listGoals(token);
       setGoals(data);
     } catch (err) {
-      console.error("Failed to load goals:", err);
+      logger.error("Failed to load goals:", err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +67,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
       setTargetValue("");
       await fetchGoals();
     } catch (err) {
-      console.error("Failed to add goal:", err);
+      logger.error("Failed to add goal:", err);
     } finally {
       setAddingGoal(false);
     }
@@ -78,7 +79,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
       await deleteGoal(id, token);
       await fetchGoals();
     } catch (err) {
-      console.error("Failed to delete goal:", err);
+      logger.error("Failed to delete goal:", err);
     } finally {
       setDeletingId(null);
     }
@@ -90,7 +91,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
       await updateGoal(id, { is_active: !currentActive }, token);
       await fetchGoals();
     } catch (err) {
-      console.error("Failed to toggle status:", err);
+      logger.error("Failed to toggle status:", err);
     } finally {
       setUpdatingId(null);
     }
@@ -119,7 +120,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
       setEditingId(null);
       await fetchGoals();
     } catch (err) {
-      console.error("Failed to save edited goal:", err);
+      logger.error("Failed to save edited goal:", err);
     } finally {
       setUpdatingId(null);
     }

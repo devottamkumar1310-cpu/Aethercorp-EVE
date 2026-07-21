@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { formatCurrency, formatCurrencyPrecise, formatNumber } from "@/lib/utils";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -470,27 +472,41 @@ export default function InventoryDashboardPage() {
               <Brain size={16} className="text-indigo-500" /> Executive Insights
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-3 bg-secondary/60 rounded-lg space-y-1">
-                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  ⚠️ Stockout Risk
-                </span>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {(alerts?.low_stock_count || 0) > 0 
-                    ? `There are ${alerts?.low_stock_count} SKUs below their safety stock levels. Total replenishment shortage is ${alerts?.low_stock?.reduce((sum, item) => sum + item.shortage, 0).toLocaleString()} units.`
-                    : "No stockout risks detected. Safety stock levels are currently compliant."
-                  }
-                </p>
+              <div className="p-3 bg-secondary/60 rounded-lg space-y-1 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    ⚠️ Stockout Risk
+                  </span>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                    {(alerts?.low_stock_count || 0) > 0 
+                      ? `There are ${alerts?.low_stock_count} SKUs below their safety stock levels. Total replenishment shortage is ${alerts?.low_stock?.reduce((sum, item) => sum + item.shortage, 0).toLocaleString()} units.`
+                      : "No stockout risks detected. Safety stock levels are currently compliant."
+                    }
+                  </p>
+                </div>
+                {(alerts?.low_stock_count || 0) > 0 && (
+                  <Link href="/dashboard/traceability?type=low_stock" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mt-2">
+                    View Decision Trace <ArrowRight size={10} />
+                  </Link>
+                )}
               </div>
-              <div className="p-3 bg-secondary/60 rounded-lg space-y-1">
-                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  ❄️ Capital Lockup
-                </span>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {(alerts?.dead_stock_count || 0) > 0
-                    ? `We have detected ${alerts?.dead_stock_count} dead stock candidates, locking up an estimated $${(alerts?.dead_stock?.reduce((sum, item) => sum + item.estimated_value, 0) || 0).toLocaleString()} in capital.`
-                    : "No dead stock detected. Inventory turnover is within normal operating parameters."
-                  }
-                </p>
+              <div className="p-3 bg-secondary/60 rounded-lg space-y-1 flex flex-col justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    ❄️ Capital Lockup
+                  </span>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                    {(alerts?.dead_stock_count || 0) > 0
+                      ? `We have detected ${alerts?.dead_stock_count} dead stock candidates, locking up an estimated $${(alerts?.dead_stock?.reduce((sum, item) => sum + item.estimated_value, 0) || 0).toLocaleString()} in capital.`
+                      : "No dead stock detected. Inventory turnover is within normal operating parameters."
+                    }
+                  </p>
+                </div>
+                {(alerts?.dead_stock_count || 0) > 0 && (
+                  <Link href="/dashboard/traceability?type=dead_stock" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mt-2">
+                    View Decision Trace <ArrowRight size={10} />
+                  </Link>
+                )}
               </div>
             </div>
           </div>

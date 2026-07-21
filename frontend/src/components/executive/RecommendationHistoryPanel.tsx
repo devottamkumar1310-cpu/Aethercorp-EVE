@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { X, Loader2, Sparkles, Award, ArrowUpRight, TrendingUp, AlertTriangle, Target } from "lucide-react";
@@ -23,7 +24,7 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
       const data = await getRecommendations(token, 20);
       setRecommendations(data);
     } catch (err) {
-      console.error("Failed to load recommendations:", err);
+      logger.error("Failed to load recommendations:", err);
     } finally {
       setLoading(false);
     }

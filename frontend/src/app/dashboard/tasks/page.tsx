@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { fetchTasks, fetchProjects, deleteTaskAPI } from "@/services/businessService";
@@ -27,7 +28,7 @@ export default function TasksPage() {
       setTasks(taskData);
       setProjects(projData);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   };
 

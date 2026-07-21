@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -465,7 +466,7 @@ export default function EVECoocommandCenter() {
               }
             }
           } catch (err) {
-            console.error("Failed to load last conversation details for default insights:", err);
+            logger.error("Failed to load last conversation details for default insights:", err);
           }
         } else {
           // No conversations; seed beautiful default initial state based on workspace metrics
@@ -495,7 +496,7 @@ export default function EVECoocommandCenter() {
         const tChat = performance.now();
         devLog(`[TELEMETRY][PERF] Time to Chat Interactive: ${(tChat - tStart).toFixed(2)}ms`);
       })
-      .catch(err => console.error("Conversations load failed:", err));
+      .catch(err => logger.error("Conversations load failed:", err));
 
     // 2. Fetch Non-critical Analytics Independently
     Promise.allSettled([
@@ -517,7 +518,7 @@ export default function EVECoocommandCenter() {
     ]).then(() => {
       const tPanels = performance.now();
       devLog(`[TELEMETRY][PERF] Time for Health/Risk/Opportunity Panels: ${(tPanels - tStart).toFixed(2)}ms`);
-    }).catch(err => console.error("Panel group load failed", err));
+    }).catch(err => logger.error("Panel group load failed", err));
 
 
     fetch(`${API_BASE_URL}/api/analytics/overview`, {
@@ -527,11 +528,11 @@ export default function EVECoocommandCenter() {
       .then(val => {
         if (val) setOverview(val);
       })
-      .catch(err => console.error("Overview load failed:", err));
+      .catch(err => logger.error("Overview load failed:", err));
 
 
     } catch (err) {
-      console.error("Hydration failed:", err);
+      logger.error("Hydration failed:", err);
     }
   };
 
@@ -555,7 +556,7 @@ export default function EVECoocommandCenter() {
             const docDetails = await getDocumentDetails(docParam, session.access_token);
             setDocumentName(docDetails.filename);
           } catch (err) {
-            console.error("Failed to load document context for chat:", err);
+            logger.error("Failed to load document context for chat:", err);
           }
         }
 
@@ -566,7 +567,7 @@ export default function EVECoocommandCenter() {
 
         hydrateDashboard(session.access_token);
       } catch (err) {
-        console.error("EVE setup error:", err);
+        logger.error("EVE setup error:", err);
       } finally {
         setLoading(false);
         devLog(`[TELEMETRY][PERF] AI Workspace Time to First Render Triggered`);
@@ -612,7 +613,7 @@ export default function EVECoocommandCenter() {
         setIsInsightsOpen(false);
       }
     } catch (err) {
-      console.error("Load conversation failed:", err);
+      logger.error("Load conversation failed:", err);
     }
   };
 
@@ -640,7 +641,7 @@ export default function EVECoocommandCenter() {
       setEditingSessionId(null);
       setEditingTitle("");
     } catch (err) {
-      console.error("Rename failed:", err);
+      logger.error("Rename failed:", err);
     }
   };
 
@@ -654,7 +655,7 @@ export default function EVECoocommandCenter() {
       }
       setDeleteConfirmId(null);
     } catch (err) {
-      console.error("Delete failed:", err);
+      logger.error("Delete failed:", err);
     }
   };
 
@@ -732,7 +733,7 @@ export default function EVECoocommandCenter() {
                     )
                   );
                 }
-              }).catch((e) => console.error("Error finalizing stream detail data:", e));
+              }).catch((e) => logger.error("Error finalizing stream detail data:", e));
 
               listConversations(sessionToken).then((convs) => setConversations(convs)).catch(() => {});
             }
@@ -746,7 +747,7 @@ export default function EVECoocommandCenter() {
       );
 
     } catch (err: any) {
-      console.error("Chat streaming failed:", err);
+      logger.error("Chat streaming failed:", err);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantTempId
@@ -802,7 +803,7 @@ export default function EVECoocommandCenter() {
       };
 
       recognition.onerror = (event: any) => {
-        console.error("Speech recognition error:", event.error);
+        logger.error("Speech recognition error:", event.error);
         if (event.error === "not-allowed") {
           setVoiceError("Microphone permission denied. Please allow microphone access in your browser settings.");
         } else {
@@ -819,7 +820,7 @@ export default function EVECoocommandCenter() {
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err: any) {
-      console.error("Failed to start speech recognition:", err);
+      logger.error("Failed to start speech recognition:", err);
       setVoiceError(`Failed to initialize microphone: ${err.message || err}`);
       setIsListening(false);
       setTimeout(() => setVoiceError(null), 5000);

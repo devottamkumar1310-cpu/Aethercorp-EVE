@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
   // 1. If Supabase redirected with an explicit error in query parameters
   if (errorParam || errorDescription) {
     const message = errorDescription || errorParam || "Redirect error from auth provider"
-    console.error(`[AUTH CALLBACK] [ERROR] Error redirect from Supabase: ${errorParam} - ${errorDescription}`)
+    logger.error(`[AUTH CALLBACK] [ERROR] Error redirect from Supabase: ${errorParam} - ${errorDescription}`)
     return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(message)}`)
   }
 
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
                 cookieStore.set(name, value, options)
               )
             } catch (e) {
-              console.warn("[AUTH CALLBACK] Cookie set error in server environment:", e)
+              logger.warn("[AUTH CALLBACK] Cookie set error in server environment:", e)
             }
           },
         },
@@ -50,7 +51,7 @@ export async function GET(request: Request) {
     const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
     
     if (exchangeError) {
-      console.error(`[AUTH CALLBACK] [ERROR] exchangeCodeForSession failed:`, exchangeError)
+      logger.error(`[AUTH CALLBACK] [ERROR] exchangeCodeForSession failed:`, exchangeError)
       return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message)}`)
     }
 
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
         devLog(`[TELEMETRY][PERF] OAuth Callback & Backend Sync Duration: ${(t1 - t0).toFixed(2)}ms`);
       }
     } catch (syncError) {
-      console.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
+      logger.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
     }
 
     devLog(`[AUTH CALLBACK] [REDIRECT] Exchange successful.`)
@@ -79,6 +80,6 @@ export async function GET(request: Request) {
   }
 
   // 3. Fallback if no code or error parameters are found in query parameters
-  console.warn(`[AUTH CALLBACK] [WARNING] Request received without 'code' or 'error' parameters. Checking for hash fragments...`)
+  logger.warn(`[AUTH CALLBACK] [WARNING] Request received without 'code' or 'error' parameters. Checking for hash fragments...`)
   return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent("Missing authorization code in link parameters")}`)
 }

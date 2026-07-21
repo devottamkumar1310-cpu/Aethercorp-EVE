@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { 
@@ -40,7 +41,7 @@ export function IntelligencePanel({ token }: IntelligencePanelProps) {
         setOpportunities(o.opportunities);
         setActions(a.actions);
       } catch (err) {
-        console.error("Failed to load intelligence", err);
+        logger.error("Failed to load intelligence", err);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -132,7 +133,7 @@ export default function SettingsPage() {
         }
       }
     } catch (e) {
-      console.error("Failed to fetch workspaces", e);
+      logger.error("Failed to fetch workspaces", e);
     }
   }, [getSession, router]);
 
@@ -168,7 +169,7 @@ export default function SettingsPage() {
           setWorkspaces(await workspacesRes.json());
         }
       } catch (e) {
-        console.error("Failed to fetch settings data", e);
+        logger.error("Failed to fetch settings data", e);
       } finally {
         setLoading(false);
       }

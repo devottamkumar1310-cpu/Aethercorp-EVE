@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -58,7 +59,7 @@ function LoginForm() {
           });
         }
       } catch (e) {
-        console.error("Sync failed", e);
+        logger.error("Sync failed", e);
       }
       router.push("/dashboard/inventory");
     }

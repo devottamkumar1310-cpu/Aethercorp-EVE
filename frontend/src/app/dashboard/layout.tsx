@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -43,35 +44,8 @@ interface Workspace {
   role: string;
 }
 
-const navItems = [
-  {
-    label: "Inventory & Analysis",
-    items: [
-      { href: "/dashboard/inventory", label: "Inventory Intelligence", icon: Package },
-      { href: "/dashboard/documents", label: "Document Intelligence", icon: FileText },
-      { href: "/dashboard/traceability", label: "Decision Traceability", icon: Sparkles },
-      { href: "/dashboard/eve", label: "AI Assistant", icon: Brain, isAI: true },
-    ],
-  },
-  {
-    label: "Operations & Finance",
-    items: [
-      { href: "/dashboard", label: "Operations Dashboard", icon: LayoutDashboard, exact: true },
-      { href: "/dashboard/finance", label: "Finance", icon: DollarSign },
-      { href: "/dashboard/clients", label: "Clients", icon: Users },
-      { href: "/dashboard/projects", label: "Projects", icon: Briefcase },
-      { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare },
-      { href: "/dashboard/activity", label: "Activity Feed", icon: Activity },
-    ],
-  },
-  {
-    label: "SYSTEM",
-    items: [
-      { href: "/dashboard/settings", label: "Settings", icon: Settings },
-      { href: "/dashboard/help", label: "Help & Learning", icon: HelpCircle },
-    ],
-  },
-];
+import { NAV_ITEMS } from "@/config/navigation";
+import { apiFetch } from "@/lib/api";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -107,6 +81,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     return null;
   });
+
+  const DEMO_WORKSPACES = [
+    { id: "demo-novawear", slug: "novawear", name: "NovaWear Fashion" },
+    { id: "demo-urban_threads", slug: "urban_threads", name: "Urban Threads" },
+    { id: "demo-essentials_co", slug: "essentials_co", name: "Essentials Co." },
+  ];
+
+  const handleSelectDemo = async (demoSlug: string) => {
+    setIsDropdownOpen(false);
+    const existing = workspaces.find(w => w.slug.startsWith(demoSlug.replace("_", "-")) || w.slug.startsWith(demoSlug));
+    if (existing) {
+      handleSwitchWorkspace(existing.id);
+      return;
+    }
+    
+    // Create on the fly
+    setLoadingStage(2);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({ demo_company: demoSlug })
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        localStorage.setItem("active_workspace_id", data.organization_id);
+        window.location.reload(); // Hard refresh to load new workspace
+      }
+    } catch (e) {
+      logger.error("Failed to create demo workspace on the fly", e);
+    }
+  };
+
 
   const getRemainingDays = () => {
     if (!profile?.trial_end_date) return 0;
@@ -269,7 +279,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setTheme(activeTheme);
         document.documentElement.setAttribute("data-theme", activeTheme);
       } catch (e) {
-        console.warn("[EVE] Failed to parse profile response:", e);
+        logger.warn("[EVE] Failed to parse profile response:", e);
       }
     } else {
       const reason =
@@ -278,7 +288,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ? "Profile request timed out"
             : String(profileSettled.reason)
           : `Profile API returned ${profileSettled.value.status}`;
-      console.warn("[EVE] Profile load failed (non-fatal):", reason);
+      logger.warn("[EVE] Profile load failed (non-fatal):", reason);
       // Dashboard still loads — profile fields show fallback values
     }
 
@@ -313,7 +323,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               }
             }
           } catch (retryErr) {
-            console.warn("[EVE] Workspace retry fetch failed:", retryErr);
+            logger.warn("[EVE] Workspace retry fetch failed:", retryErr);
           }
           // Still empty after retry — user genuinely has no workspace.
           localStorage.removeItem("active_workspace_id");
@@ -332,7 +342,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           setActiveWorkspaceId(null);
         }
       } catch (e) {
-        console.warn("[EVE] Failed to parse workspaces response:", e);
+        logger.warn("[EVE] Failed to parse workspaces response:", e);
       }
     } else {
       const reason =
@@ -341,7 +351,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ? "Workspaces request timed out after 15 seconds"
             : String(wsSettled.reason)
           : `Workspaces API returned ${wsSettled.value.status}`;
-      console.error("[EVE] Workspaces load failed:", reason);
+      logger.error("[EVE] Workspaces load failed:", reason);
       // Propagate as an initError so the user sees an actionable message
       // instead of an infinite spinner.
       throw new Error(`Failed to load workspaces: ${reason}`);
@@ -383,7 +393,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }
           if (mounted) setInitError(null);
         } catch (err: any) {
-          console.error("[EVE] Dashboard initialization failed:", err);
+          logger.error("[EVE] Dashboard initialization failed:", err);
           if (mounted) {
             const msg: string = err?.message ?? "";
             let userMessage: string;
@@ -693,7 +703,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
-          {navItems.map((group) => (
+          {NAV_ITEMS.map((group) => (
             <div key={group.label}>
               <p className={`text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-3 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
                 {group.label}
@@ -851,30 +861,51 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)} />
                     <div className="absolute right-0 mt-2 w-60 bg-sidebar border border-sidebar-border rounded-xl shadow-xl z-50 overflow-hidden text-sidebar-foreground">
                       <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
+                        <span className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">Demo Workspaces</span>
+                      </div>
+                      <div className="py-1">
+                        {DEMO_WORKSPACES.map((ws) => {
+                          const isMatch = activeWorkspace?.slug.startsWith(ws.slug.replace("_", "-")) || activeWorkspace?.slug.startsWith(ws.slug);
+                          return (
+                            <button
+                              key={ws.id}
+                              onClick={() => handleSelectDemo(ws.slug)}
+                              className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-sidebar-accent transition-colors ${
+                                isMatch ? "text-violet-400 font-bold" : "text-sidebar-foreground"
+                              }`}
+                            >
+                              <div className="flex flex-col items-start truncate max-w-[180px]">
+                                <span className="truncate">{ws.name}</span>
+                                <span className="text-[9px] text-blue-400 font-medium truncate mt-0.5">
+                                  Demo Workspace
+                                </span>
+                              </div>
+                              {isMatch && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="p-3 border-y border-sidebar-border bg-sidebar-accent/30 mt-2">
                         <span className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">My Workspaces</span>
                       </div>
                       <div className="py-1 max-h-48 overflow-y-auto">
-                        {workspaces.map((ws) => (
+                        {workspaces.filter(w => !w.slug.startsWith("novawear") && !w.slug.startsWith("urban-threads") && !w.slug.startsWith("essentials-co") && !w.slug.startsWith("urban_threads") && !w.slug.startsWith("essentials_co")).map((ws) => (
                           <button
                             key={ws.id}
                             onClick={() => handleSwitchWorkspace(ws.id)}
                             className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-sidebar-accent transition-colors ${
- ws.id === activeWorkspaceId ? "text-violet-400 font-bold" : "text-sidebar-foreground"
- }`}
+                              ws.id === activeWorkspaceId ? "text-violet-400 font-bold" : "text-sidebar-foreground"
+                            }`}
                           >
                             <div className="flex flex-col items-start truncate max-w-[180px]">
                               <span className="truncate">{ws.name}</span>
-                              {(ws.slug.startsWith("novawear") || ws.slug.startsWith("urban-threads") || ws.slug.startsWith("essentials-co")) && (
-                                <span className="text-[9px] text-blue-400 font-medium truncate mt-0.5">
-                                  Demo Workspace
-                                </span>
-                              )}
                             </div>
                             {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
                           </button>
                         ))}
-                        {workspaces.length === 0 && (
-                          <div className="px-4 py-3 text-sm text-muted-foreground italic">No active workspaces</div>
+                        {workspaces.filter(w => !w.slug.startsWith("novawear") && !w.slug.startsWith("urban-threads") && !w.slug.startsWith("essentials-co") && !w.slug.startsWith("urban_threads") && !w.slug.startsWith("essentials_co")).length === 0 && (
+                          <div className="px-4 py-3 text-sm text-muted-foreground italic">No personal workspaces</div>
                         )}
                       </div>
                       <div className="p-2 border-t border-sidebar-border">

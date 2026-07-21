@@ -604,51 +604,75 @@ def seed_demo_workspace_data(db, org_id, demo_company="novawear"):
 def seed_demo_recommendation_traces(db, org_id):
     from app.models.recommendation_trace import RecommendationTrace
     import random
+    from app.models.inventory import Inventory
     
     traces = []
-    actions = [
-        ("Reduce reorder quantity", "Reduce the next purchase order by 35%."),
-        ("Liquidate aging inventory", "Run a 20% promotion on aging seasonal items."),
-        ("Increase safety stock", "Increase safety stock for fast-moving items by 15 days."),
-        ("Delay purchase order", "Delay the upcoming purchase order by 2 weeks."),
-        ("Bundle slow-moving products", "Create product bundles with high-margin fast movers."),
-        ("Reallocate warehouse inventory", "Shift 20% of east coast stock to west coast distribution center."),
-        ("Increase reorder frequency", "Switch to weekly ordering to reduce carrying costs."),
-        ("Reduce markdown timing", "Apply markdowns 2 weeks earlier to improve sell-through."),
-        ("Review supplier lead times", "Renegotiate lead times with secondary suppliers."),
-        ("Investigate declining SKU", "Review marketing spend on underperforming SKU categories.")
-    ]
     
-    for action_title, action_desc in actions:
-        confidence = round(random.uniform(0.75, 0.98), 2)
-        trace = RecommendationTrace(
-            organization_id=org_id,
-            recommendation_type="inventory",
-            action=action_title,
-            confidence_score=confidence,
-            validation_status="GENERATED",
-            source_datasets=["Inventory", "Sales", "Supplier Data"],
-            supporting_metrics={
-                "Inventory Days": f"{random.randint(45, 120)} days",
-                "Sales Velocity": f"{random.randint(10, 50)} units/day",
-                "Gross Margin": f"{random.randint(30, 65)}%"
-            },
-            reasoning_chain=[
-                "Observed: Sales declining or inventory increasing.",
-                "Inference: Current purchasing policy is likely to create excess inventory.",
-                "Risk: Estimated carrying cost increase.",
-                f"Recommendation: {action_desc}",
-                "Expected Business Outcome: Cash released and margin improvement."
-            ],
-            evidence_snapshot={
-                "summary": "Demand has shifted over the last four weeks. Maintaining current purchasing behavior is likely to increase carrying costs.",
-                "impact": f"${random.randint(1000, 25000)} potential capital freed."
-            },
-            trigger_type="SYSTEM_ALERT",
-            created_from_query=False
-        )
-        traces.append(trace)
-        
+    # Generate traces for dead stock candidates (high stock, low sales)
+    inventory_items = db.query(Inventory).filter(Inventory.organization_id == org_id).all()
+    
+    for item in inventory_items:
+        if item.quantity_on_hand > 500 and item.sales_velocity < 2.0:
+            trace = RecommendationTrace(
+                organization_id=org_id,
+                recommendation_type="dead_stock",
+                action=f"Liquidate {item.sku}",
+                confidence_score=round(random.uniform(0.85, 0.98), 2),
+                validation_status="GENERATED",
+                source_datasets=["Inventory", "Sales", "Supplier Data"],
+                supporting_metrics={
+                    "Inventory Days": f"{round(item.quantity_on_hand / max(1, item.sales_velocity))} days",
+                    "Sales Velocity": f"{item.sales_velocity} units/day",
+                    "Current Stock": f"{item.quantity_on_hand} units"
+                },
+                reasoning_chain=[
+                    f"Observed: SKU {item.sku} has high stock ({item.quantity_on_hand}) but low sales velocity ({item.sales_velocity}/day).",
+                    "Inference: This item is aging and will soon become dead stock.",
+                    "Risk: Capital lockup and increased carrying costs.",
+                    "Recommendation: Run a clearance promotion or bundle with fast movers.",
+                    "Expected Business Outcome: Cash released and warehouse space freed."
+                ],
+                evidence_snapshot={
+                    "summary": f"SKU {item.sku} is tying up capital and moving too slowly.",
+                    "impact": f"${round(item.quantity_on_hand * item.unit_cost)} potential capital freed."
+                },
+                trigger_type="SYSTEM_ALERT",
+                created_from_query=False
+            )
+            traces.append(trace)
+            
+        elif item.quantity_on_hand < (item.sales_velocity * item.lead_time_days) + 10:
+            # Low stock / Reorder alert
+            shortage = round((item.sales_velocity * item.lead_time_days) + 20 - item.quantity_on_hand)
+            trace = RecommendationTrace(
+                organization_id=org_id,
+                recommendation_type="low_stock",
+                action=f"Reorder {item.sku}",
+                confidence_score=round(random.uniform(0.88, 0.99), 2),
+                validation_status="GENERATED",
+                source_datasets=["Inventory", "Sales", "Supplier Data"],
+                supporting_metrics={
+                    "Current Stock": f"{item.quantity_on_hand} units",
+                    "Lead Time": f"{item.lead_time_days} days",
+                    "Sales Velocity": f"{item.sales_velocity} units/day",
+                    "Suggested Reorder": f"{shortage} units"
+                },
+                reasoning_chain=[
+                    f"Observed: SKU {item.sku} stock is {item.quantity_on_hand} with {item.sales_velocity} sales/day and {item.lead_time_days} days lead time.",
+                    "Inference: Stock will deplete before next shipment arrives at current run rate.",
+                    "Risk: Imminent stockout and lost revenue.",
+                    f"Recommendation: Submit purchase order for {shortage} units immediately.",
+                    f"Expected Business Outcome: Prevent stockout and capture ${round(shortage * item.unit_price)} in revenue."
+                ],
+                evidence_snapshot={
+                    "summary": f"Stockout risk detected for {item.sku}. Reorder required immediately.",
+                    "impact": f"Prevent ${round(shortage * item.unit_price)} in lost sales."
+                },
+                trigger_type="SYSTEM_ALERT",
+                created_from_query=False
+            )
+            traces.append(trace)
+
     db.add_all(traces)
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):

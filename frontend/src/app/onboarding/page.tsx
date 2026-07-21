@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -38,7 +39,7 @@ export default function OnboardingPage() {
           }
         }
       } catch (e) {
-        console.error("Failed to check workspace", e);
+        logger.error("Failed to check workspace", e);
       }
     }
     
@@ -116,7 +117,11 @@ export default function OnboardingPage() {
     }
   };
 
-
+  const handleSkip = () => {
+    const demos = ["novawear", "urban_threads", "essentials_co"];
+    const randomDemo = demos[Math.floor(Math.random() * demos.length)];
+    handleCreateDemoWorkspace(randomDemo);
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
@@ -148,10 +153,19 @@ export default function OnboardingPage() {
           <div className="space-y-4">
             {/* Demo Workspace Cards (Option A) */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 mb-4">
-                 <Sparkles size={16} className="text-indigo-400" />
-                 <h3 className="text-sm font-semibold text-foreground">Explore with a Demo Company</h3>
-              </div>
+               <div className="flex items-center justify-between mb-4">
+                 <div className="flex items-center gap-2">
+                   <Sparkles size={16} className="text-indigo-400" />
+                   <h3 className="text-sm font-semibold text-foreground">Explore with a Demo Company</h3>
+                 </div>
+                 <button
+                   onClick={handleSkip}
+                   disabled={loading || loadingDemo}
+                   className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg border border-indigo-500/20"
+                 >
+                   Skip for now <ArrowRight size={12} className="inline ml-1" />
+                 </button>
+               </div>
               <button
                 onClick={() => handleCreateDemoWorkspace("novawear")}
                 disabled={loading || loadingDemo}

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { useState } from "react";
 import { ChatResponse } from "@/types/chat";
 import { sendChatMessage } from "@/services/chatService";
@@ -35,7 +36,7 @@ export function CEOChatConsole({ onChatResponse, token }: Props) {
       ]);
       onChatResponse(response);
     } catch (error) {
-      console.error("Chat error:", error);
+      logger.error("Chat error:", error);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "Sorry, I encountered an error while processing your request." }

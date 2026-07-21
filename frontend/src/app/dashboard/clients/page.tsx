@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { fetchClients, deleteClientAPI } from "@/services/businessService";
@@ -22,7 +23,7 @@ export default function ClientsPage() {
       const data = await fetchClients(token);
       setClients(data);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   };
 

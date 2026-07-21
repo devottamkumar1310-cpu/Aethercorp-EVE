@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -42,7 +43,7 @@ export default function DocumentDetailPage() {
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
       } catch (err) {
-        console.error("Failed to load document preview blob:", err);
+        logger.error("Failed to load document preview blob:", err);
       }
     } catch {
       toast.error("Document hub is currently processing updates. Please try again.");

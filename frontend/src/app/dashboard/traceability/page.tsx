@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass, ListRestart, AlertTriangle, ShieldAlert, CheckCircle, Database } from "lucide-react";
@@ -75,7 +76,7 @@ export default function TraceabilityDashboard() {
       setPage(pageIndex);
     } catch (err: any) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      console.warn("API load failed.", err);
+      logger.warn("API load failed.", err);
       setTraces([]);
       setSelectedTrace(null);
     } finally {
@@ -164,9 +165,19 @@ export default function TraceabilityDashboard() {
           </div>
         ) : traces.length === 0 ? (
           <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/20 p-16 text-center max-w-xl mx-auto">
-            <HelpCircle className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-            <h3 className="mt-4 text-lg font-semibold text-foreground">No decisions have been recorded yet.</h3>
-            <p className="mt-2 text-sm text-muted-foreground">This workspace has no decision traceability logs.</p>
+            <Compass className="mx-auto h-12 w-12 text-indigo-400 opacity-50 mb-4" />
+            <h3 className="mt-4 text-lg font-bold text-foreground">No recommendations generated yet.</h3>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              EVE needs to analyze your inventory data before generating decisions and reasoning traces. Once your data is processed, recommendations will appear here.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/dashboard/inventory" className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg transition-colors shadow-lg shadow-indigo-500/20">
+                Upload Inventory
+              </Link>
+              <Link href="/dashboard/eve" className="w-full sm:w-auto px-6 py-2.5 bg-sidebar-accent/80 hover:bg-sidebar-accent border border-sidebar-border text-foreground font-semibold rounded-lg transition-colors">
+                Ask EVE to Analyze
+              </Link>
+            </div>
           </div>
         ) : selectedTrace && (
           <div className="mt-8 grid gap-8 lg:grid-cols-4">

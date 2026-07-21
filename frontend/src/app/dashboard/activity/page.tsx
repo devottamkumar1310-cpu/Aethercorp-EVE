@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { fetchActivityLogs } from "@/services/businessService";
@@ -51,7 +52,7 @@ export default function ActivityPage() {
           setFilteredLogs(data);
         }
       } catch (err) {
-        console.error(err);
+        logger.error(err);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { fetchProjects, fetchClients, deleteProjectAPI } from "@/services/businessService";
@@ -27,7 +28,7 @@ export default function ProjectsPage() {
       setProjects(projData);
       setClients(clientData);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   };
 

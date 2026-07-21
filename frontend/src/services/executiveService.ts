@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { getHeaders } from "./businessService";
 import { 
@@ -124,7 +125,7 @@ export async function sendExecutiveChatStream(
         const data = JSON.parse(line);
         onChunk(data.type, data.content || data);
       } catch (err) {
-        console.error("Failed to parse stream chunk line:", line, err);
+        logger.error("Failed to parse stream chunk line:", line, err);
       }
     }
   }

@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { X, AlertTriangle, TrendingUp, Sparkles, Send, Loader2, Info } from "lucide-react";
@@ -29,7 +30,7 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
           const data = await getDailyBrief(token);
           setBrief(data);
         } catch (err: any) {
-          console.error("Error fetching daily brief:", err);
+          logger.error("Error fetching daily brief:", err);
           setError(err.message || "Failed to load the daily brief.");
         } finally {
           setLoading(false);

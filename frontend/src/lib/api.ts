@@ -1,8 +1,9 @@
+import { logger } from "@/lib/logger";
 import { devLog } from "@/lib/logger";
 
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || "";
 if (!rawUrl && typeof window !== "undefined") {
-  console.warn(
+  logger.warn(
     "[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to localhost (http://127.0.0.1:8000). " +
     "This will fail in production/Vercel unless local forwarding is active."
   );
@@ -34,13 +35,13 @@ if (typeof window !== "undefined") {
 export async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const res = await fetch(url, options);
   if (res.status === 401) {
-    console.warn("[EVE] 401 Unauthorized — session expired. Signing out.");
+    logger.warn("[EVE] 401 Unauthorized — session expired. Signing out.");
     try {
       // Dynamically import to avoid circular dependency with supabase client.
       const { createClient } = await import("@/lib/supabase/client");
       await createClient().auth.signOut();
     } catch (e) {
-      console.error("[EVE] signOut failed during 401 redirect:", e);
+      logger.error("[EVE] signOut failed during 401 redirect:", e);
     }
     // Redirect to login. Using window.location.href to guarantee a full page
     // reload which clears all in-memory React state.

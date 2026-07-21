@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
 import { fetchRevenues, fetchExpenses, fetchBusinessKPIs, fetchProjects } from "@/services/businessService";
@@ -33,7 +34,7 @@ export default function FinancePage() {
       setKpis(kpiData);
       setProjects(projData);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   };
 

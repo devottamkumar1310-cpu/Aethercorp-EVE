@@ -1,4 +1,5 @@
 "use client";
+import { logger } from "@/lib/logger";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -84,7 +85,7 @@ export default function SignupPage() {
           headers: { 'Authorization': `Bearer ${data.session.access_token}` }
         });
       } catch (e) {
-        console.error("Sync failed", e);
+        logger.error("Sync failed", e);
       }
       // Auto-login (if email confirmation is disabled)
       router.push("/onboarding");
