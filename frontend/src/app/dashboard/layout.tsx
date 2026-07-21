@@ -422,17 +422,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       };
 
+      console.log("[EVE Layout] Calling getSession()...");
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("[EVE Layout] getSession() returned session:", session ? "YES" : "NO");
       
       if (session) {
         // Sprint 1 Fix #1: await so onAuthStateChange is registered only AFTER
         // the first init completes. This eliminates the double-invocation race
         // where both getSession() and the INITIAL_SESSION event trigger concurrent
         // loadWorkspacesAndProfile calls.
+        console.log("[EVE Layout] Proceeding with session from getSession...");
         await proceedWithSession(session.access_token);
       }
       
+      console.log("[EVE Layout] Registering onAuthStateChange...");
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        console.log("[EVE Layout] onAuthStateChange event:", event, "session:", newSession ? "YES" : "NO");
         // P2-A: TOKEN_REFRESHED is Supabase rotating the access token (typically every 60 min).
         // The workspace and profile data hasn't changed — only the token value.
         // Update the token references directly and skip the full workspace re-fetch.

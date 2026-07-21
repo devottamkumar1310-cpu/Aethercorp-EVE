@@ -179,7 +179,10 @@ def onboard_demo(request: DemoOnboardRequest, background_tasks: BackgroundTasks,
             detail=f"Failed to initialize demo workspace properly. Creation rolled back. Error: {str(e)}"
         )
 
-    background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org.id, current_user.id)
+    # Note: We intentionally do NOT run ProactiveAnalysisService.generate_baseline_recommendations_async
+    # here because seed_demo_workspace_data already pre-populates realistic RecommendationTraces.
+    # Running the real analysis pipeline would block the asyncio event loop for 12+ seconds and
+    # cause subsequent client requests (like layout.tsx workspaces fetch) to time out.
 
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
