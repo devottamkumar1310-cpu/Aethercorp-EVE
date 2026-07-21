@@ -258,29 +258,96 @@ export default function TraceabilityDashboard() {
                   </div>
                 </div>
 
-                {/* True Trace Structure: Rules & Calculations */}
+                {/* Executive Observation Card */}
+                <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                    <Database className="h-4 w-4 text-indigo-400" /> Operational Observation
+                  </h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {selectedTrace.evidence_snapshot?.observation ? (
+                      Object.entries(selectedTrace.evidence_snapshot.observation).map(([k, v]) => (
+                        <div key={k} className="p-3 bg-secondary/40 rounded-lg border border-border/50">
+                          <span className="text-[10px] uppercase font-semibold text-muted-foreground block">{k.replace(/_/g, " ")}</span>
+                          <span className="text-sm font-bold text-foreground mt-0.5 block">{String(v)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      Object.entries(selectedTrace.input_metrics || selectedTrace.supporting_metrics || {}).slice(0, 6).map(([k, v]) => (
+                        <div key={k} className="p-3 bg-secondary/40 rounded-lg border border-border/50">
+                          <span className="text-[10px] uppercase font-semibold text-muted-foreground block">{k.replace(/_/g, " ")}</span>
+                          <span className="text-sm font-bold text-foreground mt-0.5 block">{String(v)}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Business & Financial Impact Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400 block mb-1">Business Impact</span>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {selectedTrace.evidence_snapshot?.business_impact || "Supply chain threshold exceeded requiring immediate operational intervention."}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Financial Impact</span>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      {selectedTrace.evidence_snapshot?.financial_impact || `Estimated impact of $${selectedTrace.estimated_financial_impact.toLocaleString()}.`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Recommended Action & Expected Outcome */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 block mb-1">Recommended Action</span>
+                    <p className="text-xs font-medium text-foreground leading-relaxed">
+                      {selectedTrace.evidence_snapshot?.recommended_action || selectedTrace.action}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-teal-500/30 bg-teal-500/10 p-5">
+                    <span className="text-xs font-bold uppercase tracking-wider text-teal-400 block mb-1">Expected Outcome</span>
+                    <p className="text-xs font-medium text-foreground leading-relaxed">
+                      {selectedTrace.evidence_snapshot?.expected_outcome || "Optimize inventory levels and maximize gross revenue."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Risk If Ignored Warning */}
+                {selectedTrace.evidence_snapshot?.risk_if_ignored && (
+                  <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 flex gap-3 items-start">
+                    <ShieldAlert className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-red-400 block">Risk If Ignored</span>
+                      <p className="text-xs text-red-200 mt-1 leading-relaxed">{selectedTrace.evidence_snapshot.risk_if_ignored}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Applied Business Rules & Calculations */}
                 {((selectedTrace.business_rules && selectedTrace.business_rules.length > 0) || (selectedTrace.calculations && selectedTrace.calculations.length > 0)) && (
                   <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
-                    <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2 mb-4">
-                      <Database className="h-4 w-4 text-indigo-400" /> True Decision Trace
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-4">
+                      <Database className="h-4 w-4 text-indigo-400" /> Executive Business Logic & Rules
                     </h3>
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {selectedTrace.business_rules && selectedTrace.business_rules.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Applied Rules</h4>
-                          <ul className="space-y-2 list-disc list-inside text-sm text-foreground">
+                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Triggered Business Rules</h4>
+                          <ul className="space-y-2 text-xs text-foreground">
                             {selectedTrace.business_rules.map((rule, idx) => (
-                              <li key={idx} className="font-mono text-xs">{rule}</li>
+                              <li key={idx} className="bg-secondary/40 p-2 rounded border border-border/40 font-mono text-[11px]">{rule}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                       {selectedTrace.calculations && selectedTrace.calculations.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Calculations</h4>
-                          <ul className="space-y-2 list-disc list-inside text-sm text-foreground">
+                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Financial Arithmetic</h4>
+                          <ul className="space-y-2 text-xs text-foreground">
                             {selectedTrace.calculations.map((calc, idx) => (
-                              <li key={idx} className="font-mono text-xs">{calc}</li>
+                              <li key={idx} className="bg-secondary/40 p-2 rounded border border-border/40 font-mono text-[11px]">{calc}</li>
                             ))}
                           </ul>
                         </div>
@@ -291,32 +358,20 @@ export default function TraceabilityDashboard() {
 
                 {/* Reasoning Chain Timeline */}
                 <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
-                  <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2 mb-6">
-                    <Compass className="h-4 w-4 text-indigo-400" /> Explainable Reasoning Steps
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-6">
+                    <Compass className="h-4 w-4 text-indigo-400" /> Executive Reasoning Chain
                   </h3>
                   
                   <div className="relative border-l-2 border-border pl-4 ml-2 space-y-6">
                     {selectedTrace.reasoning_chain.map((step, idx) => (
                       <div key={idx} className="relative">
                         <div className="absolute -left-[25px] mt-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-background"></div>
-                        <h4 className="text-sm font-semibold text-foreground">Step {idx + 1}</h4>
-                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{step}</p>
+                        <h4 className="text-xs font-bold text-indigo-400 uppercase">Step {idx + 1}</h4>
+                        <p className="mt-1 text-xs text-slate-200 leading-relaxed">{step}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                {/* Evidence Snapshot (Raw) */}
-                {Object.keys(selectedTrace.evidence_snapshot || {}).length > 0 && (
-                  <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                      Evidence Snapshot
-                    </h3>
-                    <pre className="text-[10px] font-mono text-muted-foreground bg-black/40 p-4 rounded-lg overflow-x-auto">
-                      {JSON.stringify(selectedTrace.evidence_snapshot, null, 2)}
-                    </pre>
-                  </div>
-                )}
 
               </div>
 
