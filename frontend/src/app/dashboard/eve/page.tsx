@@ -478,7 +478,7 @@ export default function EVECoocommandCenter() {
             agent: "COO Lead",
             summary: "EVE COO has initialized workspace audit operations. Explore details and recommendations in the panels.",
             recommendation_details: {
-              recommendation: `Based on the latest data audit of **NovaWear Fashion**, EVE COO recommends the following key actions:\n- **Liquidate Dead Stock**: Formulate promotional discounts for slow-moving categories to free up capital.\n- **Replenish Safety Stock**: Initiate immediate reorders for high-priority stockout risks.\n- **Contain Overhead Expenses**: Optimize administrative and logistical overheads to stabilize declining net profit margins.`,
+              recommendation: `Based on the latest data audit of **the current workspace**, EVE COO recommends the following key actions:\n- **Liquidate Dead Stock**: Formulate promotional discounts for slow-moving categories to free up capital.\n- **Replenish Safety Stock**: Initiate immediate reorders for high-priority stockout risks.\n- **Contain Overhead Expenses**: Optimize administrative and logistical overheads to stabilize declining net profit margins.`,
               expected_impact: "Stabilize inventory turnover rates and recover declining net margins to over 40% target.",
               evidence: defaultEvidence,
               assumptions: [
@@ -521,8 +521,12 @@ export default function EVECoocommandCenter() {
     }).catch(err => logger.error("Panel group load failed", err));
 
 
+    const workspaceIdForOverview = localStorage.getItem("active_workspace_id");
     fetch(`${API_BASE_URL}/api/analytics/overview`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        ...(workspaceIdForOverview ? { "X-Workspace-Id": workspaceIdForOverview } : {})
+      }
     })
       .then(r => r.ok ? r.json() : null)
       .then(val => {

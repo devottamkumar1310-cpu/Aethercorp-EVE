@@ -83,14 +83,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   });
 
   const DEMO_WORKSPACES = [
-    { id: "demo-novawear", slug: "novawear", name: "NovaWear Fashion" },
-    { id: "demo-urban_threads", slug: "urban_threads", name: "Urban Threads" },
-    { id: "demo-essentials_co", slug: "essentials_co", name: "Essentials Co." },
+    { id: "demo-novawear", slug: "novawear", apiSlug: "novawear", name: "NovaWear Fashion" },
+    { id: "demo-urban_threads", slug: "urban-threads", apiSlug: "urban_threads", name: "Urban Threads" },
+    { id: "demo-essentials_co", slug: "essentials-co", apiSlug: "essentials_co", name: "Essentials Co." },
   ];
 
   const handleSelectDemo = async (demoSlug: string) => {
     setIsDropdownOpen(false);
-    const existing = workspaces.find(w => w.slug.startsWith(demoSlug.replace("_", "-")) || w.slug.startsWith(demoSlug));
+    // Normalize slug: convert underscores to hyphens for DB comparison
+    const normalizedSlug = demoSlug.replaceAll("_", "-");
+    const existing = workspaces.find(w => w.slug.startsWith(normalizedSlug) || w.slug.startsWith(demoSlug));
     if (existing) {
       handleSwitchWorkspace(existing.id);
       return;
@@ -529,7 +531,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    localStorage.removeItem("active_workspace_id");
+    // Intentionally DO NOT remove active_workspace_id from localStorage.
+    // This ensures the user's workspace selection persists across logins.
+    // The onboarding page and dashboard layout handle workspace restoration.
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("eve_initialized");
     }
@@ -865,11 +869,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </div>
                       <div className="py-1">
                         {DEMO_WORKSPACES.map((ws) => {
-                          const isMatch = activeWorkspace?.slug.startsWith(ws.slug.replace("_", "-")) || activeWorkspace?.slug.startsWith(ws.slug);
+                          const isMatch = activeWorkspace?.slug.startsWith(ws.slug);
                           return (
                             <button
                               key={ws.id}
-                              onClick={() => handleSelectDemo(ws.slug)}
+                              onClick={() => handleSelectDemo(ws.apiSlug)}
                               className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between hover:bg-sidebar-accent transition-colors ${
                                 isMatch ? "text-violet-400 font-bold" : "text-sidebar-foreground"
                               }`}

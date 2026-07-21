@@ -17,7 +17,7 @@ export default function OnboardingPage() {
   const supabase = createClient();
 
   useEffect(() => {
-    // Check if user already has a workspace
+    // Check if user already has workspaces — if so, skip onboarding entirely
     async function checkWorkspace() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -26,15 +26,23 @@ export default function OnboardingPage() {
       }
       
       try {
-        const response = await fetch(`${API_BASE_URL}/api/profile/me`, {
+        const response = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
           headers: {
             "Authorization": `Bearer ${session.access_token}`
           }
         });
         
         if (response.ok) {
-          const data = await response.json();
-          if (data.organization_id) {
+          const workspaces = await response.json();
+          if (Array.isArray(workspaces) && workspaces.length > 0) {
+            // User already has workspaces — restore active workspace and skip onboarding
+            const storedId = localStorage.getItem("active_workspace_id");
+            if (storedId && workspaces.some((w: any) => w.id === storedId)) {
+              // Stored workspace still valid
+            } else {
+              // Restore to first available workspace
+              localStorage.setItem("active_workspace_id", workspaces[0].id);
+            }
             router.push("/dashboard/inventory");
           }
         }
