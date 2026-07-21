@@ -23,6 +23,16 @@ class RecommendationTrace(Base):
     reasoning_chain = Column(JSON, nullable=False)  # List of string reasoning steps
     evidence_snapshot = Column(JSON, nullable=False, default=dict)  # Immutable snapshot at recommendation time
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=False)
+
+    # Phase 7: Canonical Recommendation Identity & Lifecycle
+    recommendation_id = Column(String, unique=True, index=True, nullable=True) # e.g. REC-2026-000123
+    status = Column(String, default="Generated", nullable=False) # Generated, Reviewed, Accepted, Dismissed, Completed, Expired
+    version = Column(Integer, default=1, nullable=False)
+    related_skus = Column(JSON, nullable=True, default=list)
+    priority = Column(String, nullable=True, default="Medium") # High, Medium, Low
+    estimated_financial_impact = Column(Float, nullable=True)
+    related_kpis = Column(JSON, nullable=True, default=list)
 
     # Phase 2: Trace Origin Attribution
     triggered_by_user_id = Column(UUID(as_uuid=True), nullable=True)

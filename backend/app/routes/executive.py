@@ -265,9 +265,26 @@ def get_recommendations(
     current_user: Profile = Depends(get_current_user),
     workspace_id: uuid.UUID = Depends(get_required_workspace_id)
 ):
-    recs = get_recent_recommendations(db, workspace_id, limit)
-    for r in recs:
-        r.influenced_by_goals = get_influencing_goals(db, workspace_id, r.recommendation, r.agent_source)
+    from app.models.recommendation_trace import RecommendationTrace
+    traces = db.query(RecommendationTrace).filter(
+        RecommendationTrace.organization_id == workspace_id
+    ).order_by(RecommendationTrace.created_at.desc()).limit(limit).all()
+    
+    recs = []
+    for trace in traces:
+        # Synthesize AIRecommendationResponse from RecommendationTrace
+        recs.append(AIRecommendationResponse(
+            id=trace.id,
+            agent_source="coo",
+            recommendation=trace.action or trace.recommendation_type,
+            reasoning_summary=trace.evidence_snapshot.get("summary", "") if trace.evidence_snapshot else "Based on automated inventory intelligence.",
+            data_used=trace.source_datasets or ["Inventory Data"],
+            risk_factors=[f"Risk associated with {trace.recommendation_type}"],
+            opportunity_factors=[trace.evidence_snapshot.get("impact", "Optimize business operations") if trace.evidence_snapshot else "Optimize operations"],
+            confidence_level=trace.confidence_score,
+            created_at=trace.created_at,
+            influenced_by_goals=get_influencing_goals(db, workspace_id, trace.action or trace.recommendation_type, "coo")
+        ))
     return recs
 
 @router.get("/scenarios", response_model=List[Dict[str, Any]])

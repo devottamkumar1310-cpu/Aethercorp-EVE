@@ -604,69 +604,84 @@ def seed_demo_workspace_data(db, org_id, demo_company="novawear"):
 def seed_demo_recommendation_traces(db, org_id):
     from app.models.recommendation_trace import RecommendationTrace
     import random
-    from app.models.inventory import Inventory
+    from app.models.inventory import InventoryItem
+    from sqlalchemy.orm import joinedload
     
     traces = []
     
     # Generate traces for dead stock candidates (high stock, low sales)
-    inventory_items = db.query(Inventory).filter(Inventory.organization_id == org_id).all()
+    inventory_items = db.query(InventoryItem).options(joinedload(InventoryItem.product)).filter(InventoryItem.organization_id == org_id).all()
     
     for item in inventory_items:
-        if item.quantity_on_hand > 500 and item.sales_velocity < 2.0:
+        if item.stock_on_hand > 500 and item.avg_daily_sales < 2.0:
             trace = RecommendationTrace(
+                recommendation_id=f"REC-{org_id.hex[:4]}-D{item.product.sku}",
                 organization_id=org_id,
                 recommendation_type="dead_stock",
-                action=f"Liquidate {item.sku}",
+                action=f"Liquidate {item.product.sku}",
+                status="Generated",
+                version=1,
+                priority="Medium",
+                related_skus=[item.product.sku],
+                estimated_financial_impact=float(item.stock_on_hand * item.product.unit_cost),
                 confidence_score=round(random.uniform(0.85, 0.98), 2),
                 validation_status="GENERATED",
                 source_datasets=["Inventory", "Sales", "Supplier Data"],
                 supporting_metrics={
-                    "Inventory Days": f"{round(item.quantity_on_hand / max(1, item.sales_velocity))} days",
-                    "Sales Velocity": f"{item.sales_velocity} units/day",
-                    "Current Stock": f"{item.quantity_on_hand} units"
+                    "Inventory Days": f"{round(item.stock_on_hand / max(1.0, item.avg_daily_sales))} days",
+                    "Sales Velocity": f"{item.avg_daily_sales} units/day",
+                    "Current Stock": f"{item.stock_on_hand} units"
                 },
                 reasoning_chain=[
-                    f"Observed: SKU {item.sku} has high stock ({item.quantity_on_hand}) but low sales velocity ({item.sales_velocity}/day).",
+                    f"Observed: SKU {item.product.sku} has high stock ({item.stock_on_hand}) but low sales velocity ({item.avg_daily_sales}/day).",
                     "Inference: This item is aging and will soon become dead stock.",
                     "Risk: Capital lockup and increased carrying costs.",
                     "Recommendation: Run a clearance promotion or bundle with fast movers.",
                     "Expected Business Outcome: Cash released and warehouse space freed."
                 ],
                 evidence_snapshot={
-                    "summary": f"SKU {item.sku} is tying up capital and moving too slowly.",
-                    "impact": f"${round(item.quantity_on_hand * item.unit_cost)} potential capital freed."
+                    "summary": f"SKU {item.product.sku} is tying up capital and moving too slowly.",
+                    "impact": f"${round(item.stock_on_hand * item.product.unit_cost)} potential capital freed."
                 },
                 trigger_type="SYSTEM_ALERT",
                 created_from_query=False
             )
             traces.append(trace)
             
-        elif item.quantity_on_hand < (item.sales_velocity * item.lead_time_days) + 10:
+        elif item.stock_on_hand < (item.avg_daily_sales * item.lead_time_days) + 10:
             # Low stock / Reorder alert
-            shortage = round((item.sales_velocity * item.lead_time_days) + 20 - item.quantity_on_hand)
+            shortage = round((item.avg_daily_sales * item.lead_time_days) + 20 - item.stock_on_hand)
+            if shortage <= 0:
+                shortage = 50
             trace = RecommendationTrace(
+                recommendation_id=f"REC-{org_id.hex[:4]}-L{item.product.sku}",
                 organization_id=org_id,
                 recommendation_type="low_stock",
-                action=f"Reorder {item.sku}",
+                action=f"Reorder {item.product.sku}",
+                status="Generated",
+                version=1,
+                priority="High",
+                related_skus=[item.product.sku],
+                estimated_financial_impact=float(shortage * item.product.selling_price),
                 confidence_score=round(random.uniform(0.88, 0.99), 2),
                 validation_status="GENERATED",
                 source_datasets=["Inventory", "Sales", "Supplier Data"],
                 supporting_metrics={
-                    "Current Stock": f"{item.quantity_on_hand} units",
+                    "Current Stock": f"{item.stock_on_hand} units",
                     "Lead Time": f"{item.lead_time_days} days",
-                    "Sales Velocity": f"{item.sales_velocity} units/day",
+                    "Sales Velocity": f"{item.avg_daily_sales} units/day",
                     "Suggested Reorder": f"{shortage} units"
                 },
                 reasoning_chain=[
-                    f"Observed: SKU {item.sku} stock is {item.quantity_on_hand} with {item.sales_velocity} sales/day and {item.lead_time_days} days lead time.",
+                    f"Observed: SKU {item.product.sku} stock is {item.stock_on_hand} with {item.avg_daily_sales} sales/day and {item.lead_time_days} days lead time.",
                     "Inference: Stock will deplete before next shipment arrives at current run rate.",
                     "Risk: Imminent stockout and lost revenue.",
                     f"Recommendation: Submit purchase order for {shortage} units immediately.",
-                    f"Expected Business Outcome: Prevent stockout and capture ${round(shortage * item.unit_price)} in revenue."
+                    f"Expected Business Outcome: Prevent stockout and capture ${round(shortage * item.product.selling_price)} in revenue."
                 ],
                 evidence_snapshot={
-                    "summary": f"Stockout risk detected for {item.sku}. Reorder required immediately.",
-                    "impact": f"Prevent ${round(shortage * item.unit_price)} in lost sales."
+                    "summary": f"Stockout risk detected for {item.product.sku}. Reorder required immediately.",
+                    "impact": f"Prevent ${round(shortage * item.product.selling_price)} in lost sales."
                 },
                 trigger_type="SYSTEM_ALERT",
                 created_from_query=False

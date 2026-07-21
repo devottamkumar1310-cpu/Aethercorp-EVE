@@ -857,7 +857,7 @@ class AnalyticsService:
     def get_dashboard_metrics(cls, db: Session, organization_id: int) -> Dict[str, Any]:
         """
         Aggregates all key metrics for the Phase 3 Dashboard API.
-        Enforces a Single Source of Truth by calling inventory and pricing analysis layers.
+        Enforces a Single Source of Truth by reading explicitly from RecommendationTrace.
         """
         import uuid
         if isinstance(organization_id, str):
@@ -870,47 +870,64 @@ class AnalyticsService:
         inventory_analysis = cls.get_inventory_analysis(db, organization_id)
         pricing_analysis = cls.get_pricing_analysis(db, organization_id)
 
+        from app.models.recommendation_trace import RecommendationTrace
+        traces = db.query(RecommendationTrace).filter(
+            RecommendationTrace.organization_id == organization_id
+        ).all()
+
         dead_stock_items = []
         stockout_predictions = []
         reorder_recommendations = []
         pricing_recommendations = []
 
-        for item in inventory_analysis["items_at_risk"]:
-            if item["is_dead_stock"]:
+        for trace in traces:
+            metrics = trace.supporting_metrics or {}
+            
+            # Extract SKU from action (e.g. "Liquidate SKU-123", "Reorder SKU-123", "Adjust Price for SKU-123")
+            action_parts = (trace.action or "").split()
+            sku = action_parts[-1] if action_parts else "UNKNOWN"
+            if sku.startswith("SKU-"):
+                # Clean up if needed
+                pass
+
+            if trace.recommendation_type == "dead_stock":
+                # Assuming stock_on_hand is in supporting_metrics
+                stock = metrics.get("Current Stock", "0").split()[0] if "Current Stock" in metrics else 0
                 dead_stock_items.append({
-                    "sku": item["sku"],
-                    "name": item["name"],
-                    "stock_on_hand": item["stock_on_hand"]
+                    "sku": sku,
+                    "name": f"Product {sku}", # Best effort mapping without join for now
+                    "stock_on_hand": int(stock) if str(stock).isdigit() else 0
                 })
 
-            stockout_predictions.append({
-                "sku": item["sku"],
-                "days_until_stockout": item["days_until_stockout"],
-                "confidence_score": item["confidence_score"],
-                "explainability": item["explainability"],
-                "provenance": item["provenance"]
-            })
+            elif trace.recommendation_type == "low_stock":
+                stockout_predictions.append({
+                    "sku": sku,
+                    "days_until_stockout": metrics.get("Days Until Stockout", 0),
+                    "confidence_score": trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score,
+                    "explainability": trace.reasoning_chain,
+                    "provenance": trace.source_datasets
+                })
 
-            if item["reorder_quantity"] > 0:
+                reorder_qty = metrics.get("Suggested Reorder", "0").split()[0] if "Suggested Reorder" in metrics else 0
                 reorder_recommendations.append({
-                    "sku": item["sku"],
-                    "recommended_reorder": item["reorder_quantity"],
-                    "confidence_score": item["confidence_score"],
-                    "explainability": item["explainability"],
-                    "provenance": item["provenance"]
+                    "sku": sku,
+                    "recommended_reorder": int(reorder_qty) if str(reorder_qty).isdigit() else 0,
+                    "confidence_score": trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score,
+                    "explainability": trace.reasoning_chain,
+                    "provenance": trace.source_datasets
                 })
 
-        for rec in pricing_analysis["recommendations"]:
-            pricing_recommendations.append({
-                "sku": rec["sku"],
-                "current_price": rec["current_price"],
-                "recommended_price": rec["recommended_price"],
-                "current_margin_percent": rec["current_margin"],
-                "reason": rec["recommendation_reason"],
-                "confidence_score": rec["confidence_score"],
-                "explainability": rec["explainability"],
-                "provenance": rec["provenance"]
-            })
+            elif trace.recommendation_type == "margin":
+                pricing_recommendations.append({
+                    "sku": sku,
+                    "current_price": metrics.get("Current Price", 0),
+                    "recommended_price": metrics.get("Recommended Price", 0),
+                    "current_margin_percent": metrics.get("Current Margin", 0),
+                    "reason": trace.action,
+                    "confidence_score": trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score,
+                    "explainability": trace.reasoning_chain,
+                    "provenance": trace.source_datasets
+                })
 
         # Dynamic Capital reserve & risk metrics calculations
         from app.services.simulation_engine import SimulationEngine
@@ -927,14 +944,14 @@ class AnalyticsService:
         # Calculate risk engine scores
         stockout_risk = inventory_analysis["average_risk_score"]
         
-        total_skus = inventory_analysis["total_skus"]
-        dead_skus = inventory_analysis["dead_stock_skus"]
+        total_skus = inventory_analysis.get("total_skus", 0)
+        dead_skus = inventory_analysis.get("dead_stock_skus", 0)
         inventory_risk_val = (dead_skus / total_skus * 100.0) if total_skus > 0 else 0.0
         
         cash_risk_val = (capital_gap / required_capital * 100.0) if required_capital > 0 else 0.0
         
-        total_pricing_recs = len(pricing_analysis["recommendations"])
-        neg_margin_count = sum(1 for rec in pricing_analysis["recommendations"] if rec.get("current_margin_percent", 0.0) < 0.0)
+        total_pricing_recs = len(pricing_recommendations)
+        neg_margin_count = sum(1 for rec in pricing_recommendations if rec.get("current_margin_percent", 0.0) < 0.0)
         margin_risk_val = (neg_margin_count / total_pricing_recs * 100.0) if total_pricing_recs > 0 else 0.0
         
         def _get_risk_label(val: float) -> str:

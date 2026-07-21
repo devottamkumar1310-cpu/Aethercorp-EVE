@@ -154,12 +154,30 @@ def onboard_demo(request: DemoOnboardRequest, background_tasks: BackgroundTasks,
 
     # Seed all demo workspace scenario data, sample documents, sample chats, recommendations
     from app.commands.seed_scenarios import seed_demo_workspace_data
+    from app.models.inventory import InventoryItem
+    from app.models.recommendation_trace import RecommendationTrace
+
     try:
         seed_demo_workspace_data(db, org.id, demo_company)
+        
+        # Startup Validation
+        inventory_count = db.query(InventoryItem).filter(InventoryItem.organization_id == org.id).count()
+        trace_count = db.query(RecommendationTrace).filter(RecommendationTrace.organization_id == org.id).count()
+        
+        if inventory_count == 0 or trace_count == 0:
+            raise ValueError(f"Startup validation failed: Expected seeded artifacts but got Inventory: {inventory_count}, Traces: {trace_count}")
+            
     except Exception as e:
         import logging
         logger = logging.getLogger("eve.organization")
         logger.error(f"Seeding demo workspace data failed: {e}", exc_info=True)
+        # Rollback creation on failure
+        db.delete(org)
+        db.commit()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to initialize demo workspace properly. Creation rolled back. Error: {str(e)}"
+        )
 
     background_tasks.add_task(ProactiveAnalysisService.generate_baseline_recommendations_async, org.id, current_user.id)
 
