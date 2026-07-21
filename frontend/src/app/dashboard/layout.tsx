@@ -124,7 +124,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (resp.ok) {
         const data = await resp.json();
         localStorage.setItem("active_workspace_id", data.organization_id);
-        localStorage.removeItem("eve_tour_completed");
         localStorage.setItem("eve_analysis_pending", "1");
         localStorage.setItem("eve_analysis_org_id", data.organization_id);
         window.location.reload();
