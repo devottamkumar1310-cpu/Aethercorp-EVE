@@ -92,13 +92,7 @@ export default function TraceabilityDashboard() {
     return () => controller.abort();
   }, []);
 
-  // Detect if current workspace is a demo workspace
-  const workspaceId = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
-  const isDemoWorkspace = (() => {
-    // Check against known demo workspace slugs by querying the workspace list
-    // For now, we determine this from the traces data or the workspace metadata
-    return true; // Will be refined below based on actual workspace data
-  })();
+
 
   const getStatusColor = (status: string) => {
     switch (status) {

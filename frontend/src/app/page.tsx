@@ -11,7 +11,6 @@ import {
   Upload, 
   Activity, 
   Package, 
-  ShieldCheck,
   DollarSign,
   Menu,
   X

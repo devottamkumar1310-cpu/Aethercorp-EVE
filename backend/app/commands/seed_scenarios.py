@@ -112,9 +112,9 @@ def generate_urban_threads_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.Da
         daily_txs = int(random.randint(3, 8) * decline_multiplier)
         
         for _ in range(daily_txs):
-            # Dead stock sells very rarely
+            # Dead stock has zero sales in the last 65 days to ensure dead_stock alert detection
             choices = [c for c in costs if c["sku"].startswith("UT-STD")]
-            if random.random() < 0.05:
+            if day < 300 and random.random() < 0.05:
                 choices.extend([c for c in costs if c["sku"].startswith("UT-DEAD")])
             
             if not choices: continue
@@ -154,7 +154,7 @@ def generate_essentials_co_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.Da
     
     for item in fast_movers:
         sku, name, cost, price, stock, lead, supplier, category = item
-        products.append({"sku": sku, "name": name, "category": category, "stock_on_hand": stock, "lead_time_days": lead})
+        products.append({"sku": sku, "name": name, "category": category, "stock_on_hand": stock, "lead_time_days": lead, "reorder_point": 25})
         costs.append({"sku": sku, "unit_cost": cost, "selling_price": price, "supplier_name": supplier})
         
     df_inv = pd.DataFrame(products)
@@ -408,7 +408,27 @@ def seed_demo_recommendation_traces(db, org_id, demo_company):
                 )
                 traces.append(trace)
                 
+    if len(traces) == 0:
+        # Fallback trace to guarantee Decision Traceability is populated for any demo workspace
+        fallback_trace = RecommendationTrace(
+            recommendation_id=f"REC-{org_id.hex[:4]}-SYS01", organization_id=org_id,
+            recommendation_type="optimization" if demo_company == "novawear" else ("dead_stock" if demo_company == "urban_threads" else "low_stock"),
+            action=f"System Baseline Strategy for {demo_company.replace('_', ' ').title()}", status="Generated", version=1, priority="High",
+            related_skus=["DEMO-SKU-001"], estimated_financial_impact=5000.0,
+            confidence_score=0.95, validation_status="GENERATED", source_datasets=["Inventory", "Sales"],
+            supporting_metrics={"Status": "Seeded Scenario Active"},
+            reasoning_chain=[
+                f"Observed: Baseline inventory audit for {demo_company.replace('_', ' ').title()}.",
+                "Inference: Scenario initialized with dedicated parameters.",
+                "Recommendation: Execute operational strategy specific to scenario context."
+            ],
+            evidence_snapshot={"summary": f"Seeded scenario audit for {demo_company}.", "impact": "Target operational goals."},
+            trigger_type="SYSTEM_ALERT", created_from_query=False
+        )
+        traces.append(fallback_trace)
+
     db.add_all(traces)
+
 
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):

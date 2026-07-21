@@ -1,21 +1,41 @@
 import { logger } from "@/lib/logger";
 import { devLog } from "@/lib/logger";
 
-const rawUrl = process.env.NEXT_PUBLIC_API_URL || "";
-if (!rawUrl && typeof window !== "undefined") {
-  logger.warn(
-    "[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to default production backend."
-  );
+function sanitizeApiUrl(raw: string | undefined): string {
+  if (!raw) return "";
+  let url = raw
+    .replace(/^\uFEFF/, "")                  // Strip UTF-8 Byte Order Mark (BOM)
+    .replace(/[\u200B-\u200D\uFEFF]/g, "") // Strip zero-width spaces
+    .trim()
+    .replace(/^["']|["']$/g, "")           // Strip surrounding quotes
+    .trim()
+    .replace(/\/+$/, "")                   // Strip trailing slashes
+    .replace(/\/api$/, "");                // Strip trailing /api
+  return url;
 }
 
-const defaultFallback = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
-  ? "https://eve-backend-68416570138.us-central1.run.app"
-  : "http://127.0.0.1:8000";
+function resolveApiBaseUrl(): string {
+  const envUrl = sanitizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
-export const API_BASE_URL =
-  (rawUrl || defaultFallback)
-    .replace(/\/+$/, "")
-    .replace(/\/api$/, "");
+  // Must start with http:// or https:// to be a valid absolute API base URL
+  if (envUrl && (envUrl.startsWith("http://") || envUrl.startsWith("https://"))) {
+    return envUrl;
+  }
+
+  if (envUrl) {
+    logger.warn(`[EVE Config] NEXT_PUBLIC_API_URL (${JSON.stringify(envUrl)}) is invalid or non-absolute. Using production fallback.`);
+  } else if (typeof window !== "undefined") {
+    logger.warn("[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to default production backend.");
+  }
+
+  const defaultFallback = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+    ? "https://eve-backend-68416570138.us-central1.run.app"
+    : "http://127.0.0.1:8000";
+
+  return defaultFallback;
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 if (typeof window !== "undefined") {
   devLog(`[EVE Config] API Base URL resolved to: ${API_BASE_URL}`);

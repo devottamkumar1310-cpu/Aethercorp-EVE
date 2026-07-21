@@ -17,20 +17,9 @@ import {
   Sparkles,
   AlertCircle,
   X,
-  LayoutDashboard,
-  Users,
-  Briefcase,
-  CheckSquare,
-  DollarSign,
-  Package,
-  Activity,
-  Settings,
   Menu,
-  Brain,
   Sun,
   Moon,
-  FileText,
-  HelpCircle,
   Clock,
   Database,
 } from "lucide-react";
@@ -45,7 +34,6 @@ interface Workspace {
 }
 
 import { NAV_ITEMS } from "@/config/navigation";
-import { apiFetch } from "@/lib/api";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);

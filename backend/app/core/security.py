@@ -125,11 +125,71 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+def _provision_profile_idempotent(db: Session, user_id: uuid.UUID, payload: dict) -> Profile:
+    """
+    Idempotently provisions or retrieves a user profile for a verified Supabase JWT.
+    Uses thread-safe locking and email fallback matching to prevent race conditions.
+    """
+    profile = db.query(Profile).filter(Profile.id == user_id).first()
+    if profile:
+        return profile
+
+    with _migration_lock:
+        # Re-check inside lock
+        profile = db.query(Profile).filter(Profile.id == user_id).first()
+        if profile:
+            return profile
+
+        email = payload.get("email", "")
+        user_metadata = payload.get("user_metadata", {})
+        full_name = user_metadata.get("full_name") or payload.get("full_name") or ""
+        if not full_name and email:
+            full_name = email.split("@")[0].capitalize()
+        if not full_name:
+            full_name = "User"
+
+        # Handle existing profile with same email (e.g. legacy/orphaned ID)
+        if email:
+            existing_by_email = db.query(Profile).filter(Profile.email == email).first()
+            if existing_by_email:
+                if existing_by_email.id == user_id:
+                    return existing_by_email
+                logger.info(f"Found orphaned profile ID {existing_by_email.id} for email {email}. Purging and creating fresh profile with ID {user_id}.")
+                try:
+                    from app.services.account_service import AccountService
+                    AccountService.purge_orphaned_profile(db, email)
+                except Exception as e:
+                    logger.error(f"Failed to purge orphaned profile for email {email}: {e}", exc_info=e)
+                    db.rollback()
+
+        try:
+            profile = Profile(
+                id=user_id,
+                email=email if email else f"user_{user_id.hex[:8]}@example.com",
+                full_name=full_name,
+                hashed_password="supabase-authenticated",
+                is_active=True
+            )
+            db.add(profile)
+            db.commit()
+            db.refresh(profile)
+            logger.info(f"Auto-provisioned self-healing profile for user_id={user_id} email={profile.email}")
+            return profile
+        except Exception as e:
+            db.rollback()
+            # Double check if created concurrently
+            profile = db.query(Profile).filter(Profile.id == user_id).first()
+            if profile:
+                return profile
+            logger.error(f"Failed to auto-provision profile for user_id={user_id}: {e}", exc_info=e)
+            raise HTTPException(status_code=500, detail="Failed to initialize user profile.")
+
+
 def get_current_user(
     request: Request = None,
     payload: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
-):
+) -> Profile:
     user_id_str = payload.get("sub")
     if not user_id_str:
         raise HTTPException(status_code=401, detail="Invalid token payload")
@@ -147,7 +207,8 @@ def get_current_user(
         logger.info("DB query finish")
         
     if not profile:
-        raise HTTPException(status_code=401, detail="User profile not found. Please log in again to provision your account.")
+        # Self-healing: auto-provision profile idempotently for valid JWTs
+        profile = _provision_profile_idempotent(db, user_id, payload)
             
     return profile
 

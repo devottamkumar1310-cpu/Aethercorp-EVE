@@ -54,16 +54,15 @@ export async function GET(request: Request) {
       logger.error(`[AUTH CALLBACK] [ERROR] exchangeCodeForSession failed:`, exchangeError)
       return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message)}`)
     }
-
-    const session = exchangeData?.session;
+    const session = exchangeData?.session;
     devLog(`[AUTH CALLBACK] [SUCCESS] Session created: ${!!session}`)
 
     // Sync with backend immediately after OAuth code exchange
     try {
       if (session) {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const { API_BASE_URL } = await import("@/lib/api");
         devLog(`[AUTH CALLBACK] [SYNC] Syncing with backend auth endpoint`)
-        const syncResponse = await fetch(`${apiUrl}/api/auth/sync`, {
+        const syncResponse = await fetch(`${API_BASE_URL}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });

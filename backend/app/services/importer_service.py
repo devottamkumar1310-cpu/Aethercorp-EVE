@@ -188,7 +188,10 @@ class ImporterService:
                 
             inventory_item.stock_on_hand = stock
             inventory_item.lead_time_days = lead_time
-            inventory_item.reorder_point = max(5, int(stock * 0.1))
+            if "reorder_point" in df.columns and not pd.isna(row.get("reorder_point")):
+                inventory_item.reorder_point = int(row["reorder_point"])
+            else:
+                inventory_item.reorder_point = max(5, int(stock * 0.1))
             success_count += 1
             
         db.flush()

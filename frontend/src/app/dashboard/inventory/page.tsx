@@ -27,8 +27,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { formatCurrency, formatCurrencyPrecise, formatNumber } from "@/lib/utils";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
 import { API_BASE_URL } from "@/lib/api";
 

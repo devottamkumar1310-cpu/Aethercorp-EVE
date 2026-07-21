@@ -69,3 +69,11 @@ uploads/
 uploads/
 .vercel
 .env*
+
+# Build & Verification Artifacts
+*.tsbuildinfo
+*.log
+*.tmp
+test_results.txt
+*_report.md
+

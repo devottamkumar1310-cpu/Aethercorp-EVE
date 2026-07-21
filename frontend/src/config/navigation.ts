@@ -1,12 +1,9 @@
 import {
   LayoutDashboard,
   Package,
-  LineChart,
   Brain,
-  HardDrive,
   Users,
   Briefcase,
-  Target,
   FileText,
   Activity,
   Settings,
