@@ -88,18 +88,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { id: "demo-essentials_co", slug: "essentials-co", apiSlug: "essentials_co", name: "Essentials Co." },
   ];
 
+  // Map demo_company API slugs to the canonical Organization.name values
+  // used by the onboard-demo endpoint. This ensures workspace lookup works
+  // regardless of what slug suffix the DB generates (e.g. novawear-fashion-7).
+  const DEMO_NAME_MAP: Record<string, string> = {
+    "novawear": "NovaWear Fashion",
+    "urban_threads": "Urban Threads",
+    "essentials_co": "Essentials Co."
+  };
+
   const handleSelectDemo = async (demoSlug: string) => {
     setIsDropdownOpen(false);
-    // Normalize slug: convert underscores to hyphens for DB comparison
-    const normalizedSlug = demoSlug.replaceAll("_", "-");
-    const existing = workspaces.find(w => w.slug.startsWith(normalizedSlug) || w.slug.startsWith(demoSlug));
+    // Use canonical name matching — immune to slug suffix drift
+    const targetName = DEMO_NAME_MAP[demoSlug];
+    const existing = targetName
+      ? workspaces.find(w => w.name === targetName)
+      : null;
     if (existing) {
       handleSwitchWorkspace(existing.id);
       return;
     }
     
     // Create on the fly
-    setLoadingStage(2);
+    setDemoLoading(true);
+    setCreateError(null);
     try {
       const resp = await fetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
         method: "POST",
@@ -112,10 +124,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (resp.ok) {
         const data = await resp.json();
         localStorage.setItem("active_workspace_id", data.organization_id);
-        window.location.reload(); // Hard refresh to load new workspace
+        localStorage.removeItem("eve_tour_completed");
+        localStorage.setItem("eve_analysis_pending", "1");
+        localStorage.setItem("eve_analysis_org_id", data.organization_id);
+        window.location.reload();
+      } else {
+        const errData = await resp.json().catch(() => ({ detail: "Failed to create demo workspace" }));
+        setCreateError(errData.detail || "Failed to create demo workspace");
       }
     } catch (e) {
       logger.error("Failed to create demo workspace on the fly", e);
+      setCreateError("Demo environment is currently initializing. Please try again shortly.");
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -503,35 +524,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  const handleCreateDemoWorkspace = async () => {
-    setDemoLoading(true);
-    setCreateError(null);
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
-      });
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.detail || "Failed to launch demo workspace");
-      }
-      const data = await response.json();
-      localStorage.setItem("active_workspace_id", data.organization_id);
-      
-      // Clear tour state so they get the tour
-      localStorage.removeItem("eve_tour_completed");
-
-      // Persist analysis banner state across reload
-      localStorage.setItem("eve_analysis_pending", "1");
-      localStorage.setItem("eve_analysis_org_id", data.organization_id);
-
-      window.location.reload();
-    } catch {
-      setCreateError("Demo environment is currently initializing. Please try again shortly.");
-    } finally {
-      setDemoLoading(false);
-    }
-  };
+  // handleCreateDemoWorkspace removed — replaced by handleSelectDemo which
+  // accepts a specific demo_company slug, preventing all users from always
+  // getting NovaWear.
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -1034,48 +1029,60 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       )}
 
                       {!showManualForm ? (
-                        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto pt-4">
-                          <button
-                            onClick={handleCreateDemoWorkspace}
-                            disabled={demoLoading || createLoading}
-                            className="group relative flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-violet-500/40 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-violet-500/5 cursor-pointer disabled:opacity-50 overflow-hidden"
-                          >
-                            {demoLoading && (
-                              <div className="absolute inset-0 bg-background backdrop-blur-xs flex items-center justify-center z-10">
-                                <div className="flex flex-col items-center gap-3">
-                                  <div className="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
-                                  <span className="text-xs text-violet-400 font-semibold animate-pulse">Launching demo...</span>
-                                </div>
-                              </div>
-                            )}
-                            <div className="h-10 w-10 bg-violet-900/30 group-hover:bg-violet-600/20 text-violet-400 rounded-lg flex items-center justify-center mb-4 transition-all">
-                              <Sparkles size={20} />
+                        <div className="space-y-6 max-w-3xl mx-auto pt-4">
+                          {/* Demo Workspace Scenario Selector */}
+                          <div>
+                            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-4">Choose a demo business to explore</p>
+                            <div className="grid md:grid-cols-3 gap-4">
+                              {[
+                                { slug: "novawear", name: "NovaWear Fashion", icon: "✦", color: "violet", scenario: "Healthy & Growing", focus: "Optimization", desc: "Stable margins, balanced inventory. EVE finds fine-tuning opportunities." },
+                                { slug: "urban_threads", name: "Urban Threads", icon: "⚠", color: "amber", scenario: "Inventory Crisis", focus: "Recovery", desc: "Dead stock, cash locked in unsold inventory. EVE plans liquidation." },
+                                { slug: "essentials_co", name: "Essentials Co.", icon: "⚡", color: "emerald", scenario: "Hyper-Growth", focus: "Scaling", desc: "Products sell out too fast. EVE prevents stockouts and scales supply." }
+                              ].map((demo) => (
+                                <button
+                                  key={demo.slug}
+                                  onClick={() => handleSelectDemo(demo.slug)}
+                                  disabled={demoLoading || createLoading}
+                                  className={`group relative flex flex-col text-left p-5 bg-background hover:bg-background border border-border hover:border-${demo.color}-500/40 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-${demo.color}-500/10 cursor-pointer disabled:opacity-50 overflow-hidden`}
+                                >
+                                  {demoLoading && (
+                                    <div className="absolute inset-0 bg-background/90 backdrop-blur-xs flex items-center justify-center z-10">
+                                      <div className="flex flex-col items-center gap-2">
+                                        <div className="h-6 w-6 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+                                        <span className="text-[10px] text-violet-400 font-semibold animate-pulse">Creating workspace...</span>
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div className="text-2xl mb-3">{demo.icon}</div>
+                                  <h4 className="text-sm font-bold text-foreground mb-1">{demo.name}</h4>
+                                  <span className={`text-[10px] font-semibold uppercase tracking-wider text-${demo.color}-400 mb-2`}>{demo.scenario} · {demo.focus}</span>
+                                  <p className="text-muted-foreground text-xs leading-relaxed flex-1">{demo.desc}</p>
+                                  <div className={`mt-4 pt-3 border-t border-border flex items-center text-[11px] font-semibold text-${demo.color}-400`}>
+                                    Launch {demo.name} &rarr;
+                                  </div>
+                                </button>
+                              ))}
                             </div>
-                            <h4 className="text-base font-bold text-foreground group-hover:text-violet-400 transition-colors">Option A: Launch Demo Workspace</h4>
-                            <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
-                              Explore EVE using a realistic fashion business (<strong>NovaWear Fashion</strong>) with preloaded sales, inventory, customers, expenses, risks, and executive insights.
-                            </p>
-                            <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-violet-400 group-hover:text-violet-300">
-                              Launch Demo & Explore &rarr;
-                            </div>
-                          </button>
+                          </div>
 
-                          <button
-                            onClick={() => setShowManualForm(true)}
-                            disabled={demoLoading || createLoading}
-                            className="group flex flex-col text-left p-6 bg-background hover:bg-background border border-border hover:border-violet-500/50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-purple-500/5 cursor-pointer disabled:opacity-50"
-                          >
-                            <div className="h-10 w-10 bg-purple-900/30 group-hover:bg-purple-600/20 text-purple-400 rounded-lg flex items-center justify-center mb-4 transition-all">
-                              <Plus size={20} />
-                            </div>
-                            <h4 className="text-base font-bold text-foreground group-hover:text-purple-400 transition-colors">Option B: Create My Own</h4>
-                            <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
-                              Start fresh with your own brand details, upload your own business datasets/documents, and construct a custom operations workspace.
-                            </p>
-                            <div className="mt-auto pt-6 flex items-center text-xs font-semibold text-purple-400 group-hover:text-purple-300">
-                              Create Custom Workspace &rarr;
-                            </div>
-                          </button>
+                          {/* Separator */}
+                          <div className="flex items-center gap-4 max-w-xl mx-auto">
+                            <div className="flex-1 h-px bg-border" />
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">or</span>
+                            <div className="flex-1 h-px bg-border" />
+                          </div>
+
+                          {/* Create Own Workspace */}
+                          <div className="flex justify-center">
+                            <button
+                              onClick={() => setShowManualForm(true)}
+                              disabled={demoLoading || createLoading}
+                              className="flex items-center gap-2 px-5 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground border border-border hover:border-purple-500/40 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            >
+                              <Plus size={14} />
+                              Create My Own Workspace
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="max-w-md mx-auto space-y-4 pt-2">
