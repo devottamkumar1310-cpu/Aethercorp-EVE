@@ -632,7 +632,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               Sign Out
             </button>
             <p className="text-center text-[10px] text-muted-foreground pt-1">
-              Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
+              Support: <a href="mailto:support@eveinventory.in" className="hover:text-indigo-400 underline">support@eveinventory.in</a>
             </p>
           </div>
         </div>
@@ -764,7 +764,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
           <div className={`text-[10px] text-slate-550 text-center mt-1 leading-normal ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
-            Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
+            Support: <a href="mailto:support@eveinventory.in" className="hover:text-indigo-400 underline">support@eveinventory.in</a>
           </div>
         </div>
       </aside>
@@ -937,7 +937,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <button
                         type="button"
                         onClick={() => {
-                          window.location.href = "mailto:aethercorp.support@gmail.com?subject=EVE%20Trial%20Extension%20Request";
+                          window.location.href = "mailto:support@eveinventory.in?subject=EVE%20Trial%20Extension%20Request";
                         }}
                         className="px-3.5 py-1.5 bg-sidebar-accent border border-sidebar-border hover:bg-sidebar-accent/80 text-foreground text-xs font-semibold rounded-lg transition-all cursor-pointer"
                       >

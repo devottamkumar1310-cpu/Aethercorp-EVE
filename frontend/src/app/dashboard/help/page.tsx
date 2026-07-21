@@ -194,10 +194,10 @@ export default function HelpPage() {
                 </p>
               </div>
               <a 
-                href="mailto:aethercorp.support@gmail.com" 
+                href="mailto:support@eveinventory.in" 
                 className="mt-4 inline-block text-center text-xs font-bold bg-indigo-600/20 hover:bg-indigo-650 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:!text-white px-4 py-2.5 rounded-lg border border-indigo-500/20 transition-all cursor-pointer"
               >
-                aethercorp.support@gmail.com
+                support@eveinventory.in
               </a>
             </div>
           </div>
