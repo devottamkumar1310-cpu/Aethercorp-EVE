@@ -16,6 +16,9 @@ router = APIRouter(prefix="/api/organization", tags=["organization"])
 class OnboardRequest(BaseModel):
     name: str
 
+class DemoOnboardRequest(BaseModel):
+    demo_company: str = "novawear"
+
 @router.get("/workspaces")
 def get_workspaces(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"[TRACE /api/organization/workspaces] STEP 1: Request received — user_id={current_user.id}")
@@ -104,8 +107,17 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
 @router.post("/onboard-demo")
-def onboard_demo(background_tasks: BackgroundTasks, current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
-    name = "NovaWear Fashion"
+def onboard_demo(request: DemoOnboardRequest, background_tasks: BackgroundTasks, current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
+    company_map = {
+        "novawear": ("NovaWear Fashion", "novawear-fashion"),
+        "urban_threads": ("Urban Threads", "urban-threads"),
+        "essentials_co": ("Essentials Co.", "essentials-co")
+    }
+    demo_company = request.demo_company
+    if demo_company not in company_map:
+        demo_company = "novawear"
+        
+    name, slug_base = company_map[demo_company]
 
     # Idempotency guard: return existing demo workspace if the user already owns one.
     # This prevents duplicate workspaces from double-click or concurrent POST requests.
@@ -119,7 +131,7 @@ def onboard_demo(background_tasks: BackgroundTasks, current_user: Profile = Depe
         return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
     # Generate unique slug for demo workspace
-    slug = "novawear-fashion"
+    slug = slug_base
     base_slug = slug
     counter = 1
     while db.query(Organization).filter(Organization.slug == slug).first():
@@ -143,7 +155,7 @@ def onboard_demo(background_tasks: BackgroundTasks, current_user: Profile = Depe
     # Seed all demo workspace scenario data, sample documents, sample chats, recommendations
     from app.commands.seed_scenarios import seed_demo_workspace_data
     try:
-        seed_demo_workspace_data(db, org.id)
+        seed_demo_workspace_data(db, org.id, demo_company)
     except Exception as e:
         import logging
         logger = logging.getLogger("eve.organization")

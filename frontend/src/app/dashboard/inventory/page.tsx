@@ -798,6 +798,7 @@ export default function InventoryDashboardPage() {
                   <th className="px-5 py-3 text-right">On Hand</th>
                   <th className="px-5 py-3 text-right">Reorder Point</th>
                   <th className="px-5 py-3 text-right">Shortage</th>
+                  <th className="px-5 py-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-amber-50">
@@ -816,6 +817,11 @@ export default function InventoryDashboardPage() {
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 !text-red-900">
                         <AlertTriangle size={10} /> -{p.shortage}
                       </span>
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <Link href="/dashboard/traceability" className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider transition-colors">
+                        View Decision Trace <ArrowRight size={10} />
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -842,6 +848,7 @@ export default function InventoryDashboardPage() {
                   <th className="px-5 py-3 text-left">Category</th>
                   <th className="px-5 py-3 text-right">Stock On Hand</th>
                   <th className="px-5 py-3 text-right">Estimated Value</th>
+                  <th className="px-5 py-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-red-50">
@@ -857,6 +864,11 @@ export default function InventoryDashboardPage() {
                     <td className="px-5 py-3 text-right font-bold text-red-700">{p.stock_on_hand.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right font-semibold text-foreground">
                       ${p.estimated_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-5 py-3 text-center">
+                      <Link href="/dashboard/traceability" className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider transition-colors">
+                        View Decision Trace <ArrowRight size={10} />
+                      </Link>
                     </td>
                   </tr>
                 ))}

@@ -31,6 +31,7 @@ import {
   FileText,
   HelpCircle,
   Clock,
+  Database,
 } from "lucide-react";
 import { ProductTour } from "@/components/dashboard/ProductTour";
 import ProactiveAnalysisBanner from "@/components/dashboard/ProactiveAnalysisBanner";
@@ -91,6 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  const [isProvenanceModalOpen, setIsProvenanceModalOpen] = useState(false);
   
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [showAnalysisBanner, setShowAnalysisBanner] = useState(() => {
@@ -525,6 +527,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
+  const isDemoWorkspace = activeWorkspace?.slug.startsWith("novawear") || activeWorkspace?.slug.startsWith("urban-threads") || activeWorkspace?.slug.startsWith("essentials-co");
 
   if (loading || (!activeWorkspaceId && !initError)) {
     return (
@@ -749,9 +752,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             title={isSidebarCollapsed ? activeWorkspace?.name || "No workspace" : undefined}
           >
             <Building2 size={14} className="text-violet-400 flex-shrink-0" />
-            <span className={`text-xs text-muted-foreground font-medium truncate animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
-              {activeWorkspace?.name || "No workspace"}
-            </span>
+            <div className={`flex flex-col ${isSidebarCollapsed ? "md:hidden block" : "block"} truncate animate-fade-in`}>
+              <span className="text-xs text-muted-foreground font-medium truncate">
+                {activeWorkspace?.name || "No workspace"}
+              </span>
+              {(activeWorkspace?.slug.startsWith("novawear") || activeWorkspace?.slug.startsWith("urban-threads") || activeWorkspace?.slug.startsWith("essentials-co")) && (
+                <span className="text-[9px] text-blue-400 font-medium truncate mt-0.5">
+                  Demo Workspace • Based on Public E-commerce Data
+                </span>
+              )}
+            </div>
           </div>
           <div className={`text-[10px] text-slate-550 text-center mt-1 leading-normal ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             Support: <a href="mailto:aethercorp.support@gmail.com" className="hover:text-indigo-400 underline">aethercorp.support@gmail.com</a>
@@ -793,6 +803,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </span>
                 </div>
               )}
+              
+              {/* Dataset Provenance Badge */}
+              {isDemoWorkspace && (
+                <button
+                  onClick={() => setIsProvenanceModalOpen(true)}
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 rounded-full text-[11px] font-semibold text-blue-400 transition-colors"
+                >
+                  <Database size={11} />
+                  <span>Demo Dataset</span>
+                </button>
+              )}
+
               {/* Theme Toggler */}
               <button
                 onClick={() => setThemePreference(theme === "dark" ? "executive-light" : "dark")}
@@ -812,9 +834,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="listbox"
                 >
-                  <Building2 size={14} className="text-violet-400" />
-                  <span className="max-w-[140px] truncate">{activeWorkspace?.name || "Select Workspace"}</span>
-                  <ChevronDown size={12} className="text-muted-foreground" />
+                  <Building2 size={14} className="text-violet-400 flex-shrink-0" />
+                  <div className="flex flex-col items-start max-w-[140px] truncate">
+                    <span className="truncate w-full text-left">{activeWorkspace?.name || "Select Workspace"}</span>
+                    {(activeWorkspace?.slug.startsWith("novawear") || activeWorkspace?.slug.startsWith("urban-threads") || activeWorkspace?.slug.startsWith("essentials-co")) && (
+                      <span className="text-[9px] text-blue-400 font-medium truncate w-full text-left leading-none">
+                        Demo Workspace
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown size={12} className="text-muted-foreground flex-shrink-0" />
                 </button>
 
                 {isDropdownOpen && (
@@ -833,7 +862,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  ws.id === activeWorkspaceId ? "text-violet-400 font-bold" : "text-sidebar-foreground"
  }`}
                           >
-                            <span className="truncate">{ws.name}</span>
+                            <div className="flex flex-col items-start truncate max-w-[180px]">
+                              <span className="truncate">{ws.name}</span>
+                              {(ws.slug.startsWith("novawear") || ws.slug.startsWith("urban-threads") || ws.slug.startsWith("essentials-co")) && (
+                                <span className="text-[9px] text-blue-400 font-medium truncate mt-0.5">
+                                  Demo Workspace
+                                </span>
+                              )}
+                            </div>
                             {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
                           </button>
                         ))}
@@ -1102,6 +1138,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Dataset Provenance Modal */}
+      {isProvenanceModalOpen && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md bg-card text-card-foreground rounded-2xl shadow-2xl border border-border overflow-hidden animate-fade-in">
+            <div className="px-6 py-4 border-b border-border flex items-center justify-between bg-sidebar-accent/30">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Database className="text-blue-500" size={20} /> Dataset Information
+              </h3>
+              <button onClick={() => setIsProvenanceModalOpen(false)} className="p-1 rounded-lg hover:bg-sidebar-accent text-muted-foreground transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">
+                Based on a real publicly available e-commerce dataset and transformed into realistic fashion inventory businesses for demonstration purposes.
+              </p>
+              <div className="space-y-2">
+                <div className="flex justify-between border-b border-border pb-2">
+                  <span>Dataset</span>
+                  <span className="font-medium text-foreground text-right w-2/3">Olist Brazilian E-Commerce Public Dataset</span>
+                </div>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <span>Source</span>
+                  <span className="font-medium text-foreground text-right w-2/3">Official Olist Public Dataset</span>
+                </div>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <span>License</span>
+                  <span className="font-medium text-foreground text-right w-2/3">Open-source (CC BY-NC-SA 4.0)</span>
+                </div>
+                <div className="flex justify-between border-b border-border pb-2">
+                  <span>Purpose</span>
+                  <span className="font-medium text-foreground text-right w-2/3">Adapted into realistic fashion inventory businesses to demonstrate EVE's Inventory Intelligence capabilities.</span>
+                </div>
+                <div className="flex justify-between pb-2">
+                  <span>Transformations</span>
+                  <span className="font-medium text-foreground text-right w-2/3 leading-tight">Product categorization, Inventory reconstruction, Lead time estimation, Financial aggregation, Recommendation generation, Business scenario simulation.</span>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-sidebar-accent/30 flex justify-end">
+              <button onClick={() => setIsProvenanceModalOpen(false)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-all shadow-md">
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}

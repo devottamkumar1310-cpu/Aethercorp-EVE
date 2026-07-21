@@ -438,13 +438,22 @@ def seed_scenario(db, org_id, is_healthy=True):
     # Seed ledger and clients
     seed_finance_and_clients(db, org_id, is_healthy)
 
-def seed_demo_workspace_data(db, org_id):
+def seed_demo_workspace_data(db, org_id, demo_company="novawear"):
     """
     Seeds a fully preloaded demo workspace including inventory, finance,
     sample documents, chat conversations, and recommendations.
     """
-    # 1. Seed standard challenged inventory and ledger scenario (Phase 5.1 requirements)
-    seed_scenario(db, org_id, is_healthy=False)
+    company_name = "NovaWear Fashion"
+    if demo_company == "urban_threads":
+        company_name = "Urban Threads"
+    elif demo_company == "essentials_co":
+        company_name = "Essentials Co."
+
+    # 1. Seed standard challenged inventory and ledger scenario
+    # We will use the challenged scenario for novawear to show proactive alerts, 
+    # and maybe healthy for others, or just use challenged for all to show off features.
+    is_healthy = False if demo_company == "novawear" else True
+    seed_scenario(db, org_id, is_healthy=is_healthy)
 
     # 2. Seed Sample Documents
     doc1 = ProcessedDocument(
@@ -460,7 +469,7 @@ def seed_demo_workspace_data(db, org_id):
             "invoice_number": "INV-2026-0001",
             "invoice_date": "2026-06-14",
             "supplier_name": "Premium Cotton Textiles Ltd",
-            "customer_name": "NovaWear Fashion",
+            "customer_name": company_name,
             "items": [
                 {
                     "product_name": "Premium Cotton Roll (Black)",
@@ -567,7 +576,7 @@ def seed_demo_workspace_data(db, org_id):
         id=uuid.uuid4(),
         conversation_id=conv2.id,
         role="user",
-        content="What are the top reorder priorities for NovaWear Fashion?",
+        content=f"What are the top reorder priorities for {company_name}?",
         created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1)
     )
     msg2_2 = ExecutiveMessage(
@@ -587,9 +596,60 @@ def seed_demo_workspace_data(db, org_id):
     )
     db.add_all([msg2_1, msg2_2])
 
-    # 4. Proactive AI Recommendations will be triggered by background task during onboarding
-    
+    # 4. Generate deterministic recommendation traces for the demo
+    seed_demo_recommendation_traces(db, org_id)
+
     db.commit()
+
+def seed_demo_recommendation_traces(db, org_id):
+    from app.models.recommendation_trace import RecommendationTrace
+    import random
+    
+    traces = []
+    actions = [
+        ("Reduce reorder quantity", "Reduce the next purchase order by 35%."),
+        ("Liquidate aging inventory", "Run a 20% promotion on aging seasonal items."),
+        ("Increase safety stock", "Increase safety stock for fast-moving items by 15 days."),
+        ("Delay purchase order", "Delay the upcoming purchase order by 2 weeks."),
+        ("Bundle slow-moving products", "Create product bundles with high-margin fast movers."),
+        ("Reallocate warehouse inventory", "Shift 20% of east coast stock to west coast distribution center."),
+        ("Increase reorder frequency", "Switch to weekly ordering to reduce carrying costs."),
+        ("Reduce markdown timing", "Apply markdowns 2 weeks earlier to improve sell-through."),
+        ("Review supplier lead times", "Renegotiate lead times with secondary suppliers."),
+        ("Investigate declining SKU", "Review marketing spend on underperforming SKU categories.")
+    ]
+    
+    for action_title, action_desc in actions:
+        confidence = round(random.uniform(0.75, 0.98), 2)
+        trace = RecommendationTrace(
+            organization_id=org_id,
+            recommendation_type="inventory",
+            action=action_title,
+            confidence_score=confidence,
+            validation_status="GENERATED",
+            source_datasets=["Inventory", "Sales", "Supplier Data"],
+            supporting_metrics={
+                "Inventory Days": f"{random.randint(45, 120)} days",
+                "Sales Velocity": f"{random.randint(10, 50)} units/day",
+                "Gross Margin": f"{random.randint(30, 65)}%"
+            },
+            reasoning_chain=[
+                "Observed: Sales declining or inventory increasing.",
+                "Inference: Current purchasing policy is likely to create excess inventory.",
+                "Risk: Estimated carrying cost increase.",
+                f"Recommendation: {action_desc}",
+                "Expected Business Outcome: Cash released and margin improvement."
+            ],
+            evidence_snapshot={
+                "summary": "Demand has shifted over the last four weeks. Maintaining current purchasing behavior is likely to increase carrying costs.",
+                "impact": f"${random.randint(1000, 25000)} potential capital freed."
+            },
+            trigger_type="SYSTEM_ALERT",
+            created_from_query=False
+        )
+        traces.append(trace)
+        
+    db.add_all(traces)
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):
     from app.models.organization import Membership

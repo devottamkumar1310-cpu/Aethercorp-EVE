@@ -82,7 +82,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleCreateDemoWorkspace = async () => {
+  const handleCreateDemoWorkspace = async (demoCompany: string) => {
     setLoadingDemo(true);
     setError(null);
     try {
@@ -95,8 +95,10 @@ export default function OnboardingPage() {
       const response = await fetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "Authorization": `Bearer ${session.access_token}`
-        }
+        },
+        body: JSON.stringify({ demo_company: demoCompany })
       });
 
       if (!response.ok) {
@@ -144,33 +146,72 @@ export default function OnboardingPage() {
           )}
 
           <div className="space-y-4">
-            {/* Demo Workspace Card (Option A) */}
-            <button
-              onClick={handleCreateDemoWorkspace}
-              disabled={loading || loadingDemo}
-              className="w-full text-left p-5 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <div className="absolute top-3 right-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 rounded-full px-2 py-0.5 text-[10px] font-semibold flex items-center gap-1">
-                <Sparkles size={10} /> Recommended
+            {/* Demo Workspace Cards (Option A) */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-4">
+                 <Sparkles size={16} className="text-indigo-400" />
+                 <h3 className="text-sm font-semibold text-foreground">Explore with a Demo Company</h3>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
-                  <Brain size={24} />
+              <button
+                onClick={() => handleCreateDemoWorkspace("novawear")}
+                disabled={loading || loadingDemo}
+                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                    <Brain size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                      NovaWear Fashion
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Modern D2C fashion brand. Preloaded with inventory, sales, and proactive insights.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
-                    Explore with Demo Workspace
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Instantly load a model apparel brand preloaded with inventory ledger items, client projects, sample purchase invoices, and chat history.
-                  </p>
+              </button>
+              
+              <button
+                onClick={() => handleCreateDemoWorkspace("urban_threads")}
+                disabled={loading || loadingDemo}
+                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                    <Building2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                      Urban Threads
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Streetwear apparel company. Preloaded with operations data and supply chain history.
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-end text-xs font-bold text-indigo-400 group-hover:text-indigo-300 pt-3 border-t border-border mt-3">
-                {loadingDemo ? "Provisioning Sandbox..." : "Get Started Instantly"}
-                <ArrowRight size={14} className="ml-1.5 transform group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
+              </button>
+
+              <button
+                onClick={() => handleCreateDemoWorkspace("essentials_co")}
+                disabled={loading || loadingDemo}
+                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                    <Building2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                      Essentials Co.
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Basics & everyday apparel. Preloaded with supplier invoices and ledger items.
+                    </p>
+                  </div>
+                </div>
+              </button>
+            </div>
 
             {/* Custom Brand Workspace Setup (Option B) */}
             {!showManualForm ? (
