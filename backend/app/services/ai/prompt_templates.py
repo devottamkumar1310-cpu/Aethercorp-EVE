@@ -107,10 +107,17 @@ def build_context_block(
     opportunities: Optional[Dict[str, Any]] = None,
     trends: Optional[Dict[str, Any]] = None,
     goals: Optional[List[Any]] = None,
-    inventory_intel: Optional[Dict[str, Any]] = None
+    inventory_intel: Optional[Dict[str, Any]] = None,
+    workspace_name: Optional[str] = None
 ) -> str:
     """Formats intelligence inputs and memory/goals context into a clean text block for prompt injection."""
     lines = []
+    
+    if workspace_name:
+        lines.append(f"=== ACTIVE WORKSPACE CONTEXT ===")
+        lines.append(f"Workspace Name: {workspace_name}")
+        lines.append("You MUST refer to this workspace name in your responses when discussing the business context.")
+        lines.append("")
     
     if inventory_intel:
         lines.append("=== INVENTORY & FINANCIAL INTELLIGENCE ===")

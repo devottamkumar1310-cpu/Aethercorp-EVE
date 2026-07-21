@@ -199,6 +199,10 @@ class AgentOrchestrator:
 
             telemetry_token = init_telemetry()
             try:
+                from app.models.organization import Organization
+                workspace = db.query(Organization).filter(Organization.id == org_id).first()
+                workspace_name = workspace.name if workspace else None
+
                 # Delegate to multi-agent ExecutiveBoard execution
                 coo_result = await self.board.run_board(
                     db=db,
@@ -207,7 +211,8 @@ class AgentOrchestrator:
                     mode=mode,
                     user_id=user_id,
                     conversation_history=conversation_history,
-                    intent=intent
+                    intent=intent,
+                    workspace_name=workspace_name
                 )
                 # Stamp LLM provenance onto the result so it flows through model_dump()
                 coo_result.llm_provider = "google"
@@ -723,10 +728,18 @@ class AgentOrchestrator:
         except Exception as e:
             logger.error(f"Failed to fetch inventory analytics in orchestrate_stream: {e}")
 
+        try:
+            from app.models.organization import Organization
+            workspace = db.query(Organization).filter(Organization.id == org_id).first()
+            workspace_name = workspace.name if workspace else None
+        except Exception:
+            workspace_name = None
+
         context_block = build_context_block(
             health=health,
             goals=goals,
-            inventory_intel=inventory_intel
+            inventory_intel=inventory_intel,
+            workspace_name=workspace_name
         )
 
         # Build sub-agent analysis summary blocks to inject as COO context

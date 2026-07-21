@@ -46,7 +46,8 @@ class ExecutiveBoard:
         mode: str = "smart",
         user_id: Optional[uuid.UUID] = None,
         conversation_history: Optional[List[dict]] = None,
-        intent: Optional[str] = None
+        intent: Optional[str] = None,
+        workspace_name: Optional[str] = None
     ) -> ExecutiveSynthesisResult:
         run_finance = True
         run_operations = True
@@ -300,7 +301,7 @@ class ExecutiveBoard:
         # 3. COO Synthesis
         start_synth = time.time()
         try:
-            synthesis = await self.coo_agent.analyze(
+            synthesis = await timed_agent_run("coo_agent", self.coo_agent.analyze(
                 db=db,
                 org_id=org_id,
                 question=question,
@@ -312,8 +313,9 @@ class ExecutiveBoard:
                 forecasting_result=results.get("forecasting"),
                 health=health,
                 goals=goals,
-                conversation_history=conversation_history
-            )
+                conversation_history=conversation_history,
+                workspace_name=workspace_name
+            ))
             synth_latency = int((time.time() - start_synth) * 1000)
             record_agent_metric("coo_synthesis", "success", synth_latency)
         except Exception as e:

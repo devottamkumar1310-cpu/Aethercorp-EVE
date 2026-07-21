@@ -63,7 +63,16 @@ try:
         "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS business_health_score INTEGER NOT NULL DEFAULT 80",
         "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_risk_count INTEGER NOT NULL DEFAULT 0",
         "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_opportunity_count INTEGER NOT NULL DEFAULT 0",
-        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_action_count INTEGER NOT NULL DEFAULT 0"
+        "ALTER TABLE intelligence_snapshots ADD COLUMN IF NOT EXISTS top_action_count INTEGER NOT NULL DEFAULT 0",
+        # ─── Phase 7: Canonical Recommendation Identity & Lifecycle ────────────
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS recommendation_id VARCHAR",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'Generated'",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 1",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS related_skus JSONB",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS priority VARCHAR DEFAULT 'Medium'",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS estimated_financial_impact FLOAT",
+        "ALTER TABLE recommendation_traces ADD COLUMN IF NOT EXISTS related_kpis JSONB"
     ]
 
     for sql in migrations:
@@ -117,6 +126,7 @@ try:
         ("profiles", ["timezone", "language", "avatar_url", "trial_start_date", "trial_end_date", "subscription_status", "plan_type"]),
         ("waitlist_entries", ["id", "user_id", "name", "email", "company_name", "company_website", "revenue_range", "biggest_inventory_challenge", "created_at"]),
         ("intelligence_snapshots", ["inventory_value", "at_risk_skus", "dead_stock_skus", "revenue_at_risk", "working_capital_locked", "business_health_score", "top_risk_count", "top_opportunity_count", "top_action_count"]),
+        ("recommendation_traces", ["updated_at", "recommendation_id", "status", "version", "related_skus", "priority", "estimated_financial_impact", "related_kpis"]),
     ]
     all_ok = True
     for table, cols in checks:

@@ -24,7 +24,8 @@ class COOAgent:
         forecasting_result: Optional[AgentAnalysisResult] = None,
         health: Optional[dict] = None,
         goals: Optional[list] = None,
-        conversation_history: Optional[list] = None
+        conversation_history: Optional[list] = None,
+        workspace_name: Optional[str] = None
     ) -> ExecutiveSynthesisResult:
         # Retrieve overall health score and goals if not passed as cached params
         if health is None:
@@ -64,7 +65,8 @@ class COOAgent:
         context_block = build_context_block(
             health=health,
             goals=goals,
-            inventory_intel=inventory_intel
+            inventory_intel=inventory_intel,
+            workspace_name=workspace_name
         )
         
         sub_agent_reports = []
