@@ -3,21 +3,25 @@ import { devLog } from "@/lib/logger";
 
 const rawUrl = process.env.NEXT_PUBLIC_API_URL || "";
 if (!rawUrl && typeof window !== "undefined") {
+if (!rawUrl && typeof window !== "undefined") {
   logger.warn(
     "[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to localhost (http://127.0.0.1:8000). " +
     "This will fail in production/Vercel unless local forwarding is active."
   );
 }
 
+const defaultFallback = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
+  ? "https://eve-backend-68416570138.us-central1.run.app"
+  : "http://127.0.0.1:8000";
+
 export const API_BASE_URL =
-  (rawUrl || "http://127.0.0.1:8000")
+  (rawUrl || defaultFallback)
     .replace(/\/+$/, "")
     .replace(/\/api$/, "");
 
 if (typeof window !== "undefined") {
   devLog(`[EVE Config] API Base URL resolved to: ${API_BASE_URL}`);
 }
-
 /**
  * Centralized fetch wrapper for authenticated API calls.
  *
