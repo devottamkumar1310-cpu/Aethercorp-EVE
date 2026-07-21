@@ -116,6 +116,15 @@ def build_context_block(
     if workspace_name:
         lines.append(f"=== ACTIVE WORKSPACE CONTEXT ===")
         lines.append(f"Workspace Name: {workspace_name}")
+        
+        # Inject scenario-specific AI focus
+        if "NovaWear" in workspace_name:
+            lines.append("Strategic Focus: Optimization. Focus on fine-tuning reorder points, improving replenishment timing, and optimizing safety stock.")
+        elif "Urban Threads" in workspace_name:
+            lines.append("Strategic Focus: Recovery. Focus on recovering cash flow, reducing excess inventory, and liquidating dead stock.")
+        elif "Essentials Co" in workspace_name:
+            lines.append("Strategic Focus: Growth. Focus on scaling operations, preventing stockouts, and maximizing growth.")
+            
         lines.append("You MUST refer to this workspace name in your responses when discussing the business context.")
         lines.append("")
     

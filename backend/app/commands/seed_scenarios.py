@@ -26,39 +26,39 @@ from app.models.executive_conversation import ExecutiveConversation, ExecutiveMe
 DEV_ORG_ID = uuid.UUID("ea337dee-5c68-41ae-bb08-45afe771db8a")
 DIPTI_ORG_ID = uuid.UUID("dbbb6f95-f4e7-4bb4-b8c3-b776aca126cf")
 
-def generate_healthy_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Generates ~5,000 records of a healthy growth business."""
+def generate_novawear_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Generates a healthy growth business (NovaWear). Focus: Optimization."""
     random.seed(42)
-    
-    # 1. Products & Inventory
     products = []
     costs = []
     
     categories = ["Dresses", "Outerwear", "Knitwear", "Activewear"]
-    skus = [f"HC-APP-{i:03d}" for i in range(1, 21)]
+    skus = [f"NW-OPT-{i:03d}" for i in range(1, 21)]
     
     for i, sku in enumerate(skus):
-        name = f"Premium {categories[i % len(categories)]} Model {sku[-3:]}"
+        name = f"NovaWear {categories[i % len(categories)]} Model {sku[-3:]}"
         cat = categories[i % len(categories)]
         unit_cost = round(random.uniform(15.0, 30.0), 2)
-        selling_price = round(unit_cost / 0.4, 2) # ~60% margin
-        stock = random.randint(150, 400)
-        lead_time = random.randint(10, 20)
+        selling_price = round(unit_cost / 0.4, 2)
         
+        # Healthy stock, but some could use tuning
+        stock = random.randint(150, 400)
+        if i == 0: stock = 120 # Slightly low, needs tuning
+        if i == 1: stock = 450 # Slightly high, needs tuning
+        
+        lead_time = random.randint(10, 20)
         products.append({"sku": sku, "name": name, "category": cat, "stock_on_hand": stock, "lead_time_days": lead_time})
         costs.append({"sku": sku, "unit_cost": unit_cost, "selling_price": selling_price, "supplier_name": f"TextileCorp {cat}"})
         
     df_inv = pd.DataFrame(products)
     df_cost = pd.DataFrame(costs)
     
-    # 2. Sales records (~5,000 rows over 12 months with growing trend)
     sales = []
     start_date = datetime.date.today() - datetime.timedelta(days=365)
     
     for day in range(365):
         current_date = start_date + datetime.timedelta(days=day)
-        # Growth factor
-        growth_multiplier = 1.0 + (day / 365) * 0.4  # +40% growth over a year
+        growth_multiplier = 1.0 + (day / 365) * 0.4
         daily_txs = int(random.randint(8, 18) * growth_multiplier)
         
         for _ in range(daily_txs):
@@ -66,67 +66,34 @@ def generate_healthy_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFram
             sku = skus[sku_idx]
             qty = random.randint(1, 4)
             unit_price = costs[sku_idx]["selling_price"]
-            
             sales.append({
-                "sku": sku,
-                "date": current_date.strftime("%Y-%m-%d"),
-                "quantity": qty,
-                "unit_price": unit_price,
-                "revenue": round(qty * unit_price, 2)
+                "sku": sku, "date": current_date.strftime("%Y-%m-%d"),
+                "quantity": qty, "unit_price": unit_price, "revenue": round(qty * unit_price, 2)
             })
             
     df_sales = pd.DataFrame(sales)
-    # Truncate to limit size
-    if len(df_sales) > 5000:
-        df_sales = df_sales.sample(n=5000, random_state=42).sort_values("date")
+    if len(df_sales) > 4000:
+        df_sales = df_sales.sample(n=4000, random_state=42).sort_values("date")
         
     return df_inv, df_cost, df_sales
 
-def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Generates ~2,000 records of a struggling business."""
+
+def generate_urban_threads_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Generates an inventory crisis business (Urban Threads). Focus: Recovery."""
     random.seed(100)
-    
-    # 1. Products & Inventory (High dead stock, out-of-stock bestsellers)
     products = []
     costs = []
     
-    # Bestsellers (out of stock)
-    bestsellers = [("DD-BEST-001", "Vintage Blue Denim", 12.0, 48.0, 0, 45, "GlobalDenim China", "Denim"),
-                   ("DD-BEST-002", "Slim Fit Black Jeans", 14.0, 52.0, 0, 45, "GlobalDenim China", "Denim")]
-    
-    # Slow movers (massive excess stock)
     dead_stock = [
-        ("DD-DEAD-101", "Neon Yellow Denim Vest", 18.0, 22.0, 800, 30, "VestVendor Inc", "Denim"),
-        ("DD-DEAD-102", "Tie-Dye Overall Shorts", 20.0, 24.0, 600, 30, "VestVendor Inc", "Denim"),
-        ("DD-DEAD-103", "Distressed Denim Hat", 8.0, 10.0, 1000, 30, "VendorX", "Denim"),
-        ("DD-DEAD-104", "Fringe Denim Skirt", 22.0, 26.0, 500, 30, "VendorX", "Denim")
+        ("UT-DEAD-101", "Neon Yellow Denim Vest", 18.0, 22.0, 800, 30, "VestVendor Inc", "Denim"),
+        ("UT-DEAD-102", "Tie-Dye Overall Shorts", 20.0, 24.0, 600, 30, "VestVendor Inc", "Denim"),
+        ("UT-DEAD-103", "Distressed Denim Hat", 8.0, 10.0, 1000, 30, "VendorX", "Denim")
     ]
-    
-    # Standard items (Apparel Variants)
-    standard = []
-    
-    # Variant Group 1: Summer Shirt
-    standard.append(("SS-WHT-S", "Summer Shirt - White / S", 12.0, 35.0, 20, 15, "Standard Mills", "Tops"))
-    standard.append(("SS-WHT-M", "Summer Shirt - White / M", 12.0, 35.0, 45, 15, "Standard Mills", "Tops"))
-    standard.append(("SS-WHT-L", "Summer Shirt - White / L", 12.0, 35.0, 10, 15, "Standard Mills", "Tops"))
-    
-    # Variant Group 2: Basic Chinos
-    standard.append(("BC-KHK-30", "Basic Chinos - Khaki / 30", 18.0, 55.0, 15, 20, "Standard Mills", "Bottoms"))
-    standard.append(("BC-KHK-32", "Basic Chinos - Khaki / 32", 18.0, 55.0, 40, 20, "Standard Mills", "Bottoms"))
-    standard.append(("BC-KHK-34", "Basic Chinos - Khaki / 34", 18.0, 55.0, 35, 20, "Standard Mills", "Bottoms"))
-    standard.append(("BC-KHK-36", "Basic Chinos - Khaki / 36", 18.0, 55.0, 5, 20, "Standard Mills", "Bottoms"))
-    
-    # Variant Group 3: Outerwear
-    standard.append(("WJ-BLK-M", "Winter Jacket - Black / M", 45.0, 120.0, 8, 30, "Outerwear Co", "Outerwear"))
-    standard.append(("WJ-BLK-L", "Winter Jacket - Black / L", 45.0, 120.0, 12, 30, "Outerwear Co", "Outerwear"))
-
-    # Extra D2C items to eliminate catalog disconnects
-    extra_items = [
-        ("TSHIRT-CLASSIC", "Classic Tee", 10.0, 25.0, 80, 7, "Premium Cotton Textiles Ltd", "Tops"),
-        ("FABRIC-COTTON-01", "Premium Cotton Fabric", 25.0, 85.0, 100, 10, "Premium Cotton Textiles Ltd", "Raw Materials")
+    standard = [
+        ("UT-STD-001", "Basic Chinos - Khaki", 18.0, 55.0, 15, 20, "Standard Mills", "Bottoms"),
+        ("UT-STD-002", "Basic Chinos - Black", 18.0, 55.0, 10, 20, "Standard Mills", "Bottoms")
     ]
-
-    all_items = bestsellers + dead_stock + standard + extra_items
+    all_items = dead_stock + standard
     
     for item in all_items:
         sku, name, cost, price, stock, lead, supplier, category = item
@@ -136,56 +103,33 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     df_inv = pd.DataFrame(products)
     df_cost = pd.DataFrame(costs)
     
-    # 2. Sales records with declining volume
     sales = []
     start_date = datetime.date.today() - datetime.timedelta(days=365)
     
     for day in range(365):
         current_date = start_date + datetime.timedelta(days=day)
-        # Declining factor
-        decline_multiplier = 1.0 - (day / 365) * 0.5 # -50% decline over a year
+        decline_multiplier = 1.0 - (day / 365) * 0.5
         daily_txs = int(random.randint(3, 8) * decline_multiplier)
         
         for _ in range(daily_txs):
-            # Select item dynamically by SKU prefixes/values instead of brittle index positions
-            choices = []
-            
-            # Standard items and apparel variants
-            std_choices = [c for c in costs if c["sku"].startswith("DD-STD-") or c["sku"].startswith("SS-") or c["sku"].startswith("BC-") or c["sku"].startswith("WJ-")]
-            choices.extend(std_choices)
-            
-            # TSHIRT-CLASSIC also sells regularly (finished garment)
-            tshirt_choices = [c for c in costs if c["sku"] == "TSHIRT-CLASSIC"]
-            choices.extend(tshirt_choices)
-
-            # Bestsellers (only sold in first half of year before running out of stock)
-            if day < 180:
-                best_choices = [c for c in costs if c["sku"].startswith("DD-BEST-")]
-                choices.extend(best_choices)
-
-            # Dead stock (rarely sells)
+            # Dead stock sells very rarely
+            choices = [c for c in costs if c["sku"].startswith("UT-STD")]
             if random.random() < 0.05:
-                dead_choices = [c for c in costs if c["sku"].startswith("DD-DEAD-")]
-                choices.extend(dead_choices)
-                
-            if not choices:
-                continue
-                
+                choices.extend([c for c in costs if c["sku"].startswith("UT-DEAD")])
+            
+            if not choices: continue
+            
             item_cost = random.choice(choices)
             sku = item_cost["sku"]
             qty = random.randint(1, 2)
             unit_price = item_cost["selling_price"]
             
-            # Apply discounts in second half of the year
-            if day > 180 and sku.startswith("DD-DEAD"):
-                unit_price = round(unit_price * 0.6, 2) # 40% off clearance
+            if day > 180 and sku.startswith("UT-DEAD"):
+                unit_price = round(unit_price * 0.6, 2)
                 
             sales.append({
-                "sku": sku,
-                "date": current_date.strftime("%Y-%m-%d"),
-                "quantity": qty,
-                "unit_price": unit_price,
-                "revenue": round(qty * unit_price, 2)
+                "sku": sku, "date": current_date.strftime("%Y-%m-%d"),
+                "quantity": qty, "unit_price": unit_price, "revenue": round(qty * unit_price, 2)
             })
             
     df_sales = pd.DataFrame(sales)
@@ -194,9 +138,62 @@ def generate_challenged_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataF
         
     return df_inv, df_cost, df_sales
 
+
+def generate_essentials_co_scenario() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Generates a hyper-growth business (Essentials Co). Focus: Growth, preventing stockouts."""
+    random.seed(999)
+    products = []
+    costs = []
+    
+    fast_movers = [
+        ("EC-FAST-001", "Everyday White Tee", 6.0, 20.0, 15, 10, "SpeedyTextiles", "Tops"),
+        ("EC-FAST-002", "Everyday Black Tee", 6.0, 20.0, 5, 10, "SpeedyTextiles", "Tops"),
+        ("EC-FAST-003", "Essential Hoodie", 15.0, 45.0, 0, 14, "SpeedyTextiles", "Outerwear"),
+        ("EC-FAST-004", "Essential Sweatpants", 12.0, 40.0, 8, 14, "SpeedyTextiles", "Bottoms")
+    ]
+    
+    for item in fast_movers:
+        sku, name, cost, price, stock, lead, supplier, category = item
+        products.append({"sku": sku, "name": name, "category": category, "stock_on_hand": stock, "lead_time_days": lead})
+        costs.append({"sku": sku, "unit_cost": cost, "selling_price": price, "supplier_name": supplier})
+        
+    df_inv = pd.DataFrame(products)
+    df_cost = pd.DataFrame(costs)
+    
+    sales = []
+    start_date = datetime.date.today() - datetime.timedelta(days=365)
+    
+    for day in range(365):
+        current_date = start_date + datetime.timedelta(days=day)
+        # Hyper growth
+        growth_multiplier = 1.0 + (day / 365) * 1.5
+        daily_txs = int(random.randint(15, 30) * growth_multiplier)
+        
+        for _ in range(daily_txs):
+            item_cost = random.choice(costs)
+            sku = item_cost["sku"]
+            qty = random.randint(2, 6) # high volume
+            unit_price = item_cost["selling_price"]
+            
+            sales.append({
+                "sku": sku, "date": current_date.strftime("%Y-%m-%d"),
+                "quantity": qty, "unit_price": unit_price, "revenue": round(qty * unit_price, 2)
+            })
+            
+    df_sales = pd.DataFrame(sales)
+    if len(df_sales) > 5000:
+        df_sales = df_sales.sample(n=5000, random_state=42).sort_values("date")
+        
+    return df_inv, df_cost, df_sales
+
+
 def clean_org_data(db, org_id):
     """Deletes existing transaction data for the tenant before seeding."""
     print(f"Cleaning existing tables for Org: {org_id}...")
+    db.execute(text("DELETE FROM recommendation_traces WHERE organization_id = :oid"), {"oid": org_id})
+    db.execute(text("DELETE FROM executive_messages WHERE conversation_id IN (SELECT id FROM executive_conversations WHERE organization_id = :oid)"), {"oid": org_id})
+    db.execute(text("DELETE FROM executive_conversations WHERE organization_id = :oid"), {"oid": org_id})
+    db.execute(text("DELETE FROM processed_documents WHERE organization_id = :oid"), {"oid": org_id})
     db.execute(text("DELETE FROM sales_records WHERE organization_id = :oid"), {"oid": org_id})
     db.execute(text("DELETE FROM inventory_items WHERE organization_id = :oid"), {"oid": org_id})
     db.execute(text("DELETE FROM products WHERE organization_id = :oid"), {"oid": org_id})
@@ -207,488 +204,212 @@ def clean_org_data(db, org_id):
     db.execute(text("DELETE FROM suppliers WHERE organization_id = :oid"), {"oid": org_id})
     db.commit()
 
-def seed_finance_and_clients(db, org_id, is_healthy=True):
+def seed_finance_and_clients(db, org_id, scenario="novawear"):
     """Seeds revenues, expenses, clients, and projects to align dashboards."""
     print(f"Seeding clients and ledger for Org: {org_id}...")
     
-    # 1. Clients
     clients_data = []
-    
     for i in range(1, 8):
         c = Client(
-            organization_id=org_id,
-            company_name=f"Retail Buyer {chr(64+i)} Ltd",
-            contact_person=f"Contact {i}",
-            email=f"buyer_{i}@retail.com",
-            phone=f"+12345678{i}",
-            industry="Apparel Retail",
-            status="active" if i < 5 else ("lead" if i < 7 else "inactive")
+            organization_id=org_id, company_name=f"Retail Buyer {chr(64+i)} Ltd",
+            contact_person=f"Contact {i}", email=f"buyer_{i}@retail.com", phone=f"+12345678{i}",
+            industry="Apparel Retail", status="active" if i < 5 else "inactive"
         )
         db.add(c)
         clients_data.append(c)
     db.flush()
     
-    # 2. Projects
-    projects = []
-    if is_healthy:
-        for idx, client in enumerate(clients_data[:3]):
-            p = Project(
-                organization_id=org_id,
-                client_id=client.id,
-                name=f"Season Rollout Project {idx+1}",
-                status="active" if idx < 2 else "completed",
-                budget=50000.0,
-                start_date=datetime.date(2025, 1, 1),
-                deadline=datetime.date(2026, 12, 31)
-            )
-            db.add(p)
-            projects.append(p)
-        db.flush()
-    else:
-        # Find a user profile in this org to assign tasks to (bottleneck simulation)
-        profile = db.query(Profile).join(Membership).filter(Membership.organization_id == org_id).first()
-        assigned_to_id = profile.id if profile else None
-        
-        # Project A: 85% complete, deadline in 5 days, 8 overdue tasks
-        p_a = Project(
-            organization_id=org_id,
-            client_id=clients_data[0].id,
-            name="Project A (Season Rollout 1)",
-            status="active",
-            budget=15000.0,
-            completion_percentage=85.0,
-            start_date=datetime.date(2025, 1, 1),
-            deadline=datetime.date.today() + datetime.timedelta(days=5)
-        )
-        db.add(p_a)
-        db.flush()
-        projects.append(p_a)
-        
-        # Seed 8 overdue tasks for Project A
-        for i in range(8):
-            t = Task(
-                organization_id=org_id,
-                project_id=p_a.id,
-                title=f"Critical Overdue Milestone A.{i+1}",
-                status="todo" if i % 2 == 0 else "in_progress",
-                priority="high" if i < 4 else "critical",
-                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=2 + i),
-                assigned_to=assigned_to_id
-            )
-            db.add(t)
-            
-        # Project B: 40% complete, deadline in 14 days, resource bottleneck
-        p_b = Project(
-            organization_id=org_id,
-            client_id=clients_data[1].id,
-            name="Project B (Season Rollout 2)",
-            status="active",
-            budget=15000.0,
-            completion_percentage=40.0,
-            start_date=datetime.date(2025, 1, 1),
-            deadline=datetime.date.today() + datetime.timedelta(days=14)
-        )
-        db.add(p_b)
-        db.flush()
-        projects.append(p_b)
-        
-        # Resource bottleneck: several open tasks assigned to the same user
-        for i in range(6):
-            t = Task(
-                organization_id=org_id,
-                project_id=p_b.id,
-                title=f"Bottlenecked Task B.{i+1}",
-                status="in_progress" if i < 3 else "todo",
-                priority="medium" if i % 2 == 0 else "high",
-                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=1 + i) if i < 2 else datetime.datetime.utcnow() + datetime.timedelta(days=2 + i),
-                assigned_to=assigned_to_id
-            )
-            db.add(t)
-            
-        for i in range(2):
-            t = Task(
-                organization_id=org_id,
-                project_id=p_b.id,
-                title=f"Completed Setup B.{i+1}",
-                status="completed",
-                priority="low",
-                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=10 + i),
-                assigned_to=assigned_to_id
-            )
-            db.add(t)
-            
-        # Project C: Healthy project, on track (completion 70%, deadline in 60 days, 0 overdue tasks)
-        p_c = Project(
-            organization_id=org_id,
-            client_id=clients_data[2].id,
-            name="Project C (Season Rollout 3)",
-            status="active",
-            budget=15000.0,
-            completion_percentage=70.0,
-            start_date=datetime.date(2025, 1, 1),
-            deadline=datetime.date.today() + datetime.timedelta(days=60)
-        )
-        db.add(p_c)
-        db.flush()
-        projects.append(p_c)
-        
-        for i in range(3):
-            t = Task(
-                organization_id=org_id,
-                project_id=p_c.id,
-                title=f"Future Task C.{i+1}",
-                status="todo",
-                priority="medium",
-                due_date=datetime.datetime.utcnow() + datetime.timedelta(days=20 + i * 10),
-                assigned_to=assigned_to_id
-            )
-            db.add(t)
-            
-        for i in range(7):
-            t = Task(
-                organization_id=org_id,
-                project_id=p_c.id,
-                title=f"Healthy Completed Milestone C.{i+1}",
-                status="completed",
-                priority="medium",
-                due_date=datetime.datetime.utcnow() - datetime.timedelta(days=5 + i * 2),
-                assigned_to=assigned_to_id
-            )
-            db.add(t)
-            
-        db.flush()
+    p = Project(
+        organization_id=org_id,
+        client_id=clients_data[0].id,
+        name="Annual Growth Plan",
+        status="active",
+        budget=100000.0,
+        start_date=datetime.date(2025, 1, 1),
+        deadline=datetime.date(2026, 12, 31)
+    )
+    db.add(p)
+    db.flush()
     
-    # 3. Revenues & Expenses
-    for idx, p in enumerate(projects):
-        rev = Revenue(
-            organization_id=org_id,
-            project_id=p.id,
-            amount=25000.0 if is_healthy else 8000.0,
-            date=datetime.datetime(2025, 8, 1, 12, 0, 0),
-            description=f"Phase 1 payment for project {p.name}"
-        )
+    if scenario == "urban_threads":
+        db.add(Expense(organization_id=org_id, amount=6000.0, category="Warehouse Storage Penalty", description="Storage penalties for dead stock", date=datetime.datetime.utcnow()))
+        db.add(Expense(organization_id=org_id, amount=4000.0, category="Meta Advertising Ads", description="Acquisition spend for clearance runs", date=datetime.datetime.utcnow()))
+        db.add(Revenue(organization_id=org_id, project_id=p.id, amount=10000.0, date=datetime.datetime.utcnow(), description="Clearance Sale Revenue"))
+    elif scenario == "essentials_co":
+        db.add(Expense(organization_id=org_id, amount=8000.0, category="Expedited Shipping", description="Rush air freight to prevent stockouts", date=datetime.datetime.utcnow()))
+        rev = Revenue(organization_id=org_id, project_id=p.id, amount=65000.0, date=datetime.datetime.utcnow(), description="B2B Wholesale Order - Q3")
+        db.add(rev)
+    else:
+        db.add(Expense(organization_id=org_id, amount=1500.0, category="Shopify App Fees", description="Shopify monthly platform subscription", date=datetime.datetime.utcnow()))
+        rev = Revenue(organization_id=org_id, project_id=p.id, amount=35000.0, date=datetime.datetime.utcnow(), description="Summer Collection Rollout")
         db.add(rev)
         
-    if is_healthy:
-        db.add(Expense(
-            organization_id=org_id,
-            amount=1500.0,
-            category="Shopify App Fees",
-            description="Shopify monthly platform subscription and apps",
-            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
-        ))
-        db.add(Expense(
-            organization_id=org_id,
-            amount=1500.0,
-            category="Meta Advertising Ads",
-            description="Acquisition spend for Summer collection launch",
-            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
-        ))
-    else:
-        db.add(Expense(
-            organization_id=org_id,
-            amount=6000.0,
-            category="Warehouse Storage Penalty",
-            description="Storage penalties for dead stock (Yellow Vests / Overalls)",
-            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
-        ))
-        db.add(Expense(
-            organization_id=org_id,
-            amount=4000.0,
-            category="Meta Advertising Ads",
-            description="Acquisition spend for Denim collection clearance runs",
-            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
-        ))
-        db.add(Expense(
-            organization_id=org_id,
-            amount=2000.0,
-            category="Freight Forwarder Surcharges",
-            description="Fuel surcharges on raw materials import",
-            date=datetime.datetime(2025, 9, 1, 12, 0, 0)
-        ))
     db.commit()
 
-def seed_scenario(db, org_id, is_healthy=True):
+
+def seed_scenario(db, org_id, scenario="novawear"):
     clean_org_data(db, org_id)
     
-    # Generate scenario
-    if is_healthy:
-        print("\n=== Generating HEALTHY scenario for DEV ===")
-        df_inv, df_cost, df_sales = generate_healthy_scenario()
+    if scenario == "novawear":
+        print(f"\n=== Generating NOVAWEAR scenario ===")
+        df_inv, df_cost, df_sales = generate_novawear_scenario()
+    elif scenario == "urban_threads":
+        print(f"\n=== Generating URBAN THREADS scenario ===")
+        df_inv, df_cost, df_sales = generate_urban_threads_scenario()
     else:
-        print("\n=== Generating CHALLENGED scenario for DIPTI ===")
-        df_inv, df_cost, df_sales = generate_challenged_scenario()
+        print(f"\n=== Generating ESSENTIALS CO scenario ===")
+        df_inv, df_cost, df_sales = generate_essentials_co_scenario()
         
-    print(f"  Inventory items: {len(df_inv)}")
-    print(f"  Sales records: {len(df_sales)}")
-    
-    # Ingest using ImporterService
-    print("  Importing products & inventory...")
     report_inv = ImporterService.import_inventory(db, org_id, df_inv)
-    print(f"    Status: {report_inv['status']}, Count: {report_inv['processed_count']}")
-    
-    print("  Importing supplier costs...")
     report_cost = ImporterService.import_costs(db, org_id, df_cost)
-    print(f"    Status: {report_cost['status']}, Count: {report_cost['processed_count']}")
-    
-    print("  Importing sales orders...")
     report_sales = ImporterService.import_sales(db, org_id, df_sales)
-    print(f"    Status: {report_sales['status']}, Count: {report_sales['processed_count']}")
     
-    # Seed ledger and clients
-    seed_finance_and_clients(db, org_id, is_healthy)
+    seed_finance_and_clients(db, org_id, scenario)
+
 
 def seed_demo_workspace_data(db, org_id, demo_company="novawear"):
-    """
-    Seeds a fully preloaded demo workspace including inventory, finance,
-    sample documents, chat conversations, and recommendations.
-    """
+    """Seeds a fully preloaded demo workspace including inventory, finance, docs, chats, recommendations."""
+    seed_scenario(db, org_id, scenario=demo_company)
+
     company_name = "NovaWear Fashion"
+    if demo_company == "urban_threads": company_name = "Urban Threads"
+    if demo_company == "essentials_co": company_name = "Essentials Co."
+
+    # Documents and Conversations specific to scenario
     if demo_company == "urban_threads":
-        company_name = "Urban Threads"
+        doc = ProcessedDocument(
+            id=uuid.uuid4(), organization_id=org_id, filename="warehouse_fees_q2.pdf", content_type="application/pdf", file_size=15000,
+            status="completed", document_type="Invoice", classification_confidence=0.99,
+            extracted_data={"total_amount": 6000.0, "supplier_name": "StoragePro Inc"}, quality_assessment={"quality_score": 95.0, "issues": []},
+            coo_insights={
+                "summary": "Storage penalty invoice processed. Dead stock is increasing carrying costs significantly.",
+                "risks": [{"description": "Working capital locked in aged inventory.", "impact_level": "high"}],
+                "opportunities": [],
+                "recommendations": ["Liquidate UT-DEAD series items to reduce next month's storage footprint."]
+            }, file_path="uploads/warehouse.pdf"
+        )
+        db.add(doc)
     elif demo_company == "essentials_co":
-        company_name = "Essentials Co."
-
-    # 1. Seed standard challenged inventory and ledger scenario
-    # We will use the challenged scenario for novawear to show proactive alerts, 
-    # and maybe healthy for others, or just use challenged for all to show off features.
-    is_healthy = False if demo_company == "novawear" else True
-    seed_scenario(db, org_id, is_healthy=is_healthy)
-
-    # 2. Seed Sample Documents
-    doc1 = ProcessedDocument(
-        id=uuid.uuid4(),
-        organization_id=org_id,
-        filename="supplier_invoice_cotton.pdf",
-        content_type="application/pdf",
-        file_size=12543,
-        status="completed",
-        document_type="Purchase Invoice",
-        classification_confidence=0.98,
-        extracted_data={
-            "invoice_number": "INV-2026-0001",
-            "invoice_date": "2026-06-14",
-            "supplier_name": "Premium Cotton Textiles Ltd",
-            "customer_name": company_name,
-            "items": [
-                {
-                    "product_name": "Premium Cotton Roll (Black)",
-                    "sku": "FABRIC-COTTON-01",
-                    "quantity": 100,
-                    "unit_price": 25.0
-                }
-            ],
-            "tax": 250.0,
-            "total_amount": 2750.0
-        },
-        quality_assessment={
-            "quality_score": 95.0,
-            "issues": []
-        },
-        coo_insights={
-            "summary": "Purchase invoice for FABRIC-COTTON-01 processed successfully. Unit cost of $25.0 is in line with supplier agreements. Margin impact is minimal given D2C target pricing of $85.0.",
-            "risks": [],
-            "opportunities": [
-                {"description": "Establish volume discounts on FABRIC-COTTON-01 if ordering > 500 rolls", "value_potential": 1250}
-            ],
-            "recommendations": [
-                "Approve payment for INV-2026-0001 before 2026-07-14 to capture 2% early payment discount."
-            ]
-        },
-        file_path="uploads/demo_invoice.pdf"
-    )
-    
-    doc2 = ProcessedDocument(
-        id=uuid.uuid4(),
-        organization_id=org_id,
-        filename="june_sales_report.csv",
-        content_type="text/csv",
-        file_size=4892,
-        status="completed",
-        document_type="Sales Report",
-        classification_confidence=0.99,
-        extracted_data={
-            "sales_records": [
-                {"sku": "TSHIRT-CLASSIC", "quantity": 120, "date": "2026-06-14", "unit_price": 25.0, "revenue": 3000.0}
-            ]
-        },
-        quality_assessment={
-            "quality_score": 98.0,
-            "issues": []
-        },
-        coo_insights={
-            "summary": "Classic Tee (TSHIRT-CLASSIC) sales volume surged by 15% week-over-week. Inventory levels are fast approaching the safety stock threshold.",
-            "risks": [
-                {"description": "Potential stockout of TSHIRT-CLASSIC within 12 days if current sales velocity persists.", "impact_level": "high"}
-            ],
-            "opportunities": [],
-            "recommendations": [
-                "Trigger immediate reorder of 500 units of TSHIRT-CLASSIC to prevent inventory gap."
-            ]
-        },
-        file_path="uploads/demo_sales.csv"
-    )
-    db.add_all([doc1, doc2])
+        doc = ProcessedDocument(
+            id=uuid.uuid4(), organization_id=org_id, filename="supplier_expedited_shipping.pdf", content_type="application/pdf", file_size=12000,
+            status="completed", document_type="Invoice", classification_confidence=0.99,
+            extracted_data={"total_amount": 8000.0, "supplier_name": "SpeedyTextiles Logistics"}, quality_assessment={"quality_score": 98.0, "issues": []},
+            coo_insights={
+                "summary": "Expedited air freight charges to prevent stockout of EC-FAST-001.",
+                "risks": [{"description": "High freight costs eroding gross margins.", "impact_level": "medium"}],
+                "opportunities": [{"description": "Improve demand forecasting to switch back to ocean freight.", "value_potential": 5000}],
+                "recommendations": ["Increase safety stock on fast movers to avoid rush shipping."]
+            }, file_path="uploads/freight.pdf"
+        )
+        db.add(doc)
+    else: # NovaWear
+        doc = ProcessedDocument(
+            id=uuid.uuid4(), organization_id=org_id, filename="q3_optimization_plan.pdf", content_type="application/pdf", file_size=12000,
+            status="completed", document_type="Report", classification_confidence=0.95,
+            extracted_data={"title": "Q3 Target Metrics"}, quality_assessment={"quality_score": 99.0, "issues": []},
+            coo_insights={
+                "summary": "Q3 Optimization plan looks solid. Current inventory turnover is healthy, but we can fine-tune reorder points.",
+                "risks": [], "opportunities": [{"description": "Adjust NW-OPT safety stocks for 2% margin gain.", "value_potential": 2000}],
+                "recommendations": ["Review EOQ (Economic Order Quantity) for top 5 SKUs."]
+            }, file_path="uploads/q3_plan.pdf"
+        )
+        db.add(doc)
+        
     db.flush()
 
-    # 3. Seed Sample Conversations
-    conv1 = ExecutiveConversation(
-        id=uuid.uuid4(),
-        organization_id=org_id,
-        title="Strategic Q&A on Cash Flow"
-    )
-    db.add(conv1)
+    conv = ExecutiveConversation(id=uuid.uuid4(), organization_id=org_id, title="Strategy Review")
+    db.add(conv)
     db.flush()
     
-    msg1_1 = ExecutiveMessage(
-        id=uuid.uuid4(),
-        conversation_id=conv1.id,
-        role="user",
-        content="How is our cash flow looking for the next 30 days?",
-        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=2)
-    )
-    msg1_2 = ExecutiveMessage(
-        id=uuid.uuid4(),
-        conversation_id=conv1.id,
-        role="assistant",
-        content="Based on our current ledger, we have $48,000 available capital and $12,000 in upcoming rent & logistics overhead. Revenues from Season Rollout Project 1 are expected to bring in $25,000, leaving us with a healthy capital surplus of $61,000. No immediate cash flow risks detected.",
-        agent_data={
-            "reasoning_summary": "Synthesized available balances, projects timeline, and overhead logs.",
-            "data_used": ["Revenues", "Expenses", "Projects"],
-            "risk_factors": [],
-            "opportunity_factors": ["Project Rollout Payments"],
-            "confidence_level": 0.98,
-            "agent_sources": ["finance"]
-        },
-        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=2) + datetime.timedelta(seconds=30)
-    )
-    db.add_all([msg1_1, msg1_2])
+    if demo_company == "urban_threads":
+        q = "How do we fix our cash flow?"
+        a = "We need to immediately address the working capital locked in dead stock. SKUs like UT-DEAD-101 and UT-DEAD-102 have not moved in months. I recommend a 40% markdown clearance to free up space and cash."
+    elif demo_company == "essentials_co":
+        q = "Why are we losing revenue?"
+        a = "We are consistently stocking out of our bestsellers like the Everyday White Tee. Our sales velocity has outpaced our reorder frequency. I recommend increasing our order volumes by 30% and raising safety stock."
+    else:
+        q = "How can we optimize our current performance?"
+        a = "Our baseline is very healthy. To optimize further, we should fine-tune our replenishment timing. For example, slightly increasing the reorder point on NW-OPT-001 while holding less safety stock on slower variants will improve capital efficiency."
 
-    conv2 = ExecutiveConversation(
-        id=uuid.uuid4(),
-        organization_id=org_id,
-        title="Inventory Optimization Strategy"
-    )
-    db.add(conv2)
+    msg1 = ExecutiveMessage(id=uuid.uuid4(), conversation_id=conv.id, role="user", content=q, created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1))
+    msg2 = ExecutiveMessage(id=uuid.uuid4(), conversation_id=conv.id, role="assistant", content=a, agent_data={}, created_at=datetime.datetime.utcnow())
+    db.add_all([msg1, msg2])
     db.flush()
 
-    msg2_1 = ExecutiveMessage(
-        id=uuid.uuid4(),
-        conversation_id=conv2.id,
-        role="user",
-        content=f"What are the top reorder priorities for {company_name}?",
-        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1)
-    )
-    msg2_2 = ExecutiveMessage(
-        id=uuid.uuid4(),
-        conversation_id=conv2.id,
-        role="assistant",
-        content="Our primary bottleneck is TSHIRT-CLASSIC. Stock on hand is currently 80 units, and our lead time from TextileCorp is 7 days. At our current average D2C sales velocity of 20 units/day, we will experience a stockout in 4 days. I recommend placing an immediate purchase order for 500 units of Premium Cotton rolls (FABRIC-COTTON-01) to support replenishing manufacturing lines.",
-        agent_data={
-            "reasoning_summary": "Calculated current sales velocity, safety stock limits, and lead times.",
-            "data_used": ["InventoryItem (TSHIRT-CLASSIC)", "Sales Records"],
-            "risk_factors": ["Stockout of bestseller TSHIRT-CLASSIC"],
-            "opportunity_factors": ["Bulk fabric pricing optimization"],
-            "confidence_level": 0.95,
-            "agent_sources": ["operations", "coo"]
-        },
-        created_at=datetime.datetime.utcnow() - datetime.timedelta(hours=1) + datetime.timedelta(seconds=30)
-    )
-    db.add_all([msg2_1, msg2_2])
-
-    # 4. Generate deterministic recommendation traces for the demo
-    seed_demo_recommendation_traces(db, org_id)
-
+    seed_demo_recommendation_traces(db, org_id, demo_company)
     db.commit()
 
-def seed_demo_recommendation_traces(db, org_id):
+
+def seed_demo_recommendation_traces(db, org_id, demo_company):
     from app.models.recommendation_trace import RecommendationTrace
-    import random
     from app.models.inventory import InventoryItem
     from sqlalchemy.orm import joinedload
     
     traces = []
-    
-    # Generate traces for dead stock candidates (high stock, low sales)
     inventory_items = db.query(InventoryItem).options(joinedload(InventoryItem.product)).filter(InventoryItem.organization_id == org_id).all()
     
     for item in inventory_items:
-        if item.stock_on_hand > 500 and item.avg_daily_sales < 2.0:
+        if demo_company == "urban_threads" and item.stock_on_hand > 500:
             trace = RecommendationTrace(
-                recommendation_id=f"REC-{org_id.hex[:4]}-D{item.product.sku}",
-                organization_id=org_id,
-                recommendation_type="dead_stock",
-                action=f"Liquidate {item.product.sku}",
-                status="Generated",
-                version=1,
-                priority="Medium",
-                related_skus=[item.product.sku],
-                estimated_financial_impact=float(item.stock_on_hand * item.product.unit_cost),
-                confidence_score=round(random.uniform(0.85, 0.98), 2),
-                validation_status="GENERATED",
-                source_datasets=["Inventory", "Sales", "Supplier Data"],
-                supporting_metrics={
-                    "Inventory Days": f"{round(item.stock_on_hand / max(1.0, item.avg_daily_sales))} days",
-                    "Sales Velocity": f"{item.avg_daily_sales} units/day",
-                    "Current Stock": f"{item.stock_on_hand} units"
-                },
+                recommendation_id=f"REC-{org_id.hex[:4]}-D{item.product.sku}", organization_id=org_id,
+                recommendation_type="dead_stock", action=f"Liquidate {item.product.sku}", status="Generated", version=1, priority="High",
+                related_skus=[item.product.sku], estimated_financial_impact=float(item.stock_on_hand * item.product.unit_cost),
+                confidence_score=0.95, validation_status="GENERATED", source_datasets=["Inventory", "Sales"],
+                supporting_metrics={"Inventory Days": f"{round(item.stock_on_hand / max(1.0, item.avg_daily_sales))} days", "Current Stock": f"{item.stock_on_hand} units"},
                 reasoning_chain=[
-                    f"Observed: SKU {item.product.sku} has high stock ({item.stock_on_hand}) but low sales velocity ({item.avg_daily_sales}/day).",
-                    "Inference: This item is aging and will soon become dead stock.",
-                    "Risk: Capital lockup and increased carrying costs.",
-                    "Recommendation: Run a clearance promotion or bundle with fast movers.",
-                    "Expected Business Outcome: Cash released and warehouse space freed."
+                    f"Observed: SKU {item.product.sku} has {item.stock_on_hand} units gathering dust.",
+                    "Inference: SKU has not sold consistently. Working capital is locked.",
+                    "Risk: High warehouse storage fees and cash crunch.",
+                    "Recommendation: Apply aggressive markdown pricing immediately to liquidate.",
+                    "Expected Business Outcome: Recover cash flow and reduce excess inventory."
                 ],
-                evidence_snapshot={
-                    "summary": f"SKU {item.product.sku} is tying up capital and moving too slowly.",
-                    "impact": f"${round(item.stock_on_hand * item.product.unit_cost)} potential capital freed."
-                },
-                trigger_type="SYSTEM_ALERT",
-                created_from_query=False
+                evidence_snapshot={"summary": "Dead stock tying up capital.", "impact": f"${round(item.stock_on_hand * item.product.unit_cost)} potential recovery."},
+                trigger_type="SYSTEM_ALERT", created_from_query=False
             )
             traces.append(trace)
             
-        elif item.stock_on_hand < (item.avg_daily_sales * item.lead_time_days) + 10:
-            # Low stock / Reorder alert
-            shortage = round((item.avg_daily_sales * item.lead_time_days) + 20 - item.stock_on_hand)
-            if shortage <= 0:
-                shortage = 50
+        elif demo_company == "essentials_co" and item.stock_on_hand < (item.avg_daily_sales * item.lead_time_days) + 20:
+            shortage = round((item.avg_daily_sales * item.lead_time_days) * 1.5)
             trace = RecommendationTrace(
-                recommendation_id=f"REC-{org_id.hex[:4]}-L{item.product.sku}",
-                organization_id=org_id,
-                recommendation_type="low_stock",
-                action=f"Reorder {item.product.sku}",
-                status="Generated",
-                version=1,
-                priority="High",
-                related_skus=[item.product.sku],
-                estimated_financial_impact=float(shortage * item.product.selling_price),
-                confidence_score=round(random.uniform(0.88, 0.99), 2),
-                validation_status="GENERATED",
-                source_datasets=["Inventory", "Sales", "Supplier Data"],
-                supporting_metrics={
-                    "Current Stock": f"{item.stock_on_hand} units",
-                    "Lead Time": f"{item.lead_time_days} days",
-                    "Sales Velocity": f"{item.avg_daily_sales} units/day",
-                    "Suggested Reorder": f"{shortage} units"
-                },
+                recommendation_id=f"REC-{org_id.hex[:4]}-G{item.product.sku}", organization_id=org_id,
+                recommendation_type="low_stock", action=f"Aggressively Increase Reorder for {item.product.sku}", status="Generated", version=1, priority="High",
+                related_skus=[item.product.sku], estimated_financial_impact=float(shortage * item.product.selling_price),
+                confidence_score=0.98, validation_status="GENERATED", source_datasets=["Inventory", "Sales"],
+                supporting_metrics={"Sales Velocity": f"{item.avg_daily_sales} units/day", "Suggested Reorder": f"{shortage} units"},
                 reasoning_chain=[
-                    f"Observed: SKU {item.product.sku} stock is {item.stock_on_hand} with {item.avg_daily_sales} sales/day and {item.lead_time_days} days lead time.",
-                    "Inference: Stock will deplete before next shipment arrives at current run rate.",
-                    "Risk: Imminent stockout and lost revenue.",
-                    f"Recommendation: Submit purchase order for {shortage} units immediately.",
-                    f"Expected Business Outcome: Prevent stockout and capture ${round(shortage * item.product.selling_price)} in revenue."
+                    f"Observed: Average daily sales ({item.avg_daily_sales}/day) exceed historical reorder thresholds.",
+                    "Inference: Demand is outpacing supply. Stockout expected within days.",
+                    "Risk: Severe missed revenue opportunities due to stockouts.",
+                    f"Recommendation: Increase order quantities to {shortage} units and raise safety stock level.",
+                    "Expected Business Outcome: Prevent stockouts and scale operations to capture demand."
                 ],
-                evidence_snapshot={
-                    "summary": f"Stockout risk detected for {item.product.sku}. Reorder required immediately.",
-                    "impact": f"Prevent ${round(shortage * item.product.selling_price)} in lost sales."
-                },
-                trigger_type="SYSTEM_ALERT",
-                created_from_query=False
+                evidence_snapshot={"summary": "Hyper-growth SKU at risk of stockout.", "impact": f"Capture ${round(shortage * item.product.selling_price)} in potential revenue."},
+                trigger_type="SYSTEM_ALERT", created_from_query=False
             )
             traces.append(trace)
-
+            
+        elif demo_company == "novawear":
+            # Just do optimization suggestions for the first few SKUs
+            if item.product.sku in ["NW-OPT-001", "NW-OPT-002"]:
+                trace = RecommendationTrace(
+                    recommendation_id=f"REC-{org_id.hex[:4]}-O{item.product.sku}", organization_id=org_id,
+                    recommendation_type="optimization", action=f"Fine-tune Reorder Point for {item.product.sku}", status="Generated", version=1, priority="Medium",
+                    related_skus=[item.product.sku], estimated_financial_impact=1500.0,
+                    confidence_score=0.90, validation_status="GENERATED", source_datasets=["Inventory"],
+                    supporting_metrics={"Current Safety Stock": "45 units", "Recommended Safety Stock": "30 units"},
+                    reasoning_chain=[
+                        f"Observed: Demand trend for {item.product.sku} is stable but safety stock is slightly oversized.",
+                        "Inference: Capital efficiency can be marginally improved.",
+                        "Recommendation: Fine-tune replenishment timing and slightly lower safety stock.",
+                        "Expected Business Outcome: Optimize working capital without risking stockouts."
+                    ],
+                    evidence_snapshot={"summary": "Healthy business, minor optimization identified.", "impact": "Increase capital efficiency."},
+                    trigger_type="SYSTEM_ALERT", created_from_query=False
+                )
+                traces.append(trace)
+                
     db.add_all(traces)
+
 
 def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com", user_id=None):
     from app.models.organization import Membership
@@ -697,13 +418,11 @@ def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com"
     
     org = db.query(Organization).filter(Organization.id == org_id).first()
     if not org:
-        print(f"Creating missing Organization: {name} ({org_id})")
         org = Organization(id=org_id, name=name, slug=slug)
         db.add(org)
         db.flush()
         
-    if user_id is None:
-        user_id = uuid.uuid4()
+    if user_id is None: user_id = uuid.uuid4()
         
     prof = db.query(Profile).filter(Profile.id == user_id).first()
     if not prof:
@@ -711,28 +430,13 @@ def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com"
         if prof_email:
             prof = prof_email
         else:
-            print(f"Creating missing Profile: {email} ({user_id})")
-            prof = Profile(
-                id=user_id,
-                email=email,
-                hashed_password="scrypt:32768:8:1$placeholder$hashedpassword",
-                full_name=name + " Admin",
-                is_active=True
-            )
+            prof = Profile(id=user_id, email=email, hashed_password="scrypt:32768:8:1$placeholder", full_name=name + " Admin", is_active=True)
             db.add(prof)
             db.flush()
             
-    member = db.query(Membership).filter(
-        Membership.organization_id == org_id,
-        Membership.user_id == prof.id
-    ).first()
+    member = db.query(Membership).filter(Membership.organization_id == org_id, Membership.user_id == prof.id).first()
     if not member:
-        print(f"Creating missing Membership for Org {org_id} and User {prof.id}")
-        member = Membership(
-            organization_id=org_id,
-            user_id=prof.id,
-            role="owner"
-        )
+        member = Membership(organization_id=org_id, user_id=prof.id, role="owner")
         db.add(member)
         db.flush()
     db.commit()
@@ -740,28 +444,11 @@ def ensure_organization_and_user(db, org_id, name, slug, email="ceo@example.com"
 def main():
     db = SessionLocal()
     try:
-        # Ensure workspaces/users exist first
-        ensure_organization_and_user(
-            db, 
-            DEV_ORG_ID, 
-            "Dev Workspace", 
-            "dev-workspace", 
-            "dev@aethercorp.com"
-        )
-        ensure_organization_and_user(
-            db, 
-            DIPTI_ORG_ID, 
-            "NovaWear Fashion", 
-            "novawear", 
-            "dipti@novawear.com", 
-            uuid.UUID("9e3f929a-2e59-487f-a827-82ce8df09594")
-        )
-
-        # Seed Workspace A (DEV) -> Healthy
-        seed_scenario(db, DEV_ORG_ID, is_healthy=True)
+        ensure_organization_and_user(db, DEV_ORG_ID, "NovaWear Fashion", "novawear", "dev@aethercorp.com")
+        ensure_organization_and_user(db, DIPTI_ORG_ID, "Urban Threads", "urban_threads", "dipti@novawear.com", uuid.UUID("9e3f929a-2e59-487f-a827-82ce8df09594"))
         
-        # Seed Workspace B (Dipti) -> Challenged
-        seed_scenario(db, DIPTI_ORG_ID, is_healthy=False)
+        seed_demo_workspace_data(db, DEV_ORG_ID, "novawear")
+        seed_demo_workspace_data(db, DIPTI_ORG_ID, "urban_threads")
         
         print("\nAll scenarios successfully seeded!")
     except Exception as e:
