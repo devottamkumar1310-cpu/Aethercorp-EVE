@@ -473,61 +473,61 @@ export default function LandingPage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/30 transition-all">
-            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 w-fit">
+          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 group">
+            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 w-fit group-hover:scale-105 transition-transform">
               <AlertTriangle size={18} />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Predictive Stockout Alerts</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Predictive Stockout Alerts</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Monitors variant-level sales velocity daily and alerts you before popular sizes deplete, matching supplier lead times.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/30 transition-all">
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 w-fit">
+          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 group">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500 w-fit group-hover:scale-105 transition-transform">
               <DollarSign size={18} />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Dead Stock Capital Isolation</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Dead Stock Capital Isolation</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Scans warehouses for non-moving variants, providing exact dollar figures for trapped working capital and liquidation strategies.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/30 transition-all">
-            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 w-fit">
+          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 group">
+            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 w-fit group-hover:scale-105 transition-transform">
               <Package size={18} />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Automated Supplier Planning</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Automated Supplier Planning</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Generates size-level purchase order suggestions aligned with supplier minimum order quantities (MOQs) and lead times.
             </p>
           </div>
 
-          <div id="traceability" className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/30 transition-all">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 w-fit">
+          <div id="traceability" className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 group">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 w-fit group-hover:scale-105 transition-transform">
               <ShieldCheck size={18} />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Decision Traceability</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Decision Traceability</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Full audit trail into evidence datasets, confidence scores, and business math behind every AI recommendation.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/30 transition-all">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 w-fit">
+          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 group">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500 w-fit group-hover:scale-105 transition-transform">
               <FileText size={18} />
             </div>
-            <h3 className="text-sm font-bold text-foreground">Document Ingestion Vault</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">Document Ingestion Vault</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Upload supplier invoices, packing lists, and CSV ledgers. EVE classifies and integrates them into operational memory instantly.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/30 transition-all">
-            <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-500 w-fit">
+          <div className="p-6 rounded-2xl border border-border bg-card shadow-xs space-y-3 hover:border-primary/40 hover:-translate-y-1 hover:shadow-md transition-all duration-200 group">
+            <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-500 w-fit group-hover:scale-105 transition-transform">
               <Brain size={18} />
             </div>
-            <h3 className="text-sm font-bold text-foreground">EVE AI CEO Strategic Assistant</h3>
+            <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">EVE AI CEO Strategic Assistant</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Command deep business audits using plain text. Ask questions regarding margins, dead stock, or project delivery pacing.
             </p>
@@ -660,17 +660,19 @@ export default function LandingPage() {
             {faqs.map((faq, index) => (
               <div 
                 key={index}
-                className="rounded-2xl border border-border bg-card overflow-hidden transition-colors"
+                className="rounded-2xl border border-border bg-card overflow-hidden transition-all duration-200 hover:border-primary/30"
               >
                 <button
                   onClick={() => toggleFaq(index)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none"
+                  className="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none group"
                 >
-                  <span className="text-sm font-bold text-foreground">{faq.q}</span>
-                  {openFaq === index ? <ChevronUp size={18} className="text-primary flex-shrink-0" /> : <ChevronDown size={18} className="text-muted-foreground flex-shrink-0" />}
+                  <span className="text-sm font-bold text-foreground group-hover:text-primary transition-colors">{faq.q}</span>
+                  <div className={`p-1 rounded-full bg-muted transition-transform duration-200 ${openFaq === index ? "rotate-180 bg-primary/10 text-primary" : "text-muted-foreground"}`}>
+                    <ChevronDown size={16} />
+                  </div>
                 </button>
                 {openFaq === index && (
-                  <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
+                  <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/40 pt-3.5 animate-fade-in">
                     {faq.a}
                   </div>
                 )}
