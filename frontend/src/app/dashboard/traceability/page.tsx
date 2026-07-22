@@ -29,6 +29,7 @@ interface TraceRecord {
   confidence_governance_flag?: string;
   evidence_validation_status?: string;
   evidence_validation_reason?: string;
+  estimated_financial_impact?: number;
 }
 
 export default function TraceabilityDashboard() {
@@ -293,7 +294,7 @@ export default function TraceabilityDashboard() {
                   <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5">
                     <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Financial Impact</span>
                     <p className="text-xs text-slate-200 leading-relaxed">
-                      {selectedTrace.evidence_snapshot?.financial_impact || `Estimated impact of $${selectedTrace.estimated_financial_impact.toLocaleString()}.`}
+                      {selectedTrace.evidence_snapshot?.financial_impact || `Estimated impact of $${(selectedTrace.estimated_financial_impact || 0).toLocaleString()}.`}
                     </p>
                   </div>
                 </div>
