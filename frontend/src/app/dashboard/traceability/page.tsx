@@ -67,7 +67,7 @@ export default function TraceabilityDashboard() {
         signal,
       });
       if (!resp.ok) {
-        throw new Error(`Failed to load recommendations (HTTP ${resp.status})`);
+        throw new Error("Unable to retrieve decision history records at this time.");
       }
       
       const json = await resp.json();
@@ -139,45 +139,50 @@ export default function TraceabilityDashboard() {
       <div className="mx-auto max-w-6xl">
         
         {/* Breadcrumb / Back */}
-        <Link 
-          href="/dashboard" 
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-        </Link>
-
-        {/* Title */}
-        <div className="mt-6 border-b border-border pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-muted-foreground bg-clip-text text-transparent">
-              Decision Traceability
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              See the business evidence, financial logic, and operating reason behind each EVE recommendation.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => fetchTraces(page > 0 ? page - 1 : 0)}
-              disabled={page === 0}
-              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg disabled:opacity-50 transition"
-            >
-              Prev
-            </button>
-            <span className="text-xs font-medium">Page {page + 1}</span>
-            <button 
-              onClick={() => fetchTraces(page + 1)}
-              disabled={traces.length < limit}
-              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-lg disabled:opacity-50 transition"
-            >
-              Next
-            </button>
-            <button
-              onClick={() => fetchTraces(page)}
-              className="ml-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 border border-indigo-500/30 bg-indigo-500/5 px-3 py-1.5 rounded-lg transition cursor-pointer"
-            >
-              <ListRestart className="h-3.5 w-3.5" /> Refresh List
-            </button>
+        <div className="space-y-1">
+          <Link 
+            href="/dashboard" 
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-2"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Operational Dashboard
+          </Link>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-primary">Auditability & Governance</span>
+                <span className="text-muted-foreground/40">•</span>
+                <span className="text-xs font-medium text-muted-foreground">Decision Traceability</span>
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground mt-1">
+                Executive Decision Traceability
+              </h1>
+              <p className="mt-1 text-xs md:text-sm text-muted-foreground">
+                Audit underlying evidence, financial logic, model confidence, and operational impact behind every EVE decision.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => fetchTraces(page > 0 ? page - 1 : 0)}
+                disabled={page === 0}
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-xl disabled:opacity-50 transition cursor-pointer"
+              >
+                Prev
+              </button>
+              <span className="text-xs font-medium text-muted-foreground">Page {page + 1}</span>
+              <button 
+                onClick={() => fetchTraces(page + 1)}
+                disabled={traces.length < limit}
+                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-xl disabled:opacity-50 transition cursor-pointer"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => fetchTraces(page)}
+                className="ml-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary hover:underline border border-primary/20 bg-primary/10 px-3 py-1.5 rounded-xl transition cursor-pointer"
+              >
+                <ListRestart className="h-3.5 w-3.5" /> Refresh List
+              </button>
+            </div>
           </div>
         </div>
 

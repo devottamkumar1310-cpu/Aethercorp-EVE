@@ -355,13 +355,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const reason =
         wsSettled.status === "rejected"
           ? wsSettled.reason?.name === "AbortError"
-            ? "Workspaces request timed out after 15 seconds"
+            ? "Workspace request timed out"
             : String(wsSettled.reason)
-          : `Workspaces API returned ${wsSettled.value.status}`;
+          : `Workspace status ${wsSettled.value.status}`;
       logger.error("[EVE] Workspaces load failed:", reason);
-      // Propagate as an initError so the user sees an actionable message
-      // instead of an infinite spinner.
-      throw new Error(`Failed to load workspaces: ${reason}`);
+      throw new Error("Unable to load executive workspace. Please verify your connection or try logging in again.");
     }
   };
 
@@ -637,8 +635,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  const currentNav = NAV_ITEMS.flatMap((g) => g.items).find((it) => isActive(it.href, (it as any).exact));
+  const currentPageLabel = currentNav?.label || "Dashboard";
+  const initials = ((profile?.full_name || profile?.email || "U")
+    .split(/[\s@._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s: string) => s[0]?.toUpperCase())
+    .join("")) || "U";
+
   return (
-    <div className="min-h-screen bg-background text-foreground flex font-sans transition-colors duration-200">
+    <div className="eve-app min-h-screen bg-background text-foreground flex font-sans transition-colors duration-200">
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div
@@ -661,13 +668,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  }`}>
           <div
             onClick={() => router.push("/dashboard/inventory")}
-            className="h-9 w-9 bg-gradient-to-tr from-violet-700 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm tracking-tighter cursor-pointer hover:opacity-90 transition-all shadow-md shadow-violet-700/25 flex-shrink-0"
+            className="h-9 w-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-[13px] tracking-tight cursor-pointer hover:brightness-110 transition-all shadow-lg shadow-violet-600/25 ring-1 ring-inset ring-white/15 flex-shrink-0"
           >
             EVE
           </div>
           <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
-            <span className="font-bold text-foreground text-xs tracking-tight leading-none">EVE PORTAL</span>
-            <span className="text-[9px] text-muted-foreground font-medium tracking-wider uppercase mt-0.5">Inventory Intelligence</span>
+            <span className="font-semibold text-foreground text-sm tracking-tight leading-none">EVE</span>
+            <span className="text-[10px] text-muted-foreground font-medium tracking-wide mt-1 leading-none">Inventory Intelligence</span>
           </div>
           
           <button
@@ -692,7 +699,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
           {NAV_ITEMS.map((group) => (
             <div key={group.label}>
-              <p className={`text-[9px] font-bold text-muted-foreground uppercase tracking-widest px-3 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+              <p className={`text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.14em] px-2.5 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
                 {group.label}
               </p>
               <div className={`h-px bg-sidebar-border my-4 ${isSidebarCollapsed ? "md:block hidden" : "hidden"}`} />
@@ -713,24 +720,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         setSidebarOpen(false);
                       }}
                       title={isSidebarCollapsed ? item.label : undefined}
-                      className={`flex items-center rounded-lg text-sm font-medium transition-all group relative ${
- isSidebarCollapsed ? "justify-start gap-3 px-3 py-2 md:justify-center md:p-2.5 md:mx-1" : "gap-3 px-3 py-2"
+                      data-active={active && !isItemDisabled ? "true" : "false"}
+                      className={`eve-nav-link flex items-center rounded-lg text-[13px] font-medium group ${
+ isSidebarCollapsed ? "justify-start gap-2.5 px-2.5 py-2 md:justify-center md:p-2.5 md:mx-1" : "gap-2.5 px-2.5 py-2"
  } ${
  isItemDisabled
- ? "opacity-45 cursor-not-allowed text-muted-foreground"
- : active
- ? "bg-violet-600/10 text-violet-400 border-l-2 border-violet-500 pl-[10px]"
- : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
- } ${
- (item as any).isAI && !active && !isItemDisabled
- ? "hover:bg-violet-900/30 hover:text-violet-300"
- : ""
+ ? "opacity-40 cursor-not-allowed text-muted-foreground pointer-events-none"
+ : "text-muted-foreground hover:text-foreground"
  }`}
                     >
-                      <Icon size={15} className={active && !isItemDisabled ? "text-violet-400" : "text-muted-foreground group-hover:text-muted-foreground"} />
+                      <Icon size={16} className={`flex-shrink-0 transition-colors ${active && !isItemDisabled ? "text-violet-300" : "text-muted-foreground group-hover:text-foreground"}`} />
                       <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>{item.label}</span>
                       {(item as any).isAI && (
-                        <span className={`ml-auto text-[9px] font-bold bg-violet-600 text-white px-1.5 py-0.5 rounded-full tracking-wide ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
+                        <span className={`ml-auto text-[8px] font-bold bg-violet-600 text-white px-1.5 py-0.5 rounded-full tracking-wider ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
                       )}
                     </Link>
                   );
@@ -760,7 +762,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             </div>
           </div>
-          <div className={`text-[10px] text-slate-550 text-center mt-1 leading-normal ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+          <div className={`text-[10px] text-muted-foreground text-center mt-1 leading-normal ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             Support: <a href="mailto:support@eveinventory.in" className="hover:text-indigo-400 underline">support@eveinventory.in</a>
           </div>
         </div>
@@ -782,8 +784,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Menu size={18} />
             </button>
 
-            {/* Spacer for desktop */}
-            <div className="hidden md:block" />
+            {/* Left: current section context */}
+            <div className="hidden md:flex items-center min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate tracking-tight">{currentPageLabel}</span>
+            </div>
 
             {/* Right: Workspace Switcher + User */}
             <div className="flex items-center gap-3">
@@ -911,9 +915,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="h-5 w-px bg-sidebar-border" />
 
               {/* Profile */}
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-xs font-semibold text-foreground leading-none">{profile?.full_name || "Guest"}</span>
-                <span className="text-[10px] text-muted-foreground mt-0.5">{profile?.email || ""}</span>
+              <div className="flex items-center gap-2.5">
+                <div className="eve-avatar h-8 w-8 text-[11px]">{initials}</div>
+                <div className="hidden sm:flex flex-col leading-tight">
+                  <span className="text-xs font-semibold text-foreground leading-none">{profile?.full_name || "Guest"}</span>
+                  <span className="text-[10px] text-muted-foreground mt-1 leading-none">{profile?.email || ""}</span>
+                </div>
               </div>
 
               <button

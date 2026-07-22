@@ -2,7 +2,7 @@ import { ChatResponse } from "@/types/chat";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Terminal } from "lucide-react";
+import { Activity, Sparkles } from "lucide-react";
 
 interface Props {
   chatData: ChatResponse | null;
@@ -13,13 +13,13 @@ export function AgentActivityMonitor({ chatData }: Props) {
     return (
       <Card className="h-full bg-background text-muted-foreground border-border">
         <CardHeader className="pb-2 border-b border-border">
-          <CardTitle className="text-sm font-medium flex items-center text-foreground">
-            <Terminal className="h-4 w-4 mr-2" />
-            Agent Activity Monitor
+          <CardTitle className="text-sm font-semibold flex items-center text-foreground">
+            <Activity className="h-4 w-4 mr-2 text-primary" />
+            Executive Intelligence Stream
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 text-sm text-muted-foreground italic">
-          No agent activity. Submit a request to the CEO Agent to view traces.
+        <CardContent className="p-4 text-xs text-muted-foreground italic">
+          No executive activity recorded. Consult EVE AI CEO to generate operational intelligence.
         </CardContent>
       </Card>
     );
@@ -28,52 +28,63 @@ export function AgentActivityMonitor({ chatData }: Props) {
   return (
     <Card className="h-full bg-background text-muted-foreground border-border overflow-hidden flex flex-col">
       <CardHeader className="pb-2 border-b border-border bg-card">
-        <CardTitle className="text-sm font-medium flex items-center text-foreground">
-          <Terminal className="h-4 w-4 mr-2 text-emerald-400" />
-          Agent Activity Monitor
+        <CardTitle className="text-sm font-semibold flex items-center text-foreground">
+          <Activity className="h-4 w-4 mr-2 text-primary" />
+          Executive Intelligence Stream
         </CardTitle>
       </CardHeader>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           
           <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Network Discovery</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Available Advisory Roles</h4>
             <div className="flex flex-wrap gap-1">
               {chatData.discovered_agents.map((agent) => (
-                <Badge key={agent} variant="outline" className="border-border bg-secondary text-muted-foreground">
-                  {agent}
+                <Badge key={agent} variant="outline" className="border-border bg-secondary text-foreground text-[11px] capitalize">
+                  {agent.replace(/_/g, " ")}
                 </Badge>
               ))}
             </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Executed Agents</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Consulted Executive Advisors</h4>
             <div className="flex flex-wrap gap-1">
               {chatData.executed_agents.length > 0 ? (
                 chatData.executed_agents.map((agent) => (
-                  <Badge key={agent} className="bg-blue-600 hover:bg-blue-500 text-foreground">
-                    {agent}
+                  <Badge key={agent} className="bg-primary text-primary-foreground text-[11px] capitalize">
+                    {agent.replace(/_/g, " ")}
                   </Badge>
                 ))
               ) : (
-                <span className="text-xs text-muted-foreground">None</span>
+                <span className="text-xs text-muted-foreground">Standard Direct Reasoning</span>
               )}
             </div>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Event Bus Traces</h4>
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Operational Evidence Logs</h4>
             <div className="space-y-2">
               {chatData.event_bus_messages.map((msg, idx) => (
-                <div key={idx} className="bg-card border border-border rounded p-2 text-xs font-mono">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-emerald-400">[{msg.topic}]</span>
-                    <span className="text-muted-foreground">Sender: {msg.sender}</span>
+                <div key={idx} className="bg-card border border-border rounded-xl p-3 text-xs">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="font-semibold text-primary flex items-center gap-1">
+                      <Sparkles size={12} /> {msg.topic.replace(/_/g, " ").toUpperCase()}
+                    </span>
+                    <span className="text-muted-foreground text-[11px]">Advisor: {msg.sender?.replace(/_/g, " ")}</span>
                   </div>
-                  <pre className="text-muted-foreground whitespace-pre-wrap overflow-x-auto">
-                    {JSON.stringify(msg.data, null, 2)}
-                  </pre>
+                  <div className="text-muted-foreground text-xs leading-relaxed space-y-1">
+                    {typeof msg.data === "object" && msg.data !== null ? (
+                      Object.entries(msg.data).map(([k, v]) => (
+                        <div key={k} className="flex items-center justify-between border-b border-border/40 py-0.5 text-[11px]">
+                          <span className="font-medium text-foreground capitalize">{k.replace(/_/g, " ")}:</span>
+                          <span className="text-muted-foreground font-mono">{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p>{String(msg.data)}</p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

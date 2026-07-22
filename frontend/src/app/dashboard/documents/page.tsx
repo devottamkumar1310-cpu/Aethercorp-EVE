@@ -119,7 +119,6 @@ export default function DocumentHubPage() {
   };
 
   const processUpload = async (file: File) => {
-    // Limits
     const allowedExtensions = [".pdf", ".csv", ".xlsx", ".png", ".jpg", ".jpeg"];
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
     if (!allowedExtensions.includes(ext)) {
@@ -142,11 +141,8 @@ export default function DocumentHubPage() {
       toast.error(
         <div className="flex flex-col gap-0.5">
           <span>Document processing is currently syncing. Please try again in a moment.</span>
-          <span className="text-[10px] text-muted-foreground leading-normal">
-            Need help? Contact <a href="mailto:support@eveinventory.in" className="underline text-indigo-450 hover:text-indigo-350">support@eveinventory.in</a> or use our <a href="https://forms.gle/qETMVJfDzHnF86xi7" target="_blank" rel="noopener noreferrer" className="underline text-indigo-450 hover:text-indigo-350">Feedback Form</a>.
-          </span>
         </div>,
-        { id: toastId, duration: 8000 }
+        { id: toastId, duration: 5000 }
       );
     } finally {
       setIsUploading(false);
@@ -177,31 +173,37 @@ export default function DocumentHubPage() {
   };
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto text-foreground">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-6">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-3 bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            <Brain className="h-8 w-8 text-indigo-400" /> Unified Document Hub
+    <div className="min-h-screen bg-background p-6 md:p-8 max-w-[1600px] mx-auto w-full space-y-8 transition-colors duration-200 text-foreground">
+      
+      {/* Executive Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">Intelligence Hub</span>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="text-xs font-medium text-muted-foreground">Business Document Vault</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2.5 text-foreground">
+            <Brain className="h-7 w-7 text-primary" /> Executive Document Hub
           </h1>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            Upload company invoices, supplier receipts, and purchase orders. EVE classifies, extracts, and integrates them automatically.
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Upload company invoices, supplier receipts, and purchase orders. EVE classifies, extracts, and integrates them automatically into operational memory.
           </p>
         </div>
       </div>
 
-      {/* Upload Area */}
+      {/* Ingestion Dropzone */}
       <div 
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
- dragActive 
- ? "border-indigo-400 bg-indigo-500/10 shadow-[0_0_20px_rgba(99,102,241,0.2)]" 
- : "border-border bg-card hover:border-foreground/20 hover:bg-muted"
- }`}
+        className={`border-2 border-dashed rounded-xl p-8 md:p-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
+          dragActive 
+            ? "border-primary bg-primary/10 shadow-lg scale-[1.005]" 
+            : "border-border bg-card hover:border-primary/40 hover:bg-muted/50 shadow-xs"
+        }`}
       >
         <input 
           ref={fileInputRef}
@@ -212,152 +214,117 @@ export default function DocumentHubPage() {
         />
         {isUploading ? (
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-12 w-12 text-indigo-400 animate-spin" />
-            <p className="text-indigo-300 font-semibold text-lg animate-pulse">Uploading file to EVE...</p>
+            <Loader2 className="h-10 w-10 text-primary animate-spin" />
+            <p className="text-foreground font-semibold text-base animate-pulse">Processing document into operational memory...</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="p-4 bg-indigo-500/10 rounded-full border border-indigo-500/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white">
+            <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 text-primary">
               <UploadCloud className="h-10 w-10" />
             </div>
             <div>
-              <p className="text-lg font-bold">Drag and drop file here, or click to browse</p>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                Supported formats: PDF, CSV, XLSX, PNG, JPG, JPEG (Max 10MB)
+              <p className="text-base md:text-lg font-bold text-foreground">Drag and drop business documents here, or click to browse</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Supported formats: PDF, CSV, XLSX, PNG, JPG, JPEG (Maximum 10MB per file)
               </p>
-              <p className="text-xs text-indigo-400 mt-2.5 font-medium max-w-md mx-auto">
-                Only upload business documents that you are authorized to process.
+              <p className="text-[11px] text-primary mt-2 font-semibold uppercase tracking-wider">
+                Automated OCR Extraction & Semantic Indexing Enabled
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Recent Documents Table */}
-      <div className="bg-card backdrop-blur-md border border-border rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-5 border-b border-border flex items-center justify-between">
-          <h2 className="text-xl font-bold flex items-center gap-2.5">
-            <FileText className="h-5 w-5 text-indigo-400" /> Recent Documents
-          </h2>
-          <span className="text-xs font-semibold px-2.5 py-1 bg-muted text-muted-foreground rounded-full">
-            {documents.length} Total
+      {/* Documents Registry Table */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-xs">
+        <div className="p-5 border-b border-border bg-muted/30 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" /> Document Registry
+            </h2>
+            <p className="text-xs text-muted-foreground">List of all ingested business records and extracted intelligence status</p>
+          </div>
+          <span className="text-xs font-semibold px-3 py-1 bg-muted text-foreground border border-border rounded-full">
+            {documents.length} Records Ingested
           </span>
         </div>
 
         {loading ? (
-          <div className="overflow-x-auto animate-pulse">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-muted/50 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                  <th className="p-4 pl-6">Filename</th>
-                  <th className="p-4">Doc Type</th>
-                  <th className="p-4">File Size</th>
-                  <th className="p-4">Upload Date</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 pr-6 text-right">Actions</th>
+          <div className="overflow-x-auto animate-pulse p-6 space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-10 bg-muted rounded-lg w-full" />
+            ))}
+          </div>
+        ) : documents.length === 0 ? (
+          <div className="p-12 text-center text-muted-foreground space-y-2">
+            <File className="h-10 w-10 mx-auto text-muted-foreground/50" />
+            <p className="font-semibold text-sm text-foreground">No business documents ingested yet.</p>
+            <p className="text-xs text-muted-foreground">Upload invoices or contracts above to begin automated processing.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto scrollbar-thin">
+            <table className="w-full text-left text-xs md:text-sm">
+              <thead className="border-b border-border bg-muted/20 text-muted-foreground uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th className="px-5 py-3.5 font-semibold">Document Name</th>
+                  <th className="px-5 py-3.5 font-semibold">Doc Type</th>
+                  <th className="px-5 py-3.5 font-semibold">File Size</th>
+                  <th className="px-5 py-3.5 font-semibold">Ingestion Date</th>
+                  <th className="px-5 py-3.5 font-semibold">AI Extraction Status</th>
+                  <th className="px-5 py-3.5 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {[...Array(3)].map((_, i) => (
-                  <tr key={i}>
-                    <td className="p-4 pl-6"><div className="h-4 bg-muted rounded w-2/3" /></td>
-                    <td className="p-4"><div className="h-4 bg-muted rounded w-1/3" /></td>
-                    <td className="p-4"><div className="h-4 bg-muted rounded w-1/4" /></td>
-                    <td className="p-4"><div className="h-4 bg-muted rounded w-1/4" /></td>
-                    <td className="p-4"><div className="h-6 bg-muted rounded-full w-16" /></td>
-                    <td className="p-4 pr-6 text-right"><div className="h-4 bg-muted rounded w-12 ml-auto" /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : documents.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">
-            <File className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="font-medium text-muted-foreground">No documents processed yet.</p>
-            <p className="text-sm text-muted-foreground mt-1">Upload an operational file above to begin.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-muted/50 text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-                  <th className="p-4 pl-6">Filename</th>
-                  <th className="p-4">Doc Type</th>
-                  <th className="p-4">File Size</th>
-                  <th className="p-4">Upload Date</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 pr-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-sm">
                 {documents.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-muted transition-colors group">
-                    <td className="p-4 pl-6 font-medium text-foreground max-w-xs truncate">
+                  <tr key={doc.id} className="hover:bg-muted/40 transition-colors group">
+                    <td className="px-5 py-4 font-semibold text-foreground max-w-xs truncate">
                       {doc.filename}
                     </td>
-                    <td className="p-4 text-foreground">
-                      {doc.document_type || <span className="text-muted-foreground">—</span>}
+                    <td className="px-5 py-4 text-muted-foreground font-medium">
+                      {doc.document_type ? (
+                        <span className="capitalize">{doc.document_type}</span>
+                      ) : (
+                        <span className="text-muted-foreground/50">Standard</span>
+                      )}
                     </td>
-                    <td className="p-4 text-muted-foreground">
+                    <td className="px-5 py-4 text-muted-foreground font-mono text-xs">
                       {formatBytes(doc.file_size)}
                     </td>
-                    <td className="p-4 text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                    <td className="px-5 py-4 text-muted-foreground font-medium">
+                      {doc.created_at ? new Date(doc.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : '—'}
                     </td>
-                    <td className="p-4">
-                      {doc.status === "uploaded" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-blue-500/20 rounded-full text-xs font-semibold animate-pulse">
-                          Uploaded
+                    <td className="px-5 py-4">
+                      {doc.status === "completed" || doc.status === "success" ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <CheckCircle className="h-3 w-3 text-emerald-500" /> Complete
                         </span>
-                      )}
-                      {doc.status === "processing" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-semibold animate-pulse">
-                          <Loader2 className="h-3 w-3 animate-spin" /> Processing
+                      ) : doc.status === "failure" ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                          <XCircle className="h-3 w-3 text-rose-500" /> Failed
                         </span>
-                      )}
-                      {doc.status === "classified" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 rounded-full text-xs font-semibold animate-pulse">
-                          Classified
-                        </span>
-                      )}
-                      {doc.status === "validated" && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full text-xs font-semibold animate-pulse">
-                          Validated
-                        </span>
-                      )}
-                      {(doc.status === "completed" || doc.status === "success") && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-green-500/20 rounded-full text-xs font-semibold">
-                          <CheckCircle className="h-3 w-3" /> Completed
-                        </span>
-                      )}
-                      {doc.status === "failure" && (
-                        <span 
-                          title="Processing anomaly detected"
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-red-500/20 rounded-full text-xs font-semibold cursor-help"
-                        >
-                          <XCircle className="h-3 w-3" /> Failed
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
+                          <Loader2 className="h-3 w-3 animate-spin text-amber-500" /> Extracting...
                         </span>
                       )}
                     </td>
-                    <td className="p-4 pr-6 text-right">
-                      <div className="flex items-center justify-end gap-3 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <Link 
-                          href={`/dashboard/documents/${doc.id}`}
-                          className="p-1.5 bg-card hover:bg-indigo-500/10 text-muted-foreground hover:!text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-border rounded-lg transition-all"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Link>
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {doc.id && (
+                          <Link 
+                            href={`/dashboard/documents/${doc.id}`}
+                            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                            title="View Extracted Insights"
+                          >
+                            <Eye size={15} />
+                          </Link>
+                        )}
                         <button 
                           onClick={() => handleDelete(doc.id, doc.filename)}
-                          className="p-1.5 bg-card hover:bg-red-500/10 text-muted-foreground hover:!text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-border rounded-lg transition-all"
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                          title="Delete Document"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>

@@ -422,176 +422,184 @@ export default function InventoryDashboardPage() {
     : "No dead stock detected. All products have recent sales activity — capital is not trapped in non-moving inventory.";
 
   return (
-    <main className="p-6 max-w-[1600px] mx-auto w-full space-y-6 transition-colors duration-200">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <main className="min-h-screen bg-background p-6 md:p-8 max-w-[1600px] mx-auto w-full space-y-8 transition-colors duration-200">
+      
+      {/* Executive Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/dashboard" className="hover:text-indigo-500 transition-colors flex items-center gap-1">
-              <ArrowLeft size={14} /> Dashboard
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard" className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <ArrowLeft size={14} /> Operational Dashboard
             </Link>
+            <span className="text-muted-foreground/40">•</span>
+            <span className="text-xs font-medium text-muted-foreground">Inventory Intelligence</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Inventory Intelligence</h1>
-          <p className="text-muted-foreground text-sm">Monitor stock levels, profitability, and demand performance.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Inventory Intelligence</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Monitor stock levels, profitability metrics, demand velocity, and capital lockup risks in real time.
+          </p>
         </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-sm font-semibold transition-all shadow-sm cursor-pointer add-product-btn"
-        >
-          <Plus size={16} /> Add Product
-        </button>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-xs font-semibold shadow-xs hover:bg-primary/90 transition-all cursor-pointer add-product-btn"
+          >
+            <Plus size={16} /> Add Product
+          </button>
+        </div>
       </div>
 
       {/* Executive Summary KPI Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Card 1: Inventory Value */}
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-xs hover:border-primary/30 transition-all flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Inventory Value (COGS)</p>
-            <p className="text-2xl font-black text-foreground mt-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Inventory Value (COGS)</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground mt-2">
               ${(data?.total_inventory_value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-1">Total cost of stock on hand</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Total cost of stock on hand</p>
           </div>
-          <div className="h-10 w-10 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl flex items-center justify-center">
+          <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
             <DollarSign size={20} />
           </div>
         </div>
 
         {/* Card 2: Low Stock SKUs */}
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-xs hover:border-primary/30 transition-all flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Low Stock SKUs</p>
-            <p className="text-2xl font-black text-foreground mt-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Low Stock SKUs</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground mt-2">
               {alerts?.low_stock_count || 0}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-[11px] text-muted-foreground mt-1">
               {(alerts?.low_stock_count || 0) > 0
                 ? outOfStock.length > 0
-                  ? `${outOfStock.length} SKU${outOfStock.length > 1 ? "s" : ""} already out of stock`
-                  : `${criticalStockouts.length} will run out before supplier can deliver`
+                  ? `${outOfStock.length} SKU${outOfStock.length > 1 ? "s" : ""} out of stock`
+                  : `${criticalStockouts.length} stockout risk SKUs`
                 : "All stock levels healthy"}
             </p>
           </div>
-          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-500/15 text-amber-500" : "bg-muted text-muted-foreground"}`}>
+          <div className={`p-2.5 rounded-xl ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>
             <AlertTriangle size={20} />
           </div>
         </div>
 
         {/* Card 3: Revenue at Risk */}
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-xs hover:border-primary/30 transition-all flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Revenue at Risk</p>
-            <p className="text-2xl font-black text-foreground mt-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Revenue at Risk</p>
+            <p className="text-3xl font-bold tracking-tight text-rose-600 dark:text-rose-400 mt-2">
               {totalRevenueAtRisk > 0
                 ? `$${totalRevenueAtRisk.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
                 : alerts?.dead_stock_count && alerts.dead_stock_count > 0
                   ? `$${deadStockCapital.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
                   : "$0"}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
+            <p className="text-[11px] text-muted-foreground mt-1">
               {totalRevenueAtRisk > 0
-                ? "Projected from stockout gaps vs. lead time"
-                : alerts?.dead_stock_count && alerts.dead_stock_count > 0
-                  ? "Capital locked in non-moving inventory"
-                  : "No immediate inventory risk"}
+                ? "Projected gap vs lead times"
+                : "Capital locked in dead stock"}
             </p>
           </div>
-          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${totalRevenueAtRisk > 0 ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground"}`}>
+          <div className={`p-2.5 rounded-xl ${totalRevenueAtRisk > 0 ? "bg-rose-500/10 text-rose-600 dark:text-rose-400" : "bg-muted text-muted-foreground"}`}>
             <Package size={20} />
           </div>
         </div>
 
         {/* Card 4: Reorder Recommendations */}
-        <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
+        <div className="bg-card p-5 rounded-xl border border-border shadow-xs hover:border-primary/30 transition-all flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Reorder Recommendations</p>
-            <p className="text-2xl font-black text-foreground mt-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Reorder Action Plan</p>
+            <p className="text-3xl font-bold tracking-tight text-foreground mt-2">
               {alerts?.low_stock?.length || 0}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Purchase {shortageUnits.toLocaleString() || 0} units suggested
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {shortageUnits.toLocaleString() || 0} units suggested
             </p>
           </div>
-          <div className="h-10 w-10 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl flex items-center justify-center">
+          <div className="p-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
             <TrendingUp size={20} />
           </div>
         </div>
       </div>
 
-      {/* Executive Summary Cards & Data Upload Section */}
+      {/* Executive Summary Cards & Data Ingestion Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Summary Insights */}
-        <div className="lg:col-span-2 bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Brain size={16} className="text-indigo-500" /> Executive Insights
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-3 bg-secondary/60 rounded-lg space-y-1 flex flex-col justify-between">
+        <div className="lg:col-span-2 bg-card p-6 rounded-xl border border-border shadow-xs flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Brain size={16} className="text-primary" /> EVE Inventory Intelligence Brief
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-muted/40 rounded-xl border border-border space-y-2 flex flex-col justify-between">
                 <div>
                   <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    ⚠️ Stockout Risk
+                    ⚠️ Stockout Vulnerability
                   </span>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
                     {stockoutInsight}
                   </p>
                 </div>
                 {(alerts?.low_stock_count || 0) > 0 && (
-                  <Link href="/dashboard/traceability?type=low_stock" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mt-2">
-                    View Decision Trace <ArrowRight size={10} />
+                  <Link href="/dashboard/traceability?type=low_stock" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 mt-3">
+                    Audit Decision Reasoning <ArrowRight size={12} />
                   </Link>
                 )}
               </div>
-              <div className="p-3 bg-secondary/60 rounded-lg space-y-1 flex flex-col justify-between">
+              <div className="p-4 bg-muted/40 rounded-xl border border-border space-y-2 flex flex-col justify-between">
                 <div>
                   <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    ❄️ Capital Lockup & Dead Stock
+                    ❄️ Non-Moving Capital
                   </span>
-                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
                     {deadStockInsight}
                   </p>
                 </div>
                 {(alerts?.dead_stock_count || 0) > 0 && (
-                  <Link href="/dashboard/traceability?type=dead_stock" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 mt-2">
-                    View Decision Trace <ArrowRight size={10} />
+                  <Link href="/dashboard/traceability?type=dead_stock" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 mt-3">
+                    Audit Decision Reasoning <ArrowRight size={12} />
                   </Link>
                 )}
               </div>
             </div>
           </div>
           <div className="pt-4 border-t border-border flex items-center justify-between text-xs mt-4">
-            <span className="text-muted-foreground">Ask EVE AI for detailed mitigation plans:</span>
-            <Link href="/dashboard/eve" className="font-bold text-indigo-500 hover:text-indigo-400 flex items-center gap-1 transition-colors">
-              Open Chat Assistant <ArrowRight size={12} />
+            <span className="text-muted-foreground">Ask EVE AI CEO for detailed SKU mitigation plans:</span>
+            <Link href="/dashboard/eve" className="font-semibold text-primary hover:underline flex items-center gap-1 transition-colors">
+              Consult EVE AI →
             </Link>
           </div>
         </div>
 
-        {/* Right: Spreadsheet Integration */}
-        <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        {/* Right: Spreadsheet Ingestion Dropzone */}
+        <div className="bg-card p-6 rounded-xl border border-border shadow-xs flex flex-col justify-between">
           <div className="space-y-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Upload size={16} className="text-indigo-500" /> Spreadsheet Integration
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <Upload size={16} className="text-primary" /> Master CSV Ingestion
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Upload your catalog, inventory ledger, or Shopify export sheet. EVE will dynamically reconcile columns and run quality checks.
+              Upload your inventory ledger or Shopify export CSV. EVE automatically parses columns, reconciles quantities, and updates metrics.
             </p>
           </div>
           <div className="space-y-3 pt-4">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Shopify or custom CSV formats:</span>
+              <span className="text-muted-foreground">Standard Master CSV format:</span>
               <button
                 type="button"
                 onClick={downloadTemplate}
-                className="text-indigo-500 font-bold hover:underline cursor-pointer outline-none"
+                className="text-primary font-semibold hover:underline cursor-pointer outline-none"
               >
                 Download Template
               </button>
             </div>
-            <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 border border-dashed border-border hover:border-indigo-500 bg-secondary hover:bg-secondary/80 rounded-lg text-xs font-semibold text-muted-foreground cursor-pointer transition-all">
+            <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 border border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-muted/60 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-all">
               {uploadingMaster
-                ? <Loader2 className="animate-spin h-3.5 w-3.5 text-indigo-500" />
+                ? <Loader2 className="animate-spin h-4 w-4 text-primary" />
                 : <Upload size={14} className="text-muted-foreground" />}
               <span>{uploadingMaster ? "Processing spreadsheet..." : "Upload Master CSV"}</span>
               <input
@@ -685,28 +693,28 @@ export default function InventoryDashboardPage() {
         <div className="border-b border-border px-4 pt-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
             {/* Tabs */}
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
- activeTab === tab.id
- ? "border-indigo-500 text-indigo-700 bg-indigo-50/50"
- : "border-transparent text-muted-foreground hover:text-foreground"
- }`}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-t-xl text-xs font-semibold tracking-wide transition-all border-b-2 cursor-pointer ${
+                    activeTab === tab.id
+                      ? "border-primary text-foreground bg-muted/60"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  }`}
                 >
                   {tab.label}
                   {tab.count !== undefined && (
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
- activeTab === tab.id
- ? "bg-indigo-100 text-indigo-700"
- : tab.id === "reorder" && (tab.count || 0) > 0
- ? "bg-amber-100 text-amber-700"
- : tab.id === "dead" && (tab.count || 0) > 0
- ? "bg-red-100 !text-red-900"
- : "bg-secondary text-muted-foreground"
- }`}>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                      activeTab === tab.id
+                        ? "bg-primary/10 text-primary border-primary/20"
+                        : tab.id === "reorder" && (tab.count || 0) > 0
+                        ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+                        : tab.id === "dead" && (tab.count || 0) > 0
+                        ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                        : "bg-muted text-muted-foreground border-border"
+                    }`}>
                       {tab.count ?? 0}
                     </span>
                   )}

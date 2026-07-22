@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-roboto-mono);
-  --font-heading: var(--font-inter);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -84,9 +84,6 @@
   --surface: var(--bg-card);
   --surface-secondary: var(--bg-sidebar);
   --border: var(--border-accent);
-  --text-primary: var(--text-primary);
-  --text-secondary: var(--text-secondary);
-  --text-muted: var(--text-muted);
   --success: #10b981;
   --warning: #d97706;
   --danger: #ef4444;
@@ -142,9 +139,6 @@
   --surface: var(--bg-card);
   --surface-secondary: var(--bg-sidebar);
   --border: var(--border-accent);
-  --text-primary: var(--text-primary);
-  --text-secondary: var(--text-secondary);
-  --text-muted: var(--text-muted);
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -239,13 +233,13 @@
 /* Global Contrast & Readability Overrides */
 [data-theme="executive-light"], [data-theme="light"] {
   /* Enforce Light Mode Rule: Primary = near black, Secondary = dark gray */
-  h1:not(.landing-page *), h2:not(.landing-page *), h3:not(.landing-page *), h4:not(.landing-page *), h5:not(.landing-page *), h6:not(.landing-page *), th:not(.landing-page *), td:not(.landing-page *), strong:not(.landing-page *), .font-bold:not(.landing-page *), .font-extrabold:not(.landing-page *), .text-foreground:not(.landing-page *), .text-primary:not(.landing-page *) {
+  h1:not(.landing-page *):not(.eve-app *), h2:not(.landing-page *):not(.eve-app *), h3:not(.landing-page *):not(.eve-app *), h4:not(.landing-page *):not(.eve-app *), h5:not(.landing-page *):not(.eve-app *), h6:not(.landing-page *):not(.eve-app *), th:not(.landing-page *):not(.eve-app *), td:not(.landing-page *):not(.eve-app *), strong:not(.landing-page *):not(.eve-app *), .font-bold:not(.landing-page *):not(.eve-app *), .font-extrabold:not(.landing-page *):not(.eve-app *), .text-foreground:not(.landing-page *):not(.eve-app *), .text-primary:not(.landing-page *):not(.eve-app *) {
     color: #18181b !important;
   }
-  p:not(.landing-page *), span:not(.landing-page *), li:not(.landing-page *), label:not(.landing-page *), .text-xs:not(.landing-page *), .text-sm:not(.landing-page *), .text-muted-foreground:not(.landing-page *), .text-secondary:not(.landing-page *), .text-slate-400:not(.landing-page *), .text-slate-500:not(.landing-page *) {
+  p:not(.landing-page *):not(.eve-app *), span:not(.landing-page *):not(.eve-app *), li:not(.landing-page *):not(.eve-app *), label:not(.landing-page *):not(.eve-app *), .text-xs:not(.landing-page *):not(.eve-app *), .text-sm:not(.landing-page *):not(.eve-app *), .text-muted-foreground:not(.landing-page *):not(.eve-app *), .text-secondary:not(.landing-page *):not(.eve-app *), .text-slate-400:not(.landing-page *):not(.eve-app *), .text-slate-500:not(.landing-page *):not(.eve-app *) {
     color: #4b5563 !important;
   }
-  svg:not(.landing-page *) {
+  svg:not(.landing-page *):not(.eve-app *) {
     stroke: #18181b !important;
     color: #18181b !important;
   }
@@ -262,13 +256,13 @@
 
 [data-theme="executive-dark"], [data-theme="dark"] {
   /* Enforce Dark Mode Rule: Primary = white, Secondary = light gray */
-  h1:not(.landing-page *), h2:not(.landing-page *), h3:not(.landing-page *), h4:not(.landing-page *), h5:not(.landing-page *), h6:not(.landing-page *), th:not(.landing-page *), td:not(.landing-page *), strong:not(.landing-page *), .font-bold:not(.landing-page *), .font-extrabold:not(.landing-page *), .text-foreground:not(.landing-page *), .text-primary:not(.landing-page *) {
+  h1:not(.landing-page *):not(.eve-app *), h2:not(.landing-page *):not(.eve-app *), h3:not(.landing-page *):not(.eve-app *), h4:not(.landing-page *):not(.eve-app *), h5:not(.landing-page *):not(.eve-app *), h6:not(.landing-page *):not(.eve-app *), th:not(.landing-page *):not(.eve-app *), td:not(.landing-page *):not(.eve-app *), strong:not(.landing-page *):not(.eve-app *), .font-bold:not(.landing-page *):not(.eve-app *), .font-extrabold:not(.landing-page *):not(.eve-app *), .text-foreground:not(.landing-page *):not(.eve-app *), .text-primary:not(.landing-page *):not(.eve-app *) {
     color: #ffffff !important;
   }
-  p:not(.landing-page *), span:not(.landing-page *), li:not(.landing-page *), label:not(.landing-page *), .text-xs:not(.landing-page *), .text-sm:not(.landing-page *), .text-muted-foreground:not(.landing-page *), .text-secondary:not(.landing-page *), .text-slate-400:not(.landing-page *), .text-slate-500:not(.landing-page *), .text-slate-850:not(.landing-page *), .text-slate-900:not(.landing-page *), .text-slate-950:not(.landing-page *), .text-slate-800:not(.landing-page *) {
+  p:not(.landing-page *):not(.eve-app *), span:not(.landing-page *):not(.eve-app *), li:not(.landing-page *):not(.eve-app *), label:not(.landing-page *):not(.eve-app *), .text-xs:not(.landing-page *):not(.eve-app *), .text-sm:not(.landing-page *):not(.eve-app *), .text-muted-foreground:not(.landing-page *):not(.eve-app *), .text-secondary:not(.landing-page *):not(.eve-app *), .text-slate-400:not(.landing-page *):not(.eve-app *), .text-slate-500:not(.landing-page *):not(.eve-app *), .text-slate-850:not(.landing-page *):not(.eve-app *), .text-slate-900:not(.landing-page *):not(.eve-app *), .text-slate-950:not(.landing-page *):not(.eve-app *), .text-slate-800:not(.landing-page *):not(.eve-app *) {
     color: #d4d4d8 !important;
   }
-  svg:not(.landing-page *) {
+  svg:not(.landing-page *):not(.eve-app *) {
     stroke: #ffffff !important;
     color: #ffffff !important;
   }
@@ -1379,4 +1373,152 @@
 [data-theme] .bg-blue-600 svg {
   stroke: #ffffff !important;
   color: #ffffff !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   EVE APP SHELL — reusable shell primitives
+   Consolidates the shell's repeated patterns into a small, intentional set so the
+   sidebar, header, and later pages speak one visual language.
+   ══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --eve-accent-soft:   rgba(139, 92, 246, 0.12);
+  --eve-accent-softer: rgba(139, 92, 246, 0.06);
+}
+
+/* Identity avatar — initials in a brand-gradient disc (header + menus) */
+.eve-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, var(--eve-purple-600) 0%, var(--eve-purple-400) 100%);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20), 0 1px 3px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+/* Sidebar nav link — one active/hover language, no per-item className drift */
+.eve-nav-link {
+  position: relative;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.eve-nav-link[data-active="true"] {
+  background: var(--eve-accent-soft);
+  color: var(--eve-purple-300);
+  font-weight: 600;
+}
+.eve-nav-link[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 1.05rem;
+  width: 2.5px;
+  border-radius: 9999px;
+  background: var(--eve-purple-400);
+}
+.eve-nav-link[data-active="false"]:hover {
+  background: var(--eve-accent-softer);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   EVE SURFACE SYSTEM — one card/elevation language for every surface
+   Supersedes the earlier ad-hoc .eve-card / [data-slot=card] treatments so the
+   base-ui Card primitive and hand-rolled page cards share identical borders,
+   radius, elevation, and hover. Theme-aware elevation (real light-mode shadows).
+   ══════════════════════════════════════════════════════════════════════════════ */
+:root, [data-theme="light"], [data-theme="executive-light"] {
+  --eve-elev-1: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.05);
+  --eve-elev-2: 0 4px 10px -4px rgba(16, 24, 40, 0.10), 0 12px 28px -14px rgba(16, 24, 40, 0.12);
+  --eve-sheen: linear-gradient(180deg, rgba(16, 24, 40, 0.010) 0%, transparent 42%);
+  --eve-hairline: inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+[data-theme="dark"], [data-theme="executive-dark"] {
+  --eve-elev-1: 0 1px 2px rgba(0, 0, 0, 0.40), 0 1px 3px rgba(0, 0, 0, 0.28);
+  --eve-elev-2: 0 4px 12px -4px rgba(0, 0, 0, 0.45), 0 16px 40px -18px rgba(0, 0, 0, 0.62);
+  --eve-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.022) 0%, transparent 42%);
+  --eve-hairline: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+.eve-card,
+.eve-kpi-card,
+.eve-app [data-slot="card"] {
+  background-color: var(--card);
+  background-image: var(--eve-sheen);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  box-shadow: var(--eve-elev-1), var(--eve-hairline);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Static panels — elevate on hover without a distracting jump */
+.eve-card:hover,
+.eve-app [data-slot="card"]:hover {
+  border-color: var(--eve-purple-border);
+  box-shadow: var(--eve-elev-2), var(--eve-hairline);
+  transform: none;
+}
+
+/* Stat cards — a subtle, tactile lift */
+.eve-kpi-card:hover {
+  border-color: var(--eve-purple-border);
+  box-shadow: var(--eve-elev-2), 0 0 18px var(--eve-glow-sm), var(--eve-hairline);
+  transform: translateY(-2px);
+}
+
+/* ── LOADING — premium shimmer skeleton (replaces flat animate-pulse on adoption) ── */
+.eve-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--muted) 70%, transparent);
+  border-radius: 8px;
+}
+.eve-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: eve-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes eve-shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* ── EMPTY STATE — one quiet, confident treatment across the product ── */
+.eve-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.75rem;
+  background:
+    radial-gradient(ellipse at 50% 0%, var(--eve-accent-softer) 0%, transparent 60%),
+    var(--card);
+}
+.eve-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  width: 2.75rem;
+  border-radius: 0.75rem;
+  color: var(--eve-purple-400);
+  background: var(--eve-accent-soft);
+  border: 1px solid var(--eve-purple-border);
+  margin-bottom: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eve-skeleton::after { animation: none; }
+  .eve-card, .eve-kpi-card, .eve-app [data-slot="card"] { transition: none; }
 }
