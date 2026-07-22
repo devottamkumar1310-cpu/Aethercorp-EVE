@@ -31,7 +31,7 @@ def test_demo_workspace_startup_validation_and_consistency(db_session):
     db_session.refresh(org)
 
     # Seed the data
-    seed_demo_workspace_data(db_session, org.id, "novawear")
+    seed_demo_workspace_data(db_session, org.id, "luma")
     
     # Assert validation rules
     inventory_count = db_session.query(InventoryItem).filter(InventoryItem.organization_id == org.id).count()

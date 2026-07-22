@@ -62,6 +62,10 @@ interface AlertData {
     stock_on_hand: number;
     reorder_point: number;
     shortage: number;
+    avg_daily_sales?: number;
+    days_of_supply?: number | null;
+    lead_time_days?: number | null;
+    revenue_at_risk?: number | null;
   }>;
   dead_stock: Array<{
     sku: string;
@@ -69,9 +73,13 @@ interface AlertData {
     category: string;
     stock_on_hand: number;
     estimated_value: number;
+    monthly_carrying_cost?: number;
+    days_since_last_sale?: number | null;
   }>;
   low_stock_count: number;
   dead_stock_count: number;
+  total_revenue_at_risk?: number;
+  total_capital_locked?: number;
 }
 
 type SortField = "stock_on_hand" | "qty_sold" | "revenue" | "margin_percent" | "profit";
@@ -374,6 +382,44 @@ export default function InventoryDashboardPage() {
     { id: "reorder", label: "Reorder Alerts", count: alerts?.low_stock_count },
     { id: "dead", label: "Dead Stock", count: alerts?.dead_stock_count },
   ];
+  const lowStockProducts = alerts?.low_stock || [];
+  const deadStockProducts = alerts?.dead_stock || [];
+  const shortageUnits = lowStockProducts.reduce((sum, item) => sum + Math.max(0, item.shortage), 0);
+  const deadStockCapital = deadStockProducts.reduce((sum, item) => sum + item.estimated_value, 0);
+  const topLowStockSkus = lowStockProducts.slice(0, 2).map((item) => item.sku).join(" and ");
+  const topDeadStockSkus = deadStockProducts.slice(0, 3).map((item) => item.sku).join(", ");
+  const totalRevenueAtRisk = alerts?.total_revenue_at_risk ?? lowStockProducts.reduce((s, i) => s + (i.revenue_at_risk ?? 0), 0);
+  const criticalStockouts = lowStockProducts.filter((i) => i.days_of_supply !== null && i.days_of_supply !== undefined && i.days_of_supply < (i.lead_time_days ?? 14));
+  const outOfStock = lowStockProducts.filter((i) => i.stock_on_hand === 0);
+
+  const stockoutInsight = lowStockProducts.length > 0
+    ? (() => {
+        const parts: string[] = [];
+        if (outOfStock.length > 0) {
+          parts.push(`${outOfStock.length} SKU${outOfStock.length > 1 ? "s are" : " is"} already out of stock and generating zero revenue right now.`);
+        }
+        if (criticalStockouts.length > 0) {
+          parts.push(`${criticalStockouts.length} product${criticalStockouts.length > 1 ? "s" : ""} will run out before replenishment can arrive based on current lead times.`);
+        }
+        if (totalRevenueAtRisk > 0) {
+          parts.push(`Projected revenue at risk: $${totalRevenueAtRisk.toLocaleString(undefined, { maximumFractionDigits: 0 })}.`);
+        }
+        parts.push(`Prioritize immediate purchase orders for ${topLowStockSkus || "the highest-risk SKUs"}.`);
+        return parts.join(" ");
+      })()
+    : "Stock coverage is healthy. No products are below reorder point. Maintain current replenishment cadence.";
+
+  const deadStockInsight = deadStockProducts.length > 0
+    ? (() => {
+        const monthlyCost = deadStockProducts.reduce((s, i) => s + (i.monthly_carrying_cost ?? 0), 0);
+        const oldest = deadStockProducts.find((i) => i.days_since_last_sale != null);
+        let insight = `${deadStockProducts.length} SKU${deadStockProducts.length > 1 ? "s have" : " has"} had no sales in the last 30 days, tying up $${deadStockCapital.toLocaleString(undefined, { maximumFractionDigits: 0 })} in capital.`;
+        if (monthlyCost > 0) insight += ` Carrying cost is approximately $${monthlyCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}/month.`;
+        if (oldest) insight += ` ${oldest.name} has been unsold for ${oldest.days_since_last_sale}+ days.`;
+        insight += ` Initiate markdown, bundle, or liquidation for ${topDeadStockSkus || "the oldest SKUs"} to recover cash and free warehouse capacity.`;
+        return insight;
+      })()
+    : "No dead stock detected. All products have recent sales activity — capital is not trapped in non-moving inventory.";
 
   return (
     <main className="p-6 max-w-[1600px] mx-auto w-full space-y-6 transition-colors duration-200">
@@ -381,7 +427,7 @@ export default function InventoryDashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/dashboard" className="hover:text-indigo-650:text-indigo-400 transition-colors flex items-center gap-1">
+            <Link href="/dashboard" className="hover:text-indigo-500 transition-colors flex items-center gap-1">
               <ArrowLeft size={14} /> Dashboard
             </Link>
           </div>
@@ -420,7 +466,11 @@ export default function InventoryDashboardPage() {
               {alerts?.low_stock_count || 0}
             </p>
             <p className="text-[10px] text-muted-foreground mt-1">
-              {(alerts?.low_stock_count || 0) > 0 ? `${alerts?.low_stock?.filter(item => item.shortage > 0).length || 0} SKUs below safety limit` : "All stock levels healthy"}
+              {(alerts?.low_stock_count || 0) > 0
+                ? outOfStock.length > 0
+                  ? `${outOfStock.length} SKU${outOfStock.length > 1 ? "s" : ""} already out of stock`
+                  : `${criticalStockouts.length} will run out before supplier can deliver`
+                : "All stock levels healthy"}
             </p>
           </div>
           <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-500/15 text-amber-500" : "bg-muted text-muted-foreground"}`}>
@@ -428,18 +478,26 @@ export default function InventoryDashboardPage() {
           </div>
         </div>
 
-        {/* Card 3: Dead Stock Candidates */}
+        {/* Card 3: Revenue at Risk */}
         <div className="bg-card p-5 rounded-xl border border-border shadow-sm flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Dead Stock Candidates</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Revenue at Risk</p>
             <p className="text-2xl font-black text-foreground mt-1">
-              {alerts?.dead_stock_count || 0}
+              {totalRevenueAtRisk > 0
+                ? `$${totalRevenueAtRisk.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                : alerts?.dead_stock_count && alerts.dead_stock_count > 0
+                  ? `$${deadStockCapital.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                  : "$0"}
             </p>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Est. ${(alerts?.dead_stock?.reduce((sum, item) => sum + item.estimated_value, 0) || 0).toLocaleString()} tied up
+              {totalRevenueAtRisk > 0
+                ? "Projected from stockout gaps vs. lead time"
+                : alerts?.dead_stock_count && alerts.dead_stock_count > 0
+                  ? "Capital locked in non-moving inventory"
+                  : "No immediate inventory risk"}
             </p>
           </div>
-          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${(alerts?.dead_stock_count || 0) > 0 ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground"}`}>
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${totalRevenueAtRisk > 0 ? "bg-rose-500/15 text-rose-500" : "bg-muted text-muted-foreground"}`}>
             <Package size={20} />
           </div>
         </div>
@@ -452,7 +510,7 @@ export default function InventoryDashboardPage() {
               {alerts?.low_stock?.length || 0}
             </p>
             <p className="text-[10px] text-muted-foreground mt-1">
-              Purchase {alerts?.low_stock?.reduce((sum, item) => sum + item.shortage, 0).toLocaleString() || 0} units suggested
+              Purchase {shortageUnits.toLocaleString() || 0} units suggested
             </p>
           </div>
           <div className="h-10 w-10 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-xl flex items-center justify-center">
@@ -476,10 +534,7 @@ export default function InventoryDashboardPage() {
                     ⚠️ Stockout Risk
                   </span>
                   <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                    {(alerts?.low_stock_count || 0) > 0 
-                      ? `Current inventory levels across ${alerts?.low_stock_count} bestseller SKUs are projected to stock out within 24 hours based on trailing 30-day demand velocity (104.1 units/day). Estimated lost revenue exceeds $31,710 over the next 10 days if replenishment is delayed.`
-                      : "Baseline performance is healthy across active SKUs with 68.4% gross margins and 4.2x turnover. Fine-tuning safety stock on moderate velocity items will unlock $4,800 in capital efficiency."
-                    }
+                    {stockoutInsight}
                   </p>
                 </div>
                 {(alerts?.low_stock_count || 0) > 0 && (
@@ -494,10 +549,7 @@ export default function InventoryDashboardPage() {
                     ❄️ Capital Lockup & Dead Stock
                   </span>
                   <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-                    {(alerts?.dead_stock_count || 0) > 0
-                      ? `${alerts?.dead_stock_count} SKUs (UT-DEAD-101, 102, 103) have not sold in 127+ days, locking $71,200 of working capital and incurring $6,000/mo in storage fees. Liquidating these SKUs at a 35–40% markdown is projected to recover cash while reducing carrying costs.`
-                      : "No dead stock detected. All active products maintain consistent sales velocity and inventory turnover within target operating parameters."
-                    }
+                    {deadStockInsight}
                   </p>
                 </div>
                 {(alerts?.dead_stock_count || 0) > 0 && (
@@ -574,9 +626,9 @@ export default function InventoryDashboardPage() {
                   <th className="px-4 py-2 text-right">Revenue</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {data?.best_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-secondary:bg-slate-850/40">
+                  <tr key={p.sku} className="hover:bg-secondary/40">
                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
                     <td className="px-4 py-2.5 text-right font-bold text-foreground">{p.qty_sold.toLocaleString()}</td>
@@ -609,9 +661,9 @@ export default function InventoryDashboardPage() {
                   <th className="px-4 py-2 text-right">Stock</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {data?.worst_sellers?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-secondary:bg-slate-850/40">
+                  <tr key={p.sku} className="hover:bg-secondary/40">
                     <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-4 py-2.5 font-medium text-foreground">{p.name}</td>
                     <td className="px-4 py-2.5 text-right font-semibold text-foreground">{p.qty_sold}</td>
@@ -641,7 +693,7 @@ export default function InventoryDashboardPage() {
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-t-lg text-sm font-medium transition-colors border-b-2 ${
  activeTab === tab.id
  ? "border-indigo-500 text-indigo-700 bg-indigo-50/50"
- : "border-transparent text-muted-foreground hover:text-foreground:text-foreground"
+ : "border-transparent text-muted-foreground hover:text-foreground"
  }`}
                 >
                   {tab.label}
@@ -700,32 +752,32 @@ export default function InventoryDashboardPage() {
                   <th className="px-5 py-3 text-left">Product</th>
                   <th className="px-5 py-3 text-left">Category</th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-500 select-none"
                     onClick={() => toggleSort("stock_on_hand")}
                   >
                     <span className="flex items-center justify-end gap-1">Stock <SortIcon field="stock_on_hand" /></span>
                   </th>
                   <th className="px-5 py-3 text-right">Cost</th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-500 select-none"
                     onClick={() => toggleSort("qty_sold")}
                   >
                     <span className="flex items-center justify-end gap-1">Sold <SortIcon field="qty_sold" /></span>
                   </th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-500 select-none"
                     onClick={() => toggleSort("revenue")}
                   >
                     <span className="flex items-center justify-end gap-1">Revenue <SortIcon field="revenue" /></span>
                   </th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-500 select-none"
                     onClick={() => toggleSort("profit")}
                   >
                     <span className="flex items-center justify-end gap-1">Profit <SortIcon field="profit" /></span>
                   </th>
                   <th
-                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-600:text-indigo-400 select-none"
+                    className="px-5 py-3 text-right cursor-pointer hover:text-indigo-500 select-none"
                     onClick={() => toggleSort("margin_percent")}
                   >
                     <span className="flex items-center justify-end gap-1">Margin <SortIcon field="margin_percent" /></span>
@@ -735,9 +787,9 @@ export default function InventoryDashboardPage() {
                   <th className="px-5 py-3 text-right">Turnover</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {filteredAndSorted.map((p) => (
-                  <tr key={p.sku} className="hover:bg-secondary:bg-slate-850/40 transition-colors">
+                  <tr key={p.sku} className="hover:bg-secondary/40 transition-colors">
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3">
@@ -804,20 +856,24 @@ export default function InventoryDashboardPage() {
         {activeTab === "reorder" && (
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-amber-50 border-b border-amber-100 text-amber-800 text-xs font-semibold uppercase tracking-wider">
+              <thead className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-100 dark:border-amber-900/40 text-amber-800 dark:text-amber-400 text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 text-left">SKU</th>
                   <th className="px-5 py-3 text-left">Product</th>
                   <th className="px-5 py-3 text-left">Category</th>
                   <th className="px-5 py-3 text-right">On Hand</th>
-                  <th className="px-5 py-3 text-right">Reorder Point</th>
+                  <th className="px-5 py-3 text-right">Days Left</th>
+                  <th className="px-5 py-3 text-right">Lead Time</th>
+                  <th className="px-5 py-3 text-right">Revenue Risk</th>
                   <th className="px-5 py-3 text-right">Shortage</th>
-                  <th className="px-5 py-3 text-center">Action</th>
+                  <th className="px-5 py-3 text-center">Trace</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-amber-50">
-                {alerts?.low_stock?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-amber-50/40:bg-amber-900/10 transition-colors">
+              <tbody className="divide-y divide-border">
+                {alerts?.low_stock?.map((p) => {
+                  const isCritical = p.days_of_supply !== null && p.days_of_supply !== undefined && p.days_of_supply < (p.lead_time_days ?? 14);
+                  return (
+                  <tr key={p.sku} className={`transition-colors ${isCritical ? "bg-red-50/40 dark:bg-red-950/10" : "hover:bg-secondary/40"}`}>
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3">
@@ -825,20 +881,33 @@ export default function InventoryDashboardPage() {
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-amber-700">{p.stock_on_hand.toLocaleString()}</td>
-                    <td className="px-5 py-3 text-right text-muted-foreground">{p.reorder_point.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-amber-600">{p.stock_on_hand.toLocaleString()}</td>
                     <td className="px-5 py-3 text-right">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 !text-red-900">
+                      {p.stock_on_hand === 0
+                        ? <span className="text-xs font-bold text-red-600">OUT</span>
+                        : p.days_of_supply != null
+                          ? <span className={`text-xs font-bold ${isCritical ? "text-red-600" : "text-amber-600"}`}>{p.days_of_supply}d</span>
+                          : <span className="text-muted-foreground text-xs">—</span>}
+                    </td>
+                    <td className="px-5 py-3 text-right text-muted-foreground text-xs">{p.lead_time_days != null ? `${p.lead_time_days}d` : "—"}</td>
+                    <td className="px-5 py-3 text-right">
+                      {p.revenue_at_risk != null && p.revenue_at_risk > 0
+                        ? <span className="text-xs font-bold text-red-600">${p.revenue_at_risk.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                        : <span className="text-muted-foreground text-xs">—</span>}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400">
                         <AlertTriangle size={10} /> -{p.shortage}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-center">
-                      <Link href="/dashboard/traceability" className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider transition-colors">
-                        View Decision Trace <ArrowRight size={10} />
+                      <Link href="/dashboard/traceability?type=low_stock" className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider transition-colors">
+                        Trace <ArrowRight size={10} />
                       </Link>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
                 {!alerts?.low_stock?.length && (
                   <tr>
                     <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground italic">
@@ -855,19 +924,21 @@ export default function InventoryDashboardPage() {
         {activeTab === "dead" && (
           <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
-              <thead className="bg-red-50 border-b border-red-100 text-red-800 text-xs font-semibold uppercase tracking-wider">
+              <thead className="bg-red-50 dark:bg-red-950/30 border-b border-red-100 dark:border-red-900/40 text-red-800 dark:text-red-400 text-xs font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-5 py-3 text-left">SKU</th>
                   <th className="px-5 py-3 text-left">Product</th>
                   <th className="px-5 py-3 text-left">Category</th>
-                  <th className="px-5 py-3 text-right">Stock On Hand</th>
-                  <th className="px-5 py-3 text-right">Estimated Value</th>
-                  <th className="px-5 py-3 text-center">Action</th>
+                  <th className="px-5 py-3 text-right">On Hand</th>
+                  <th className="px-5 py-3 text-right">Days Unsold</th>
+                  <th className="px-5 py-3 text-right">Capital Locked</th>
+                  <th className="px-5 py-3 text-right">Carrying Cost/mo</th>
+                  <th className="px-5 py-3 text-center">Trace</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-red-50">
+              <tbody className="divide-y divide-border">
                 {alerts?.dead_stock?.map((p) => (
-                  <tr key={p.sku} className="hover:bg-red-50/40:bg-red-900/10 transition-colors">
+                  <tr key={p.sku} className="hover:bg-secondary/40 transition-colors">
                     <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{p.sku}</td>
                     <td className="px-5 py-3 font-semibold text-foreground">{p.name}</td>
                     <td className="px-5 py-3">
@@ -875,20 +946,30 @@ export default function InventoryDashboardPage() {
                         {p.category}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right font-bold text-red-700">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right font-bold text-red-600">{p.stock_on_hand.toLocaleString()}</td>
+                    <td className="px-5 py-3 text-right">
+                      {p.days_since_last_sale != null
+                        ? <span className={`text-xs font-bold ${p.days_since_last_sale > 60 ? "text-red-600" : "text-amber-600"}`}>{p.days_since_last_sale}d</span>
+                        : <span className="text-muted-foreground text-xs">30+d</span>}
+                    </td>
                     <td className="px-5 py-3 text-right font-semibold text-foreground">
-                      ${p.estimated_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ${p.estimated_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      {p.monthly_carrying_cost != null && p.monthly_carrying_cost > 0
+                        ? <span className="text-xs font-medium text-orange-600">${p.monthly_carrying_cost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                        : <span className="text-muted-foreground text-xs">—</span>}
                     </td>
                     <td className="px-5 py-3 text-center">
-                      <Link href="/dashboard/traceability" className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider transition-colors">
-                        View Decision Trace <ArrowRight size={10} />
+                      <Link href="/dashboard/traceability?type=dead_stock" className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider transition-colors">
+                        Trace <ArrowRight size={10} />
                       </Link>
                     </td>
                   </tr>
                 ))}
                 {!alerts?.dead_stock?.length && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-12 text-center text-muted-foreground italic">
+                    <td colSpan={8} className="px-5 py-12 text-center text-muted-foreground italic">
                       No dead stock detected. All products have recent sales activity. ✓
                     </td>
                   </tr>
@@ -982,7 +1063,7 @@ export default function InventoryDashboardPage() {
                           <th className="px-4 py-2">Failure Reason</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 text-muted-foreground">
+                      <tbody className="divide-y divide-border text-muted-foreground">
                         {importSummary.errors.map((err, idx) => (
                           <tr key={idx} className="hover:bg-secondary font-normal">
                             <td className="px-4 py-2 font-mono text-muted-foreground text-center">{err.row || "-"}</td>

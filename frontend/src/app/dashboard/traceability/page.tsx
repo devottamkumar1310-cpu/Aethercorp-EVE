@@ -1,7 +1,8 @@
 "use client";
 import { logger } from "@/lib/logger";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass, ListRestart, AlertTriangle, ShieldAlert, CheckCircle, Database } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -38,6 +39,8 @@ export default function TraceabilityDashboard() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const limit = 20;
+  const searchParams = useSearchParams();
+  const typeFilter = searchParams.get("type"); // e.g. "low_stock" or "dead_stock"
 
   const fetchTraces = async (pageIndex: number = 0, signal?: AbortSignal) => {
     setLoading(true);
@@ -70,7 +73,11 @@ export default function TraceabilityDashboard() {
       const json = await resp.json();
       setTraces(json || []);
       if (json && json.length > 0) {
-        setSelectedTrace(json[0]);
+        const typeParam = new URLSearchParams(window.location.search).get("type");
+        const filterMap: Record<string, string[]> = { low_stock: ["reorder", "low_stock"], dead_stock: ["dead_stock", "markdown"], reorder: ["reorder"], optimization: ["optimization"] };
+        const allowed = typeParam ? filterMap[typeParam] : null;
+        const firstMatch = allowed ? json.find((t: TraceRecord) => allowed.includes(t.recommendation_type?.toLowerCase())) : null;
+        setSelectedTrace(firstMatch || json[0]);
       } else {
         setSelectedTrace(null);
       }
@@ -97,12 +104,12 @@ export default function TraceabilityDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "VALIDATED": return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-      case "REJECTED": return "text-red-400 bg-red-500/10 border-red-500/20";
-      case "USER_PROMPTED": return "text-blue-400 bg-blue-500/10 border-blue-500/20";
-      case "GENERATED": 
+      case "VALIDATED": return "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+      case "REJECTED": return "text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20";
+      case "USER_PROMPTED": return "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20";
+      case "GENERATED":
       default:
-        return "text-amber-400 bg-amber-500/10 border-amber-500/20";
+        return "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20";
     }
   };
 
@@ -113,6 +120,19 @@ export default function TraceabilityDashboard() {
       default: return <CheckCircle2 className="h-3.5 w-3.5" />;
     }
   };
+
+  const TYPE_FILTER_MAP: Record<string, string[]> = {
+    low_stock: ["reorder", "low_stock"],
+    dead_stock: ["dead_stock", "markdown"],
+    reorder: ["reorder"],
+    optimization: ["optimization"],
+  };
+
+  const filteredTraces = useMemo(() => {
+    if (!typeFilter || !TYPE_FILTER_MAP[typeFilter]) return traces;
+    const allowed = TYPE_FILTER_MAP[typeFilter];
+    return traces.filter((t) => allowed.includes(t.recommendation_type?.toLowerCase()));
+  }, [traces, typeFilter]);
 
   return (
     <div className="min-h-screen bg-background p-6 text-foreground lg:p-10">
@@ -130,10 +150,10 @@ export default function TraceabilityDashboard() {
         <div className="mt-6 border-b border-border pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground/80 to-muted-foreground bg-clip-text text-transparent">
-              Decision Traceability Audit
+              Decision Traceability
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Audit the calculations, data integrity sources, and AI reasoning chain behind EVE recommendations.
+              See the business evidence, financial logic, and operating reason behind each EVE recommendation.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -152,9 +172,9 @@ export default function TraceabilityDashboard() {
             >
               Next
             </button>
-            <button 
+            <button
               onClick={() => fetchTraces(page)}
-              className="ml-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400 hover:text-indigo-300 border border-indigo-500/20 bg-indigo-950/10 px-3 py-1.5 rounded-lg transition cursor-pointer"
+              className="ml-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 border border-indigo-500/30 bg-indigo-500/5 px-3 py-1.5 rounded-lg transition cursor-pointer"
             >
               <ListRestart className="h-3.5 w-3.5" /> Refresh List
             </button>
@@ -164,7 +184,16 @@ export default function TraceabilityDashboard() {
         {loading ? (
           <div className="mt-12 text-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto" />
-            <p className="mt-4 text-sm text-muted-foreground">Loading audit traces...</p>
+            <p className="mt-4 text-sm text-muted-foreground">Loading recommendation reasoning...</p>
+          </div>
+        ) : filteredTraces.length === 0 && traces.length > 0 ? (
+          <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/20 p-12 text-center max-w-xl mx-auto">
+            <Compass className="mx-auto h-10 w-10 text-indigo-400 opacity-50 mb-4" />
+            <h3 className="text-lg font-bold text-foreground">No {typeFilter?.replace("_", " ")} traces found.</h3>
+            <p className="mt-2 text-sm text-muted-foreground">No recommendations of this type have been generated yet.</p>
+            <Link href="/dashboard/traceability" className="mt-6 inline-block text-sm font-semibold text-indigo-500 hover:text-indigo-400 transition-colors">
+              View all recommendations →
+            </Link>
           </div>
         ) : traces.length === 0 ? (
           <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/20 p-16 text-center max-w-xl mx-auto">
@@ -187,11 +216,23 @@ export default function TraceabilityDashboard() {
             
             {/* Sidebar Recommendation list (Col-Span-1) */}
             <div className="lg:col-span-1 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Decisions</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Generated Decisions</h3>
+                {typeFilter && TYPE_FILTER_MAP[typeFilter] && (
+                  <Link href="/dashboard/traceability" className="text-[10px] font-semibold text-indigo-500 hover:text-indigo-400 uppercase tracking-wider">
+                    Clear filter ×
+                  </Link>
+                )}
+              </div>
+              {typeFilter && TYPE_FILTER_MAP[typeFilter] && (
+                <div className="text-[10px] font-semibold px-2 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                  Filtering: {typeFilter.replace(/_/g, " ")}
+                </div>
+              )}
               <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-                
+
                 {/* Dynamic items */}
-                {traces.map((trace) => (
+                {filteredTraces.map((trace) => (
                   <button
                     type="button"
                     key={trace.id}
@@ -224,8 +265,8 @@ export default function TraceabilityDashboard() {
                 <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex gap-3 items-start backdrop-blur-md">
                   <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-semibold text-amber-500">AI-generated recommendation.</h4>
-                    <p className="text-xs text-amber-500/80 mt-1">Review evidence and calculations before taking action. Explanations may not encompass all business variables.</p>
+                    <h4 className="text-sm font-semibold text-amber-500">Business recommendation.</h4>
+                    <p className="text-xs text-amber-500/80 mt-1">Review the supporting numbers and expected impact before taking action.</p>
                   </div>
                 </div>
                 
@@ -246,16 +287,16 @@ export default function TraceabilityDashboard() {
                   <h2 className="mt-4 text-2xl font-bold tracking-tight text-foreground leading-snug">
                     {selectedTrace.action}
                   </h2>
-                  <p className="mt-3 text-sm text-slate-300 leading-relaxed">
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                     {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
                   </p>
                   
                   {/* Metadata Bar */}
                   <div className="mt-6 flex flex-wrap gap-4 pt-4 border-t border-border/50 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                    <div><span className="opacity-50 block mb-1">Trigger</span> <span className="text-foreground">{selectedTrace.trigger_type || "UNKNOWN"}</span></div>
-                    <div><span className="opacity-50 block mb-1">Agent</span> <span className="text-foreground">{selectedTrace.source_agent || "COO"}</span></div>
-                    <div><span className="opacity-50 block mb-1">Model</span> <span className="text-foreground">{selectedTrace.llm_model || "gemini"}</span></div>
-                    <div><span className="opacity-50 block mb-1">Timestamp</span> <span className="text-foreground">{selectedTrace.created_at}</span></div>
+                    <div><span className="opacity-50 block mb-1">Signal</span> <span className="text-foreground">{selectedTrace.trigger_type || "Inventory review"}</span></div>
+                    <div><span className="opacity-50 block mb-1">Decision Owner</span> <span className="text-foreground">{selectedTrace.source_agent || "EVE Executive Reasoning"}</span></div>
+                    <div><span className="opacity-50 block mb-1">Evidence Sets</span> <span className="text-foreground">{selectedTrace.source_datasets?.length || 0}</span></div>
+                    <div><span className="opacity-50 block mb-1">Created</span> <span className="text-foreground">{selectedTrace.created_at}</span></div>
                   </div>
                 </div>
 
@@ -286,14 +327,14 @@ export default function TraceabilityDashboard() {
                 {/* Business & Financial Impact Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-400 block mb-1">Business Impact</span>
-                    <p className="text-xs text-slate-200 leading-relaxed">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block mb-1">Business Impact</span>
+                    <p className="text-xs text-foreground/80 leading-relaxed">
                       {selectedTrace.evidence_snapshot?.business_impact || "Supply chain threshold exceeded requiring immediate operational intervention."}
                     </p>
                   </div>
                   <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-1">Financial Impact</span>
-                    <p className="text-xs text-slate-200 leading-relaxed">
+                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block mb-1">Financial Impact</span>
+                    <p className="text-xs text-foreground/80 leading-relaxed">
                       {selectedTrace.evidence_snapshot?.financial_impact || `Estimated impact of $${(selectedTrace.estimated_financial_impact || 0).toLocaleString()}.`}
                     </p>
                   </div>
@@ -321,7 +362,7 @@ export default function TraceabilityDashboard() {
                     <ShieldAlert className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-red-400 block">Risk If Ignored</span>
-                      <p className="text-xs text-red-200 mt-1 leading-relaxed">{selectedTrace.evidence_snapshot.risk_if_ignored}</p>
+                      <p className="text-xs text-red-700 dark:text-red-200 mt-1 leading-relaxed">{selectedTrace.evidence_snapshot.risk_if_ignored}</p>
                     </div>
                   </div>
                 )}
@@ -330,15 +371,15 @@ export default function TraceabilityDashboard() {
                 {((selectedTrace.business_rules && selectedTrace.business_rules.length > 0) || (selectedTrace.calculations && selectedTrace.calculations.length > 0)) && (
                   <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-4">
-                      <Database className="h-4 w-4 text-indigo-400" /> Executive Business Logic & Rules
+                      <Database className="h-4 w-4 text-indigo-400" /> Decision Policy & Arithmetic
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {selectedTrace.business_rules && selectedTrace.business_rules.length > 0 && (
                         <div>
-                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Triggered Business Rules</h4>
+                          <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Business Rule</h4>
                           <ul className="space-y-2 text-xs text-foreground">
                             {selectedTrace.business_rules.map((rule, idx) => (
-                              <li key={idx} className="bg-secondary/40 p-2 rounded border border-border/40 font-mono text-[11px]">{rule}</li>
+                              <li key={idx} className="bg-secondary/40 p-2 rounded border border-border/40 text-[11px] leading-relaxed">{rule}</li>
                             ))}
                           </ul>
                         </div>
@@ -348,7 +389,7 @@ export default function TraceabilityDashboard() {
                           <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">Financial Arithmetic</h4>
                           <ul className="space-y-2 text-xs text-foreground">
                             {selectedTrace.calculations.map((calc, idx) => (
-                              <li key={idx} className="bg-secondary/40 p-2 rounded border border-border/40 font-mono text-[11px]">{calc}</li>
+                              <li key={idx} className="bg-secondary/40 p-2 rounded border border-border/40 text-[11px] leading-relaxed">{calc}</li>
                             ))}
                           </ul>
                         </div>
@@ -360,7 +401,7 @@ export default function TraceabilityDashboard() {
                 {/* Reasoning Chain Timeline */}
                 <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-6">
-                    <Compass className="h-4 w-4 text-indigo-400" /> Executive Reasoning Chain
+                    <Compass className="h-4 w-4 text-indigo-400" /> Executive Reasoning
                   </h3>
                   
                   <div className="relative border-l-2 border-border pl-4 ml-2 space-y-6">
@@ -368,7 +409,7 @@ export default function TraceabilityDashboard() {
                       <div key={idx} className="relative">
                         <div className="absolute -left-[25px] mt-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-background"></div>
                         <h4 className="text-xs font-bold text-indigo-400 uppercase">Step {idx + 1}</h4>
-                        <p className="mt-1 text-xs text-slate-200 leading-relaxed">{step}</p>
+                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{step}</p>
                       </div>
                     ))}
                   </div>
@@ -383,7 +424,7 @@ export default function TraceabilityDashboard() {
                 {(selectedTrace.trust_score !== undefined || selectedTrace.confidence_governance_flag) && (
                   <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center space-y-4">
                     <div>
-                      <span className="text-sm font-medium text-muted-foreground font-semibold block">Decision Trust Score</span>
+                      <span className="text-sm font-medium text-muted-foreground font-semibold block">Evidence Strength</span>
                       <p className={`mt-2 text-5xl font-extrabold tracking-tight bg-clip-text text-transparent ${
                         (selectedTrace.trust_score ?? 0) < 50 ? 'bg-gradient-to-r from-red-400 to-rose-400' :
                         (selectedTrace.trust_score ?? 0) < 80 ? 'bg-gradient-to-r from-amber-400 to-yellow-400' :
@@ -392,7 +433,7 @@ export default function TraceabilityDashboard() {
                         {selectedTrace.trust_score !== undefined ? `${Math.round(selectedTrace.trust_score)}/100` : "N/A"}
                       </p>
                       <div className="mt-2 text-xs text-muted-foreground">
-                        Based on evidence, validation, risk & rules
+                        Based on data consistency, impact size, and operating logic
                       </div>
                     </div>
                     
@@ -428,12 +469,12 @@ export default function TraceabilityDashboard() {
 
                 {/* Confidence Score Card */}
                 <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md text-center">
-                  <span className="text-sm font-medium text-muted-foreground font-semibold">LLM Confidence Level</span>
+                  <span className="text-sm font-medium text-muted-foreground font-semibold">Recommendation Confidence</span>
                   <p className={`mt-3 text-5xl font-extrabold tracking-tight bg-clip-text text-transparent ${selectedTrace.validation_status === 'REJECTED' ? 'bg-gradient-to-r from-red-400 to-rose-400' : 'bg-gradient-to-r from-indigo-400 to-blue-400'}`}>
                     {(selectedTrace.confidence_score * 100).toFixed(0)}%
                   </p>
-                  <div className="mt-4 flex items-center justify-center gap-1 text-xs text-slate-400">
-                    <Cpu className="h-3.5 w-3.5 text-indigo-400" /> Audited reasoning logic
+                  <div className="mt-4 flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                    <Cpu className="h-3.5 w-3.5 text-indigo-400" /> Supported by the SKU ledger
                   </div>
                 </div>
 

@@ -51,6 +51,9 @@ class RecommendationTraceResponse(BaseModel):
     input_metrics: Optional[dict] = None
     business_rules: Optional[List[str]] = None
     calculations: Optional[List[str]] = None
+    priority: Optional[str] = None
+    related_skus: Optional[List[str]] = None
+    estimated_financial_impact: Optional[float] = None
 
     # Phase 2 Hardening
     evidence_validation_status: Optional[str] = None
@@ -116,6 +119,9 @@ def list_recommendation_traces(
             input_metrics=t.input_metrics,
             business_rules=t.business_rules,
             calculations=t.calculations,
+            priority=t.priority,
+            related_skus=t.related_skus,
+            estimated_financial_impact=t.estimated_financial_impact,
             evidence_validation_status=t.evidence_validation_status,
             evidence_validation_reason=t.evidence_validation_reason,
             confidence_governance_flag=t.confidence_governance_flag,
@@ -183,6 +189,9 @@ def get_recommendation_trace(
         input_metrics=trace.input_metrics,
         business_rules=trace.business_rules,
         calculations=trace.calculations,
+        priority=trace.priority,
+        related_skus=trace.related_skus,
+        estimated_financial_impact=trace.estimated_financial_impact,
         evidence_validation_status=trace.evidence_validation_status,
         evidence_validation_reason=trace.evidence_validation_reason,
         confidence_governance_flag=trace.confidence_governance_flag,

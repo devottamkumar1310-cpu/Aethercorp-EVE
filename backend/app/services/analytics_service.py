@@ -880,53 +880,76 @@ class AnalyticsService:
         reorder_recommendations = []
         pricing_recommendations = []
 
+        def _first_number(value, default=0.0):
+            import re
+            if isinstance(value, (int, float)):
+                return float(value)
+            match = re.search(r"-?\d+(?:,\d{3})*(?:\.\d+)?", str(value or ""))
+            return float(match.group(0).replace(",", "")) if match else default
+
         for trace in traces:
             metrics = trace.supporting_metrics or {}
-            
-            # Extract SKU from action (e.g. "Liquidate SKU-123", "Reorder SKU-123", "Adjust Price for SKU-123")
-            action_parts = (trace.action or "").split()
-            sku = action_parts[-1] if action_parts else "UNKNOWN"
-            if sku.startswith("SKU-"):
-                # Clean up if needed
-                pass
+            snapshot = trace.evidence_snapshot or {}
+            observation = snapshot.get("observation", {}) if isinstance(snapshot, dict) else {}
+
+            sku = metrics.get("sku") or metrics.get("SKU") or (trace.related_skus or ["UNKNOWN"])[0]
+            name = metrics.get("name") or observation.get("product") or f"Product {sku}"
+            confidence = trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score
 
             if trace.recommendation_type == "dead_stock":
-                # Assuming stock_on_hand is in supporting_metrics
-                stock = metrics.get("Current Stock", "0").split()[0] if "Current Stock" in metrics else 0
+                stock = _first_number(observation.get("current_inventory") or metrics.get("current_inventory"))
                 dead_stock_items.append({
                     "sku": sku,
-                    "name": f"Product {sku}", # Best effort mapping without join for now
-                    "stock_on_hand": int(stock) if str(stock).isdigit() else 0
+                    "name": name,
+                    "stock_on_hand": int(stock),
+                    "estimated_value": round(float(trace.estimated_financial_impact or 0.0), 2),
+                    "business_impact": snapshot.get("business_impact"),
+                    "financial_impact": snapshot.get("financial_impact"),
+                    "recommended_action": snapshot.get("recommended_action"),
                 })
 
             elif trace.recommendation_type == "low_stock":
+                days_until_stockout = _first_number(observation.get("inventory_remaining_days"), 0.0)
+                reorder_qty = _first_number(observation.get("recommended_reorder") or observation.get("reorder_quantity"), 0.0)
                 stockout_predictions.append({
                     "sku": sku,
-                    "days_until_stockout": metrics.get("Days Until Stockout", 0),
-                    "confidence_score": trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score,
+                    "name": name,
+                    "days_until_stockout": days_until_stockout,
+                    "confidence_score": confidence,
                     "explainability": trace.reasoning_chain,
-                    "provenance": trace.source_datasets
+                    "provenance": trace.source_datasets,
+                    "estimated_revenue_at_risk": round(float(trace.estimated_financial_impact or 0.0), 2),
+                    "business_impact": snapshot.get("business_impact"),
+                    "financial_impact": snapshot.get("financial_impact"),
+                    "recommended_action": snapshot.get("recommended_action"),
                 })
 
-                reorder_qty = metrics.get("Suggested Reorder", "0").split()[0] if "Suggested Reorder" in metrics else 0
                 reorder_recommendations.append({
                     "sku": sku,
-                    "recommended_reorder": int(reorder_qty) if str(reorder_qty).isdigit() else 0,
-                    "confidence_score": trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score,
+                    "name": name,
+                    "recommended_reorder": int(reorder_qty),
+                    "confidence_score": confidence,
                     "explainability": trace.reasoning_chain,
-                    "provenance": trace.source_datasets
+                    "provenance": trace.source_datasets,
+                    "business_impact": snapshot.get("business_impact"),
+                    "financial_impact": snapshot.get("financial_impact"),
+                    "recommended_action": snapshot.get("recommended_action"),
                 })
 
-            elif trace.recommendation_type == "margin":
+            elif trace.recommendation_type in ["margin", "optimization"]:
                 pricing_recommendations.append({
                     "sku": sku,
-                    "current_price": metrics.get("Current Price", 0),
-                    "recommended_price": metrics.get("Recommended Price", 0),
-                    "current_margin_percent": metrics.get("Current Margin", 0),
+                    "name": name,
+                    "current_price": _first_number(observation.get("selling_price"), 0.0),
+                    "recommended_price": _first_number(observation.get("selling_price"), 0.0),
+                    "current_margin_percent": 0,
                     "reason": trace.action,
-                    "confidence_score": trace.confidence_score * 100 if trace.confidence_score <= 1.0 else trace.confidence_score,
+                    "confidence_score": confidence,
                     "explainability": trace.reasoning_chain,
-                    "provenance": trace.source_datasets
+                    "provenance": trace.source_datasets,
+                    "business_impact": snapshot.get("business_impact"),
+                    "financial_impact": snapshot.get("financial_impact"),
+                    "recommended_action": snapshot.get("recommended_action"),
                 })
 
         # Dynamic Capital reserve & risk metrics calculations

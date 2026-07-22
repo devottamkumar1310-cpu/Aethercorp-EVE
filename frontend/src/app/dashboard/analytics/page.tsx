@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
             <h2 className="text-xl font-bold text-foreground mb-6">Business Metrics Overview</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Total Conversion Rate</p>
+                    <p className="text-sm text-muted-foreground mb-1">Active Client Rate</p>
                     <p className="text-2xl font-bold text-foreground">
                         {(((kpis?.active_clients ?? 0) / Math.max(1, kpis?.clients ?? 1)) * 100).toFixed(1)}%
                     </p>
@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
                 </div>
             </div>
             <div className="mt-8 pt-8 border-t border-border">
-                <p className="text-muted-foreground text-sm">More advanced chart visualizations will be enabled in Phase 3 mapping to historical trends.</p>
+                <p className="text-muted-foreground text-sm">Historical trend charts and cohort analysis are available through the AI CEO. Ask EVE for a detailed breakdown by product, channel, or time period.</p>
             </div>
         </div>
       )}

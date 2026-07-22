@@ -10,7 +10,7 @@ import uuid
 # ==============================================================================
 
 import datetime
-from sqlalchemy import Column, String, ForeignKey, UUID, JSON
+from sqlalchemy import Column, String, ForeignKey, UUID, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -24,6 +24,11 @@ class Organization(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, index=True, nullable=False)
+    # Canonical business scenario (GROWTH / CASH_FLOW / SEASONAL). This is the single
+    # source of truth every service reads instead of parsing the name/slug. NULL for
+    # custom (non-demo) workspaces. See app.core.scenario. Distinct from the forecasting
+    # simulation scenario_type, which is a per-request what-if parameter, not stored here.
+    scenario_type = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
@@ -64,6 +69,13 @@ class Membership(Base):
     Maps a User to an Organization with role permissions (e.g. admin, member, owner).
     """
     __tablename__ = "memberships"
+
+    # DB-enforced: a user can hold at most one membership per organization.
+    # This is the source of truth that prevents duplicate ownership rows under
+    # concurrent onboarding requests (used with ON CONFLICT DO NOTHING).
+    __table_args__ = (
+        UniqueConstraint("organization_id", "user_id", name="uq_memberships_org_user"),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False)

@@ -14,10 +14,10 @@ def backfill_traces():
     try:
         # Get all demo orgs that match slugs or have the demo base slugs
         orgs = db.query(Organization).filter(
-            Organization.slug.like("novawear%")
+            Organization.slug.like("luma%")
         ).all()
-        orgs.extend(db.query(Organization).filter(Organization.slug.like("urban-threads%")).all())
-        orgs.extend(db.query(Organization).filter(Organization.slug.like("essentials-co%")).all())
+        orgs.extend(db.query(Organization).filter(Organization.slug.like("drift%")).all())
+        orgs.extend(db.query(Organization).filter(Organization.slug.like("basecamp%")).all())
         
         print(f"Found {len(orgs)} potential demo organizations to backfill.")
         

@@ -88,6 +88,56 @@ class ExecutiveFormatter:
 
         return assumptions
 
+    @staticmethod
+    def _format_trace_recommendations(db, org_id, rec_types: List[str]) -> Optional[str]:
+        from app.models.recommendation_trace import RecommendationTrace
+
+        traces = db.query(RecommendationTrace).filter(
+            RecommendationTrace.organization_id == org_id,
+            RecommendationTrace.recommendation_type.in_(rec_types)
+        ).order_by(RecommendationTrace.estimated_financial_impact.desc()).limit(5).all()
+
+        if not traces:
+            return None
+
+        primary = traces[0]
+        primary_snapshot = primary.evidence_snapshot or {}
+        output = (
+            f"Direct Answer:\n"
+            f"{primary.action}\n\n"
+            f"Reason:\n"
+            f"{primary_snapshot.get('reasoning') or (primary.reasoning_chain[0] if primary.reasoning_chain else 'The recommendation is supported by the current SKU ledger.')}\n\n"
+            f"Business Impact:\n"
+            f"{primary_snapshot.get('business_impact', 'This action improves the current inventory position.')}\n\n"
+            f"Financial Impact:\n"
+            f"{primary_snapshot.get('financial_impact', f'Estimated impact: ${primary.estimated_financial_impact or 0:,.0f}.')}\n\n"
+            f"Recommended Action:\n"
+            f"{primary_snapshot.get('recommended_action', primary.action)}\n\n"
+            f"Expected Outcome:\n"
+            f"{primary_snapshot.get('expected_outcome', 'Improve inventory availability and operating cash flow.')}\n\n"
+            f"Confidence:\n"
+            f"{int((primary.confidence_score or 0) * 100)}% - {primary_snapshot.get('confidence_reason', 'Supported by matching sales, inventory, supplier, and cost data.')}\n\n"
+            f"Risk If Ignored:\n"
+            f"{primary_snapshot.get('risk_if_ignored', 'The inventory issue will continue to create avoidable financial risk.')}\n\n"
+            f"Supporting Recommendations\n\n"
+        )
+
+        for idx, trace in enumerate(traces, 1):
+            snapshot = trace.evidence_snapshot or {}
+            observation = snapshot.get("observation", {})
+            output += (
+                f"{idx}. {trace.action}\n"
+                f"   SKU: {(trace.related_skus or ['Unknown'])[0]}\n"
+                f"   Observation: Current inventory {observation.get('current_inventory', 'n/a')}; "
+                f"average daily sales {observation.get('average_daily_sales', 'n/a')}; "
+                f"coverage {observation.get('inventory_remaining_days', 'n/a')}; "
+                f"lead time {observation.get('supplier_lead_time', 'n/a')}.\n"
+                f"   Action: {snapshot.get('recommended_action', trace.action)}\n"
+                f"   Impact: {snapshot.get('financial_impact', f'${trace.estimated_financial_impact or 0:,.0f}')}\n\n"
+            )
+
+        return output.strip()
+
     @classmethod
     def build_executive_recommendation(
         cls,
@@ -190,6 +240,10 @@ class ExecutiveFormatter:
 
     @classmethod
     def format_sku_overstock(cls, db, org_id) -> str:
+        trace_text = cls._format_trace_recommendations(db, org_id, ["dead_stock"])
+        if trace_text:
+            return trace_text
+
         from app.services.analytics_service import AnalyticsService
         analysis = AnalyticsService.get_inventory_analysis(db, org_id)
         items = analysis.get("items_at_risk", [])
@@ -254,6 +308,10 @@ class ExecutiveFormatter:
 
     @classmethod
     def format_sku_reorders(cls, db, org_id) -> str:
+        trace_text = cls._format_trace_recommendations(db, org_id, ["low_stock"])
+        if trace_text:
+            return trace_text
+
         from app.services.analytics_service import AnalyticsService
         analysis = AnalyticsService.get_inventory_analysis(db, org_id)
         items = analysis.get("items_at_risk", [])

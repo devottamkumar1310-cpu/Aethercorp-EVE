@@ -47,7 +47,8 @@ class ExecutiveBoard:
         user_id: Optional[uuid.UUID] = None,
         conversation_history: Optional[List[dict]] = None,
         intent: Optional[str] = None,
-        workspace_name: Optional[str] = None
+        workspace_name: Optional[str] = None,
+        scenario_type: Optional[str] = None
     ) -> ExecutiveSynthesisResult:
         run_finance = True
         run_operations = True
@@ -314,7 +315,8 @@ class ExecutiveBoard:
                 health=health,
                 goals=goals,
                 conversation_history=conversation_history,
-                workspace_name=workspace_name
+                workspace_name=workspace_name,
+                scenario_type=scenario_type
             ))
             synth_latency = int((time.time() - start_synth) * 1000)
             record_agent_metric("coo_synthesis", "success", synth_latency)

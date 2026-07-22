@@ -405,7 +405,7 @@ export default function EVECoocommandCenter() {
             onClick={() => {
               setActiveActions(prev => ({
                 ...prev,
-                [actionKey]: "Success: Exported 3 SKUs to CSV (TSHIRT-CLASSIC, HOODIE-WINTER, BENCH-PROD-0)"
+                [actionKey]: "Success: SKU list exported to CSV"
               }));
             }}
             className="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 hover:border-indigo-500/50 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded text-[9px] font-bold cursor-pointer transition-all"
@@ -419,7 +419,7 @@ export default function EVECoocommandCenter() {
             onClick={() => {
               setActiveActions(prev => ({
                 ...prev,
-                [actionKey]: "Success: Generated discount campaign for BENCH-PROD-0 (30% discount suggested)"
+                [actionKey]: "Success: Discount campaign generated (30% off prioritized SKUs)"
               }));
             }}
             className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 hover:border-emerald-500/50 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded text-[9px] font-bold cursor-pointer transition-all"
@@ -433,7 +433,7 @@ export default function EVECoocommandCenter() {
             onClick={() => {
               setActiveActions(prev => ({
                 ...prev,
-                [actionKey]: "Success: Generated replenishment order of 50 units for HOODIE-WINTER via Mock Supplier Corp"
+                [actionKey]: "Success: Replenishment order created (50 units via primary supplier)"
               }));
             }}
             className="px-2 py-1 bg-purple-600/20 hover:bg-purple-600/35 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 rounded text-[9px] font-bold cursor-pointer transition-all"
@@ -469,29 +469,10 @@ export default function EVECoocommandCenter() {
             logger.error("Failed to load last conversation details for default insights:", err);
           }
         } else {
-          // No conversations; seed beautiful default initial state based on workspace metrics
-          const defaultEvidence: string[] = [
-            "Establish base ledger and inventory records to trace operational performance."
-          ];
-
-          setSelectedReasoning({
-            agent: "COO Lead",
-            summary: "EVE COO has initialized workspace audit operations. Explore details and recommendations in the panels.",
-            recommendation_details: {
-              recommendation: `Based on the latest data audit of **the current workspace**, EVE COO recommends the following key actions:\n- **Liquidate Dead Stock**: Formulate promotional discounts for slow-moving categories to free up capital.\n- **Replenish Safety Stock**: Initiate immediate reorders for high-priority stockout risks.\n- **Contain Overhead Expenses**: Optimize administrative and logistical overheads to stabilize declining net profit margins.`,
-              expected_impact: "Stabilize inventory turnover rates and recover declining net margins to over 40% target.",
-              evidence: defaultEvidence,
-              assumptions: [
-                "Supplier shipping routes and lead times will remain consistent during standard runs.",
-                "Retail buyer transaction patterns reflect steady seasonal demands."
-              ]
-            },
-            confidence_scores: {
-              Overall: 0.85,
-              "Finance Agent": 0.88,
-              "Operations Agent": 0.85
-            }
-          } as any);
+          // No prior conversations — leave selectedReasoning null so the Executive Snapshot
+          // fallback panel renders live workspace data (profit, risks, opportunities) instead
+          // of a hardcoded generic summary that contradicts each workspace's real story.
+          setSelectedReasoning(null);
         }
         const tChat = performance.now();
         devLog(`[TELEMETRY][PERF] Time to Chat Interactive: ${(tChat - tStart).toFixed(2)}ms`);

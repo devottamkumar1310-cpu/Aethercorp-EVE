@@ -71,18 +71,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   });
 
   const DEMO_WORKSPACES = [
-    { id: "demo-novawear", slug: "novawear", apiSlug: "novawear", name: "NovaWear Fashion" },
-    { id: "demo-urban_threads", slug: "urban-threads", apiSlug: "urban_threads", name: "Urban Threads" },
-    { id: "demo-essentials_co", slug: "essentials-co", apiSlug: "essentials_co", name: "Essentials Co." },
+    { id: "demo-luma", slug: "luma", apiSlug: "luma", name: "Luma & Co." },
+    { id: "demo-drift", slug: "drift", apiSlug: "drift", name: "Drift Collective" },
+    { id: "demo-basecamp", slug: "basecamp", apiSlug: "basecamp", name: "Basecamp Basics" },
   ];
 
-  // Map demo_company API slugs to the canonical Organization.name values
-  // used by the onboard-demo endpoint. This ensures workspace lookup works
-  // regardless of what slug suffix the DB generates (e.g. novawear-fashion-7).
   const DEMO_NAME_MAP: Record<string, string> = {
-    "novawear": "NovaWear Fashion",
-    "urban_threads": "Urban Threads",
-    "essentials_co": "Essentials Co."
+    "luma": "Luma & Co.",
+    "drift": "Drift Collective",
+    "basecamp": "Basecamp Basics",
   };
 
   const handleSelectDemo = async (demoSlug: string) => {
@@ -512,8 +509,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   // handleCreateDemoWorkspace removed — replaced by handleSelectDemo which
-  // accepts a specific demo_company slug, preventing all users from always
-  // getting NovaWear.
+  // accepts a specific demo_company slug so the user lands on the workspace they chose.
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -528,7 +524,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const activeWorkspace = workspaces.find((w) => w.id === activeWorkspaceId);
-  const isDemoWorkspace = activeWorkspace?.slug.startsWith("novawear") || activeWorkspace?.slug.startsWith("urban-threads") || activeWorkspace?.slug.startsWith("essentials-co");
+  const isDemoWorkspace = activeWorkspace?.slug.startsWith("luma") || activeWorkspace?.slug.startsWith("drift") || activeWorkspace?.slug.startsWith("basecamp");
 
   if (loading || (!activeWorkspaceId && !initError)) {
     return (
@@ -757,7 +753,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="text-xs text-muted-foreground font-medium truncate">
                 {activeWorkspace?.name || "No workspace"}
               </span>
-              {(activeWorkspace?.slug.startsWith("novawear") || activeWorkspace?.slug.startsWith("urban-threads") || activeWorkspace?.slug.startsWith("essentials-co")) && (
+              {(activeWorkspace?.slug.startsWith("luma") || activeWorkspace?.slug.startsWith("drift") || activeWorkspace?.slug.startsWith("basecamp")) && (
                 <span className="text-[9px] text-blue-400 font-medium truncate mt-0.5">
                   Demo Workspace • Based on Public E-commerce Data
                 </span>
@@ -838,7 +834,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Building2 size={14} className="text-violet-400 flex-shrink-0" />
                   <div className="flex flex-col items-start max-w-[140px] truncate">
                     <span className="truncate w-full text-left">{activeWorkspace?.name || "Select Workspace"}</span>
-                    {(activeWorkspace?.slug.startsWith("novawear") || activeWorkspace?.slug.startsWith("urban-threads") || activeWorkspace?.slug.startsWith("essentials-co")) && (
+                    {(activeWorkspace?.slug.startsWith("luma") || activeWorkspace?.slug.startsWith("drift") || activeWorkspace?.slug.startsWith("basecamp")) && (
                       <span className="text-[9px] text-blue-400 font-medium truncate w-full text-left leading-none">
                         Demo Workspace
                       </span>
@@ -881,7 +877,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <span className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">My Workspaces</span>
                       </div>
                       <div className="py-1 max-h-48 overflow-y-auto">
-                        {workspaces.filter(w => !w.slug.startsWith("novawear") && !w.slug.startsWith("urban-threads") && !w.slug.startsWith("essentials-co") && !w.slug.startsWith("urban_threads") && !w.slug.startsWith("essentials_co")).map((ws) => (
+                        {workspaces.filter(w => !w.slug.startsWith("luma") && !w.slug.startsWith("drift") && !w.slug.startsWith("basecamp")).map((ws) => (
                           <button
                             key={ws.id}
                             onClick={() => handleSwitchWorkspace(ws.id)}
@@ -895,7 +891,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {ws.id === activeWorkspaceId && <div className="w-1.5 h-1.5 rounded-full bg-violet-400 flex-shrink-0" />}
                           </button>
                         ))}
-                        {workspaces.filter(w => !w.slug.startsWith("novawear") && !w.slug.startsWith("urban-threads") && !w.slug.startsWith("essentials-co") && !w.slug.startsWith("urban_threads") && !w.slug.startsWith("essentials_co")).length === 0 && (
+                        {workspaces.filter(w => !w.slug.startsWith("luma") && !w.slug.startsWith("drift") && !w.slug.startsWith("basecamp")).length === 0 && (
                           <div className="px-4 py-3 text-sm text-muted-foreground italic">No personal workspaces</div>
                         )}
                       </div>
@@ -1022,9 +1018,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-4">Choose a demo business to explore</p>
                             <div className="grid md:grid-cols-3 gap-4">
                               {[
-                                { slug: "novawear", name: "NovaWear Fashion", icon: "✦", color: "violet", scenario: "Healthy & Growing", focus: "Optimization", desc: "Stable margins, balanced inventory. EVE finds fine-tuning opportunities." },
-                                { slug: "urban_threads", name: "Urban Threads", icon: "⚠", color: "amber", scenario: "Inventory Crisis", focus: "Recovery", desc: "Dead stock, cash locked in unsold inventory. EVE plans liquidation." },
-                                { slug: "essentials_co", name: "Essentials Co.", icon: "⚡", color: "emerald", scenario: "Hyper-Growth", focus: "Scaling", desc: "Products sell out too fast. EVE prevents stockouts and scales supply." }
+                                { slug: "luma", name: "Luma & Co.", icon: "✦", color: "violet", scenario: "Growth Brand", focus: "Stockout Prevention", desc: "Premium womenswear growing fast. Hero products at risk of stockout — strong margins, zero dead stock." },
+                                { slug: "drift", name: "Drift Collective", icon: "⚠", color: "amber", scenario: "Cash-Flow Crisis", focus: "Dead Stock Recovery", desc: "Streetwear brand with $92k locked in failed collab drops. Core line still selling." },
+                                { slug: "basecamp", name: "Basecamp Basics", icon: "⚡", color: "emerald", scenario: "Seasonal Transition", focus: "Season Pivot", desc: "Unisex essentials caught between seasons. Summer selling out, winter stuck as dead stock." }
                               ].map((demo) => (
                                 <button
                                   key={demo.slug}

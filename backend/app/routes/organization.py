@@ -4,6 +4,8 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from app.core.scenario import scenario_for_demo
 from app.database import get_db
 from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
@@ -17,7 +19,7 @@ class OnboardRequest(BaseModel):
     name: str
 
 class DemoOnboardRequest(BaseModel):
-    demo_company: str = "novawear"
+    demo_company: str = "luma"
 
 @router.get("/workspaces")
 def get_workspaces(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -109,48 +111,75 @@ def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(g
 @router.post("/onboard-demo")
 def onboard_demo(request: DemoOnboardRequest, background_tasks: BackgroundTasks, current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
     company_map = {
-        "novawear": ("NovaWear Fashion", "novawear-fashion"),
-        "urban_threads": ("Urban Threads", "urban-threads"),
-        "essentials_co": ("Essentials Co.", "essentials-co")
+        "luma": ("Luma & Co.", "luma-and-co"),
+        "drift": ("Drift Collective", "drift-collective"),
+        "basecamp": ("Basecamp Basics", "basecamp-basics"),
     }
     demo_company = request.demo_company
     if demo_company not in company_map:
-        demo_company = "novawear"
+        demo_company = "luma"
         
     name, slug_base = company_map[demo_company]
 
-    # Idempotency guard: return existing demo workspace if the user already owns one.
-    # This prevents duplicate workspaces from double-click or concurrent POST requests.
-    existing_membership = db.query(Membership).join(Organization).filter(
-        Membership.user_id == current_user.id,
-        Organization.name == name
-    ).first()
-    if existing_membership:
-        org = existing_membership.organization
-        logger.info(f"Returning existing demo workspace {org.id} for user {current_user.id}")
-        return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
+    # Deterministic, per-user slug. The UNIQUE index on organizations.slug is the
+    # DATABASE-LEVEL source of truth that guarantees a user can own at most one demo
+    # organization per scenario — even under concurrent requests. Application checks
+    # below are an optimization only; correctness does not depend on them.
+    user_hex = _uuid.UUID(str(current_user.id)).hex[:12]
+    slug = f"{slug_base}-{user_hex}"
 
-    # Generate unique slug for demo workspace
-    slug = slug_base
-    base_slug = slug
-    counter = 1
-    while db.query(Organization).filter(Organization.slug == slug).first():
-        slug = f"{base_slug}-{counter}"
-        counter += 1
-
-    # Create Organization
-    org = Organization(name=name, slug=slug)
-    db.add(org)
-    db.flush() # To get org.id
-
-    # Create Membership
-    membership = Membership(
-        user_id=current_user.id,
-        organization_id=org.id,
-        role="owner"
+    # Fast path (optimization, NOT the sole guarantee): if the user already owns this
+    # demo — by deterministic slug, or by the legacy canonical name/slug for demos
+    # provisioned before this scheme — return it without touching the write path.
+    existing = (
+        db.query(Organization)
+        .join(Membership, Membership.organization_id == Organization.id)
+        .filter(
+            Membership.user_id == current_user.id,
+            (Organization.slug == slug)
+            | (Organization.slug == slug_base)
+            | (Organization.name == name),
+        )
+        .first()
     )
-    db.add(membership)
+    if existing:
+        logger.info(f"Returning existing demo workspace {existing.id} for user {current_user.id}")
+        return {"status": "success", "organization_id": str(existing.id), "slug": existing.slug}
+
+    # Authoritative idempotent create: INSERT ... ON CONFLICT (slug) DO NOTHING.
+    # Under simultaneous requests exactly one INSERT wins (RETURNING yields its id);
+    # every other request no-ops (RETURNING is empty) — no duplicate org, slug, or name.
+    new_org_id = _uuid.uuid4()
+    insert_org = (
+        pg_insert(Organization.__table__)
+        .values(id=new_org_id, name=name, slug=slug, scenario_type=scenario_for_demo(demo_company))
+        .on_conflict_do_nothing(index_elements=["slug"])
+        .returning(Organization.__table__.c.id)
+    )
+    inserted_id = db.execute(insert_org).scalar()
     db.commit()
+    created_here = inserted_id is not None
+
+    # Resolve the org whether we created it or a concurrent request did.
+    org = db.query(Organization).filter(Organization.slug == slug).first()
+    if org is None:
+        raise HTTPException(status_code=500, detail="Demo provisioning failed: organization missing after upsert.")
+
+    # Idempotent owner membership: ON CONFLICT (organization_id, user_id) DO NOTHING,
+    # backed by the uq_memberships_org_user unique constraint. Concurrent requests
+    # cannot create duplicate ownership rows.
+    insert_membership = (
+        pg_insert(Membership.__table__)
+        .values(id=_uuid.uuid4(), organization_id=org.id, user_id=current_user.id, role="owner")
+        .on_conflict_do_nothing(index_elements=["organization_id", "user_id"])
+    )
+    db.execute(insert_membership)
+    db.commit()
+
+    # Seed ONLY on the request that actually created the org → no duplicate seed.
+    if not created_here:
+        logger.info(f"Concurrent onboard resolved to existing demo workspace {org.id} for user {current_user.id}")
+        return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
     # Seed all demo workspace scenario data, sample documents, sample chats, recommendations
     from app.commands.seed_scenarios import seed_demo_workspace_data
@@ -159,19 +188,17 @@ def onboard_demo(request: DemoOnboardRequest, background_tasks: BackgroundTasks,
 
     try:
         seed_demo_workspace_data(db, org.id, demo_company)
-        
-        # Startup Validation
+
+        # Post-seed validation
         inventory_count = db.query(InventoryItem).filter(InventoryItem.organization_id == org.id).count()
         trace_count = db.query(RecommendationTrace).filter(RecommendationTrace.organization_id == org.id).count()
-        
+
         if inventory_count == 0 or trace_count == 0:
             raise ValueError(f"Startup validation failed: Expected seeded artifacts but got Inventory: {inventory_count}, Traces: {trace_count}")
-            
+
     except Exception as e:
-        import logging
-        logger = logging.getLogger("eve.organization")
         logger.error(f"Seeding demo workspace data failed: {e}", exc_info=True)
-        # Rollback creation on failure
+        # Roll back only the org we created (cascades membership + partial seed).
         db.delete(org)
         db.commit()
         raise HTTPException(

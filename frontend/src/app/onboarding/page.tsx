@@ -126,7 +126,7 @@ export default function OnboardingPage() {
   };
 
   const handleSkip = () => {
-    const demos = ["novawear", "urban_threads", "essentials_co"];
+    const demos = ["luma", "drift", "basecamp"];
     const randomDemo = demos[Math.floor(Math.random() * demos.length)];
     handleCreateDemoWorkspace(randomDemo);
   };
@@ -175,7 +175,7 @@ export default function OnboardingPage() {
                  </button>
                </div>
               <button
-                onClick={() => handleCreateDemoWorkspace("novawear")}
+                onClick={() => handleCreateDemoWorkspace("luma")}
                 disabled={loading || loadingDemo}
                 className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
               >
@@ -185,37 +185,17 @@ export default function OnboardingPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
-                      NovaWear Fashion
+                      Luma & Co.
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Modern D2C fashion brand. Preloaded with inventory, sales, and proactive insights.
-                    </p>
-                  </div>
-                </div>
-              </button>
-              
-              <button
-                onClick={() => handleCreateDemoWorkspace("urban_threads")}
-                disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
-                    <Building2 size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
-                      Urban Threads
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Streetwear apparel company. Preloaded with operations data and supply chain history.
+                      Premium womenswear brand growing fast. Hero products at stockout risk — strong margins, zero dead stock.
                     </p>
                   </div>
                 </div>
               </button>
 
               <button
-                onClick={() => handleCreateDemoWorkspace("essentials_co")}
+                onClick={() => handleCreateDemoWorkspace("drift")}
                 disabled={loading || loadingDemo}
                 className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
               >
@@ -225,10 +205,30 @@ export default function OnboardingPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
-                      Essentials Co.
+                      Drift Collective
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Basics & everyday apparel. Preloaded with supplier invoices and ledger items.
+                      Streetwear brand with a cash-flow crisis. $92k locked in dead collab drops — core line still selling.
+                    </p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => handleCreateDemoWorkspace("basecamp")}
+                disabled={loading || loadingDemo}
+                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                    <Building2 size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                      Basecamp Basics
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Unisex essentials caught between seasons. Summer selling out, winter stuck as dead stock.
                     </p>
                   </div>
                 </div>

@@ -27,7 +27,7 @@ export default function HelpPage() {
           <div className="bg-secondary dark:bg-card border border-border dark:border-border p-4 rounded-xl space-y-2 shadow-sm">
             <h4 className="text-xs font-bold text-indigo-400 uppercase">First Steps:</h4>
             <ul className="list-decimal list-inside text-xs text-muted-foreground space-y-2 leading-relaxed">
-              <li>Explore the preloaded <strong>NovaWear Fashion</strong> demo workspace or create your own.</li>
+              <li>Explore a preloaded demo workspace (<strong>Luma & Co.</strong>, <strong>Drift Collective</strong>, or <strong>Basecamp Basics</strong>) or create your own.</li>
               <li>Go to the <strong>Document Hub</strong> to upload supplier invoices, contracts, or marketing plans.</li>
               <li>Open the <strong>AI Command Center</strong> to run queries and get strategic recommendations.</li>
             </ul>

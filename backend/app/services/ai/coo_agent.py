@@ -25,7 +25,8 @@ class COOAgent:
         health: Optional[dict] = None,
         goals: Optional[list] = None,
         conversation_history: Optional[list] = None,
-        workspace_name: Optional[str] = None
+        workspace_name: Optional[str] = None,
+        scenario_type: Optional[str] = None
     ) -> ExecutiveSynthesisResult:
         # Retrieve overall health score and goals if not passed as cached params
         if health is None:
@@ -66,7 +67,8 @@ class COOAgent:
             health=health,
             goals=goals,
             inventory_intel=inventory_intel,
-            workspace_name=workspace_name
+            workspace_name=workspace_name,
+            scenario_type=scenario_type
         )
         
         sub_agent_reports = []

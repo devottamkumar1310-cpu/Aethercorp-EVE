@@ -511,11 +511,13 @@ def get_inventory_alerts(
 ):
     """
     Returns two alert categories for the workspace:
-    - low_stock: items at or below their reorder_point
-    - dead_stock: items with stock > 0 but no sales in the last 30 days
+    - low_stock: items at or below their reorder_point, enriched with days-of-supply and revenue at risk
+    - dead_stock: items with stock > 0 but no sales in the last 30 days, enriched with capital locked
     """
     from sqlalchemy.orm import joinedload
+    from sqlalchemy import func as sqlfunc
     from app.models.inventory import InventoryItem, SalesRecord
+    from app.models.recommendation_trace import RecommendationTrace
 
     org_id = token_context["organization_id"]
     thirty_days_ago = datetime.date.today() - datetime.timedelta(days=30)
@@ -528,45 +530,100 @@ def get_inventory_alerts(
         .all()
     )
 
+    # Bulk-fetch 30-day sales velocity per product for days-of-supply calculation
+    thirty_day_sales = db.query(
+        SalesRecord.product_id,
+        sqlfunc.sum(SalesRecord.quantity).label("qty_30d")
+    ).filter(
+        SalesRecord.organization_id == org_id,
+        SalesRecord.date >= thirty_days_ago,
+        SalesRecord.quantity > 0
+    ).group_by(SalesRecord.product_id).all()
+
+    qty_30d_map = {row[0]: int(row[1]) for row in thirty_day_sales if row[1] is not None}
+
     # Collect product IDs that have had at least one sale in the last 30 days
-    recent_sales_product_ids = (
-        db.query(SalesRecord.product_id)
-        .filter(
-            SalesRecord.organization_id == org_id,
-            SalesRecord.date >= thirty_days_ago
-        )
-        .distinct()
-        .all()
-    )
-    recent_ids = {row[0] for row in recent_sales_product_ids}
+    recent_ids = set(qty_30d_map.keys())
+
+    # Pull revenue-at-risk from seeded recommendation traces keyed by SKU
+    trace_rows = db.query(
+        RecommendationTrace
+    ).filter(
+        RecommendationTrace.organization_id == org_id,
+        RecommendationTrace.recommendation_type.in_(["low_stock", "dead_stock", "reorder", "markdown", "optimization"])
+    ).all()
+
+    trace_by_sku: dict = {}
+    for t in trace_rows:
+        for sku in (t.related_skus or []):
+            trace_by_sku[sku] = t
 
     low_stock = []
     dead_stock = []
 
     for item in items:
         prod = item.product
+        qty_30d = qty_30d_map.get(prod.id, 0)
+        avg_daily = round(qty_30d / 30.0, 2) if qty_30d > 0 else 0.0
+        days_of_supply = round(item.stock_on_hand / avg_daily, 1) if avg_daily > 0 else None
+
         if item.stock_on_hand <= item.reorder_point:
+            trace = trace_by_sku.get(prod.sku)
+            revenue_at_risk = None
+            if trace and trace.estimated_financial_impact:
+                revenue_at_risk = round(float(trace.estimated_financial_impact), 2)
+            elif avg_daily > 0 and item.lead_time_days:
+                # Stockout gap = lead_time - days_of_supply (clamped to 0)
+                gap_days = max(0.0, item.lead_time_days - (days_of_supply or 0.0))
+                revenue_at_risk = round(gap_days * avg_daily * (prod.selling_price or 0.0), 2)
+
             low_stock.append({
                 "sku": prod.sku,
                 "name": prod.name,
                 "category": prod.category,
                 "stock_on_hand": item.stock_on_hand,
                 "reorder_point": item.reorder_point,
-                "shortage": item.reorder_point - item.stock_on_hand
+                "shortage": max(0, item.reorder_point - item.stock_on_hand),
+                "avg_daily_sales": avg_daily,
+                "days_of_supply": days_of_supply,
+                "lead_time_days": item.lead_time_days,
+                "revenue_at_risk": revenue_at_risk,
             })
+
         if item.stock_on_hand > 0 and prod.id not in recent_ids:
+            capital_locked = round(item.stock_on_hand * (prod.unit_cost or 0.0), 2)
+            monthly_carrying_cost = round(capital_locked * 0.03, 2)
+            trace = trace_by_sku.get(prod.sku)
+            days_since_last_sale = None
+            if trace and trace.supporting_metrics:
+                raw = trace.supporting_metrics.get("inventory_age") or trace.supporting_metrics.get("days_since_last_sale")
+                if raw:
+                    import re as _re
+                    m = _re.search(r"\d+", str(raw))
+                    if m:
+                        days_since_last_sale = int(m.group(0))
+
             dead_stock.append({
                 "sku": prod.sku,
                 "name": prod.name,
                 "category": prod.category,
                 "stock_on_hand": item.stock_on_hand,
-                "estimated_value": round(item.stock_on_hand * (prod.unit_cost or 0.0), 2)
+                "estimated_value": capital_locked,
+                "monthly_carrying_cost": monthly_carrying_cost,
+                "days_since_last_sale": days_since_last_sale,
             })
 
+    total_revenue_at_risk = round(sum(
+        item["revenue_at_risk"] for item in low_stock if item["revenue_at_risk"] is not None
+    ), 2)
+    total_capital_locked = round(sum(item["estimated_value"] for item in dead_stock), 2)
+
     return {
-        "low_stock": sorted(low_stock, key=lambda x: x["shortage"], reverse=True),
-        "dead_stock": dead_stock,
+        "low_stock": sorted(low_stock, key=lambda x: (x["revenue_at_risk"] or 0), reverse=True),
+        "dead_stock": sorted(dead_stock, key=lambda x: x["estimated_value"], reverse=True),
         "low_stock_count": len(low_stock),
-        "dead_stock_count": len(dead_stock)
+        "dead_stock_count": len(dead_stock),
+        "total_revenue_at_risk": total_revenue_at_risk,
+        "total_capital_locked": total_capital_locked,
     }
 
