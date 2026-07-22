@@ -188,23 +188,23 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Executive Credibility & Proof Strip */}
-      <section className="border-y border-border/60 bg-muted/30 py-10 px-4 sm:px-6">
+      <section className="border-y border-border/60 bg-muted/30 py-8 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           <div className="space-y-1">
-            <div className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">$14.2M+</div>
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Working Capital Recovered</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Sub-Second</div>
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Decision Traceability Sync</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">4.4x</div>
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Average Stock Turn Velocity</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">100%</div>
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Audit Trail Evidence</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">99.4%</div>
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Demand Forecast Precision</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Variant-Level</div>
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Size & Color Velocity Math</div>
           </div>
           <div className="space-y-1">
-            <div className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">&lt; 2 min</div>
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Setup & Data Ingestion</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">&lt; 2 min</div>
+            <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Setup & Data Ingestion</div>
           </div>
         </div>
       </section>
@@ -219,6 +219,9 @@ export default function LandingPage() {
           <p className="text-xs sm:text-sm text-muted-foreground max-w-xl mx-auto">
             Switch between modules to inspect how EVE optimizes inventory, delivers operational commands, and audits decision reasoning.
           </p>
+          <div className="inline-block px-3 py-1 rounded-full bg-muted border border-border text-[10px] text-muted-foreground font-medium">
+            * Interactive interface displaying sample e-commerce brand dataset
+          </div>
         </div>
 
         {/* Tab Switcher */}
