@@ -43,14 +43,14 @@ export async function updateSession(request: NextRequest) {
 
   logger.log(`[MIDDLEWARE] [AUTH] Path: ${pathname}, User email: ${user?.email || "anonymous (null)"}, Verified: ${!!user?.email_confirmed_at}`)
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup') || request.nextUrl.pathname.startsWith('/forgot-password')
-  const isVerifyRoute = request.nextUrl.pathname.startsWith('/verify-email')
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/forgot-password')
+  const isVerifyRoute = pathname.startsWith('/verify-email')
 
   if (user) {
     const isConfirmed = !!user.email_confirmed_at;
     
     // Redirect unverified users trying to access dashboard or onboarding
-    if (!isConfirmed && !isVerifyRoute && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/onboarding'))) {
+    if (!isConfirmed && !isVerifyRoute && (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding'))) {
       const url = request.nextUrl.clone()
       url.pathname = '/verify-email'
       url.searchParams.set('email', user.email || '')
@@ -74,16 +74,16 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Redirect authenticated users from home page or dashboard root to dashboard/inventory
-    if (isConfirmed && (pathname === '/' || pathname === '/dashboard' || pathname === '/dashboard/')) {
+    // Redirect authenticated users from root page '/' ONLY to dashboard/inventory
+    if (isConfirmed && pathname === '/') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard/inventory'
-      logger.log(`[MIDDLEWARE] [REDIRECT] Authenticated user on ${pathname} redirected to: ${url.pathname}`)
+      logger.log(`[MIDDLEWARE] [REDIRECT] Authenticated user on root '/' redirected to: ${url.pathname}`)
       return NextResponse.redirect(url)
     }
   } else {
     // Protect /dashboard and /onboarding for unauthenticated users
-    if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/onboarding')) {
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       logger.log(`[MIDDLEWARE] [REDIRECT] Unauthenticated user redirected to login: ${url.pathname}`)

@@ -154,7 +154,7 @@ export default function TraceabilityDashboard() {
                 <span className="text-xs font-medium text-muted-foreground">Decision Traceability</span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-foreground mt-1">
-                Executive Decision Traceability
+                Decision Traceability
               </h1>
               <p className="mt-1 text-xs md:text-sm text-muted-foreground">
                 Audit underlying evidence, financial logic, model confidence, and operational impact behind every EVE decision.
@@ -249,11 +249,23 @@ export default function TraceabilityDashboard() {
                       : "border-border bg-card/30 hover:border-foreground/20"
                     }`}
                   >
-                    <span className="block text-xs font-semibold text-indigo-400 uppercase tracking-wide">
-                      {trace.recommendation_type}
-                    </span>
-                    <span className="block text-sm font-bold text-foreground mt-1 truncate">{trace.action}</span>
-                    <span className="block text-[10px] text-muted-foreground mt-2">{trace.created_at}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+                        {trace.recommendation_type}
+                      </span>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {trace.created_at?.slice(0, 10)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs font-semibold text-foreground line-clamp-2">
+                      {trace.action}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between text-[10px]">
+                      <span className="text-muted-foreground font-medium">Confidence</span>
+                      <span className="font-bold text-emerald-500">
+                        {Math.round((trace.confidence_score || 0) * 100)}%
+                      </span>
+                    </div>
                   </button>
                 ))}
 
@@ -298,10 +310,10 @@ export default function TraceabilityDashboard() {
                   
                   {/* Metadata Bar */}
                   <div className="mt-6 flex flex-wrap gap-4 pt-4 border-t border-border/50 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                    <div><span className="opacity-50 block mb-1">Signal</span> <span className="text-foreground">{selectedTrace.trigger_type || "Inventory review"}</span></div>
-                    <div><span className="opacity-50 block mb-1">Decision Owner</span> <span className="text-foreground">{selectedTrace.source_agent || "EVE Executive Reasoning"}</span></div>
-                    <div><span className="opacity-50 block mb-1">Evidence Sets</span> <span className="text-foreground">{selectedTrace.source_datasets?.length || 0}</span></div>
-                    <div><span className="opacity-50 block mb-1">Created</span> <span className="text-foreground">{selectedTrace.created_at}</span></div>
+                    <div><span className="text-muted-foreground block mb-1 font-semibold">Business Trigger</span> <span className="text-foreground">{selectedTrace.trigger_type || "Inventory review"}</span></div>
+                    <div><span className="text-muted-foreground block mb-1 font-semibold">Decision Owner</span> <span className="text-foreground">{selectedTrace.source_agent || "EVE Strategic Intelligence"}</span></div>
+                    <div><span className="text-muted-foreground block mb-1 font-semibold">Evidence Sets</span> <span className="text-foreground">{selectedTrace.source_datasets?.length || 0}</span></div>
+                    <div><span className="text-muted-foreground block mb-1 font-semibold">Created</span> <span className="text-foreground">{selectedTrace.created_at}</span></div>
                   </div>
                 </div>
 

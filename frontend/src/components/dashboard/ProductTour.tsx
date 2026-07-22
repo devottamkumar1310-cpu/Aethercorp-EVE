@@ -57,7 +57,7 @@ const tourSteps: TourStep[] = [
       "Revenue: Track gross income streams and trends.",
       "Profit: See net margins after subtracting expenses.",
       "Growth: Monitor client, project, and task completion growth.",
-      "Inventory Health: Keep track of active SKU states."
+      "Task Delivery: Monitor client accounts, active projects, and task execution."
     ]
   }
 ];
