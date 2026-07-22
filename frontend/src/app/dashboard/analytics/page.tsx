@@ -17,6 +17,7 @@ import {
   Briefcase, 
   Brain
 } from "lucide-react";
+import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -332,6 +333,9 @@ export default function AnalyticsPage() {
               Consult EVE AI CEO →
             </Link>
           </div>
+
+          {/* AI Product Governance Disclaimer */}
+          <AIDisclaimer className="mt-4" />
         </div>
       )}
     </div>

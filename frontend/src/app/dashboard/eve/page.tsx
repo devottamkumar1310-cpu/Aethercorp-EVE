@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
+import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
 import { devLog } from "@/lib/logger";
 import { 
   sendExecutiveChatStream,
@@ -1137,6 +1138,9 @@ export default function EVECoocommandCenter() {
             )}
           </div>
         </div>
+
+        {/* AI Product Governance Disclaimer */}
+        <AIDisclaimer className="mx-6 mt-3 mb-1" />
 
         {/* Executive Snapshot Compact Card */}
         {isInsightsOpen && (

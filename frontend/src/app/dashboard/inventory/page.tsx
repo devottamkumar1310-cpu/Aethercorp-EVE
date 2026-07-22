@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
+import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
 import { API_BASE_URL } from "@/lib/api";
 
 interface ProductMetric {
@@ -567,6 +568,8 @@ export default function InventoryDashboardPage() {
                 )}
               </div>
             </div>
+            {/* AI Product Governance Disclaimer */}
+            <AIDisclaimer className="mt-4" />
           </div>
           <div className="pt-4 border-t border-border flex items-center justify-between text-xs mt-4">
             <span className="text-muted-foreground">Ask EVE AI CEO for detailed SKU mitigation plans:</span>

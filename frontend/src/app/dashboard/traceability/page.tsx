@@ -7,6 +7,7 @@ import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass,
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
+import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
 
 interface TraceRecord {
   id: string;
@@ -278,14 +279,8 @@ export default function TraceabilityDashboard() {
               {/* The recommendation action (Col-Span-2) */}
               <div className="md:col-span-2 space-y-6">
 
-                {/* Warning Banner */}
-                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 flex gap-3 items-start backdrop-blur-md">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-semibold text-amber-500">Business recommendation.</h4>
-                    <p className="text-xs text-amber-500/80 mt-1">Review the supporting numbers and expected impact before taking action.</p>
-                  </div>
-                </div>
+                {/* AI Product Governance Disclaimer */}
+                <AIDisclaimer />
                 
                 <div className="rounded-2xl border border-border bg-card/40 p-6 backdrop-blur-md">
                   <div className="flex items-center justify-between">
