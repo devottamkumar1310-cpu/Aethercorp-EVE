@@ -667,14 +667,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  isSidebarCollapsed ? "px-5 py-5 md:px-3 md:py-5 md:justify-center" : "gap-3 px-5 py-5"
  }`}>
           <div
-            onClick={() => router.push("/dashboard/inventory")}
+            onClick={() => router.push("/dashboard")}
             className="h-9 w-9 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-[13px] tracking-tight cursor-pointer hover:brightness-110 transition-all shadow-lg shadow-violet-600/25 ring-1 ring-inset ring-white/15 flex-shrink-0"
           >
             EVE
           </div>
           <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             <span className="font-semibold text-foreground text-sm tracking-tight leading-none">EVE</span>
-            <span className="text-[10px] text-muted-foreground font-medium tracking-wide mt-1 leading-none">Inventory Intelligence</span>
+            <span className="text-[10px] text-muted-foreground font-medium tracking-wide mt-1 leading-none">Executive Operating System</span>
           </div>
           
           <button
@@ -699,7 +699,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6 scrollbar-none">
           {NAV_ITEMS.map((group) => (
             <div key={group.label}>
-              <p className={`text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-[0.14em] px-2.5 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
+              <p className={`text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.14em] px-2.5 mb-2 ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
                 {group.label}
               </p>
               <div className={`h-px bg-sidebar-border my-4 ${isSidebarCollapsed ? "md:block hidden" : "hidden"}`} />

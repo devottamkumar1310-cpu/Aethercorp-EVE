@@ -500,19 +500,19 @@ export default function TraceabilityDashboard() {
                   </div>
                 )}
 
-                {/* Source Database Records */}
+                {/* Supporting Business Datasets */}
                 <div className="rounded-2xl border border-border bg-card/60 p-6 backdrop-blur-md">
                   <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-indigo-400" /> Verified Data Sources
+                    <HelpCircle className="h-4 w-4 text-indigo-400" /> Supporting Business Datasets
                   </h3>
                   <div className="space-y-2.5">
                     {selectedTrace.source_datasets.map((source, index) => (
                       <div key={index} className="rounded-lg bg-card/60 p-2.5 border border-border/40 text-xs break-words">
-                        <span className="block font-semibold text-foreground leading-relaxed">{source}</span>
+                        <span className="block font-semibold text-foreground leading-relaxed">{source.replace(/_/g, " ").toUpperCase()}</span>
                       </div>
                     ))}
                     <span className="block text-[10px] text-muted-foreground mt-2 text-center font-medium">
-                      Trace ID: {selectedTrace.id.slice(0, 8)}
+                      Decision Record: #{selectedTrace.id.slice(0, 8)}
                     </span>
                   </div>
                 </div>

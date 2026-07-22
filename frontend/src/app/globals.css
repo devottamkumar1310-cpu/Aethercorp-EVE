@@ -64,29 +64,29 @@
    ────────────────────────────────────────────────────────────────────────────── */
 
 :root, [data-theme="executive-light"], [data-theme="light"] {
-  /* Default: Premium Executive OS Light Theme - Avoid pure white page background */
+  /* Default: Premium Executive OS Light Theme - High Contrast Executive Palette */
   --bg-app: hsl(240 20% 98%);
   --bg-card: #ffffff;
   --bg-sidebar: #f4f4f5;
-  --border-accent: #e4e4e7; /* Cleaner Zinc border */
+  --border-accent: #e4e4e7;
   --text-primary: #09090b;
-  --text-secondary: #27272a;
-  --text-muted: #71717a;
+  --text-secondary: #18181b;
+  --text-muted: #52525b; /* Zinc 600 - High contrast readable muted text */
   --accent-color: #09090b;
   --accent-glow: rgba(9, 9, 11, 0.05);
   --accent-hover: #18181b;
   --panel-glow: none;
   --chart-primary: #09090b;
-  --chart-secondary: #71717a;
+  --chart-secondary: #52525b;
 
   /* Semantic Variables */
   --background: var(--bg-app);
   --surface: var(--bg-card);
   --surface-secondary: var(--bg-sidebar);
   --border: var(--border-accent);
-  --success: #10b981;
+  --success: #059669;
   --warning: #d97706;
-  --danger: #ef4444;
+  --danger: #dc2626;
   --info: #2563eb;
 
   /* Tailwind Semantic Mappings */
@@ -126,7 +126,7 @@
   --border-accent: #293047;
   --text-primary: #ffffff;
   --text-secondary: #e4e4e7;
-  --text-muted: #a1a1aa;
+  --text-muted: #a1a1aa; /* Zinc 400 - High contrast readable muted text */
   --accent-color: #ffffff;
   --accent-glow: rgba(255, 255, 255, 0.05);
   --accent-hover: #f4f4f5;
@@ -158,7 +158,7 @@
   --border: var(--border-accent);
   --input: var(--border-accent);
   --muted: #12182a;
-  --muted-foreground: #8892aa;
+  --muted-foreground: #94a3b8; /* Slate 400 - High contrast muted text */
   --accent: #0d1120;
   --accent-foreground: #ffffff;
   --ring: #7c3aed;
