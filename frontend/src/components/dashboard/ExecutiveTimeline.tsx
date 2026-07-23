@@ -128,7 +128,7 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
                         <span className="text-sm font-bold text-foreground tracking-tight">
                           {log.action}
                         </span>
-                        <Badge variant={meta.badgeVariant} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.2 rounded ${meta.badgeClass}`}>
+                        <Badge variant={meta.badgeVariant} className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${meta.badgeClass}`}>
                           {meta.label}
                         </Badge>
                       </div>

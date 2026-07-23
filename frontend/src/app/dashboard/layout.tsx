@@ -657,7 +657,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-40 flex flex-col transition-all duration-200 eve-sidebar-atmosphere ${
- isSidebarCollapsed ? "w-64 md:w-16" : "w-64"
+ isSidebarCollapsed ? "w-60 md:w-16" : "w-60"
  } ${
  sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
  }`}
@@ -773,7 +773,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           wide child (e.g. a data table) force this whole column past the viewport width
           instead of shrinking and letting the table's own overflow-x:auto handle it. */}
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${
- isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
+ isSidebarCollapsed ? "md:ml-16" : "md:ml-60"
  }`}>
         {/* Top Header */}
         <header className="sticky top-0 z-20 w-full bg-sidebar border-b border-sidebar-border text-sidebar-foreground transition-colors duration-200 eve-header-atmosphere">

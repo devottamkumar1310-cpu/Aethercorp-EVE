@@ -123,10 +123,10 @@ export default function DocumentDetailPage() {
         {arrays.map(([key, val]: any) => (
           <div key={key} className="space-y-2 pt-2 animate-fade-in">
             <span className="text-xs font-bold text-muted-foreground block uppercase tracking-wider">{formatKey(key)}</span>
-            <div className="bg-background border border-slate-850 rounded-xl overflow-x-auto">
+            <div className="bg-background border border-slate-800 rounded-xl overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse min-w-[400px]">
                 <thead>
-                  <tr className="bg-card border-b border-slate-850 text-muted-foreground">
+                  <tr className="bg-card border-b border-slate-800 text-muted-foreground">
                     {val.length > 0 && Object.keys(val[0]).map((header) => (
                       <th key={header} className="p-3 font-semibold uppercase">{formatKey(header)}</th>
                     ))}
@@ -134,7 +134,7 @@ export default function DocumentDetailPage() {
                 </thead>
                 <tbody>
                   {val.map((item: any, idx: number) => (
-                    <tr key={idx} className="border-b border-slate-850/40 hover:bg-card text-muted-foreground">
+                    <tr key={idx} className="border-b border-slate-800/40 hover:bg-card text-muted-foreground">
                       {Object.values(item).map((v: any, cellIdx) => (
                         <td key={cellIdx} className="p-3">{String(v)}</td>
                       ))}
@@ -172,7 +172,7 @@ export default function DocumentDetailPage() {
           <div className="space-y-6">
             <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
               <div className="h-5 bg-muted rounded w-1/3" />
-              <div className="h-16 bg-slate-150 rounded-xl" />
+              <div className="h-16 bg-slate-100 rounded-xl" />
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function DocumentDetailPage() {
                 {new Date(document.created_at).toLocaleDateString()}
               </span>
               <span>•</span>
-              <span className="px-2.5 py-0.5 bg-secondary text-muted-foreground rounded-full font-semibold border border-slate-750">
+              <span className="px-2.5 py-0.5 bg-secondary text-muted-foreground rounded-full font-semibold border border-slate-700">
                 {getFriendlyMimeLabel(document.content_type)}
               </span>
             </div>
@@ -360,7 +360,7 @@ export default function DocumentDetailPage() {
               {/* Opportunities */}
               {typeof document.coo_insights !== "string" && (document.coo_insights as any).opportunities && (document.coo_insights as any).opportunities.length > 0 && (
                 <div className="space-y-2 pt-2 border-t border-indigo-950/40">
-                  <span className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest block">Opportunities & Volume Discounts</span>
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">Opportunities & Volume Discounts</span>
                   <div className="space-y-2">
                     {(document.coo_insights as any).opportunities.map((opp: any, i: number) => {
                       const oppDesc = typeof opp === "string" ? opp : opp.description || "";

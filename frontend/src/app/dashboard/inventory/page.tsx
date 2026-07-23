@@ -303,7 +303,7 @@ export default function InventoryDashboardPage() {
         {/* Header Skeleton */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2 w-full md:w-1/3">
-            <div className="h-7 bg-slate-250 rounded w-3/4" />
+            <div className="h-7 bg-slate-200 rounded w-3/4" />
             <div className="h-4 bg-secondary rounded w-1/2" />
           </div>
           <div className="h-10 bg-secondary rounded-lg w-32" />
@@ -376,7 +376,7 @@ export default function InventoryDashboardPage() {
           <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex justify-center">
-            <div className="h-16 w-16 bg-indigo-650/15 text-indigo-500 rounded-2xl flex items-center justify-center">
+            <div className="h-16 w-16 bg-indigo-600/15 text-indigo-500 rounded-2xl flex items-center justify-center">
               <Package size={32} />
             </div>
           </div>
@@ -1105,8 +1105,8 @@ export default function InventoryDashboardPage() {
               </div>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider ${
  importSummary.status === "success"
- ? "bg-emerald-100 text-emerald-850 border-emerald-250"
- : "bg-rose-100 text-rose-850 border-rose-250"
+ ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+ : "bg-rose-100 text-rose-800 border-rose-200"
  }`}>
                 {importSummary.status === "success" ? "Success" : "Failed"}
               </span>
@@ -1150,7 +1150,7 @@ export default function InventoryDashboardPage() {
               {/* Errors Breakdown table */}
               {importSummary.errors && importSummary.errors.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     Validation Violations Log
                   </h4>
                   <div className="border border-border rounded-xl overflow-hidden max-h-52 overflow-y-auto">
@@ -1168,8 +1168,8 @@ export default function InventoryDashboardPage() {
                           <tr key={idx} className="hover:bg-secondary font-normal">
                             <td className="px-4 py-2 font-mono text-muted-foreground text-center">{err.row || "-"}</td>
                             <td className="px-4 py-2 font-semibold text-foreground">{err.column || "-"}</td>
-                            <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground truncate max-w-[95px]">{err.value !== null ? String(err.value) : <span className="text-slate-350 italic">null</span>}</td>
-                            <td className="px-4 py-2 text-rose-650">{err.message}</td>
+                            <td className="px-4 py-2 font-mono text-[11px] text-muted-foreground truncate max-w-[95px]">{err.value !== null ? String(err.value) : <span className="text-slate-300 italic">null</span>}</td>
+                            <td className="px-4 py-2 text-rose-600">{err.message}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1184,7 +1184,7 @@ export default function InventoryDashboardPage() {
                   <p className="text-xs font-bold text-emerald-800">
                     Import completed successfully!
                   </p>
-                  <p className="text-[11px] text-emerald-650 font-normal">
+                  <p className="text-[11px] text-emerald-600 font-normal">
                     All {importSummary.processed_count} records have been written to the database.
                   </p>
                 </div>

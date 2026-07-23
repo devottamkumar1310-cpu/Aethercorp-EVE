@@ -277,7 +277,7 @@ export function ReorderCenter({ lowStockItems = [], confidenceBySku = {}, status
               }`}
             >
               {st === "ALL" ? "All Recommendations" : st.charAt(0) + st.slice(1).toLowerCase()}
-              <span className="ml-1.5 text-[10px] px-1.5 py-0.2 rounded-full bg-background/60 text-muted-foreground border border-border/70">
+              <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded-full bg-background/60 text-muted-foreground border border-border/70">
                 {st === "ALL"
                   ? recommendations.length
                   : recommendations.filter((r) => (r.status || "PENDING") === st).length}

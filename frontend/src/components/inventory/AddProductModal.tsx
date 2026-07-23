@@ -82,11 +82,11 @@ export function AddProductModal({ isOpen, onClose, token, onSuccess }: AddProduc
       >
         <div className="px-6 py-4 border-b border-border dark:border-border flex items-center justify-between bg-secondary dark:bg-background">
           <h3 id="add-product-title" className="text-lg font-bold text-foreground dark:text-foreground flex items-center gap-2">
-            <Package className="text-indigo-650 dark:text-indigo-400" size={20} /> Add Product
+            <Package className="text-indigo-600 dark:text-indigo-400" size={20} /> Add Product
           </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-secondary dark:hover:bg-slate-850 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="p-1 rounded-lg hover:bg-secondary dark:hover:bg-slate-800 text-muted-foreground hover:text-muted-foreground dark:hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Close add product dialog"
           >
             <X size={18} />

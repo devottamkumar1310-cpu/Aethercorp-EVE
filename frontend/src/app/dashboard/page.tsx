@@ -2,23 +2,20 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
-import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects, fetchInventoryAlerts } from "@/services/businessService";
-import { DashboardSummary, ActivityLog, Client, Project } from "@/types/business";
+import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchInventoryAlerts } from "@/services/businessService";
+import { DashboardSummary, ActivityLog, Client } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
 import { devLog } from "@/lib/logger";
 
 import { ExecutiveTimeline } from "@/components/dashboard/ExecutiveTimeline";
 
-import { AlertCircle, Plus, Users, Briefcase, CheckSquare, DollarSign, Activity, Sparkles, Package } from "lucide-react";
+import { AlertCircle, Users, Briefcase, CheckSquare, DollarSign, Sparkles, Package } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
 // Import Modals
 import { ClientModal } from "@/components/business/ClientModal";
 import { ProjectModal } from "@/components/business/ProjectModal";
-import { TaskModal } from "@/components/business/TaskModal";
-import { RevenueModal } from "@/components/business/RevenueModal";
-import { ExpenseModal } from "@/components/business/ExpenseModal";
 import { fetchTrends, fetchRisks, fetchOpportunities } from "@/services/intelligenceService";
 
 export default function DashboardPage() {
@@ -40,7 +37,6 @@ export default function DashboardPage() {
 
   // Lists for dropdowns in modals
   const [clientsList, setClientsList] = useState<Client[]>([]);
-  const [projectsList, setProjectsList] = useState<Project[]>([]);
 
   // Performance audit variables
   const [startTime] = useState(() => performance.now());
@@ -48,9 +44,6 @@ export default function DashboardPage() {
   // Modal States
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [isRevenueModalOpen, setIsRevenueModalOpen] = useState(false);
-  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
 
   const fetchAllData = (token: string) => {
     setLoadingSummary(true);
@@ -137,12 +130,7 @@ export default function DashboardPage() {
 
   const fetchModalDropdowns = async (token: string) => {
     try {
-      const [clients, projects] = await Promise.all([
-        fetchClients(token),
-        fetchProjects(token)
-      ]);
-      setClientsList(clients);
-      setProjectsList(projects);
+      setClientsList(await fetchClients(token));
     } catch (err) {
       logger.error("Error loading dropdown data:", err);
     }
@@ -252,28 +240,11 @@ export default function DashboardPage() {
       <main className="flex-1 p-6 md:p-8 max-w-[1600px] mx-auto w-full space-y-8">
         
         {/* Executive Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary">Executive Operating System</span>
-              <span className="text-muted-foreground/40">•</span>
-              <span className="text-xs font-medium text-muted-foreground">Founder Command Center</span>
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Founder Executive Command Center</h1>
-            <p className="text-xs md:text-sm text-muted-foreground">
-              Real-time executive intelligence for founder-led D2C commerce: revenue protection, inventory health, cash efficiency, and decision traceability.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>Data Intelligence: Live Sync Active</span>
-            </div>
-          </div>
+        <div className="border-b border-border pb-6">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Operations</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            What needs your attention today.
+          </p>
         </div>
 
         {error && (
@@ -283,50 +254,6 @@ export default function DashboardPage() {
             <AlertDescription className="text-xs">{error}</AlertDescription>
           </Alert>
         )}
-
-        {/* Global Quick Actions Bar */}
-        <div className="bg-card p-4 rounded-xl border border-border shadow-xs flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Operational Actions:</span>
-            <button onClick={() => setIsClientModalOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-xs cursor-pointer">
-              <Plus size={14} /> New Client
-            </button>
-            <button onClick={() => setIsProjectModalOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border transition-all shadow-xs cursor-pointer">
-              <Plus size={14} /> New Project
-            </button>
-            <button onClick={() => setIsTaskModalOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border transition-all shadow-xs cursor-pointer">
-              <Plus size={14} /> New Task
-            </button>
-            <button onClick={() => setIsRevenueModalOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all shadow-xs cursor-pointer">
-              <Plus size={14} /> Add Revenue
-            </button>
-            <button onClick={() => setIsExpenseModalOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 transition-all shadow-xs cursor-pointer">
-              <Plus size={14} /> Add Expense
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Modules:</span>
-            <Link href="/dashboard/clients" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap">
-              <Users size={14} /> Clients
-            </Link>
-            <Link href="/dashboard/projects" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap">
-              <Briefcase size={14} /> Projects
-            </Link>
-            <Link href="/dashboard/tasks" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap">
-              <CheckSquare size={14} /> Tasks
-            </Link>
-            <Link href="/dashboard/finance" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap">
-              <DollarSign size={14} /> Finances
-            </Link>
-            <Link href="/dashboard/inventory" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap">
-              <Package size={14} /> Inventory
-            </Link>
-            <Link href="/dashboard/activity" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors whitespace-nowrap">
-              <Activity size={14} /> Activity Feed
-            </Link>
-          </div>
-        </div>
 
         {/* Hero Executive Operational KPI Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
@@ -478,12 +405,9 @@ export default function DashboardPage() {
                         : "All tracked SKUs are currently above their reorder point."}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 pt-2 border-t border-border/60 text-xs">
+                  <div className="pt-2 border-t border-border/60 text-xs">
                     <Link href="/dashboard/inventory" className="font-semibold text-primary hover:underline">
                       Open Reorder Center →
-                    </Link>
-                    <Link href="/dashboard/traceability?type=reorder" className="text-muted-foreground hover:text-foreground">
-                      View Traceability
                     </Link>
                   </div>
                 </div>
@@ -509,12 +433,9 @@ export default function DashboardPage() {
                         : "Every tracked SKU has sold within the last 30 days."}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 pt-2 border-t border-border/60 text-xs">
+                  <div className="pt-2 border-t border-border/60 text-xs">
                     <Link href="/dashboard/inventory" className="font-semibold text-primary hover:underline">
                       Review Inventory →
-                    </Link>
-                    <Link href="/dashboard/traceability?type=dead_stock" className="text-muted-foreground hover:text-foreground">
-                      View Traceability
                     </Link>
                   </div>
                 </div>
@@ -537,12 +458,9 @@ export default function DashboardPage() {
                         : "No SKU below reorder point currently carries an extended supplier lead time."}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 pt-2 border-t border-border/60 text-xs">
-                    <Link href="/dashboard/tasks" className="font-semibold text-primary hover:underline">
-                      View Tasks →
-                    </Link>
-                    <Link href="/dashboard/eve" className="text-muted-foreground hover:text-foreground">
-                      Consult AI CEO
+                  <div className="pt-2 border-t border-border/60 text-xs">
+                    <Link href="/dashboard/inventory" className="font-semibold text-primary hover:underline">
+                      Review Supplier Exposure →
                     </Link>
                   </div>
                 </div>
@@ -764,50 +682,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Connected Executive Activity Timeline Feed */}
-        <div className="bg-card rounded-xl border border-border p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <Activity size={16} className="text-primary" /> Live Business Activity Timeline
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Real-time operational timeline connecting inventory updates, AI recommendations, and financial milestones</p>
-            </div>
-            <Link href="/dashboard/activity" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
-              View Full Activity Log →
-            </Link>
-          </div>
-
-          <div className="divide-y divide-border/60">
-            {activityLogs.slice(0, 5).map((log) => (
-              <div key={log.id} className="py-3.5 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
-                    <Activity className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                        {log.entity_type}
-                      </span>
-                      <span className="text-xs font-bold text-foreground">{log.action}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{log.description}</p>
-                  </div>
-                </div>
-                <span className="text-[10px] text-muted-foreground whitespace-nowrap font-mono">
-                  {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            ))}
-            {activityLogs.length === 0 && (
-              <div className="py-8 text-center text-xs text-muted-foreground">
-                No recent activity logged yet. Operations synced in real time.
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Executive Audit Timeline */}
         <ExecutiveTimeline logs={activityLogs} loading={loadingLogs} />
       </main>
@@ -815,9 +689,6 @@ export default function DashboardPage() {
       {/* Render Modals */}
       <ClientModal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} token={sessionToken} onSuccess={handleModalSuccess} />
       <ProjectModal isOpen={isProjectModalOpen} onClose={() => setIsProjectModalOpen(false)} token={sessionToken} clients={clientsList} onSuccess={handleModalSuccess} />
-      <TaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} token={sessionToken} projects={projectsList} onSuccess={handleModalSuccess} />
-      <RevenueModal isOpen={isRevenueModalOpen} onClose={() => setIsRevenueModalOpen(false)} token={sessionToken} projects={projectsList} onSuccess={handleModalSuccess} />
-      <ExpenseModal isOpen={isExpenseModalOpen} onClose={() => setIsExpenseModalOpen(false)} token={sessionToken} onSuccess={handleModalSuccess} />
     </div>
   );
 }

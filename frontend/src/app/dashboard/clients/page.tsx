@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchClients, deleteClientAPI } from "@/services/businessService";
 import { Client } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
-import { Users, Plus, ArrowLeft, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import { ClientModal } from "@/components/business/ClientModal";
 import { toast } from "sonner";
 
@@ -66,16 +65,13 @@ export default function ClientsPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
-      <div className="flex items-center gap-4 text-muted-foreground mb-4">
-        <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
-      </div>
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Users className="text-blue-600"/> Clients</h1>
-          <p className="text-xs text-muted-foreground mt-1">Manage wholesale accounts, retail partners, and D2C stockist relationships.</p>
+          <h1 className="text-3xl font-bold text-foreground">Clients</h1>
+          <p className="text-sm text-muted-foreground mt-1">Wholesale accounts, retail partners and D2C stockists.</p>
         </div>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
-          <Plus size={18}/> New Client Account
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors cursor-pointer text-sm font-medium">
+          <Plus size={17}/> New Client
         </button>
       </div>
       
@@ -115,7 +111,6 @@ export default function ClientsPage() {
                   <th className="px-6 py-3 font-medium text-muted-foreground">Company Name</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Account Type</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Connected Initiatives</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Joined</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
@@ -128,23 +123,12 @@ export default function ClientsPage() {
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${c.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-muted text-foreground'}`}>{c.status}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Link href="/dashboard/projects" className="text-xs font-semibold text-primary hover:underline">
-                          Active Projects →
-                        </Link>
-                        <span className="text-muted-foreground/30">•</span>
-                        <Link href="/dashboard/finance" className="text-xs font-semibold text-emerald-400 hover:underline">
-                          Financials →
-                        </Link>
-                      </div>
-                    </td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(c)} className="p-1.5 text-muted-foreground hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleEdit(c)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" title="Edit">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(c.id)} className="p-1.5 text-muted-foreground hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
+                      <button onClick={() => handleDelete(c.id)} className="p-1.5 text-muted-foreground hover:text-rose-500 transition-colors ml-2 cursor-pointer" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>

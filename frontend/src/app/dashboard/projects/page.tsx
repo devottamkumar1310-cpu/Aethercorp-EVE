@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { fetchProjects, fetchClients, deleteProjectAPI } from "@/services/businessService";
 import { Project, Client } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
-import Link from "next/link";
-import { Briefcase, Plus, ArrowLeft, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import { ProjectModal } from "@/components/business/ProjectModal";
 import { toast } from "sonner";
 
@@ -72,39 +71,16 @@ export default function ProjectsPage() {
 
   return (
     <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
-      <div className="flex items-center gap-4 text-muted-foreground mb-4">
-        <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
-      </div>
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Briefcase className="text-blue-600"/> Active Projects</h1>
-          <p className="text-xs text-muted-foreground mt-1">Strategic commerce initiatives: Dead Stock Recovery, Collection Launches, Supplier Audits, and Margin Improvements.</p>
+          <h1 className="text-3xl font-bold text-foreground">Projects</h1>
+          <p className="text-sm text-muted-foreground mt-1">Initiatives you are running across the business.</p>
         </div>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
-          <Plus size={18}/> New Strategic Initiative
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors cursor-pointer text-sm font-medium">
+          <Plus size={17}/> New Project
         </button>
       </div>
 
-      {/* Strategic Founder Initiative Templates */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {[
-          "Dead Stock Recovery",
-          "Summer Collection Launch",
-          "Supplier Optimization",
-          "Inventory Audit",
-          "Margin Improvement",
-        ].map((initName) => (
-          <button
-            key={initName}
-            onClick={handleCreate}
-            className="p-3 bg-card border border-border hover:border-primary/40 rounded-xl text-left transition-all hover:bg-muted/40 cursor-pointer shadow-xs group"
-          >
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">Initiative Preset</span>
-            <span className="text-xs font-bold text-foreground block mt-1 group-hover:text-primary transition-colors">{initName}</span>
-          </button>
-        ))}
-      </div>
-      
       {loading ? (
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden animate-pulse">
           <div className="overflow-x-auto w-full scrollbar-thin">
@@ -145,12 +121,11 @@ export default function ProjectsPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Strategic Initiative</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Project</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Budget</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Progress</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Connected Deliverables</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Target Deadline</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Deadline</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
@@ -170,30 +145,19 @@ export default function ProjectsPage() {
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${p.status === 'active' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-muted text-foreground'}`}>{p.status}</span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Link href="/dashboard/tasks" className="text-xs font-semibold text-primary hover:underline">
-                          View Tasks →
-                        </Link>
-                        <span className="text-muted-foreground/30">•</span>
-                        <Link href="/dashboard/traceability" className="text-xs font-semibold text-indigo-400 hover:underline">
-                          Traceability →
-                        </Link>
-                      </div>
-                    </td>
                     <td className="px-6 py-4 text-muted-foreground">{p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => handleEdit(p)} className="p-1.5 text-muted-foreground hover:text-blue-600:text-blue-400 transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleEdit(p)} className="p-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" title="Edit">
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-muted-foreground hover:text-red-650:text-red-400 transition-colors ml-2 cursor-pointer" title="Delete">
+                      <button onClick={() => handleDelete(p.id)} className="p-1.5 text-muted-foreground hover:text-rose-500 transition-colors ml-2 cursor-pointer" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </td>
                   </tr>
                 ))}
                 {projects.length === 0 && (
-                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No projects found. Click "New Project" to get started.</td></tr>
+                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No projects yet. Create one to get started.</td></tr>
                 )}
               </tbody>
             </table>

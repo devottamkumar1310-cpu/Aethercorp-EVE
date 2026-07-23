@@ -247,7 +247,7 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                       className={`p-4 bg-background border rounded-xl relative group transition-all ${
                         g.is_active 
                           ? "border-border hover:border-border" 
-                          : "border-slate-850/40 opacity-70 hover:opacity-100 hover:border-border"
+                          : "border-slate-800/40 opacity-70 hover:opacity-100 hover:border-border"
                       }`}
                     >
                       {/* Top Action Buttons (Edit / Toggle Active / Delete) */}
@@ -267,8 +267,8 @@ export function MemoryManagerPanel({ isOpen, onClose, token }: MemoryManagerPane
                             title={g.is_active ? "Disable goal" : "Enable goal"}
                             className={`p-1 rounded transition-all cursor-pointer ${
                               g.is_active 
-                                ? "text-muted-foreground hover:text-amber-450 hover:bg-amber-500/10" 
-                                : "text-muted-foreground hover:text-emerald-450 hover:bg-emerald-500/10"
+                                ? "text-muted-foreground hover:text-amber-400 hover:bg-amber-500/10" 
+                                : "text-muted-foreground hover:text-emerald-400 hover:bg-emerald-500/10"
                             }`}
                           >
                             {isUpdating ? (

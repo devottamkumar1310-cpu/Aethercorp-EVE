@@ -417,34 +417,6 @@ export default function TraceabilityDashboard() {
                   </div>
                 </div>
 
-                {/* Founder Executive Next Steps (Connected Operating System) */}
-                <div className="rounded-2xl border border-border bg-card/60 p-5 flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary block">Connected Executive Next Steps</span>
-                    <p className="text-xs text-muted-foreground mt-0.5">Progress from decision audit directly into execution or activity timeline</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href="/dashboard/tasks"
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-xs"
-                    >
-                      Execute Task →
-                    </Link>
-                    <Link
-                      href="/dashboard/inventory"
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary text-foreground hover:bg-muted transition-all border border-border"
-                    >
-                      View Inventory →
-                    </Link>
-                    <Link
-                      href="/dashboard/activity"
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Audit Activity History →
-                    </Link>
-                  </div>
-                </div>
-
                 {/* Risk If Ignored Warning */}
                 {selectedTrace.evidence_snapshot?.risk_if_ignored && (
                   <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5 flex gap-3 items-start">
