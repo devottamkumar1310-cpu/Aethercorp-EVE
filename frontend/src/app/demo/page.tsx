@@ -10,8 +10,6 @@ import {
   Search, 
   Filter, 
   ArrowLeft,
-  MessageSquare,
-  Sparkles,
   Bot
 } from "lucide-react";
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 
 export default function PricingPage() {
   const [email, setEmail] = useState("");

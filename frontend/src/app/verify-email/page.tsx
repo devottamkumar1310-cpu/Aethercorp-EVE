@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Mail, ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 function VerifyEmailForm() {
