@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Eye, EyeOff, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, AlertTriangle, Loader2, Sparkles, ArrowLeft } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -36,10 +37,10 @@ export default function ResetPasswordPage() {
   ].filter(Boolean).length;
 
   const getStrengthText = (score: number) => {
-    if (password.length === 0) return { label: "", color: "bg-card", text: "text-muted-foreground" };
-    if (score <= 2) return { label: "Weak", color: "bg-rose-500", text: "text-rose-500" };
-    if (score <= 4) return { label: "Fair", color: "bg-amber-500", text: "text-amber-550" };
-    return { label: "Strong", color: "bg-emerald-500", text: "text-emerald-400" };
+    if (password.length === 0) return { label: "", color: "bg-muted", text: "text-muted-foreground" };
+    if (score <= 2) return { label: "Weak", color: "bg-rose-500", text: "text-rose-600" };
+    if (score <= 4) return { label: "Fair", color: "bg-amber-500", text: "text-amber-600" };
+    return { label: "Strong", color: "bg-emerald-500", text: "text-emerald-600" };
   };
 
   const strength = getStrengthText(strengthScore);
@@ -112,175 +113,163 @@ export default function ResetPasswordPage() {
 
   if (checkingSession) {
     return (
-      <div data-theme="executive-light" className="eve-auth-shell min-h-screen bg-secondary flex flex-col items-center justify-center p-4 font-sans text-foreground">
-        <Loader2 className="w-10 h-10 text-indigo-600 animate-spin mb-4" />
-        <p className="text-muted-foreground text-sm tracking-wider animate-pulse">Verifying reset credentials...</p>
-      </div>
+      <AuthShell>
+        <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Loader2 size={24} className="animate-spin text-indigo-600" />
+          <span className="text-sm font-medium">Verifying reset credentials...</span>
+        </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div data-theme="executive-light" className="eve-auth-shell min-h-screen bg-secondary text-foreground flex flex-col justify-center items-center p-4 font-sans relative">
-      <div className="eve-auth-card w-full max-w-md bg-card border border-border rounded-2xl shadow-xl overflow-hidden relative z-10">
-        <div className="p-8">
-          <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl tracking-tighter shadow-md shadow-indigo-600/20">
-              EVE
-            </div>
+    <AuthShell>
+      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="text-center space-y-2">
+          <div className="chip-accent inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm mb-1">
+            <Sparkles className="h-3.5 w-3.5 text-[color:var(--eve-accent)]" /> Security Credentials
           </div>
-          <h2 className="text-2xl font-bold text-foreground text-center mb-1.5">Set New Password</h2>
-          <p className="text-xs text-muted-foreground text-center mb-8">Establish a new operational key for your EVE portal</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Set New Password</h1>
+          <p className="text-xs text-muted-foreground">Establish a new password for your EVE account</p>
+        </div>
 
-          {errorMsg && (
-            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2 mb-6">
-              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+        {errorMsg && (
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
-          {successMsg && (
-            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs rounded-xl flex items-start gap-2 mb-6">
-              <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{successMsg}</span>
-            </div>
-          )}
+        {successMsg && (
+          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs rounded-xl flex items-start gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{successMsg}</span>
+          </div>
+        )}
 
-          {sessionActive && !successMsg ? (
-            <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">New Password</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-muted-foreground"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-
-                {/* Password Strength Meter & Visual Indicators */}
-                {password.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-muted-foreground">Strength:</span>
-                      <span className={`font-semibold ${strength.text}`}>{strength.label}</span>
-                    </div>
-                    
-                    {/* Strength Bar */}
-                    <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
-                      <div 
-                        className={`h-full ${strength.color} transition-all duration-300`} 
-                        style={{ width: `${(strengthScore / 5) * 100}%` }}
-                      />
-                    </div>
-
-                    {/* Rules Checklist */}
-                    <ul className="space-y-1.5 text-xs text-muted-foreground mt-2">
-                      <li className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasMinLength ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
-                          {hasMinLength ? "✓" : "✕"}
-                        </span>
-                        <span>At least 8 characters</span>
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasUppercase ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
-                          {hasUppercase ? "✓" : "✕"}
-                        </span>
-                        <span>At least one uppercase letter (A-Z)</span>
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasLowercase ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
-                          {hasLowercase ? "✓" : "✕"}
-                        </span>
-                        <span>At least one lowercase letter (a-z)</span>
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasNumber ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
-                          {hasNumber ? "✓" : "✕"}
-                        </span>
-                        <span>At least one number (0-9)</span>
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasSpecialChar ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
-                          {hasSpecialChar ? "✓" : "✕"}
-                        </span>
-                        <span>At least one special character (!@#$%^&*)</span>
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-foreground mb-1.5">Confirm New Password</label>
+        {sessionActive && !successMsg ? (
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">New Password</label>
+              <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-muted-foreground"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all placeholder:text-muted-foreground"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || !isPasswordValid}
-                className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer mt-6"
+              {/* Password Strength Meter & Visual Indicators */}
+              {password.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Strength:</span>
+                    <span className={`font-semibold ${strength.text}`}>{strength.label}</span>
+                  </div>
+                  
+                  {/* Strength Bar */}
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
+                    <div 
+                      className={`h-full ${strength.color} transition-all duration-300`} 
+                      style={{ width: `${(strengthScore / 5) * 100}%` }}
+                    />
+                  </div>
+
+                  {/* Rules Checklist */}
+                  <ul className="space-y-1.5 text-xs text-muted-foreground mt-2">
+                    <li className="flex items-center gap-1.5">
+                      <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasMinLength ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
+                        {hasMinLength ? "✓" : "✕"}
+                      </span>
+                      <span>At least 8 characters</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasUppercase ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
+                        {hasUppercase ? "✓" : "✕"}
+                      </span>
+                      <span>At least one uppercase letter (A-Z)</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasLowercase ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
+                        {hasLowercase ? "✓" : "✕"}
+                      </span>
+                      <span>At least one lowercase letter (a-z)</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasNumber ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
+                        {hasNumber ? "✓" : "✕"}
+                      </span>
+                      <span>At least one number (0-9)</span>
+                    </li>
+                    <li className="flex items-center gap-1.5">
+                      <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold ${hasSpecialChar ? "bg-emerald-500/10 text-emerald-700 border border-emerald-500/30" : "bg-muted text-muted-foreground border border-border"}`}>
+                        {hasSpecialChar ? "✓" : "✕"}
+                      </span>
+                      <span>At least one special character (!@#$%^&*)</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">Confirm New Password</label>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all placeholder:text-muted-foreground"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !isPasswordValid}
+              className="w-full py-3.5 px-4 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+            >
+              {loading ? (
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Updating Key...
+                </span>
+              ) : (
+                "Update Password"
+              )}
+            </button>
+          </form>
+        ) : (
+          !successMsg && (
+            <div className="space-y-4">
+              <Link
+                href="/forgot-password"
+                className="w-full py-3 px-4 border border-border hover:bg-muted text-foreground rounded-xl text-xs font-bold transition-all cursor-pointer text-center block"
               >
-                {loading ? (
-                  <span className="flex items-center gap-1.5">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Updating Key...
-                  </span>
-                ) : (
-                  "Update Password"
-                )}
-              </button>
-            </form>
-          ) : (
-            !successMsg && (
-              <div className="space-y-4">
-                <Link
-                  href="/forgot-password"
-                  className="w-full flex justify-center py-2.5 px-4 border border-border hover:bg-muted text-foreground rounded-xl text-sm font-semibold transition-all cursor-pointer text-center"
-                >
-                  Request New Reset Email
-                </Link>
-              </div>
-            )
-          )}
-        </div>
-        
-        <div className="px-8 py-4 bg-muted/50 border-t border-border text-center">
-          <Link href="/login" className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
-            Back to login
+                Request New Reset Email
+              </Link>
+            </div>
+          )
+        )}
+
+        <div className="pt-4 border-t border-border/60 text-center">
+          <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-bold text-[color:var(--eve-accent)] hover:underline transition-colors">
+            <ArrowLeft size={14} /> Back to Sign In
           </Link>
         </div>
       </div>
-      <footer className="mt-8 text-center text-xs text-muted-foreground space-x-4">
-        <Link href="/privacy" className="hover:text-foreground transition-colors">
-          Privacy Policy
-        </Link>
-        <span>&bull;</span>
-        <Link href="/terms" className="hover:text-foreground transition-colors">
-          Terms of Service
-        </Link>
-        <span>&bull;</span>
-        <a href="mailto:support@eveinventory.in" className="hover:text-foreground transition-colors">
-          Contact
-        </a>
-      </footer>
-    </div>
+    </AuthShell>
   );
 }
+
 

@@ -4,8 +4,9 @@ import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, ArrowRight, Sparkles, Brain } from "lucide-react";
+import { Building2, ArrowRight, Sparkles, Brain, CheckCircle2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function OnboardingPage() {
   const [workspaceName, setWorkspaceName] = useState("");
@@ -132,175 +133,170 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
-      {/* Decorative Radial Glows */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="w-full max-w-xl bg-background/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-border overflow-hidden z-10">
-        <div className="p-8 md:p-10">
-          <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center !text-white [&_svg]:!text-white [&_svg]:!stroke-white font-bold text-xl tracking-tighter shadow-lg shadow-indigo-600/20">
-              EVE
-            </div>
+    <AuthShell>
+      <div className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 sm:p-10 shadow-xl space-y-8">
+        <div className="text-center space-y-2">
+          <div className="chip-accent inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm mb-1">
+            <Sparkles className="h-3.5 w-3.5 text-[color:var(--eve-accent)]" /> Organization Setup
           </div>
-          
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center tracking-tight mb-2">
-            Welcome to EVE
-          </h2>
-          <p className="text-muted-foreground text-center mb-8 text-sm md:text-base">
+          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-foreground">Welcome to EVE</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
             Set up your brand's intelligence hub to begin forecasting and optimizing operations.
           </p>
+        </div>
 
-          {error && (
-            <div className="p-3 mb-6 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-xl border border-red-500/20">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {/* Demo Workspace Cards (Option A) */}
-            <div className="space-y-3">
-               <div className="flex items-center justify-between mb-4">
-                 <div className="flex items-center gap-2">
-                   <Sparkles size={16} className="text-indigo-400" />
-                   <h3 className="text-sm font-semibold text-foreground">Explore with a Demo Company</h3>
-                 </div>
-                 <button
-                   onClick={handleSkip}
-                   disabled={loading || loadingDemo}
-                   className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-lg border border-indigo-500/20"
-                 >
-                   Skip for now <ArrowRight size={12} className="inline ml-1" />
-                 </button>
-               </div>
-              <button
-                onClick={() => handleCreateDemoWorkspace("luma")}
-                disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-card hover:bg-muted/40 border border-border hover:border-indigo-500/50 rounded-xl transition-all shadow-sm hover:shadow-md group relative hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <Brain size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                      Luma & Co.
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Premium womenswear brand growing fast. Hero products at stockout risk — strong margins, zero dead stock.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleCreateDemoWorkspace("drift")}
-                disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-card hover:bg-muted/40 border border-border hover:border-indigo-500/50 rounded-xl transition-all shadow-sm hover:shadow-md group relative hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <Building2 size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                      Drift Collective
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Streetwear brand with a cash-flow crisis. $92k locked in dead collab drops — core line still selling.
-                    </p>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleCreateDemoWorkspace("basecamp")}
-                disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-card hover:bg-muted/40 border border-border hover:border-indigo-500/50 rounded-xl transition-all shadow-sm hover:shadow-md group relative hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <Building2 size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
-                      Basecamp Basics
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Unisex essentials caught between seasons. Summer selling out, winter stuck as dead stock.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            {/* Custom Brand Workspace Setup (Option B) */}
-            {!showManualForm ? (
-              <button
-                onClick={() => setShowManualForm(true)}
-                disabled={loading || loadingDemo}
-                className="w-full text-left p-5 bg-card border border-border hover:border-border rounded-xl transition-all group"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-secondary text-muted-foreground rounded-lg group-hover:bg-secondary group-hover:text-foreground transition-colors">
-                    <Building2 size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground group-hover:text-muted-foreground transition-colors">
-                      Configure Clean Workspace
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Start fresh. Create a blank organization database and upload your own sales spreadsheets and supplier invoices.
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ) : (
-              <form onSubmit={handleCreateWorkspace} className="p-5 bg-card border border-border rounded-xl space-y-4 animate-in slide-in-from-bottom-2 duration-200">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <Building2 size={16} className="text-indigo-400" /> Enter Workspace Details
-                </h3>
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">Brand / Company Name</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <input
-                      type="text"
-                      required
-                      value={workspaceName}
-                      onChange={(e) => setWorkspaceName(e.target.value)}
-                      className="pl-10 block w-full bg-background border border-border rounded-lg px-3 py-2 text-foreground placeholder-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm outline-none transition-all"
-                      placeholder="Acme Wearables"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={loading || !workspaceName.trim()}
-                    className="flex-1 flex justify-center items-center py-2 px-4 border border-transparent rounded-lg text-sm font-semibold text-foreground bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50"
-                  >
-                    {loading ? "Creating..." : "Create Workspace"}
-                    {!loading && <ArrowRight size={14} className="ml-1.5" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowManualForm(false)}
-                    className="py-2 px-4 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary transition-all"
-                  >
-                    Back
-                  </button>
-                </div>
-              </form>
-            )}
-            
+        {error && (
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+            <span>{error}</span>
           </div>
+        )}
+
+        <div className="space-y-4">
+          {/* Demo Workspace Cards */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <Brain size={16} className="text-[color:var(--eve-accent)]" />
+                <h2 className="text-xs font-bold text-foreground uppercase tracking-wider">Explore with a Demo Brand</h2>
+              </div>
+              <button
+                onClick={handleSkip}
+                disabled={loading || loadingDemo}
+                className="text-xs font-bold text-[color:var(--eve-accent)] hover:underline transition-all cursor-pointer flex items-center gap-1"
+              >
+                Skip for now <ArrowRight size={12} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => handleCreateDemoWorkspace("luma")}
+              disabled={loading || loadingDemo}
+              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-violet-500/10 text-violet-600 rounded-xl group-hover:bg-violet-600 group-hover:text-white transition-colors shrink-0">
+                  <Brain size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground group-hover:text-[color:var(--eve-accent)] transition-colors flex items-center gap-2">
+                    Luma &amp; Co.
+                    <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-500/20">Womenswear</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Premium womenswear brand with strong margins. High inventory velocity with upcoming stockout risks on core hero SKUs.
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleCreateDemoWorkspace("drift")}
+              disabled={loading || loadingDemo}
+              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground group-hover:text-[color:var(--eve-accent)] transition-colors flex items-center gap-2">
+                    Drift Collective
+                    <span className="text-[10px] font-semibold bg-amber-500/10 text-amber-700 px-2 py-0.5 rounded-full border border-amber-500/20">Streetwear</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Streetwear brand with working capital bottlenecks. $92k trapped in past collab drops with core line selling consistently.
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => handleCreateDemoWorkspace("basecamp")}
+              disabled={loading || loadingDemo}
+              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-blue-500/10 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground group-hover:text-[color:var(--eve-accent)] transition-colors flex items-center gap-2">
+                    Basecamp Basics
+                    <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-700 px-2 py-0.5 rounded-full border border-blue-500/20">Essentials</span>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Unisex essentials apparel brand navigating seasonal transitions between summer sellouts and winter stock buildup.
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Custom Brand Workspace Setup */}
+          {!showManualForm ? (
+            <button
+              onClick={() => setShowManualForm(true)}
+              disabled={loading || loadingDemo}
+              className="w-full text-left p-4 bg-background border border-border hover:border-border rounded-xl transition-all group cursor-pointer"
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-secondary text-muted-foreground rounded-xl group-hover:bg-secondary group-hover:text-foreground transition-colors shrink-0">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-foreground transition-colors">
+                    Configure Blank Workspace
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Start clean. Create a fresh organization environment and upload your brand's sales CSVs and inventory records.
+                  </p>
+                </div>
+              </div>
+            </button>
+          ) : (
+            <form onSubmit={handleCreateWorkspace} className="p-5 bg-background border border-border rounded-xl space-y-4 animate-fade-in">
+              <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                <Building2 size={16} className="text-[color:var(--eve-accent)]" /> Enter Workspace Details
+              </h3>
+              <div>
+                <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-2">Brand / Company Name</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <input
+                    type="text"
+                    required
+                    value={workspaceName}
+                    onChange={(e) => setWorkspaceName(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all"
+                    placeholder="Acme Wearables"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={loading || !workspaceName.trim()}
+                  className="flex-1 py-3 px-4 text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Creating..." : "Create Workspace"}
+                  {!loading && <ArrowRight size={14} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowManualForm(false)}
+                  className="py-3 px-4 border border-border rounded-xl text-xs font-bold text-foreground bg-secondary hover:bg-secondary/70 transition-all cursor-pointer"
+                >
+                  Back
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }
+

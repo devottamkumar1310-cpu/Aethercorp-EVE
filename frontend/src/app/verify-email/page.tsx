@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Mail, ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { Mail, ArrowLeft, RefreshCw, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 function VerifyEmailForm() {
   const router = useRouter();
@@ -74,99 +75,86 @@ function VerifyEmailForm() {
 
   if (isChecking) {
     return (
-      <div data-theme="executive-light" className="eve-auth-shell min-h-screen bg-secondary flex flex-col justify-center items-center p-4 text-foreground">
+      <AuthShell>
         <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
           <RefreshCw size={24} className="animate-spin text-indigo-600" />
           <span className="text-sm font-medium">Verifying session...</span>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div data-theme="executive-light" className="eve-auth-shell min-h-screen bg-secondary text-foreground flex flex-col justify-center items-center p-4 font-sans relative">
-      <div className="eve-auth-card w-full max-w-md bg-card rounded-2xl shadow-xl border border-border overflow-hidden relative z-10">
-        <div className="p-8">
-          <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl tracking-tighter shadow-md shadow-indigo-600/20">
-              EVE
-            </div>
+    <AuthShell>
+      <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="text-center space-y-2">
+          <div className="chip-accent inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm mb-1">
+            <Sparkles className="h-3.5 w-3.5 text-[color:var(--eve-accent)]" /> Verification Required
           </div>
-
-          <h2 className="text-2xl font-bold text-foreground text-center mb-1.5">Verify Your Email</h2>
-          <p className="text-muted-foreground text-center mb-6 text-xs leading-relaxed">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Verify Your Email</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
             We sent a verification link to <span className="font-semibold text-foreground">{email || "your registered email"}</span>. Please check your inbox and confirm.
           </p>
+        </div>
 
-          {message && (
-            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs rounded-xl flex items-start gap-2 mb-4">
-              <CheckCircle size={16} className="shrink-0 mt-0.5" />
-              <span>{message}</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2 mb-4">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <button
-              onClick={handleResend}
-              disabled={loading || cooldown > 0}
-              className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw size={14} className="animate-spin" />
-                  Resending...
-                </>
-              ) : cooldown > 0 ? (
-                `Resend in ${cooldown}s`
-              ) : (
-                "Resend Verification Link"
-              )}
-            </button>
-
-            <div className="pt-4 border-t border-border flex flex-col gap-2.5">
-              <Link 
-                href="/login" 
-                className="w-full py-2 px-4 bg-muted hover:bg-muted/80 text-foreground rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
-              >
-                <ArrowLeft size={14} /> Back to Login
-              </Link>
-            </div>
+        {message && (
+          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs rounded-xl flex items-start gap-2">
+            <CheckCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{message}</span>
           </div>
+        )}
+
+        {error && (
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <button
+            onClick={handleResend}
+            disabled={loading || cooldown > 0}
+            className="w-full py-3.5 px-4 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <RefreshCw size={14} className="animate-spin" />
+                Resending...
+              </>
+            ) : cooldown > 0 ? (
+              `Resend link in ${cooldown}s`
+            ) : (
+              "Resend Verification Link"
+            )}
+          </button>
+        </div>
+
+        <div className="pt-4 border-t border-border/60 text-center">
+          <Link 
+            href="/login" 
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[color:var(--eve-accent)] hover:underline transition-colors"
+          >
+            <ArrowLeft size={14} /> Back to Sign In
+          </Link>
         </div>
       </div>
-      <footer className="mt-8 text-center text-xs text-muted-foreground space-x-4">
-        <Link href="/privacy" className="hover:text-foreground transition-colors">
-          Privacy Policy
-        </Link>
-        <span>&bull;</span>
-        <Link href="/terms" className="hover:text-foreground transition-colors">
-          Terms of Service
-        </Link>
-        <span>&bull;</span>
-        <a href="mailto:support@eveinventory.in" className="hover:text-foreground transition-colors">
-          Contact
-        </a>
-      </footer>
-    </div>
+    </AuthShell>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div data-theme="executive-light" className="min-h-screen bg-secondary flex flex-col justify-center items-center p-4 text-foreground">
-        <RefreshCw size={24} className="animate-spin text-indigo-600" />
-      </div>
+      <AuthShell>
+        <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <RefreshCw size={24} className="animate-spin text-indigo-600" />
+        </div>
+      </AuthShell>
     }>
       <VerifyEmailForm />
     </Suspense>
   );
 }
+
 
