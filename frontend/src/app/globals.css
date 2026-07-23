@@ -2,7 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* The app toggles dark mode via [data-theme="dark"|"executive-dark"] on <html>,
+   not a .dark class — so Tailwind's default `dark:` variant (which only matches
+   a .dark ancestor) never activated anywhere in this codebase. This rewires the
+   variant to the attribute EVE actually uses, retroactively activating every
+   pre-existing `dark:` utility class across the app instead of leaving them dead. */
+@custom-variant dark (&:is(.dark *, [data-theme="dark"] *, [data-theme="executive-dark"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -1556,6 +1561,22 @@
   background: var(--eve-accent-soft);
   border: 1px solid var(--eve-purple-border);
   margin-bottom: 0.25rem;
+}
+
+/* ── KEYBOARD FOCUS VISIBILITY — DASHBOARD APP ──
+   The landing page already has a :focus-visible rule; the authenticated app
+   (.eve-app) had none, so keyboard users tabbing through the dashboard got no
+   visible focus indicator on most controls (many use `outline-none`). */
+.eve-app a:focus-visible,
+.eve-app button:focus-visible,
+.eve-app input:focus-visible,
+.eve-app select:focus-visible,
+.eve-app textarea:focus-visible,
+.eve-app [tabindex]:focus-visible,
+.eve-app [role="button"]:focus-visible {
+  outline: 2px solid var(--eve-purple-500, #8b5cf6);
+  outline-offset: 2px;
+  border-radius: 0.5rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

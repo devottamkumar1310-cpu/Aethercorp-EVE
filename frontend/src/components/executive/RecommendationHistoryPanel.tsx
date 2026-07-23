@@ -2,9 +2,11 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
-import { X, Loader2, Sparkles, Award, ArrowUpRight, TrendingUp, AlertTriangle, Target } from "lucide-react";
+import { X, Loader2, Sparkles, Award, ArrowUpRight, TrendingUp, Target } from "lucide-react";
 import { getRecommendations } from "@/services/executiveService";
+import { updateRecommendationStatusAPI } from "@/services/businessService";
 import { AIRecommendationResponse } from "@/types/executive";
+import { toast } from "sonner";
 
 interface RecommendationHistoryPanelProps {
   isOpen: boolean;
@@ -16,6 +18,25 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
   const [recommendations, setRecommendations] = useState<AIRecommendationResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [statusById, setStatusById] = useState<Record<string, "Accepted" | "Dismissed">>({});
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const handleStatusChange = async (id: string, newStatus: "Accepted" | "Dismissed") => {
+    setPendingId(id);
+    try {
+      await updateRecommendationStatusAPI(token, id, newStatus === "Accepted" ? "Completed" : "Dismissed");
+      setStatusById((prev) => ({ ...prev, [id]: newStatus }));
+      toast.success(
+        newStatus === "Accepted"
+          ? "Recommendation accepted — logged to Activity and Decision Traceability."
+          : "Recommendation dismissed — logged to Activity and Decision Traceability."
+      );
+    } catch (err: any) {
+      toast.error(err?.message || "Couldn't save this action. Please try again.");
+    } finally {
+      setPendingId(null);
+    }
+  };
 
   const fetchRecommendations = async () => {
     if (!token) return;
@@ -46,31 +67,31 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
     const s = source.toLowerCase();
     if (s === "finance") {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 rounded-md">
           Finance Agent
         </span>
       );
     } else if (s === "operations" || s === "inventory") {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 rounded-md">
           Operations Agent
         </span>
       );
     } else if (s === "client" || s === "clients") {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 rounded-md">
           Client Agent
         </span>
       );
     } else if (s === "growth") {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-pink-500/10 text-pink-400 border border-pink-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-pink-500/10 text-pink-700 dark:text-pink-300 border border-pink-500/20 rounded-md">
           Growth Agent
         </span>
       );
     } else {
       return (
-        <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 rounded-md">
+        <span className="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 rounded-md">
           COO Synthesis
         </span>
       );
@@ -155,9 +176,9 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
                               key={g.id}
                               title={g.description}
                               className={`text-[9px] font-bold px-2 py-0.5 rounded-full border cursor-help ${
-                                g.goal_type === 'profitability' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/20' :
-                                g.goal_type === 'growth' ? 'bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/20' :
-                                g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                g.goal_type === 'profitability' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20' :
+                                g.goal_type === 'growth' ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20' :
+                                g.goal_type === 'cost_reduction' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20' :
                                 'bg-slate-500/10 text-muted-foreground border-slate-500/20'
                               }`}
                             >
@@ -194,53 +215,89 @@ export function RecommendationHistoryPanel({ isOpen, onClose, token }: Recommend
                       </button>
                     </div>
 
-                    {/* Expanded details */}
-                    {isExpanded && (
-                      <div className="space-y-3 pt-3 border-t border-border animate-in fade-in slide-in-from-top-1 duration-150">
-                        {/* Data Used */}
-                        {item.data_used && item.data_used.length > 0 && (
-                          <div>
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                              <TrendingUp size={10} className="text-cyan-400" /> Data Indicators
-                            </span>
-                            <ul className="list-disc list-inside text-xs text-muted-foreground mt-1 pl-1 space-y-0.5">
-                              {item.data_used.map((data: any, idx: number) => (
-                                <li key={idx} className="truncate">{String(data)}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Risks & Opportunities */}
-                        <div className="grid grid-cols-2 gap-3">
-                          {item.risk_factors && item.risk_factors.length > 0 && (
-                            <div>
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                                <AlertTriangle size={10} className="text-amber-400" /> Risk Factors
-                              </span>
-                              <ul className="text-[11px] text-muted-foreground mt-1 list-disc list-inside space-y-0.5 pl-1">
-                                {item.risk_factors.map((risk, idx) => (
-                                  <li key={idx} className="leading-tight">{risk}</li>
-                                ))}
+                    {/* Expanded details & Founder Action Buttons */}
+                    <div className="space-y-3 pt-3 border-t border-border">
+                      {(item.risk_factors?.length > 0 || item.opportunity_factors?.length > 0) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          {item.risk_factors?.length > 0 && (
+                            <div className="bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg">
+                              <span className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400 block mb-0.5">Risk Factors</span>
+                              <ul className="text-foreground space-y-0.5">
+                                {item.risk_factors.map((r, i) => <li key={i}>• {r}</li>)}
                               </ul>
                             </div>
                           )}
+                          {item.opportunity_factors?.length > 0 && (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-lg">
+                              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block mb-0.5">Opportunity Factors</span>
+                              <ul className="text-foreground space-y-0.5">
+                                {item.opportunity_factors.map((o, i) => <li key={i}>• {o}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                          {item.opportunity_factors && item.opportunity_factors.length > 0 && (
+                      {/* Founder Executive Actions */}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border">
+                        <a
+                          href={`/dashboard/traceability?traceId=${item.id}`}
+                          className="px-2.5 py-1 text-[11px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors"
+                        >
+                          Open Traceability
+                        </a>
+                        {statusById[item.id] ? (
+                          <span className={`px-2.5 py-1 text-[11px] font-semibold rounded border ${
+                            statusById[item.id] === "Accepted"
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                              : "bg-muted text-muted-foreground border-border"
+                          }`}>
+                            {statusById[item.id] === "Accepted" ? "Accepted" : "Dismissed"}
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleStatusChange(item.id, "Accepted")}
+                              disabled={pendingId === item.id}
+                              className="px-2.5 py-1 text-[11px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/20 rounded transition-colors disabled:opacity-50 disabled:cursor-wait"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(item.id, "Dismissed")}
+                              disabled={pendingId === item.id}
+                              className="px-2.5 py-1 text-[11px] font-medium bg-secondary text-secondary-foreground hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-wait"
+                            >
+                              Dismiss
+                            </button>
+                          </>
+                        )}
+                        <a
+                          href="/dashboard/tasks"
+                          className="px-2.5 py-1 text-[11px] font-medium bg-secondary text-secondary-foreground hover:bg-muted rounded transition-colors"
+                        >
+                          Go to Tasks
+                        </a>
+                      </div>
+
+                      {isExpanded && (
+                        <div className="space-y-3 pt-2">
+                          {/* Data Used */}
+                          {item.data_used && item.data_used.length > 0 && (
                             <div>
                               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                                <Sparkles size={10} className="text-emerald-400" /> Opportunities
+                                <TrendingUp size={10} className="text-cyan-400" /> Data Indicators
                               </span>
-                              <ul className="text-[11px] text-muted-foreground mt-1 list-disc list-inside space-y-0.5 pl-1">
-                                {item.opportunity_factors.map((opp, idx) => (
-                                  <li key={idx} className="leading-tight">{opp}</li>
+                              <ul className="list-disc list-inside text-xs text-muted-foreground mt-1 pl-1 space-y-0.5">
+                                {item.data_used.map((data: any, idx: number) => (
+                                  <li key={idx} className="truncate">{String(data)}</li>
                                 ))}
                               </ul>
                             </div>
                           )}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 );
               })

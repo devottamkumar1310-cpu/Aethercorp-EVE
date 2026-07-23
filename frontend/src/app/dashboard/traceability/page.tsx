@@ -8,6 +8,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL } from "@/lib/api";
 import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
+import { selectTrace } from "@/lib/traceSelection";
 
 interface TraceRecord {
   id: string;
@@ -38,6 +39,7 @@ export default function TraceabilityDashboard() {
   const [traces, setTraces] = useState<TraceRecord[]>([]);
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const limit = 20;
   const searchParams = useSearchParams();
@@ -45,13 +47,14 @@ export default function TraceabilityDashboard() {
 
   const fetchTraces = async (pageIndex: number = 0, signal?: AbortSignal) => {
     setLoading(true);
+    setLoadError(null);
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       const token = session?.access_token;
       const workspaceId = localStorage.getItem("active_workspace_id");
-      
+
       if (!token || !workspaceId) {
         setLoading(false);
         return;
@@ -70,24 +73,22 @@ export default function TraceabilityDashboard() {
       if (!resp.ok) {
         throw new Error("Unable to retrieve decision history records at this time.");
       }
-      
-      const json = await resp.json();
-      setTraces(json || []);
-      if (json && json.length > 0) {
-        const typeParam = new URLSearchParams(window.location.search).get("type");
-        const filterMap: Record<string, string[]> = { low_stock: ["reorder", "low_stock"], dead_stock: ["dead_stock", "markdown"], reorder: ["reorder"], optimization: ["optimization"] };
-        const allowed = typeParam ? filterMap[typeParam] : null;
-        const firstMatch = allowed ? json.find((t: TraceRecord) => allowed.includes(t.recommendation_type?.toLowerCase())) : null;
-        setSelectedTrace(firstMatch || json[0]);
-      } else {
-        setSelectedTrace(null);
-      }
+
+      const loadedTraces: TraceRecord[] = await resp.json();
+      setTraces(loadedTraces);
+      const params = new URLSearchParams(window.location.search);
+      setSelectedTrace(selectTrace(loadedTraces, {
+        traceId: params.get("traceId"),
+        sku: params.get("sku"),
+        type: params.get("type"),
+      }));
       setPage(pageIndex);
     } catch (err: any) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      logger.warn("API load failed.", err);
+      logger.warn("Failed to load decision traces.", err);
       setTraces([]);
       setSelectedTrace(null);
+      setLoadError("Couldn't load decision records right now. Please retry.");
     } finally {
       if (!signal?.aborted) {
         setLoading(false);
@@ -191,6 +192,17 @@ export default function TraceabilityDashboard() {
           <div className="mt-12 text-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto" />
             <p className="mt-4 text-sm text-muted-foreground">Loading recommendation reasoning...</p>
+          </div>
+        ) : loadError ? (
+          <div className="mt-12 rounded-2xl border border-dashed border-rose-500/30 bg-rose-500/5 p-12 text-center max-w-xl mx-auto">
+            <AlertTriangle className="mx-auto h-10 w-10 text-rose-500 opacity-70 mb-4" />
+            <h3 className="text-lg font-bold text-foreground">{loadError}</h3>
+            <button
+              onClick={() => fetchTraces(page)}
+              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+            >
+              <ListRestart className="h-4 w-4" /> Retry
+            </button>
           </div>
         ) : filteredTraces.length === 0 && traces.length > 0 ? (
           <div className="mt-12 rounded-2xl border border-dashed border-border bg-card/20 p-12 text-center max-w-xl mx-auto">
@@ -303,6 +315,43 @@ export default function TraceabilityDashboard() {
                     {selectedTrace.reasoning_chain[0] || "Stock level evaluated below target safety limit."}
                   </p>
                   
+                  {/* Enterprise Visual Decision Flow */}
+                  <div className="mt-6 pt-6 border-t border-border/80 space-y-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
+                      Enterprise Decision Traceability Flow
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-center text-[11px]">
+                      <div className="p-2 bg-indigo-500/10 border border-indigo-500/25 rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-indigo-700 dark:text-indigo-300 block">Step 1</span>
+                        <span className="font-semibold text-foreground truncate block">Recommendation</span>
+                      </div>
+                      <div className="p-2 bg-muted/60 border border-border rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-muted-foreground block">Step 2</span>
+                        <span className="font-semibold text-foreground truncate block">Business Trigger</span>
+                      </div>
+                      <div className="p-2 bg-muted/60 border border-border rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-muted-foreground block">Step 3</span>
+                        <span className="font-semibold text-foreground truncate block">Inventory Evidence</span>
+                      </div>
+                      <div className="p-2 bg-muted/60 border border-border rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-muted-foreground block">Step 4</span>
+                        <span className="font-semibold text-foreground truncate block">Financial Evidence</span>
+                      </div>
+                      <div className="p-2 bg-blue-500/10 border border-blue-500/25 rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-blue-700 dark:text-blue-400 block">Step 5</span>
+                        <span className="font-semibold text-blue-700 dark:text-blue-300 truncate block">Confidence</span>
+                      </div>
+                      <div className="p-2 bg-emerald-500/10 border border-emerald-500/25 rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-emerald-700 dark:text-emerald-400 block">Step 6</span>
+                        <span className="font-semibold text-emerald-700 dark:text-emerald-300 truncate block">Expected Impact</span>
+                      </div>
+                      <div className="p-2 bg-emerald-500/10 border border-emerald-500/25 rounded-lg">
+                        <span className="text-[9px] uppercase font-bold text-emerald-700 dark:text-emerald-300 block">Step 7</span>
+                        <span className="font-semibold text-foreground truncate block">Founder Outcome</span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Metadata Bar */}
                   <div className="mt-6 flex flex-wrap gap-4 pt-4 border-t border-border/50 text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                     <div><span className="text-muted-foreground block mb-1 font-semibold">Business Trigger</span> <span className="text-foreground">{selectedTrace.trigger_type || "Inventory review"}</span></div>
@@ -365,6 +414,34 @@ export default function TraceabilityDashboard() {
                     <p className="text-xs font-medium text-foreground leading-relaxed">
                       {selectedTrace.evidence_snapshot?.expected_outcome || "Optimize inventory levels and maximize gross revenue."}
                     </p>
+                  </div>
+                </div>
+
+                {/* Founder Executive Next Steps (Connected Operating System) */}
+                <div className="rounded-2xl border border-border bg-card/60 p-5 flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary block">Connected Executive Next Steps</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">Progress from decision audit directly into execution or activity timeline</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href="/dashboard/tasks"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-xs"
+                    >
+                      Execute Task →
+                    </Link>
+                    <Link
+                      href="/dashboard/inventory"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary text-foreground hover:bg-muted transition-all border border-border"
+                    >
+                      View Inventory →
+                    </Link>
+                    <Link
+                      href="/dashboard/activity"
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Audit Activity History →
+                    </Link>
                   </div>
                 </div>
 

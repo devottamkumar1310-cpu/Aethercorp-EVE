@@ -65,14 +65,17 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 transition-colors duration-200">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
       <div className="flex items-center gap-4 text-muted-foreground mb-4">
         <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
       </div>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Users className="text-blue-600"/> Client Management</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors cursor-pointer">
-          <Plus size={18}/> New Client
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Users className="text-blue-600"/> Clients</h1>
+          <p className="text-xs text-muted-foreground mt-1">Manage wholesale accounts, retail partners, and D2C stockist relationships.</p>
+        </div>
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+          <Plus size={18}/> New Client Account
         </button>
       </div>
       
@@ -110,8 +113,9 @@ export default function ClientsPage() {
               <thead className="bg-background border-b border-border">
                 <tr>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Company Name</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Industry</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Account Type</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Connected Initiatives</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Joined</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
@@ -120,9 +124,20 @@ export default function ClientsPage() {
                 {clients.map(c => (
                   <tr key={c.id} className="hover:bg-muted/40 group">
                     <td className="px-6 py-4 font-medium text-primary">{c.company_name}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{c.industry || '-'}</td>
+                    <td className="px-6 py-4 text-muted-foreground">{c.industry || 'D2C Retail Account'}</td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-muted text-foreground'}`}>{c.status}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${c.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-muted text-foreground'}`}>{c.status}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Link href="/dashboard/projects" className="text-xs font-semibold text-primary hover:underline">
+                          Active Projects →
+                        </Link>
+                        <span className="text-muted-foreground/30">•</span>
+                        <Link href="/dashboard/finance" className="text-xs font-semibold text-emerald-400 hover:underline">
+                          Financials →
+                        </Link>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-right">

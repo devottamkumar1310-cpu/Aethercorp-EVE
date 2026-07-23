@@ -97,7 +97,12 @@ async def chat_stream(
 ):
     from fastapi.responses import StreamingResponse
     orchestrator = AgentOrchestrator()
-    
+    # Capture primitive values off the ORM instance now — event_generator() runs
+    # after this request's db session has been torn down, so touching an expired
+    # attribute on `current_user` inside the generator raises DetachedInstanceError
+    # (surfaces to the client as a 200 OK stream that silently yields nothing).
+    user_id = current_user.id
+
     async def event_generator():
         try:
             async for chunk in orchestrator.orchestrate_stream(
@@ -106,7 +111,7 @@ async def chat_stream(
                 question=body.question,
                 mode=body.mode or "smart",
                 conversation_id=body.conversation_id,
-                user_id=current_user.id,
+                user_id=user_id,
                 language=body.language,
                 developer_mode=body.developer_mode,
                 document_id=body.document_id
@@ -115,7 +120,7 @@ async def chat_stream(
         except Exception as e:
             logger.error(f"Streaming error occurred: {e}", exc_info=True)
             import json
-            yield json.dumps({"type": "error", "content": str(e)}) + "\n"
+            yield json.dumps({"type": "error", "content": "EVE couldn't complete that answer. Please try again."}) + "\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

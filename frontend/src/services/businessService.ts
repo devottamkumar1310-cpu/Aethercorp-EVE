@@ -128,6 +128,29 @@ export async function fetchInventoryDashboard(token: string): Promise<any> {
   return res.json();
 }
 
+export async function fetchInventoryAlerts(token: string): Promise<any> {
+  const res = await apiFetch(`${API_BASE_URL}/api/inventory/alerts`, {
+    headers: getHeaders(token)
+  });
+  if (!res.ok) throw new Error("Failed to fetch inventory alerts");
+  return res.json();
+}
+
+// Recommendation Traceability
+export async function updateRecommendationStatusAPI(token: string, traceId: string, statusValue: "Reviewed" | "Accepted" | "Dismissed" | "Completed"): Promise<any> {
+  const res = await apiFetch(`${API_BASE_URL}/api/recommendations/${traceId}/status`, {
+    method: "PATCH",
+    headers: getHeaders(token, "application/json"),
+    body: JSON.stringify({ status: statusValue })
+  });
+  if (!res.ok) {
+    let detail = "Failed to update recommendation status";
+    try { detail = (await res.json()).detail || detail; } catch {}
+    throw new Error(detail);
+  }
+  return res.json();
+}
+
 async function uploadCSVFile(url: string, token: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);

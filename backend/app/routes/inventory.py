@@ -588,6 +588,13 @@ def get_inventory_alerts(
                 "days_of_supply": days_of_supply,
                 "lead_time_days": item.lead_time_days,
                 "revenue_at_risk": revenue_at_risk,
+                "unit_cost": prod.unit_cost or 0.0,
+                "supplier_name": prod.supplier_name,
+                "recommended_order_qty": (
+                    round(avg_daily * (item.lead_time_days + 5))
+                    if avg_daily > 0 and item.lead_time_days
+                    else max(0, item.reorder_point - item.stock_on_hand)
+                ),
             })
 
         if item.stock_on_hand > 0 and prod.id not in recent_ids:
@@ -617,6 +624,7 @@ def get_inventory_alerts(
         item["revenue_at_risk"] for item in low_stock if item["revenue_at_risk"] is not None
     ), 2)
     total_capital_locked = round(sum(item["estimated_value"] for item in dead_stock), 2)
+    total_recommended_order_units = sum(item["recommended_order_qty"] for item in low_stock)
 
     return {
         "low_stock": sorted(low_stock, key=lambda x: (x["revenue_at_risk"] or 0), reverse=True),
@@ -625,5 +633,6 @@ def get_inventory_alerts(
         "dead_stock_count": len(dead_stock),
         "total_revenue_at_risk": total_revenue_at_risk,
         "total_capital_locked": total_capital_locked,
+        "total_recommended_order_units": total_recommended_order_units,
     }
 

@@ -3,7 +3,7 @@ import { devLog } from "@/lib/logger";
 
 function sanitizeApiUrl(raw: string | undefined): string {
   if (!raw) return "";
-  let url = raw
+  const url = raw
     .replace(/^\uFEFF/, "")                  // Strip UTF-8 Byte Order Mark (BOM)
     .replace(/[\u200B-\u200D\uFEFF]/g, "") // Strip zero-width spaces
     .trim()

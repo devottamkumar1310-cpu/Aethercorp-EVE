@@ -71,15 +71,38 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 transition-colors duration-200">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
       <div className="flex items-center gap-4 text-muted-foreground mb-4">
         <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
       </div>
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Briefcase className="text-blue-600"/> Projects Portfolio</h1>
-        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-foreground px-4 py-2 rounded-lg hover:bg-blue-700:bg-indigo-750 transition-colors cursor-pointer">
-          <Plus size={18}/> New Project
+        <div>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2"><Briefcase className="text-blue-600"/> Active Projects</h1>
+          <p className="text-xs text-muted-foreground mt-1">Strategic commerce initiatives: Dead Stock Recovery, Collection Launches, Supplier Audits, and Margin Improvements.</p>
+        </div>
+        <button onClick={handleCreate} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+          <Plus size={18}/> New Strategic Initiative
         </button>
+      </div>
+
+      {/* Strategic Founder Initiative Templates */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {[
+          "Dead Stock Recovery",
+          "Summer Collection Launch",
+          "Supplier Optimization",
+          "Inventory Audit",
+          "Margin Improvement",
+        ].map((initName) => (
+          <button
+            key={initName}
+            onClick={handleCreate}
+            className="p-3 bg-card border border-border hover:border-primary/40 rounded-xl text-left transition-all hover:bg-muted/40 cursor-pointer shadow-xs group"
+          >
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider block">Initiative Preset</span>
+            <span className="text-xs font-bold text-foreground block mt-1 group-hover:text-primary transition-colors">{initName}</span>
+          </button>
+        ))}
       </div>
       
       {loading ? (
@@ -122,11 +145,12 @@ export default function ProjectsPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-background border-b border-border">
                 <tr>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Project Name</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Strategic Initiative</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Budget</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Progress</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="px-6 py-3 font-medium text-muted-foreground">Deadline</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Connected Deliverables</th>
+                  <th className="px-6 py-3 font-medium text-muted-foreground">Target Deadline</th>
                   <th className="px-6 py-3 font-medium text-muted-foreground text-right">Actions</th>
                 </tr>
               </thead>
@@ -134,17 +158,28 @@ export default function ProjectsPage() {
                 {projects.map(p => (
                   <tr key={p.id} className="hover:bg-muted/40 group">
                     <td className="px-6 py-4 font-medium text-primary">{p.name}</td>
-                    <td className="px-6 py-4 text-muted-foreground">${p.budget.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-muted-foreground font-semibold">${p.budget.toLocaleString()}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-full bg-muted rounded-full h-2">
+                        <div className="w-24 bg-muted rounded-full h-2">
                           <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${p.completion_percentage}%` }}></div>
                         </div>
-                        <span className="text-xs text-muted-foreground">{p.completion_percentage}%</span>
+                        <span className="text-xs text-muted-foreground font-semibold">{p.completion_percentage}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-muted text-foreground'}`}>{p.status}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${p.status === 'active' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'bg-muted text-foreground'}`}>{p.status}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Link href="/dashboard/tasks" className="text-xs font-semibold text-primary hover:underline">
+                          View Tasks →
+                        </Link>
+                        <span className="text-muted-foreground/30">•</span>
+                        <Link href="/dashboard/traceability" className="text-xs font-semibold text-indigo-400 hover:underline">
+                          Traceability →
+                        </Link>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">{p.deadline ? new Date(p.deadline).toLocaleDateString() : '-'}</td>
                     <td className="px-6 py-4 text-right">

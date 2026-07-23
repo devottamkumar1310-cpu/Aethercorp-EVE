@@ -363,11 +363,15 @@ class AnalyticsService:
                 
                 trace_data["revenue_at_risk"] = revenue_at_risk
             
-            # Write metrics back to database for persistence
+            # Record the observed velocity, but do NOT overwrite safety_stock/reorder_point here:
+            # those are founder-configured thresholds that /api/inventory/alerts (the canonical
+            # low-stock/reorder source used by Inventory Intelligence, Dashboard, and Finance)
+            # reads directly. This function used to silently rewrite them with its own formula
+            # (avg_daily_sales * lead_time_days * 1.5/0.5) on every AI chat call or daily brief,
+            # which meant simply asking EVE a question could change what counts as "low stock"
+            # elsewhere in the app. Compute-and-report only; no write-back of those two fields.
             item.avg_daily_sales = avg_daily_sales
-            item.safety_stock = metrics["safety_stock"]
-            item.reorder_point = metrics["reorder_point"]
-            
+
             # Get cached sales quantity
             units_sold = sales_qty_map.get(product.id, 0)
                            

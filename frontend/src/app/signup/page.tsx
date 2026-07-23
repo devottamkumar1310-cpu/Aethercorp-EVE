@@ -73,7 +73,14 @@ export default function SignupPage() {
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      const raw = signUpError.message || "";
+      if (/invalid/i.test(raw) && /email/i.test(raw)) {
+        setError("We couldn't verify that email address — double-check for typos, or try a different email (a personal address works fine for your free trial).");
+      } else if (/already registered|already exists/i.test(raw)) {
+        setError("An account already exists for this email. Try signing in instead.");
+      } else {
+        setError(raw || "Something went wrong creating your account. Please try again.");
+      }
       setLoading(false);
       return;
     }

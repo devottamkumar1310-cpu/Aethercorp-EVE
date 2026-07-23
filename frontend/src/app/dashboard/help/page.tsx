@@ -215,7 +215,7 @@ export default function HelpPage() {
   const activeTopic = topics.find(t => t.id === activeTab) || topics[0];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8 font-sans animate-fade-in text-foreground dark:text-foreground">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 font-sans animate-fade-in text-foreground">
       {/* Title Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border dark:border-border pb-6">
         <div className="space-y-1">

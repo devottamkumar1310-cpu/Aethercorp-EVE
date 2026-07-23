@@ -58,7 +58,8 @@ import {
   MessageSquare,
   X,
   FileText,
-  Coins
+  Coins,
+  ListChecks
 } from "lucide-react";
 
 // Markdown parser helpers
@@ -391,7 +392,7 @@ export default function EVECoocommandCenter() {
 
     if (triggeredOutcome) {
       return (
-        <div className="mt-2 p-1.5 bg-emerald-500/10 border border-emerald-500/20 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg text-[9px] font-semibold animate-fade-in flex items-center gap-1">
+        <div className="mt-2 p-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 rounded-lg text-[9px] font-semibold animate-fade-in flex items-center gap-1">
           <span>✓</span>
           <span>{triggeredOutcome}</span>
         </div>
@@ -409,7 +410,7 @@ export default function EVECoocommandCenter() {
                 [actionKey]: "Success: SKU list exported to CSV"
               }));
             }}
-            className="px-2 py-1 bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 hover:border-indigo-500/50 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded text-[9px] font-bold cursor-pointer transition-all"
+            className="px-2 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-700 dark:text-indigo-300 rounded text-[9px] font-bold cursor-pointer transition-all"
           >
             Export SKU List
           </button>
@@ -423,7 +424,7 @@ export default function EVECoocommandCenter() {
                 [actionKey]: "Success: Discount campaign generated (30% off prioritized SKUs)"
               }));
             }}
-            className="px-2 py-1 bg-emerald-600/20 hover:bg-emerald-600/35 border border-emerald-500/30 hover:border-emerald-500/50 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded text-[9px] font-bold cursor-pointer transition-all"
+            className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 rounded text-[9px] font-bold cursor-pointer transition-all"
           >
             Generate Discount Campaign
           </button>
@@ -701,6 +702,17 @@ export default function EVECoocommandCenter() {
                   : msg
               )
             );
+          } else if (type === "error") {
+            accumulatedContent = typeof content === "string" && content
+              ? content
+              : "EVE couldn't complete that answer. Please try again.";
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantTempId
+                  ? { ...msg, content: accumulatedContent }
+                  : msg
+              )
+            );
           } else if (type === "done") {
             // Stream complete. Load full details to populate snap/telemetry panels
             if (activeConversationId) {
@@ -907,7 +919,7 @@ export default function EVECoocommandCenter() {
                     key={c.id}
                     className={`group w-full p-2.5 rounded-xl border transition-all text-left flex flex-col justify-between relative ${
  isActive
- ? "bg-indigo-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/30"
+ ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-semibold border-indigo-500/30"
  : "bg-background/45 text-muted-foreground border-border/60 hover:bg-muted/40 hover:text-foreground"
  }`}
                   >
@@ -1059,6 +1071,18 @@ export default function EVECoocommandCenter() {
               >
                 <Sparkles size={13} />
               </button>
+              <button
+                type="button"
+                onClick={() => setIsRecommendationsOpen(!isRecommendationsOpen)}
+                className={`p-1.5 rounded-md transition-all cursor-pointer ${
+ isRecommendationsOpen
+ ? "bg-muted text-indigo-400 font-bold"
+ : "text-muted-foreground hover:text-muted-foreground"
+ }`}
+                title="Recommendation History — review, accept, or dismiss past AI recommendations"
+              >
+                <ListChecks size={13} />
+              </button>
             </div>
             {/* Language Selector */}
             <div className="flex items-center gap-1 bg-background p-1 rounded-lg border border-border">
@@ -1144,7 +1168,7 @@ export default function EVECoocommandCenter() {
 
         {/* Executive Snapshot Compact Card */}
         {isInsightsOpen && (
-          <div className="mx-6 mt-4 p-4 bg-indigo-950/45 border border-indigo-500/40 rounded-2xl space-y-3.5 shadow-xl transition-all duration-300 animate-fade-in flex flex-col relative overflow-hidden backdrop-blur-md">
+          <div className="mx-6 mt-4 p-4 bg-indigo-500/10 border border-indigo-500/40 rounded-2xl space-y-3.5 shadow-xl transition-all duration-300 animate-fade-in flex flex-col relative overflow-hidden backdrop-blur-md">
             {/* Ambient glowing effect */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
             
@@ -1159,10 +1183,10 @@ export default function EVECoocommandCenter() {
                 {selectedReasoning?.confidence_category && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
                     selectedReasoning.confidence_category === "High Confidence"
-                      ? "bg-emerald-500/15 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/30"
+                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                       : selectedReasoning.confidence_category === "Medium Confidence"
-                      ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-                      : "bg-rose-500/15 text-rose-350 border-rose-500/30"
+                      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                      : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
                   }`}>
                     {selectedReasoning.confidence_category}
                   </span>
@@ -1170,15 +1194,15 @@ export default function EVECoocommandCenter() {
                 {selectedReasoning?.risk_classification && (
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm ${
                     selectedReasoning.risk_classification === "Low Risk"
-                      ? "bg-emerald-500/15 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/30"
-                      : "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                      : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30"
                   }`}>
                     {selectedReasoning.risk_classification}
                   </span>
                 )}
                 <button
                   onClick={() => setIsInsightsOpen(false)}
-                  className="p-1 hover:bg-indigo-500/15 text-slate-300 hover:!text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg transition-all cursor-pointer"
+                  className="p-1 hover:bg-indigo-500/15 text-muted-foreground hover:text-indigo-600 dark:hover:text-indigo-300 rounded-lg transition-all cursor-pointer"
                   title="Collapse Panel"
                 >
                   <X size={13} />
@@ -1191,7 +1215,7 @@ export default function EVECoocommandCenter() {
               <div className="space-y-3.5 z-10 text-xs">
                 {/* Executive metrics row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                  <div className="p-2 bg-indigo-500/5 border border-indigo-500/25 rounded-xl text-center">
                     <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Business Health</span>
                     <span className="text-sm font-extrabold text-indigo-200">
                       {selectedReasoning.evidence_used?.business_health_score !== undefined && selectedReasoning.evidence_used?.business_health_score !== null
@@ -1199,25 +1223,32 @@ export default function EVECoocommandCenter() {
                         : 'N/A'}
                     </span>
                   </div>
-                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                  <div className="p-2 bg-indigo-500/5 border border-indigo-500/25 rounded-xl text-center">
                     <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Top Risks</span>
                     <span className="text-sm font-extrabold text-rose-300">
                       {selectedReasoning.evidence_used?.risk_count || 0}
                     </span>
                   </div>
-                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
+                  <div className="p-2 bg-indigo-500/5 border border-indigo-500/25 rounded-xl text-center">
                     <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Opportunities</span>
                     <span className="text-sm font-extrabold text-emerald-300">
                       {selectedReasoning.evidence_used?.opportunity_count || 0}
                     </span>
                   </div>
-                  <div className="p-2 bg-slate-950/50 border border-indigo-500/25 rounded-xl text-center">
-                    <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Revenue at Risk</span>
+                  <div
+                    className="p-2 bg-indigo-500/5 border border-indigo-500/25 rounded-xl text-center"
+                    title="Computed by EVE's forecasting engine (safety stock + demand trend), not the live Inventory Intelligence ledger — the two can differ by design."
+                  >
+                    <span className="text-[9px] text-secondary block uppercase font-bold tracking-wider">Revenue at Risk (Forecast)</span>
                     <span className="text-sm font-extrabold text-primary">
                       ${selectedReasoning.evidence_used?.revenue_at_risk?.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}
                     </span>
                   </div>
                 </div>
+                <p className="text-[10px] text-secondary leading-relaxed">
+                  Snapshot figures come from EVE's forecasting engine, which recalculates safety stock and demand trend independently of the live Inventory Intelligence ledger — for the authoritative current figure, see the{" "}
+                  <a href="/dashboard/inventory" className="underline hover:text-indigo-300">Inventory Intelligence page</a>.
+                </p>
 
                 {/* Capital locked sub-badge */}
                 {selectedReasoning.evidence_used?.working_capital_locked > 0 && (
@@ -1249,7 +1280,7 @@ export default function EVECoocommandCenter() {
                           </div>
                         ))
                       ) : (
-                        <p className="text-[10px] text-slate-400 italic">No strategic priorities required.</p>
+                        <p className="text-[10px] text-muted-foreground italic">No strategic priorities required.</p>
                       )}
                     </div>
                   </div>
@@ -1334,7 +1365,7 @@ export default function EVECoocommandCenter() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-[10px] text-slate-500 italic">No critical risks active. Seed data to analyze.</p>
+                      <p className="text-[10px] text-muted-foreground italic">No critical risks active. Seed data to analyze.</p>
                     )}
                   </div>
                 </div>
@@ -1357,7 +1388,7 @@ export default function EVECoocommandCenter() {
                         </div>
                       ))
                     ) : (
-                      <p className="text-[10px] text-slate-500 italic">No opportunities flagged. Seed data to scan.</p>
+                      <p className="text-[10px] text-muted-foreground italic">No opportunities flagged. Seed data to scan.</p>
                     )}
                   </div>
                 </div>
@@ -1390,7 +1421,7 @@ export default function EVECoocommandCenter() {
                     {/* Active agent badges for assistant */}
                     {isAssistant && msg.id !== "welcome-msg" && (
                       <div className="flex flex-wrap gap-1.5 items-center mb-1">
-                        <span className="text-[9px] font-bold bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                        <span className="text-[9px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                           {agentData?.agent || "COO Lead"}
                         </span>
                         {agentData?.confidence !== undefined && (
@@ -1419,7 +1450,7 @@ export default function EVECoocommandCenter() {
                     <div className={`text-sm leading-relaxed space-y-2.5 ${
  isAssistant 
  ? "bg-transparent text-foreground border-none shadow-none px-1 py-0" 
- : "bg-indigo-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/15 px-3.5 py-2 rounded-2xl shadow-sm"
+ : "bg-indigo-600 text-white border border-indigo-500/20 px-3.5 py-2 rounded-2xl shadow-sm"
  }`}>
                       {isAssistant ? (
                         <>
@@ -1562,7 +1593,7 @@ export default function EVECoocommandCenter() {
                                         <div key={agentName} className="flex items-center gap-1.5">
                                           <span className="capitalize text-muted-foreground font-medium">{agentName}:</span>
                                           <span className="text-muted-foreground">{data.latency_ms}ms</span>
-                                          <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white' : 'bg-rose-500/10 text-rose-400'}`}>
+                                          <span className={`text-[8px] px-1 rounded-sm font-semibold uppercase ${data.status === 'success' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/10 text-rose-400'}`}>
                                             {data.status}
                                           </span>
                                         </div>
@@ -1613,13 +1644,13 @@ export default function EVECoocommandCenter() {
                       <h2 className="text-lg font-extrabold text-foreground tracking-tight flex items-center gap-2">
                         EVE Executive Briefing
                       </h2>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-muted-foreground">
                         Operational health status and automated intelligence for your brand
                       </p>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20 px-3 py-2 rounded-xl text-[10px] font-bold shadow-sm">
+                    <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 px-3 py-2 rounded-xl text-[10px] font-bold shadow-sm">
                       <span className="relative flex h-1.5 w-1.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
@@ -1627,7 +1658,7 @@ export default function EVECoocommandCenter() {
                       <span>Data Freshness: Live (Synced Just Now)</span>
                     </div>
                     <div className="flex items-center gap-3 bg-indigo-950/30 border border-indigo-500/20 px-4 py-2.5 rounded-xl">
-                      <span className="text-xs font-semibold text-slate-400">Operational Health:</span>
+                      <span className="text-xs font-semibold text-muted-foreground">Operational Health:</span>
                       <span className={`text-sm font-extrabold px-2.5 py-0.5 rounded-full ${
                         healthScore >= 75 ? "bg-emerald-500/10 text-emerald-450 border border-emerald-500/20"
                         : healthScore >= 50 ? "bg-amber-500/10 text-amber-450 border border-amber-500/20"
@@ -1703,11 +1734,11 @@ export default function EVECoocommandCenter() {
                   <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
                     <MessageSquare size={13} className="text-indigo-500" /> Suggested Action Prompts
                   </h3>
-                  <p className="text-xs text-slate-400">Click any prompt below to query the EVE Agent network immediately:</p>
+                  <p className="text-xs text-muted-foreground">Click any prompt below to query the EVE Agent network immediately:</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                     {getDynamicSuggestions().map((group, idx) => (
                       <div key={idx} className="space-y-2">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
                           {group.category}
                         </span>
                         <div className="flex flex-col gap-2">
@@ -1745,7 +1776,7 @@ export default function EVECoocommandCenter() {
                   ) : (
                     <>
                       <div className="flex gap-1 items-center mb-1">
-                        <span className="text-[9px] font-semibold bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 px-1.5 py-0.2 rounded-full animate-pulse">
+                        <span className="text-[9px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 px-1.5 py-0.2 rounded-full animate-pulse">
                           EVE COO Executing...
                         </span>
                       </div>

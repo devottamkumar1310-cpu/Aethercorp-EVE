@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, ArrowRight, Sparkles, Brain, CheckCircle2 } from "lucide-react";
+import { Building2, ArrowRight, Sparkles, Brain, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 
@@ -13,6 +13,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingDemo, setLoadingDemo] = useState(false);
+  const [loadingDemoKey, setLoadingDemoKey] = useState<string | null>(null);
   const [showManualForm, setShowManualForm] = useState(false);
   const router = useRouter();
   const supabase = createClient();
@@ -94,6 +95,7 @@ export default function OnboardingPage() {
 
   const handleCreateDemoWorkspace = async (demoCompany: string) => {
     setLoadingDemo(true);
+    setLoadingDemoKey(demoCompany);
     setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -123,6 +125,7 @@ export default function OnboardingPage() {
     } catch (e: any) {
       setError(e.message);
       setLoadingDemo(false);
+      setLoadingDemoKey(null);
     }
   };
 
@@ -171,11 +174,13 @@ export default function OnboardingPage() {
             <button
               onClick={() => handleCreateDemoWorkspace("luma")}
               disabled={loading || loadingDemo}
-              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer"
+              aria-label="Explore EVE with the Luma & Co. demo brand (Womenswear)"
+              aria-busy={loadingDemoKey === "luma"}
+              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-violet-500/10 text-violet-600 rounded-xl group-hover:bg-violet-600 group-hover:text-white transition-colors shrink-0">
-                  <Brain size={20} />
+                  {loadingDemoKey === "luma" ? <Loader2 size={20} className="animate-spin" /> : <Brain size={20} />}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground group-hover:text-[color:var(--eve-accent)] transition-colors flex items-center gap-2">
@@ -183,7 +188,9 @@ export default function OnboardingPage() {
                     <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-500/20">Womenswear</span>
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Premium womenswear brand with strong margins. High inventory velocity with upcoming stockout risks on core hero SKUs.
+                    {loadingDemoKey === "luma"
+                      ? "Setting up your Luma & Co. workspace…"
+                      : "Premium womenswear brand with strong margins. High inventory velocity with upcoming stockout risks on core hero SKUs."}
                   </p>
                 </div>
               </div>
@@ -192,11 +199,13 @@ export default function OnboardingPage() {
             <button
               onClick={() => handleCreateDemoWorkspace("drift")}
               disabled={loading || loadingDemo}
-              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer"
+              aria-label="Explore EVE with the Drift Collective demo brand (Streetwear)"
+              aria-busy={loadingDemoKey === "drift"}
+              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">
-                  <Building2 size={20} />
+                  {loadingDemoKey === "drift" ? <Loader2 size={20} className="animate-spin" /> : <Building2 size={20} />}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground group-hover:text-[color:var(--eve-accent)] transition-colors flex items-center gap-2">
@@ -204,7 +213,9 @@ export default function OnboardingPage() {
                     <span className="text-[10px] font-semibold bg-amber-500/10 text-amber-700 px-2 py-0.5 rounded-full border border-amber-500/20">Streetwear</span>
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Streetwear brand with working capital bottlenecks. $92k trapped in past collab drops with core line selling consistently.
+                    {loadingDemoKey === "drift"
+                      ? "Setting up your Drift Collective workspace…"
+                      : "Streetwear brand with working capital bottlenecks. $92k trapped in past collab drops with core line selling consistently."}
                   </p>
                 </div>
               </div>
@@ -213,11 +224,13 @@ export default function OnboardingPage() {
             <button
               onClick={() => handleCreateDemoWorkspace("basecamp")}
               disabled={loading || loadingDemo}
-              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer"
+              aria-label="Explore EVE with the Basecamp Basics demo brand (Essentials)"
+              aria-busy={loadingDemoKey === "basecamp"}
+              className="w-full text-left p-4 bg-background hover:bg-muted/40 border border-border hover:border-[color:var(--eve-accent)]/50 rounded-xl transition-all shadow-sm hover:shadow-md group cursor-pointer disabled:cursor-wait disabled:opacity-70"
             >
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-blue-500/10 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
-                  <Building2 size={20} />
+                  {loadingDemoKey === "basecamp" ? <Loader2 size={20} className="animate-spin" /> : <Building2 size={20} />}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground group-hover:text-[color:var(--eve-accent)] transition-colors flex items-center gap-2">
@@ -225,7 +238,9 @@ export default function OnboardingPage() {
                     <span className="text-[10px] font-semibold bg-blue-500/10 text-blue-700 px-2 py-0.5 rounded-full border border-blue-500/20">Essentials</span>
                   </h3>
                   <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Unisex essentials apparel brand navigating seasonal transitions between summer sellouts and winter stock buildup.
+                    {loadingDemoKey === "basecamp"
+                      ? "Setting up your Basecamp Basics workspace…"
+                      : "Unisex essentials apparel brand navigating seasonal transitions between summer sellouts and winter stock buildup."}
                   </p>
                 </div>
               </div>
@@ -237,6 +252,7 @@ export default function OnboardingPage() {
             <button
               onClick={() => setShowManualForm(true)}
               disabled={loading || loadingDemo}
+              aria-label="Configure a blank workspace with your own data"
               className="w-full text-left p-4 bg-background border border-border hover:border-border rounded-xl transition-all group cursor-pointer"
             >
               <div className="flex items-start gap-4">

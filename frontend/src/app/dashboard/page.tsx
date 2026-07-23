@@ -2,7 +2,7 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
-import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects } from "@/services/businessService";
+import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchProjects, fetchInventoryAlerts } from "@/services/businessService";
 import { DashboardSummary, ActivityLog, Client, Project } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
 import { devLog } from "@/lib/logger";
@@ -27,12 +27,14 @@ export default function DashboardPage() {
   const [trends, setTrends] = useState<any>(null);
   const [risks, setRisks] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
+  const [inventoryAlerts, setInventoryAlerts] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [loadingSummary, setLoadingSummary] = useState(true);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [loadingTrends, setLoadingTrends] = useState(true);
   const [loadingRisks, setLoadingRisks] = useState(true);
   const [loadingOpportunities, setLoadingOpportunities] = useState(true);
+  const [loadingInventoryAlerts, setLoadingInventoryAlerts] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState<string>("");
 
@@ -56,6 +58,21 @@ export default function DashboardPage() {
     setLoadingTrends(true);
     setLoadingRisks(true);
     setLoadingOpportunities(true);
+    setLoadingInventoryAlerts(true);
+
+    // Fetch Inventory Alerts — same source Inventory Intelligence uses, so the
+    // homepage priority cards can never disagree with the dedicated inventory page.
+    fetchInventoryAlerts(token)
+      .then((data) => {
+        setInventoryAlerts(data);
+      })
+      .catch((err) => {
+        logger.error("Error loading inventory alerts:", err);
+        setInventoryAlerts(null);
+      })
+      .finally(() => {
+        setLoadingInventoryAlerts(false);
+      });
 
     // Fetch Dashboard Summary
     fetchDashboardSummary(token)
@@ -238,13 +255,13 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary">Executive Workspace</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary">Executive Operating System</span>
               <span className="text-muted-foreground/40">•</span>
-              <span className="text-xs font-medium text-muted-foreground">Operational Command Center v2.4</span>
+              <span className="text-xs font-medium text-muted-foreground">Founder Command Center</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Executive Operational Command Center</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Founder Executive Command Center</h1>
             <p className="text-xs md:text-sm text-muted-foreground">
-              Real-time visibility into today's operational priorities, active project pipelines, task delivery velocity, and client account health.
+              Real-time executive intelligence for founder-led D2C commerce: revenue protection, inventory health, cash efficiency, and decision traceability.
             </p>
           </div>
 
@@ -254,7 +271,7 @@ export default function DashboardPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>Data Freshness: Live (Synced Just Now)</span>
+              <span>Data Intelligence: Live Sync Active</span>
             </div>
           </div>
         </div>
@@ -412,61 +429,126 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Founder Attention Grid: Today's Operational Priorities */}
+        {/* Founder Attention Grid: Today's Executive Priorities */}
         <div className="bg-card rounded-xl border border-border p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
-              <Sparkles size={16} className="text-primary" /> Today's Founder Operational Priorities
+              <Sparkles size={16} className="text-primary" /> Today's Executive Priorities
             </h3>
-            <span className="text-xs text-muted-foreground">Requiring Founder Decision & Execution</span>
+            <span className="text-xs text-muted-foreground">Founder Decision & Revenue Protection Workspace</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">Project Deliverables</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
-                  {summary?.kpis?.active_projects || 0} Active Initiatives
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Review milestone completion velocity and assign deliverable leads for active projects nearing release.
-              </p>
-              <Link href="/dashboard/tasks" className="text-xs font-semibold text-primary hover:underline inline-block pt-1">
-                Open Task Command →
-              </Link>
+          {loadingInventoryAlerts ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="p-4 bg-muted/40 rounded-xl border border-border h-32 animate-pulse" />
+              ))}
             </div>
+          ) : (() => {
+            const lowStock = inventoryAlerts?.low_stock || [];
+            const deadStock = inventoryAlerts?.dead_stock || [];
+            const revenueAtRisk = inventoryAlerts?.total_revenue_at_risk || 0;
+            const capitalLocked = inventoryAlerts?.total_capital_locked || 0;
+            const topLowStockSkus = lowStock.slice(0, 2).map((i: any) => i.sku).join(" and ");
+            const topDeadStockSkus = deadStock.slice(0, 2).map((i: any) => i.sku).join(" and ");
+            const longestLeadTime = [...lowStock]
+              .filter((i: any) => i.lead_time_days)
+              .sort((a: any, b: any) => (b.lead_time_days || 0) - (a.lead_time_days || 0))[0];
 
-            <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">Milestone Target Deadlines</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  {summary?.upcoming_deadlines?.length || 0} Scheduled
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Check upcoming project milestone deadlines to prevent delays and maintain client SLA commitments.
-              </p>
-              <Link href="/dashboard/projects" className="text-xs font-semibold text-primary hover:underline inline-block pt-1">
-                View Project Pipeline →
-              </Link>
-            </div>
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={`p-4 rounded-xl border space-y-2 flex flex-col justify-between ${lowStock.length > 0 ? "bg-rose-500/5 border-rose-500/20" : "bg-emerald-500/5 border-emerald-500/20"}`}>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold flex items-center gap-1 ${lowStock.length > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                        <AlertCircle size={14} /> Inventory Needing Attention
+                      </span>
+                      {lowStock.length > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30">
+                          {lowStock.length} SKU{lowStock.length > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-lg font-bold text-foreground mt-2">
+                      {lowStock.length > 0 ? `$${revenueAtRisk.toLocaleString()} revenue at risk` : "No SKUs below reorder point"}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                      {lowStock.length > 0
+                        ? `${lowStock.length} SKU${lowStock.length > 1 ? "s are" : " is"} below reorder point, including ${topLowStockSkus || "flagged items"}.`
+                        : "All tracked SKUs are currently above their reorder point."}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2 border-t border-border/60 text-xs">
+                    <Link href="/dashboard/inventory" className="font-semibold text-primary hover:underline">
+                      Open Reorder Center →
+                    </Link>
+                    <Link href="/dashboard/traceability?type=reorder" className="text-muted-foreground hover:text-foreground">
+                      View Traceability
+                    </Link>
+                  </div>
+                </div>
 
-            <div className="p-4 bg-muted/30 rounded-xl border border-border space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">Client Account Health</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  {summary?.kpis?.active_clients || 0} Healthy
-                </span>
+                <div className={`p-4 rounded-xl border space-y-2 flex flex-col justify-between ${deadStock.length > 0 ? "bg-amber-500/5 border-amber-500/20" : "bg-emerald-500/5 border-emerald-500/20"}`}>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold flex items-center gap-1 ${deadStock.length > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                        <Package size={14} /> Dead Stock
+                      </span>
+                      {deadStock.length > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                          {deadStock.length} SKU{deadStock.length > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-lg font-bold text-foreground mt-2">
+                      {deadStock.length > 0 ? `$${capitalLocked.toLocaleString()} cash locked in slow stock` : "No dead stock detected"}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                      {deadStock.length > 0
+                        ? `${topDeadStockSkus || "Flagged SKUs"} have had no sales in 30+ days.`
+                        : "Every tracked SKU has sold within the last 30 days."}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2 border-t border-border/60 text-xs">
+                    <Link href="/dashboard/inventory" className="font-semibold text-primary hover:underline">
+                      Review Inventory →
+                    </Link>
+                    <Link href="/dashboard/traceability?type=dead_stock" className="text-muted-foreground hover:text-foreground">
+                      View Traceability
+                    </Link>
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-xl border space-y-2 flex flex-col justify-between ${longestLeadTime ? "bg-indigo-500/5 border-indigo-500/20" : "bg-emerald-500/5 border-emerald-500/20"}`}>
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold flex items-center gap-1 ${longestLeadTime ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                        <DollarSign size={14} /> Supplier Lead Time
+                      </span>
+                    </div>
+                    <div className="text-lg font-bold text-foreground mt-2">
+                      {longestLeadTime
+                        ? `${longestLeadTime.lead_time_days}-day lead time on ${longestLeadTime.sku}`
+                        : "No active supplier exposure"}
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                      {longestLeadTime
+                        ? `${longestLeadTime.name} (${longestLeadTime.sku}) has the longest supplier lead time among SKUs currently below reorder point.`
+                        : "No SKU below reorder point currently carries an extended supplier lead time."}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2 border-t border-border/60 text-xs">
+                    <Link href="/dashboard/tasks" className="font-semibold text-primary hover:underline">
+                      View Tasks →
+                    </Link>
+                    <Link href="/dashboard/eve" className="text-muted-foreground hover:text-foreground">
+                      Consult AI CEO
+                    </Link>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Ensure newly onboarded accounts are active and contract deliverables are fully on track.
-              </p>
-              <Link href="/dashboard/clients" className="text-xs font-semibold text-primary hover:underline inline-block pt-1">
-                Manage Accounts →
-              </Link>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* Operational Overview: Recent Clients & Deadlines */}
@@ -679,6 +761,50 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Connected Executive Activity Timeline Feed */}
+        <div className="bg-card rounded-xl border border-border p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <Activity size={16} className="text-primary" /> Live Business Activity Timeline
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Real-time operational timeline connecting inventory updates, AI recommendations, and financial milestones</p>
+            </div>
+            <Link href="/dashboard/activity" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
+              View Full Activity Log →
+            </Link>
+          </div>
+
+          <div className="divide-y divide-border/60">
+            {activityLogs.slice(0, 5).map((log) => (
+              <div key={log.id} className="py-3.5 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                        {log.entity_type}
+                      </span>
+                      <span className="text-xs font-bold text-foreground">{log.action}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{log.description}</p>
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground whitespace-nowrap font-mono">
+                  {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            ))}
+            {activityLogs.length === 0 && (
+              <div className="py-8 text-center text-xs text-muted-foreground">
+                No recent activity logged yet. Operations synced in real time.
+              </div>
+            )}
           </div>
         </div>
 

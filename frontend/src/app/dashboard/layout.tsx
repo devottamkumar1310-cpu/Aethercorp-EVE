@@ -769,7 +769,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-200 ${
+      {/* min-w-0 overrides the flexbox default (min-width: auto), which otherwise lets a
+          wide child (e.g. a data table) force this whole column past the viewport width
+          instead of shrinking and letting the table's own overflow-x:auto handle it. */}
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-200 ${
  isSidebarCollapsed ? "md:ml-16" : "md:ml-64"
  }`}>
         {/* Top Header */}

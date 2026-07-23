@@ -21,11 +21,20 @@ export default function ActivityPage() {
 
   const getReadableEntity = (entity: string) => {
     const map: Record<string, string> = {
+      "AIRecommendation": "AI Recommendation Generated",
+      "RecommendationAccepted": "Recommendation Accepted",
+      "RecommendationRejected": "Recommendation Rejected",
+      "InventoryUpdate": "Inventory Updated",
+      "SupplierUpdate": "Supplier Updated",
+      "DeadStockRecovery": "Dead Stock Recovered",
+      "RevenueProtection": "Revenue Protected",
+      "Markdown": "Markdown Completed",
+      "TaskCompletion": "Task Completed",
       "Client": "Supplier / Account",
       "Project": "Production Run",
-      "Task": "Supply Chain Milestone",
+      "Task": "Supply Chain Task",
       "Product": "Garment Product",
-      "InventoryItem": "Inventory Level",
+      "InventoryItem": "Stock Level",
       "SalesRecord": "Sales Transaction",
       "Revenue": "Inbound Revenue",
       "Expense": "Outbound Expense"
@@ -35,9 +44,11 @@ export default function ActivityPage() {
 
   const getReadableAction = (action: string, entity: string) => {
     const act = action.toUpperCase();
-    if (act === "CREATE") return `New ${getReadableEntity(entity)} Created`;
-    if (act === "UPDATE") return `${getReadableEntity(entity)} Details Updated`;
-    if (act === "DELETE") return `${getReadableEntity(entity)} Removed`;
+    if (act === "CREATE") return `New ${getReadableEntity(entity)} Action`;
+    if (act === "UPDATE") return `${getReadableEntity(entity)} Status Updated`;
+    if (act === "DELETE") return `${getReadableEntity(entity)} Archived`;
+    if (act === "ACCEPT") return `Recommendation Accepted by Founder`;
+    if (act === "REJECT") return `Recommendation Dismissed`;
     return action;
   };
 
@@ -92,7 +103,7 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-6 transition-colors duration-200">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
       <div className="flex items-center gap-4 text-muted-foreground mb-4">
         <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
       </div>
@@ -143,25 +154,47 @@ export default function ActivityPage() {
       ) : (
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden flex flex-col">
           <div className="p-6 space-y-6 flex-1">
-            {currentLogs.map(log => (
-              <div key={log.id} className="flex gap-4 items-start pb-6 border-b border-border/60 last:border-0 last:pb-0">
-                <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center flex-shrink-0 text-indigo-500 shadow-sm border border-border">
-                  <Activity size={18}/>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    <span className="text-[10px] font-bold uppercase bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-indigo-500/20 px-2 py-0.5 rounded-full tracking-wider shadow-sm">
-                      {getReadableEntity(log.entity_type)}
-                    </span>
-                    <span className="text-foreground font-bold text-sm">
-                      {getReadableAction(log.action, log.entity_type)}
-                    </span>
+            {currentLogs.map(log => {
+              const getModuleLink = (type: string) => {
+                const t = type.toLowerCase();
+                if (t.includes("inventory") || t.includes("product") || t.includes("stock") || t.includes("deadstock")) return { href: "/dashboard/inventory", label: "Inventory Intelligence →" };
+                if (t.includes("recommendation") || t.includes("trace")) return { href: "/dashboard/traceability", label: "Decision Traceability →" };
+                if (t.includes("revenue") || t.includes("expense") || t.includes("finance")) return { href: "/dashboard/finance", label: "Financial Intelligence →" };
+                if (t.includes("task")) return { href: "/dashboard/tasks", label: "Task Execution →" };
+                if (t.includes("project")) return { href: "/dashboard/projects", label: "Active Projects →" };
+                if (t.includes("client")) return { href: "/dashboard/clients", label: "Clients →" };
+                return { href: "/dashboard", label: "Operational Dashboard →" };
+              };
+              const moduleRef = getModuleLink(log.entity_type);
+
+              return (
+                <div key={log.id} className="flex gap-4 items-start pb-6 border-b border-border/60 last:border-0 last:pb-0 justify-between">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center flex-shrink-0 text-indigo-500 shadow-sm border border-border">
+                      <Activity size={18}/>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                        <span className="text-[10px] font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full tracking-wider shadow-sm">
+                          {getReadableEntity(log.entity_type)}
+                        </span>
+                        <span className="text-foreground font-bold text-sm">
+                          {getReadableAction(log.action, log.entity_type)}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{log.description}</p>
+                      <p className="text-slate-450 text-[10px] mt-2 font-medium">{new Date(log.created_at).toLocaleString()}</p>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{log.description}</p>
-                  <p className="text-slate-450 text-[10px] mt-2 font-medium">{new Date(log.created_at).toLocaleString()}</p>
+                  <Link
+                    href={moduleRef.href}
+                    className="text-xs font-semibold text-primary hover:underline whitespace-nowrap pt-1"
+                  >
+                    {moduleRef.label}
+                  </Link>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {currentLogs.length === 0 && (
               <div className="text-center py-10 text-muted-foreground">
                 {logs.length === 0 ? "No activity logged yet." : "No results match your search criteria."}

@@ -2,7 +2,7 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
-import { fetchRevenues, fetchExpenses, fetchBusinessKPIs, fetchProjects } from "@/services/businessService";
+import { fetchRevenues, fetchExpenses, fetchBusinessKPIs, fetchProjects, fetchInventoryDashboard, fetchInventoryAlerts } from "@/services/businessService";
 import { Revenue, Expense, BusinessKPIs, Project } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -15,6 +15,8 @@ export default function FinancePage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [kpis, setKpis] = useState<BusinessKPIs | null>(null);
+  const [inventoryDashboard, setInventoryDashboard] = useState<any>(null);
+  const [inventoryAlerts, setInventoryAlerts] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string>("");
 
@@ -23,16 +25,20 @@ export default function FinancePage() {
 
   const loadData = async (token: string) => {
     try {
-      const [revData, expData, kpiData, projData] = await Promise.all([
+      const [revData, expData, kpiData, projData, invDashboard, invAlerts] = await Promise.all([
         fetchRevenues(token),
         fetchExpenses(token),
         fetchBusinessKPIs(token),
-        fetchProjects(token)
+        fetchProjects(token),
+        fetchInventoryDashboard(token).catch(() => null),
+        fetchInventoryAlerts(token).catch(() => null),
       ]);
       setRevenues(revData);
       setExpenses(expData);
       setKpis(kpiData);
       setProjects(projData);
+      setInventoryDashboard(invDashboard);
+      setInventoryAlerts(invAlerts);
     } catch (err) {
       logger.error(err);
     }
@@ -55,7 +61,7 @@ export default function FinancePage() {
   }, []);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-6 transition-colors duration-200">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
       <div className="flex items-center gap-4 text-muted-foreground mb-4">
         <Link href="/dashboard" className="hover:text-blue-600:text-blue-400 flex items-center gap-1"><ArrowLeft size={16}/> Back to Dashboard</Link>
       </div>
@@ -98,6 +104,135 @@ export default function FinancePage() {
         </div>
       ) : (
         <div className="space-y-8">
+          {/* Inventory-Centric Financial Intelligence Grid — sourced from the same
+              /api/inventory/dashboard and /api/inventory/alerts data as Inventory
+              Intelligence, so these figures can never disagree with that page. */}
+          {(() => {
+            const totalInventoryValue = inventoryDashboard?.total_inventory_value ?? null;
+            const deadStockCount = inventoryAlerts?.dead_stock_count ?? 0;
+            const deadStockCapital = inventoryAlerts?.total_capital_locked ?? 0;
+            const monthlyCarryingCost = totalInventoryValue !== null ? Math.round(totalInventoryValue * 0.03) : null;
+            const potentialRecovery = Math.round(deadStockCapital * 0.8);
+            const gmroiValues = (inventoryDashboard?.product_metrics || [])
+              .map((p: any) => p.gmroi)
+              .filter((v: any) => typeof v === "number" && v > 0);
+            const avgGmroi = gmroiValues.length > 0
+              ? gmroiValues.reduce((a: number, b: number) => a + b, 0) / gmroiValues.length
+              : null;
+
+            return (
+              <div className="eve-card border border-border rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                      Executive Capital Allocation
+                    </span>
+                    <h2 className="text-xl font-bold text-foreground mt-0.5">
+                      Inventory Financial Intelligence
+                    </h2>
+                  </div>
+                  <Link
+                    href="/dashboard/inventory"
+                    className="text-xs font-semibold text-primary hover:underline transition-colors flex items-center gap-1"
+                  >
+                    Go to Reorder Center →
+                  </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
+                      Inventory Carrying Cost
+                    </span>
+                    <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                      {monthlyCarryingCost !== null ? `$${monthlyCarryingCost.toLocaleString()} / mo` : "—"}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Estimated at 3%/mo of inventory value on hand — the same rate used for dead-stock carrying cost.
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
+                      Cash Locked in Inventory
+                    </span>
+                    <div className="text-2xl font-bold text-foreground">
+                      {totalInventoryValue !== null ? `$${totalInventoryValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Total cost of stock on hand — matches Inventory Intelligence.
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
+                      Dead Stock Cost
+                    </span>
+                    <div className={`text-2xl font-bold ${deadStockCount > 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                      ${deadStockCapital.toLocaleString()}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {deadStockCount > 0
+                        ? `Capital locked in ${deadStockCount} SKU${deadStockCount > 1 ? "s" : ""} unsold for over 30 days.`
+                        : "No SKUs currently unsold for over 30 days."}
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
+                      Potential Recovery
+                    </span>
+                    <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                      ${potentialRecovery.toLocaleString()}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Est. at 80% of dead-stock value via bundle or markdown liquidation.
+                    </p>
+                  </div>
+
+                  <div className="bg-muted/40 p-4 rounded-xl border border-border space-y-1">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
+                      Inventory ROI (GMROI)
+                    </span>
+                    <div className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                      {avgGmroi !== null ? `${avgGmroi.toFixed(1)}x` : "—"}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Average gross margin return on investment across SKUs with sales history.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Connected Originating Decisions & Strategic Initiatives */}
+          <div className="bg-card rounded-xl border border-border p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span className="text-xs font-semibold text-primary uppercase tracking-wider block">Connected Decision Traceability</span>
+              <h3 className="text-sm font-bold text-foreground mt-0.5">Which inventory decisions are driving financial performance?</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                {(() => {
+                  const revenueAtRisk = inventoryAlerts?.total_revenue_at_risk ?? 0;
+                  const deadStockCapital = inventoryAlerts?.total_capital_locked ?? 0;
+                  if (!revenueAtRisk && !deadStockCapital) return "No active reorder or dead-stock recommendations right now.";
+                  const parts: string[] = [];
+                  if (revenueAtRisk) parts.push(`Open reorder recommendations protect $${revenueAtRisk.toLocaleString()} in revenue`);
+                  if (deadStockCapital) parts.push(`${parts.length ? "and" : "Reorder recommendations flag"} $${deadStockCapital.toLocaleString()} in dead stock for liquidation`);
+                  return parts.join(" ") + ".";
+                })()}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard/inventory" className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                Review Reorders →
+              </Link>
+              <Link href="/dashboard/projects" className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-secondary text-foreground hover:bg-muted transition-all border border-border">
+                Active Initiatives →
+              </Link>
+            </div>
+          </div>
+
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-card p-6 rounded-xl border border-border shadow-sm flex flex-col justify-center items-center">
@@ -109,7 +244,7 @@ export default function FinancePage() {
               <div className="text-4xl font-bold text-foreground">${kpis?.expenses?.toLocaleString() || 0}</div>
             </div>
             <div className="bg-blue-600 p-6 rounded-xl border border-blue-700 shadow-md flex flex-col justify-center items-center text-foreground">
-              <div className="font-medium mb-2 opacity-90">Net Profit</div>
+              <div className="font-medium mb-2 opacity-90">Net Operating Profit</div>
               <div className="text-4xl font-bold">${kpis?.profit?.toLocaleString() || 0}</div>
             </div>
           </div>

@@ -415,7 +415,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto w-full px-4 py-6 flex flex-col lg:flex-row gap-6">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 flex flex-col lg:flex-row gap-8">
       
       {/* Sticky Sidebar Navigation */}
       <aside className="lg:w-60 lg:shrink-0 lg:sticky lg:top-24 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none">
@@ -620,11 +620,11 @@ export default function SettingsPage() {
                       onClick={() => handleThemeChange(t.value)}
                       className={`flex flex-col items-center justify-center p-3.5 rounded-xl border text-sm font-medium transition-all gap-1.5 cursor-pointer ${
                         active
-                          ? "bg-indigo-600/15 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/80 shadow-xs"
+                          ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
                           : "bg-card border-border text-muted-foreground hover:text-foreground hover:bg-muted/30"
                       }`}
                     >
-                      <Icon size={16} className={active ? "text-indigo-400" : "text-muted-foreground"} />
+                      <Icon size={16} className={active ? "text-white" : "text-muted-foreground"} />
                       <span>{t.label}</span>
                     </button>
                   );
@@ -638,21 +638,21 @@ export default function SettingsPage() {
             <div className="border-t border-border/60 pt-6 max-w-md">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5 pr-4">
-                  <label className="text-xs font-bold text-foreground block">Developer Telemetry Mode</label>
+                  <label className="text-xs font-bold text-foreground block">Show AI Reasoning Details</label>
                   <span className="text-[11px] text-muted-foreground block leading-relaxed">
-                    Show advanced token counts, estimated costs, and agent logical breakdowns in EVE Chat.
+                    Show which EVE agent answered, plus the underlying cost and step-by-step reasoning behind each response in EVE Chat.
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleToggleDeveloperMode(!developerMode)}
                   className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors cursor-pointer outline-none ${
-                    developerMode ? "bg-indigo-600" : "bg-zinc-700"
+                    developerMode ? "bg-indigo-600" : "bg-muted border border-border"
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-foreground transition-transform ${
-                      developerMode ? "translate-x-6" : "translate-x-1"
+                    className={`inline-block h-4 w-4 transform rounded-full transition-transform ${
+                      developerMode ? "translate-x-6 bg-white" : "translate-x-1 bg-foreground"
                     }`}
                   />
                 </button>

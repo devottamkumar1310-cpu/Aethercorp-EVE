@@ -5,14 +5,27 @@ import { useEffect, useState } from "react";
 import { fetchTasks, fetchProjects, deleteTaskAPI } from "@/services/businessService";
 import { Task, Project } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
+import { API_BASE_URL } from "@/lib/api";
 import Link from "next/link";
-import { CheckSquare, Plus, ArrowLeft, Edit2, Trash2, Calendar, AlertCircle } from "lucide-react";
+import { CheckSquare, Plus, ArrowLeft, Edit2, Trash2, Calendar, Sparkles, Inbox } from "lucide-react";
 import { TaskModal } from "@/components/business/TaskModal";
 import { toast } from "sonner";
+
+interface AITraceCard {
+  id: string;
+  action: string;
+  recommendation_type: string;
+  confidence_score: number;
+  priority?: string | null;
+  estimated_financial_impact?: number | null;
+  related_skus?: string[] | null;
+}
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [aiTraces, setAiTraces] = useState<AITraceCard[]>([]);
+  const [loadingTraces, setLoadingTraces] = useState(true);
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string>("");
 
@@ -32,6 +45,30 @@ export default function TasksPage() {
     }
   };
 
+  const loadAiTraces = async (token: string) => {
+    setLoadingTraces(true);
+    try {
+      const workspaceId = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
+      const res = await fetch(`${API_BASE_URL}/api/recommendations?limit=6`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Workspace-Id": workspaceId || "",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiTraces(Array.isArray(data) ? data : []);
+      } else {
+        setAiTraces([]);
+      }
+    } catch (err) {
+      logger.error("Failed to load recommendation traces", err);
+      setAiTraces([]);
+    } finally {
+      setLoadingTraces(false);
+    }
+  };
+
   useEffect(() => {
     async function init() {
       try {
@@ -40,6 +77,7 @@ export default function TasksPage() {
         if (session) {
           setSessionToken(session.access_token);
           await loadData(session.access_token);
+          loadAiTraces(session.access_token);
         }
       } finally {
         setLoading(false);
@@ -70,7 +108,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6 md:p-8 max-w-[1600px] mx-auto w-full space-y-8 transition-colors duration-200">
+    <div className="max-w-[1600px] mx-auto p-6 md:p-8 space-y-8 transition-colors duration-200">
       
       {/* Header Navigation */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-border pb-6">
@@ -95,6 +133,85 @@ export default function TasksPage() {
         >
           <Plus size={16}/> New Operational Task
         </button>
+      </div>
+
+      {/* AI-Generated Operational Tasks Banner — pulled directly from this workspace's
+          Decision Traceability records, so every card links to a real, sourced recommendation. */}
+      <div className="eve-card border border-indigo-500/15 rounded-2xl p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="p-2 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 rounded-lg">
+              <Sparkles className="w-5 h-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-bold text-foreground">AI-Generated Executive Operational Tasks</h2>
+              <p className="text-xs text-muted-foreground">Live Decision Traceability records for this workspace, ranked by confidence</p>
+            </div>
+          </div>
+          {!loadingTraces && (
+            <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 rounded-full border border-indigo-500/30">
+              {aiTraces.length} Active Recommendation{aiTraces.length === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
+
+        {loadingTraces ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-muted/40 border border-border rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : aiTraces.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+            <Inbox className="w-6 h-6 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No AI-generated recommendations for this workspace yet.</p>
+            <p className="text-xs text-muted-foreground">Upload sales and inventory data to generate decision traces.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+            {aiTraces.map((trace) => {
+              const priority = (trace.priority || "medium").toUpperCase();
+              const confidencePct = Math.round(trace.confidence_score * (trace.confidence_score <= 1 ? 100 : 1));
+              const sku = (trace.related_skus || [])[0];
+              return (
+                <div key={trace.id} className="bg-card border border-border rounded-xl p-4 space-y-3 flex flex-col justify-between hover:border-indigo-500/40 transition-all">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-foreground">{trace.action}</span>
+                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded ${
+                        priority === "CRITICAL"
+                          ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/30"
+                          : priority === "HIGH"
+                          ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30"
+                          : "bg-muted text-muted-foreground border border-border"
+                      }`}>
+                        {priority}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-snug capitalize">{trace.recommendation_type.replace(/_/g, " ")}{sku ? ` · ${sku}` : ""}</p>
+                  </div>
+
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                        {trace.estimated_financial_impact ? `$${trace.estimated_financial_impact.toLocaleString()} Impact` : "Impact not quantified"}
+                      </span>
+                      <span className="text-indigo-600 dark:text-indigo-400 font-semibold text-[11px] flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> {confidencePct}% Conf.
+                      </span>
+                    </div>
+                    <Link
+                      href={`/dashboard/traceability?type=${trace.recommendation_type}${sku ? `&sku=${sku}` : ""}&traceId=${trace.id}`}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:underline transition-colors pt-1"
+                    >
+                      Open Decision Traceability →
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -154,8 +271,9 @@ export default function TasksPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button 
                           onClick={() => handleEdit(t)} 
-                          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer" 
+                          className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors cursor-pointer" 
                           title="Edit Task"
+                          aria-label={`Edit task ${t.title}`}
                         >
                           <Edit2 size={15} />
                         </button>
@@ -163,6 +281,7 @@ export default function TasksPage() {
                           onClick={() => handleDelete(t.id)} 
                           className="p-1.5 rounded-md text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer" 
                           title="Delete Task"
+                          aria-label={`Delete task ${t.title}`}
                         >
                           <Trash2 size={15} />
                         </button>

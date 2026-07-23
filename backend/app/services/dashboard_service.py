@@ -25,7 +25,7 @@ class DashboardService:
         projects = db.query(Project).filter(
             Project.organization_id == organization_id,
             Project.status.in_(["planned", "active"]),
-            Project.deadline is not None
+            Project.deadline.isnot(None)
         ).order_by(Project.deadline).limit(limit).all()
         return projects
 

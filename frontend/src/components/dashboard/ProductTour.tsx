@@ -129,7 +129,9 @@ export function ProductTour() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] w-full max-w-md p-1 animate-fade-in">
+    // Sits well above the bottom edge so it never overlaps a page's bottom-anchored
+    // input bar (e.g. the AI CEO chat composer, which this same tour step points at).
+    <div className="fixed bottom-28 right-6 z-[9999] w-full max-w-md p-1 animate-fade-in">
       <div className="bg-card dark:bg-background backdrop-blur-lg border border-border rounded-2xl shadow-2xl p-6 text-foreground flex flex-col space-y-4 font-sans">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border pb-3">

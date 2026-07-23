@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
+import { ReorderCenter } from "@/components/inventory/ReorderCenter";
 import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
 import { API_BASE_URL } from "@/lib/api";
 
@@ -67,6 +68,9 @@ interface AlertData {
     days_of_supply?: number | null;
     lead_time_days?: number | null;
     revenue_at_risk?: number | null;
+    unit_cost?: number;
+    supplier_name?: string | null;
+    recommended_order_qty?: number;
   }>;
   dead_stock: Array<{
     sku: string;
@@ -81,15 +85,26 @@ interface AlertData {
   dead_stock_count: number;
   total_revenue_at_risk?: number;
   total_capital_locked?: number;
+  total_recommended_order_units?: number;
+}
+
+interface RecommendationTraceSummary {
+  id: string;
+  recommendation_type: string;
+  confidence_score: number;
+  related_skus?: string[] | null;
+  status?: string;
 }
 
 type SortField = "stock_on_hand" | "qty_sold" | "revenue" | "margin_percent" | "profit";
 type SortDir = "asc" | "desc";
-type TabId = "all" | "reorder" | "dead";
+type TabId = "reorder_center" | "all" | "reorder" | "dead";
 
 export default function InventoryDashboardPage() {
   const [data, setData] = useState<InventoryDashboardData | null>(null);
   const [alerts, setAlerts] = useState<AlertData | null>(null);
+  const [traces, setTraces] = useState<RecommendationTraceSummary[]>([]);
+  const [sessionSkuStatus, setSessionSkuStatus] = useState<Record<string, "ORDERED" | "IGNORED">>({});
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string>("");
   const [uploadingMaster, setUploadingMaster] = useState(false);
@@ -97,7 +112,7 @@ export default function InventoryDashboardPage() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortField, setSortField] = useState<SortField>("revenue");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [activeTab, setActiveTab] = useState<TabId>("all");
+  const [activeTab, setActiveTab] = useState<TabId>("reorder_center");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [showImportSummary, setShowImportSummary] = useState(false);
   const [importSummary, setImportSummary] = useState<{
@@ -116,9 +131,15 @@ export default function InventoryDashboardPage() {
   const loadData = async (token: string) => {
     try {
       const activeWorkspace = localStorage.getItem("active_workspace_id");
-      const [dbData, alertRes] = await Promise.all([
+      const [dbData, alertRes, tracesRes] = await Promise.all([
         fetchInventoryDashboard(token),
         fetch(`${API_BASE_URL}/api/inventory/alerts`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Workspace-Id": activeWorkspace || "",
+          },
+        }),
+        fetch(`${API_BASE_URL}/api/recommendations?limit=100`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "X-Workspace-Id": activeWorkspace || "",
@@ -129,6 +150,10 @@ export default function InventoryDashboardPage() {
       if (alertRes.ok) {
         const alertData = await alertRes.json();
         setAlerts(alertData);
+      }
+      if (tracesRes.ok) {
+        const traceData = await tracesRes.json();
+        setTraces(Array.isArray(traceData) ? traceData : []);
       }
     } catch {
       toast.error("Inventory synchronization in progress. Please wait.");
@@ -222,6 +247,41 @@ export default function InventoryDashboardPage() {
       return (a[sortField] - b[sortField]) * dir;
     });
   }, [data, search, categoryFilter, sortField, sortDir]);
+
+  // Declared unconditionally (before the loading/empty-state early returns below) so
+  // this hook always runs in the same order on every render — placing it after those
+  // early returns caused a "rendered more hooks than previous render" crash.
+  const confidenceBySku = useMemo(() => {
+    const map: Record<string, { score: number; traceId: string }> = {};
+    for (const t of traces) {
+      if (!["reorder", "low_stock"].includes((t.recommendation_type || "").toLowerCase())) continue;
+      for (const sku of t.related_skus || []) {
+        const existing = map[sku];
+        if (!existing) {
+          map[sku] = { score: Math.round(t.confidence_score * (t.confidence_score <= 1 ? 100 : 1)), traceId: t.id };
+        }
+      }
+    }
+    return map;
+  }, [traces]);
+
+  // Hydrate session status from what's actually persisted (RecommendationTrace.status),
+  // so a page refresh reflects real backend state instead of resetting every SKU to
+  // "pending" — without clobbering an action just taken this session.
+  useEffect(() => {
+    if (traces.length === 0) return;
+    setSessionSkuStatus((prev) => {
+      const next = { ...prev };
+      for (const t of traces) {
+        const mapped = t.status === "Completed" ? "ORDERED" : t.status === "Dismissed" ? "IGNORED" : null;
+        if (!mapped) continue;
+        for (const sku of t.related_skus || []) {
+          if (!next[sku]) next[sku] = mapped;
+        }
+      }
+      return next;
+    });
+  }, [traces]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) setSortDir((d) => (d === "desc" ? "asc" : "desc"));
@@ -378,20 +438,26 @@ export default function InventoryDashboardPage() {
     );
   }
 
-  const tabs: { id: TabId; label: string; count?: number }[] = [
-    { id: "all", label: "All Products", count: data?.product_metrics?.length },
-    { id: "reorder", label: "Reorder Alerts", count: alerts?.low_stock_count },
-    { id: "dead", label: "Dead Stock", count: alerts?.dead_stock_count },
-  ];
-  const lowStockProducts = alerts?.low_stock || [];
+  const lowStockProductsAll = alerts?.low_stock || [];
+  // SKUs marked "Ordered" this session are excluded from outstanding-risk tiles so the
+  // KPI strip reflects the action just taken instead of staying frozen at pre-action values.
+  const lowStockProducts = lowStockProductsAll.filter((item) => sessionSkuStatus[item.sku] !== "ORDERED");
   const deadStockProducts = alerts?.dead_stock || [];
-  const shortageUnits = lowStockProducts.reduce((sum, item) => sum + Math.max(0, item.shortage), 0);
+  const recommendedOrderUnits = alerts?.total_recommended_order_units ??
+    lowStockProducts.reduce((sum, item) => sum + (item.recommended_order_qty ?? Math.max(0, item.shortage)), 0);
   const deadStockCapital = deadStockProducts.reduce((sum, item) => sum + item.estimated_value, 0);
   const topLowStockSkus = lowStockProducts.slice(0, 2).map((item) => item.sku).join(" and ");
   const topDeadStockSkus = deadStockProducts.slice(0, 3).map((item) => item.sku).join(", ");
-  const totalRevenueAtRisk = alerts?.total_revenue_at_risk ?? lowStockProducts.reduce((s, i) => s + (i.revenue_at_risk ?? 0), 0);
+  const totalRevenueAtRisk = lowStockProducts.reduce((s, i) => s + (i.revenue_at_risk ?? 0), 0);
   const criticalStockouts = lowStockProducts.filter((i) => i.days_of_supply !== null && i.days_of_supply !== undefined && i.days_of_supply < (i.lead_time_days ?? 14));
   const outOfStock = lowStockProducts.filter((i) => i.stock_on_hand === 0);
+
+  const tabs: { id: TabId; label: string; count?: number }[] = [
+    { id: "reorder_center", label: "Reorder Center", count: lowStockProducts.length },
+    { id: "all", label: "All Products", count: data?.product_metrics?.length },
+    { id: "reorder", label: "Reorder Alerts", count: lowStockProducts.length },
+    { id: "dead", label: "Dead Stock", count: alerts?.dead_stock_count },
+  ];
 
   const stockoutInsight = lowStockProducts.length > 0
     ? (() => {
@@ -472,17 +538,17 @@ export default function InventoryDashboardPage() {
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Low Stock SKUs</p>
             <p className="text-3xl font-bold tracking-tight text-foreground mt-2">
-              {alerts?.low_stock_count || 0}
+              {lowStockProducts.length || 0}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              {(alerts?.low_stock_count || 0) > 0
+              {(lowStockProducts.length || 0) > 0
                 ? outOfStock.length > 0
                   ? `${outOfStock.length} SKU${outOfStock.length > 1 ? "s" : ""} out of stock`
                   : `${criticalStockouts.length} stockout risk SKUs`
                 : "All stock levels healthy"}
             </p>
           </div>
-          <div className={`p-2.5 rounded-xl ${(alerts?.low_stock_count || 0) > 0 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>
+          <div className={`p-2.5 rounded-xl ${(lowStockProducts.length || 0) > 0 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground"}`}>
             <AlertTriangle size={20} />
           </div>
         </div>
@@ -514,10 +580,10 @@ export default function InventoryDashboardPage() {
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Reorder Action Plan</p>
             <p className="text-3xl font-bold tracking-tight text-foreground mt-2">
-              {alerts?.low_stock?.length || 0}
+              {lowStockProducts.length}
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              {shortageUnits.toLocaleString() || 0} units suggested
+              {recommendedOrderUnits.toLocaleString() || 0} units to reorder — matches Reorder Center below
             </p>
           </div>
           <div className="p-2.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
@@ -546,7 +612,7 @@ export default function InventoryDashboardPage() {
                     {stockoutInsight}
                   </p>
                 </div>
-                {(alerts?.low_stock_count || 0) > 0 && (
+                {(lowStockProducts.length || 0) > 0 && (
                   <Link href="/dashboard/traceability?type=low_stock" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1 mt-3">
                     Audit Decision Reasoning <ArrowRight size={12} />
                   </Link>
@@ -571,20 +637,30 @@ export default function InventoryDashboardPage() {
             {/* AI Product Governance Disclaimer */}
             <AIDisclaimer className="mt-4" />
           </div>
-          <div className="pt-4 border-t border-border flex items-center justify-between text-xs mt-4">
-            <span className="text-muted-foreground">Ask EVE AI CEO for detailed SKU mitigation plans:</span>
-            <Link href="/dashboard/eve" className="font-semibold text-primary hover:underline flex items-center gap-1 transition-colors">
-              Consult EVE AI →
-            </Link>
+          <div className="pt-4 border-t border-border flex flex-wrap items-center justify-between text-xs mt-4 gap-2">
+            <div className="flex items-center gap-3">
+              <Link href="/dashboard/eve" className="font-semibold text-primary hover:underline flex items-center gap-1 transition-colors">
+                Consult EVE AI →
+              </Link>
+              <span className="text-muted-foreground/40">•</span>
+              <Link href="/dashboard/finance" className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 transition-colors">
+                View Inventory Carrying Cost →
+              </Link>
+            </div>
           </div>
         </div>
 
         {/* Right: Spreadsheet Ingestion Dropzone */}
         <div className="bg-card p-6 rounded-xl border border-border shadow-xs flex flex-col justify-between">
           <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <Upload size={16} className="text-primary" /> Master CSV Ingestion
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Upload size={16} className="text-primary" /> Master CSV Ingestion
+              </h3>
+              <Link href="/dashboard/documents" className="text-[11px] text-primary hover:underline font-semibold">
+                Document Hub →
+              </Link>
+            </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Upload your inventory ledger or Shopify export CSV. EVE automatically parses columns, reconciles quantities, and updates metrics.
             </p>
@@ -752,6 +828,19 @@ export default function InventoryDashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Tab: Reorder Center */}
+        {activeTab === "reorder_center" && (
+          <div className="p-4">
+            <ReorderCenter
+              lowStockItems={lowStockProductsAll}
+              confidenceBySku={confidenceBySku}
+              statusBySku={sessionSkuStatus}
+              onStatusChange={(sku, status) => setSessionSkuStatus((prev) => ({ ...prev, [sku]: status }))}
+              token={sessionToken}
+            />
+          </div>
+        )}
 
         {/* Tab: All Products */}
         {activeTab === "all" && (
