@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Sparkles,
   AlertTriangle,
-  CheckCircle2,
   Package,
   DollarSign,
   Menu,
@@ -58,26 +57,20 @@ export default function LandingPage() {
     requestAnimationFrame(() => document.getElementById(`tab-${next}`)?.focus());
   };
 
+  // Mirrors the in-app FAQ (dashboard → Help & Learning Center → FAQ) so the
+  // landing page and product stay consistent. Do not invent generic SaaS FAQs.
   const faqs = [
     {
-      q: "How quickly can I set up EVE for my brand?",
-      a: "Setup takes less than 2 minutes. You can upload any variant inventory CSV, connect via Shopify, or integrate via API. EVE immediately parses columns, reconciles SKU quantities, and surfaces stockout risks.",
+      q: "Can you prove this right now?",
+      a: "Yes. You can upload any supplier invoice, contract, or inventory ledger CSV to the Document Hub and query EVE immediately in the chat console. EVE will instantly extract data, run planning diagnostics, and surface cash-flow impact recommendations.",
     },
     {
-      q: "Does EVE replace my existing e-commerce store or ERP?",
-      a: "No. EVE acts as an executive intelligence layer on top of your existing setup (Shopify, WooCommerce, ERPs, or custom warehouses), transforming raw stock lists into proactive reorder plans and cash flow forecasts.",
+      q: "Where does the AI get its business data?",
+      a: "EVE reads from the central database schema (Clients, Projects, Finances, and Inventory tables) plus any documents uploaded to the Document Hub.",
     },
     {
-      q: "How does EVE predict stockout depletion dates?",
-      a: "EVE analyzes historical daily sales velocities for every SKU and size variant, factors in supplier lead times and minimum order quantities (MOQs), and alerts you before stock runs out.",
-    },
-    {
-      q: "What is Decision Traceability and why is it important?",
-      a: "Decision Traceability gives you 100% transparency into every AI recommendation. You can inspect the exact evidence datasets, math formulas, confidence scores, and business rules behind every advice before taking action.",
-    },
-    {
-      q: "Is my proprietary business and customer data secure?",
-      a: "Yes. EVE adheres to strict SOC2 and GDPR compliance guidelines with enterprise-grade encryption in transit and at rest. Your data is isolated per workspace and is never used to train shared public AI models.",
+      q: "Is my company data kept secure?",
+      a: "Yes. All uploaded files are stored securely in encrypted buckets, and database access is locked at the workspace boundary.",
     },
   ];
 
@@ -113,7 +106,7 @@ export default function LandingPage() {
             <a href="#features" className="hover:text-foreground transition-colors">Capabilities</a>
             <a href="#traceability" className="hover:text-foreground transition-colors">Decision Traceability</a>
             <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
           </nav>
 
@@ -126,10 +119,10 @@ export default function LandingPage() {
               Sign In
             </Link>
             <Link
-              href="/signup"
+              href="/pricing"
               className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md"
             >
-              Start 14-Day Free Trial
+              Join Waitlist
             </Link>
           </div>
 
@@ -155,11 +148,11 @@ export default function LandingPage() {
             <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Capabilities</a>
             <a href="#traceability" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Decision Traceability</a>
             <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Workflow</a>
-            <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Pricing</a>
+            <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Pricing</Link>
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">FAQ</a>
             <div className="pt-4 border-t border-border flex flex-col gap-2.5">
-              <Link href="/login" className="w-full text-center text-xs font-semibold py-2.5 rounded-xl border border-border text-foreground hover:bg-muted transition-colors">Sign In</Link>
-              <Link href="/signup" className="w-full text-center text-xs font-bold bg-primary text-primary-foreground py-2.5 rounded-xl shadow-sm">Start 14-Day Free Trial</Link>
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-semibold py-2.5 rounded-xl border border-border text-foreground hover:bg-muted transition-colors">Sign In</Link>
+              <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-bold bg-primary text-primary-foreground py-2.5 rounded-xl shadow-sm">Join Waitlist</Link>
             </div>
           </nav>
         )}
@@ -179,15 +172,15 @@ export default function LandingPage() {
 
         <div className="max-w-4xl space-y-6 sm:space-y-8 relative z-10">
 
-          {/* Release Banner Pill */}
-          <a
-            href="#traceability"
+          {/* Early-access banner pill */}
+          <Link
+            href="/pricing"
             className="chip-accent inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-sm max-w-full hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 transition-transform"
           >
             <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="text-left">EVE 2.0 Released: Autonomous Decision Traceability &amp; Replenishment</span>
+            <span className="text-left">Now in private beta — onboarding e-commerce brands weekly. Join the waitlist.</span>
             <ArrowRight className="h-3 w-3 shrink-0" aria-hidden />
-          </a>
+          </Link>
 
           {/* Main Headline */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-foreground">
@@ -203,10 +196,10 @@ export default function LandingPage() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full max-w-md mx-auto sm:max-w-none">
             <Link
-              href="/signup"
+              href="/pricing"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
             >
-              Start 14-Day Free Trial
+              Join the Waitlist
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
             <Link
@@ -218,7 +211,7 @@ export default function LandingPage() {
           </div>
 
           <p className="text-xs text-muted-foreground font-medium">
-            No credit card required • 2-minute setup • Connects via CSV, Shopify, or API
+            Invitation-only private beta • Onboarding e-commerce brands weekly • Upload your inventory CSV to get started
           </p>
         </div>
       </section>
@@ -426,7 +419,7 @@ export default function LandingPage() {
                     </div>
                     <div className="p-2.5 bg-card rounded-lg border border-border text-xs">
                       <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Evidence Datasets</span>
-                      <span className="font-bold text-foreground mt-0.5 block">Shopify Sales + Factory PO</span>
+                      <span className="font-bold text-foreground mt-0.5 block">Sales History CSV + Factory PO</span>
                     </div>
                   </div>
                 </div>
@@ -531,7 +524,7 @@ export default function LandingPage() {
 
           <ol className="grid md:grid-cols-3 gap-8 text-center list-none">
             {[
-              { n: 1, t: "Upload Inventory or Connect Store", d: "Drag and drop your variant stock CSV, or connect your Shopify catalog in one click." },
+              { n: 1, t: "Upload Your Inventory CSV", d: "Drag and drop your master variant stock CSV. EVE parses the columns and reconciles SKU quantities automatically." },
               { n: 2, t: "EVE Scans Health & Velocity", d: "EVE calculates sales velocity per variant size, evaluates lead times, and flags stockout risk dates." },
               { n: 3, t: "Review & Execute Purchase Orders", d: "Receive exact reorder suggestions and audit evidence behind every recommendation." },
             ].map((s) => (
@@ -542,79 +535,6 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
-        </div>
-      </section>
-
-      {/* 8. Pricing Section */}
-      <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto w-full space-y-12">
-        <div className="text-center space-y-3">
-          <div className="text-xs font-bold uppercase tracking-wider t-accent">Transparent Pricing</div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-            Simple Plans for Growing E-Commerce Brands
-          </h2>
-          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            14-day free trial on all plans. No credit card required to begin.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-8 md:items-stretch">
-          {/* Starter */}
-          <div className="p-6 rounded-2xl border border-border bg-card space-y-6 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Starter</span>
-              <div className="text-3xl font-extrabold text-foreground">$49 <span className="text-xs font-normal text-muted-foreground">/ month</span></div>
-              <p className="text-xs text-muted-foreground">For emerging D2C brands taking control of variant inventory.</p>
-              <ul className="space-y-2 text-xs text-foreground font-medium pt-2">
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Up to 500 SKUs</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Stockout Risk Predictions</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Dead Stock Identification</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Master CSV Ingestion</li>
-              </ul>
-            </div>
-            <Link href="/signup" className="w-full text-center py-2.5 rounded-xl border border-border text-xs font-semibold hover:bg-muted hover:border-[color:var(--eve-accent)]/40 transition-colors block">
-              Start Free Trial
-            </Link>
-          </div>
-
-          {/* Growth (Featured) */}
-          <div className="p-6 rounded-2xl border-2 bg-card space-y-6 flex flex-col justify-between relative shadow-lg md:-mt-2 border-[color:var(--eve-accent)]">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase tracking-wider bg-violet-600 text-white px-3 py-1 rounded-full shadow-md">
-              Most Popular
-            </span>
-            <div className="space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider t-accent">Growth</span>
-              <div className="text-3xl font-extrabold text-foreground">$149 <span className="text-xs font-normal text-muted-foreground">/ month</span></div>
-              <p className="text-xs text-muted-foreground">For scaling e-commerce brands needing automated PO planning.</p>
-              <ul className="space-y-2 text-xs text-foreground font-medium pt-2">
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Up to 5,000 SKUs</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Automated PO Generation</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Decision Traceability</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> EVE AI CEO Strategic Assistant</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Document Vault Ingestion</li>
-              </ul>
-            </div>
-            <Link href="/signup" className="w-full text-center py-2.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold hover:bg-primary/90 transition-colors shadow-sm block">
-              Start 14-Day Free Trial
-            </Link>
-          </div>
-
-          {/* Enterprise */}
-          <div className="p-6 rounded-2xl border border-border bg-card space-y-6 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Enterprise</span>
-              <div className="text-3xl font-extrabold text-foreground">Custom</div>
-              <p className="text-xs text-muted-foreground">For high-volume multi-brand groups and enterprise retailers.</p>
-              <ul className="space-y-2 text-xs text-foreground font-medium pt-2">
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Unlimited SKUs &amp; Workspaces</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Custom API &amp; ERP Connectors</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Dedicated Account Manager</li>
-                <li className="flex items-center gap-2"><CheckCircle2 size={14} className="t-success shrink-0" aria-hidden /> Custom AI Model Guardrails</li>
-              </ul>
-            </div>
-            <a href="mailto:support@eveinventory.in" className="w-full text-center py-2.5 rounded-xl border border-border text-xs font-semibold hover:bg-muted hover:border-[color:var(--eve-accent)]/40 transition-colors block">
-              Contact Sales
-            </a>
-          </div>
         </div>
       </section>
 
@@ -684,10 +604,10 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
-              href="/signup"
+              href="/pricing"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
             >
-              Start 14-Day Free Trial
+              Request Early Access
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
             <Link
@@ -730,9 +650,9 @@ export default function LandingPage() {
           <div className="space-y-3">
             <span className="font-bold text-foreground uppercase tracking-wider block">Company</span>
             <ul className="space-y-2 text-muted-foreground font-medium">
-              <li><a href="#pricing" className="hover:text-foreground transition-colors">Pricing Plans</a></li>
-              <li><a href="mailto:support@eveinventory.in" className="hover:text-foreground transition-colors">Contact Support</a></li>
-              <li><a href="mailto:sales@eveinventory.in" className="hover:text-foreground transition-colors">Enterprise Sales</a></li>
+              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Join Waitlist</Link></li>
+              <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+              <li><Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link></li>
             </ul>
           </div>
 
@@ -741,7 +661,6 @@ export default function LandingPage() {
             <ul className="space-y-2 text-muted-foreground font-medium">
               <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
               <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><a href="mailto:security@eveinventory.in" className="hover:text-foreground transition-colors">Security Center</a></li>
             </ul>
           </div>
         </div>
