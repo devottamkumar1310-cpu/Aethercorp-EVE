@@ -812,7 +812,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {isDemoWorkspace && (
                 <button
                   onClick={() => setIsProvenanceModalOpen(true)}
-                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 rounded-full text-[11px] font-semibold text-blue-400 transition-colors"
+                  className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 rounded-full text-[11px] font-semibold text-blue-700 dark:text-blue-300 transition-colors"
                 >
                   <Database size={11} />
                   <span>Demo Dataset</span>

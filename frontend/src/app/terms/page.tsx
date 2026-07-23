@@ -8,7 +8,7 @@ export default function TermsOfServicePage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <header className="w-full bg-card backdrop-blur-md border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center !text-white [&_svg]:!text-white [&_svg]:!stroke-white font-bold tracking-tighter">
+          <div className="h-8 w-8 bg-indigo-600 rounded-md flex items-center justify-center text-white font-bold tracking-tighter">
             EVE
           </div>
           <span className="text-xl font-semibold tracking-tight text-foreground">Terms of Service</span>
@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12">
         <div className="bg-card border border-border rounded-2xl p-8 shadow-xl space-y-8">
           <div className="flex items-center gap-3 border-b border-border pb-6">
-            <div className="p-3 bg-indigo-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg">
+            <div className="p-3 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 rounded-lg">
               <FileText className="h-6 w-6" />
             </div>
             <div>

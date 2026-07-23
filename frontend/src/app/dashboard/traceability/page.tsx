@@ -530,8 +530,8 @@ export default function TraceabilityDashboard() {
                       <div className="pt-4 border-t border-border/50 text-left">
                         <span className="text-xs uppercase text-muted-foreground block mb-1">Confidence Flag</span>
                         <div className={`text-xs font-semibold px-2 py-1 rounded inline-block ${
-                          selectedTrace.confidence_governance_flag === 'OK' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20' :
-                          'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                          selectedTrace.confidence_governance_flag === 'OK' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20' :
+                          'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
                         }`}>
                           {selectedTrace.confidence_governance_flag.replace(/_/g, ' ')}
                         </div>
@@ -542,9 +542,9 @@ export default function TraceabilityDashboard() {
                       <div className="pt-2 text-left">
                         <span className="text-xs uppercase text-muted-foreground block mb-1">Evidence Status</span>
                         <div className={`text-xs font-semibold px-2 py-1 rounded inline-block ${
-                          selectedTrace.evidence_validation_status === 'SUPPORTED' ? 'bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-emerald-500/20' :
-                          selectedTrace.evidence_validation_status === 'PARTIALLY_SUPPORTED' ? 'bg-blue-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-blue-500/20' :
-                          'bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border border-red-500/20'
+                          selectedTrace.evidence_validation_status === 'SUPPORTED' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20' :
+                          selectedTrace.evidence_validation_status === 'PARTIALLY_SUPPORTED' ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20' :
+                          'bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20'
                         }`}>
                           {selectedTrace.evidence_validation_status.replace(/_/g, ' ')}
                         </div>

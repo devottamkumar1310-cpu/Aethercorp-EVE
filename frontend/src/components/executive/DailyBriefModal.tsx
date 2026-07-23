@@ -265,7 +265,7 @@ export function DailyBriefModal({ isOpen, onClose, token, onAskFollowUp }: Daily
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg border border-indigo-500/20">
+            <div className="p-1.5 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 rounded-lg border border-indigo-500/20">
               <Sparkles size={18} />
             </div>
             <div>

@@ -391,21 +391,21 @@ export default function InventoryDashboardPage() {
           {/* Three-step visual onboarding guide */}
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-4 text-left">
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
-              <div className="h-8 w-8 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg flex items-center justify-center font-bold text-sm">1</div>
+              <div className="h-8 w-8 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 rounded-lg flex items-center justify-center font-bold text-sm">1</div>
               <h4 className="font-bold text-foreground text-sm">Upload Stock Data</h4>
               <p className="text-muted-foreground text-xs leading-relaxed">
                 Export your products from Shopify or download our template, and upload the CSV here.
               </p>
             </div>
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
-              <div className="h-8 w-8 bg-violet-500/10 text-violet-400 rounded-lg flex items-center justify-center font-bold text-sm">2</div>
+              <div className="h-8 w-8 bg-violet-500/10 text-violet-700 dark:text-violet-300 rounded-lg flex items-center justify-center font-bold text-sm">2</div>
               <h4 className="font-bold text-foreground text-sm">Get Live Insights</h4>
               <p className="text-muted-foreground text-xs leading-relaxed">
                 See stockout risks, capital tied up in dead stock, best sellers, and gross margins instantly.
               </p>
             </div>
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
-              <div className="h-8 w-8 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg flex items-center justify-center font-bold text-sm">3</div>
+              <div className="h-8 w-8 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 rounded-lg flex items-center justify-center font-bold text-sm">3</div>
               <h4 className="font-bold text-foreground text-sm">Take Smart Action</h4>
               <p className="text-muted-foreground text-xs leading-relaxed">
                 Let EVE generate restocking purchase orders, price adjustments, and supplier requests.
@@ -415,7 +415,7 @@ export default function InventoryDashboardPage() {
 
           {/* Call to Actions */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 max-w-md mx-auto">
-            <label className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-indigo-550/40 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-550/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:text-indigo-300 rounded-xl text-sm font-semibold cursor-pointer transition-all text-center">
+            <label className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-indigo-500/40 hover:border-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-semibold cursor-pointer transition-all text-center">
               {uploadingMaster ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload size={16} />}
               <span>{uploadingMaster ? "Uploading..." : "Upload Master CSV"}</span>
               <input

@@ -26,27 +26,27 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
     if (type.includes("client")) {
       return {
         icon: Users,
-        iconClass: "bg-blue-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-blue-500/20",
+        iconClass: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
         badgeVariant: "default" as const,
-        badgeClass: "bg-blue-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:bg-blue-600/20 border-blue-500/20",
+        badgeClass: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20",
         label: "Client Ops"
       };
     }
     if (type.includes("project")) {
       return {
         icon: Briefcase,
-        iconClass: "bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-indigo-500/20",
+        iconClass: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20",
         badgeVariant: "default" as const,
-        badgeClass: "bg-indigo-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:bg-indigo-600/20 border-indigo-500/20",
+        badgeClass: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20",
         label: "Project"
       };
     }
     if (type.includes("task")) {
       return {
         icon: CheckSquare,
-        iconClass: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+        iconClass: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20",
         badgeVariant: "default" as const,
-        badgeClass: "bg-cyan-600/10 text-cyan-400 hover:bg-cyan-600/20 border-cyan-500/20",
+        badgeClass: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20",
         label: "Task"
       };
     }
@@ -54,11 +54,11 @@ export function ExecutiveTimeline({ logs, loading = false }: Props) {
       const isExpense = act.includes("expense") || type.includes("expense");
       return {
         icon: DollarSign,
-        iconClass: isExpense ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-emerald-500/20",
+        iconClass: isExpense ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
         badgeVariant: "default" as const,
         badgeClass: isExpense 
-          ? "bg-rose-600/10 text-rose-400 hover:bg-rose-600/20 border-rose-500/20" 
-          : "bg-emerald-600/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white hover:bg-emerald-600/20 border-emerald-500/20",
+          ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20" 
+          : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20",
         label: isExpense ? "Expense" : "Revenue"
       };
     }

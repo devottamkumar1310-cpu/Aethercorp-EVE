@@ -440,7 +440,7 @@ export default function SettingsPage() {
                 onClick={() => scrollToSection(sec.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left cursor-pointer group ${
                   active
-                    ? "bg-indigo-600/15 !text-white [&_svg]:!text-white [&_svg]:!stroke-white border-l-2 border-indigo-500 pl-[10px]"
+                    ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-bold border-l-2 border-indigo-500 pl-[10px]"
                     : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent pl-3"
                 }`}
               >
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                         type="button"
                         onClick={handleAvatarUpload}
                         disabled={uploadingAvatar}
-                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-indigo-600 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg hover:bg-indigo-700 transition cursor-pointer"
+                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition cursor-pointer"
                       >
                         {uploadingAvatar ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
                         Save Upload
@@ -511,7 +511,7 @@ export default function SettingsPage() {
                             fileInputRef.current.value = "";
                           }
                         }}
-                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-red-500/30 hover:bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg transition cursor-pointer"
+                        className="flex items-center gap-2 text-xs font-semibold px-3 py-2 border border-red-500/30 hover:bg-red-500/10 text-red-700 dark:text-red-400 rounded-lg transition cursor-pointer"
                       >
                         Remove Avatar
                       </button>
@@ -670,12 +670,12 @@ export default function SettingsPage() {
               Email Management
             </h2>
             {isGoogleUser ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                 <Check className="h-3 w-3" />
                 Managed by Google
               </span>
             ) : profile?.email_verified ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                 <Check className="h-3 w-3" />
                 Verified
               </span>
@@ -776,7 +776,7 @@ export default function SettingsPage() {
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
                           ws.role === "owner"
-                            ? "bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white"
+                            ? "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-semibold"
                             : "bg-muted text-muted-foreground"
                         }`}
                       >
@@ -871,7 +871,7 @@ export default function SettingsPage() {
               </p>
               
               {deleteWsError && (
-                <div className="mb-4 p-3 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-lg border border-red-500/20">
+                <div className="mb-4 p-3 bg-red-500/10 text-red-700 dark:text-red-300 text-sm rounded-lg border border-red-500/20 font-medium">
                   {deleteWsError}
                 </div>
               )}
@@ -930,7 +930,7 @@ export default function SettingsPage() {
 
                 return isBlocked ? (
                   <div className="space-y-4">
-                    <div className="p-3 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-lg border border-red-500/20 font-medium">
+                    <div className="p-3 bg-red-500/10 text-red-700 dark:text-red-300 text-sm rounded-lg border border-red-500/20 font-medium">
                       Account deletion is currently unavailable.
                     </div>
 
@@ -968,7 +968,7 @@ export default function SettingsPage() {
                           setShowDeleteAccountModal(false);
                           scrollToSection("workspaces");
                         }}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         Manage Workspace
                       </button>
@@ -981,7 +981,7 @@ export default function SettingsPage() {
                   </p>
                   
                   {deleteAccountError && (
-                    <div className="mb-4 p-3 bg-red-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-lg border border-red-500/20">
+                    <div className="mb-4 p-3 bg-red-500/10 text-red-700 dark:text-red-300 text-sm rounded-lg border border-red-500/20 font-medium">
                       {deleteAccountError}
                     </div>
                   )}
