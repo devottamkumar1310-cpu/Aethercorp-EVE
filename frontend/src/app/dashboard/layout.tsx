@@ -176,10 +176,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return stored;
     };
 
-    let stored = localStorage.getItem("theme") || "dark";
+    let stored = localStorage.getItem("theme") || "executive-light";
     if (!["system", "executive-light", "dark"].includes(stored)) {
-      stored = "dark";
-      localStorage.setItem("theme", "dark");
+      stored = "executive-light";
+      localStorage.setItem("theme", "executive-light");
     }
 
     const active = resolveTheme(stored);
@@ -219,9 +219,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return profile.preferences.theme;
     }
     if (typeof window !== "undefined") {
-      return localStorage.getItem("theme") || "dark";
+      return localStorage.getItem("theme") || "executive-light";
     }
-    return "dark";
+    return "executive-light";
   };
 
   const setThemePreference = (newTheme: string) => {

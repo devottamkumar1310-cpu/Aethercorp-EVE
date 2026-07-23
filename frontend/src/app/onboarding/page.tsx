@@ -177,14 +177,14 @@ export default function OnboardingPage() {
               <button
                 onClick={() => handleCreateDemoWorkspace("luma")}
                 disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full text-left p-4 bg-card hover:bg-muted/40 border border-border hover:border-indigo-500/50 rounded-xl transition-all shadow-sm hover:shadow-md group relative hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                     <Brain size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
                       Luma & Co.
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -197,14 +197,14 @@ export default function OnboardingPage() {
               <button
                 onClick={() => handleCreateDemoWorkspace("drift")}
                 disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full text-left p-4 bg-card hover:bg-muted/40 border border-border hover:border-indigo-500/50 rounded-xl transition-all shadow-sm hover:shadow-md group relative hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                     <Building2 size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
                       Drift Collective
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -217,14 +217,14 @@ export default function OnboardingPage() {
               <button
                 onClick={() => handleCreateDemoWorkspace("basecamp")}
                 disabled={loading || loadingDemo}
-                className="w-full text-left p-4 bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/30 hover:border-indigo-500/80 rounded-xl transition-all shadow-md group relative hover:-translate-y-0.5 active:translate-y-0"
+                className="w-full text-left p-4 bg-card hover:bg-muted/40 border border-border hover:border-indigo-500/50 rounded-xl transition-all shadow-sm hover:shadow-md group relative hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-indigo-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white rounded-lg group-hover:bg-indigo-500 group-hover:text-foreground transition-colors">
+                  <div className="p-3 bg-indigo-500/10 text-indigo-600 rounded-lg group-hover:bg-indigo-600 group-hover:text-white transition-colors">
                     <Building2 size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-300 transition-colors flex items-center gap-1.5">
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
                       Basecamp Basics
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">

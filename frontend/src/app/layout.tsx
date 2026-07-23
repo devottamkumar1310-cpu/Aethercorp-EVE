@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="dark"
+      data-theme="executive-light"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
@@ -43,7 +43,7 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var stored = localStorage.getItem('theme') || 'dark';
+                  var stored = localStorage.getItem('theme') || 'executive-light';
                   var active = stored;
                   if (stored === 'system') {
                     active = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'executive-light';

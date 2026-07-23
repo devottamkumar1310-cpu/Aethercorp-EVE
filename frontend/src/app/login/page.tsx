@@ -5,7 +5,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Lock, Mail } from "lucide-react";
+import { Lock, Mail, AlertTriangle, CheckCircle, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 
 function LoginForm() {
@@ -66,97 +66,104 @@ function LoginForm() {
   };
 
   return (
-    <div className="eve-auth-shell min-h-screen bg-[#020203] text-white flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
-      {/* Background Star field & Glows */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="hero-stars" />
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-purple-500/10 rounded-full filter blur-[120px] opacity-40" />
-      </div>
-
-      <div className="eve-auth-card w-full max-w-md bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden relative z-10">
+    <div data-theme="executive-light" className="eve-auth-shell min-h-screen bg-secondary text-foreground flex flex-col justify-center items-center p-4 font-sans relative">
+      <div className="eve-auth-card w-full max-w-md bg-card border border-border rounded-2xl shadow-xl overflow-hidden relative z-10">
         <div className="p-8">
           <div className="flex justify-center mb-6">
-            <div className="h-12 w-12 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-xl tracking-tighter shadow-md shadow-purple-900/20">
-              E
+            <div className="h-12 w-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-xl tracking-tighter shadow-md shadow-indigo-600/20">
+              EVE
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-white text-center mb-2">Welcome Back</h2>
-          <p className="text-zinc-400 text-center mb-8 text-sm">Sign in to your Inventory Intelligence dashboard</p>
+          <h2 className="text-2xl font-bold text-foreground text-center mb-1.5">Welcome Back</h2>
+          <p className="text-xs text-muted-foreground text-center mb-8">Sign in to your Executive Operating System</p>
 
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="p-3 bg-rose-500/10 text-rose-400 text-sm rounded-md border border-rose-500/25">
-                {error}
+              <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{error}</span>
               </div>
             )}
             {queryError && !error && (
-              <div className="p-3 bg-rose-500/10 text-rose-400 text-sm rounded-md border border-rose-500/25">
-                {queryError}
+              <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{queryError}</span>
               </div>
             )}
             {infoMessage && !error && (
-              <div className="p-3 bg-emerald-500/10 !text-white [&_svg]:!text-white [&_svg]:!stroke-white text-sm rounded-md border border-emerald-500/25">
-                {infoMessage}
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs rounded-xl flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{infoMessage}</span>
               </div>
             )}
+
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Email</label>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Email</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-zinc-500" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 block w-full bg-white/5 border border-white/10 rounded-lg py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 sm:text-sm outline-none transition-all"
+                  className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   placeholder="founder@acmefashion.com"
                 />
               </div>
             </div>
+
             <div>
               <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-semibold text-zinc-300">Password</label>
-                <Link href="/forgot-password" className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
+                <label className="block text-xs font-semibold text-foreground">Password</label>
+                <Link href="/forgot-password" className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-zinc-500" />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 block w-full bg-white/5 border border-white/10 rounded-lg py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 sm:text-sm outline-none transition-all"
+                  className="w-full bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                   placeholder="••••••••"
                 />
               </div>
             </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-md text-sm font-semibold text-white bg-[#4F46E5] hover:bg-[#4F46E5]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6 btn-primary-glow"
+              className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-6 cursor-pointer"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? (
+                <span className="flex items-center gap-1.5">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                "Sign In"
+              )}
             </button>
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/[0.08]" />
+                <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-[#121318] px-2 text-zinc-500">Or continue with</span>
+                <span className="bg-card px-2 text-muted-foreground font-medium">Or continue with</span>
               </div>
             </div>
 
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 border border-white/10 rounded-lg text-sm font-medium text-white bg-white/5 hover:bg-white/10 transition-all cursor-pointer font-sans"
+              className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 border border-border rounded-xl text-sm font-medium text-foreground bg-background hover:bg-muted transition-all cursor-pointer"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -168,23 +175,44 @@ function LoginForm() {
             </button>
           </form>
         </div>
-        <div className="px-8 py-4 bg-white/[0.01] border-t border-white/[0.08] text-center">
-          <p className="text-sm text-zinc-400">
+        <div className="px-8 py-4 bg-muted/50 border-t border-border text-center">
+          <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link href="/signup" className="font-semibold text-purple-400 hover:text-purple-300 transition-colors">
+            <Link href="/signup" className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors">
               Sign up
             </Link>
           </p>
         </div>
       </div>
+      <footer className="mt-8 text-center text-xs text-muted-foreground space-x-4">
+        <Link href="/privacy" className="hover:text-foreground transition-colors">
+          Privacy Policy
+        </Link>
+        <span>&bull;</span>
+        <Link href="/terms" className="hover:text-foreground transition-colors">
+          Terms of Service
+        </Link>
+        <span>&bull;</span>
+        <a href="mailto:support@eveinventory.in" className="hover:text-foreground transition-colors">
+          Contact
+        </a>
+      </footer>
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#020203] flex flex-col justify-center items-center p-4 text-white">Loading login portal...</div>}>
+    <Suspense fallback={
+      <div data-theme="executive-light" className="min-h-screen bg-secondary flex flex-col justify-center items-center p-4 text-foreground">
+        <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
+          <Loader2 size={24} className="animate-spin text-indigo-600" />
+          <span className="text-sm font-medium">Loading login portal...</span>
+        </div>
+      </div>
+    }>
       <LoginForm />
     </Suspense>
   );
 }
+

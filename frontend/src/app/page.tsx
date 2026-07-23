@@ -119,10 +119,10 @@ export default function LandingPage() {
               Sign In
             </Link>
             <Link
-              href="/pricing"
+              href="/signup"
               className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md"
             >
-              Join Waitlist
+              Start Free Trial
             </Link>
           </div>
 
@@ -152,7 +152,7 @@ export default function LandingPage() {
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">FAQ</a>
             <div className="pt-4 border-t border-border flex flex-col gap-2.5">
               <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-semibold py-2.5 rounded-xl border border-border text-foreground hover:bg-muted transition-colors">Sign In</Link>
-              <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-bold bg-primary text-primary-foreground py-2.5 rounded-xl shadow-sm">Join Waitlist</Link>
+              <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-bold bg-primary text-primary-foreground py-2.5 rounded-xl shadow-sm">Start Free Trial</Link>
             </div>
           </nav>
         )}
@@ -196,10 +196,10 @@ export default function LandingPage() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full max-w-md mx-auto sm:max-w-none">
             <Link
-              href="/pricing"
+              href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
             >
-              Join the Waitlist
+              Start Free Trial
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
             <Link
@@ -211,7 +211,7 @@ export default function LandingPage() {
           </div>
 
           <p className="text-xs text-muted-foreground font-medium">
-            Invitation-only private beta • Onboarding e-commerce brands weekly • Upload your inventory CSV to get started
+            Full-feature free trial • Onboarding e-commerce brands weekly • Upload your inventory CSV to get started
           </p>
         </div>
       </section>
@@ -604,10 +604,10 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
             <Link
-              href="/pricing"
+              href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
             >
-              Request Early Access
+              Start Free Trial
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
             <Link
@@ -640,9 +640,9 @@ export default function LandingPage() {
           <div className="space-y-3">
             <span className="font-bold text-foreground uppercase tracking-wider block">Product</span>
             <ul className="space-y-2 text-muted-foreground font-medium">
-              <li><a href="#features" className="hover:text-foreground transition-colors">Inventory Intelligence</a></li>
+              <li><a href="#features" className="hover:text-foreground transition-colors">Capabilities</a></li>
               <li><a href="#traceability" className="hover:text-foreground transition-colors">Decision Traceability</a></li>
-              <li><a href="#features" className="hover:text-foreground transition-colors">Supplier Reorder Automation</a></li>
+              <li><a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a></li>
               <li><Link href="/demo" className="hover:text-foreground transition-colors">Interactive Demo</Link></li>
             </ul>
           </div>
@@ -650,7 +650,8 @@ export default function LandingPage() {
           <div className="space-y-3">
             <span className="font-bold text-foreground uppercase tracking-wider block">Company</span>
             <ul className="space-y-2 text-muted-foreground font-medium">
-              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Join Waitlist</Link></li>
+              <li><Link href="/signup" className="hover:text-foreground transition-colors">Start Free Trial</Link></li>
+              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing & Waitlist</Link></li>
               <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               <li><Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link></li>
             </ul>

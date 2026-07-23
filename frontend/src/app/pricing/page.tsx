@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles, CheckCircle2 } from "lucide-react";
 
 export default function PricingPage() {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ export default function PricingPage() {
     e.preventDefault();
     if (!email.trim()) return;
     setLoading(true);
-    // Simulate API request
     setTimeout(() => {
       setSubmitted(true);
       setLoading(false);
@@ -21,99 +20,102 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="eve-public-shell min-h-screen bg-[#020203] text-white flex flex-col font-sans relative overflow-hidden">
-      {/* Background Star field & Glows */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="hero-stars" />
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-500/10 rounded-full filter blur-[120px] opacity-60" />
-      </div>
+    <div data-theme="executive-light" className="landing-page min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200">
+      {/* Header Navigation */}
+      <header className="w-full border-b border-border/60 bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 rounded-xl" aria-label="EVE home">
+            <div className="h-9 w-9 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-sm tracking-tight shadow-md shadow-violet-600/25">
+              EVE
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-extrabold tracking-tight text-foreground flex items-center gap-1.5">
+                EVE
+                <span className="chip chip-accent text-[10px] font-semibold px-2 py-0.5">Pricing & Access</span>
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Executive Operating System</span>
+            </div>
+          </Link>
 
-      {/* Navbar */}
-      <header className="eve-public-nav w-full bg-black/40 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-6 py-4 flex items-center justify-between sticky top-0 z-50 relative">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="h-8 w-8 bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black tracking-tighter shadow-md shadow-purple-900/20">
-            E
-          </Link>
-          <Link href="/" className="text-lg sm:text-xl font-semibold text-white tracking-tight hover:opacity-90">
-            EVE
-          </Link>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/" className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors">
-            Home
-          </Link>
-          <Link href="/login" className="text-sm font-semibold text-zinc-300 hover:text-white transition-colors">
-            Sign In
-          </Link>
-          <Link 
-            href="/signup" 
-            className="text-xs sm:text-sm font-semibold bg-violet-600 hover:bg-violet-700 px-3 sm:px-4 py-2 rounded-lg transition-all text-white shadow-md hover:-translate-y-0.5"
-          >
-            Get Started
-          </Link>
+          <nav aria-label="Primary" className="hidden md:flex items-center gap-8 text-xs font-semibold text-muted-foreground">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <Link href="/demo" className="hover:text-foreground transition-colors">Live Demo</Link>
+            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-xs font-semibold px-4 py-2 rounded-lg text-foreground hover:text-indigo-600 transition-colors">
+              Sign In
+            </Link>
+            <Link 
+              href="/signup" 
+              className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm"
+            >
+              Start Free Trial
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-20 flex flex-col justify-center items-center text-center space-y-10 relative z-10">
+      {/* Main Content */}
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-12 sm:py-20 flex flex-col justify-center items-center text-center space-y-10">
         {/* Badge */}
-        <div className="inline-flex items-center rounded-full border border-purple-500/20 bg-purple-500/5 px-3 py-1 text-xs sm:text-sm text-purple-400">
-          <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-          EVE Private Beta Invitation
+        <div className="chip-accent inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-sm">
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>EVE Private Beta & Free Trial Program</span>
         </div>
 
-        {/* Title */}
-        <div className="space-y-4">
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Simple, Scale-Ready Pricing <br />
-            <span className="hero-headline-accent">Coming Soon.</span>
+        {/* Headline */}
+        <div className="space-y-4 max-w-2xl">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.15]">
+            Simple, Transparent Pricing <br />
+            <span className="eve-gradient-text">Available After Free Trial</span>
           </h1>
-          <p className="text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-            EVE is currently in an invitation-only Private Beta for founder-led ecommerce, D2C, and apparel brands. We are onboarding new merchants weekly.
+          <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+            Every new brand receives full access during their initial trial. Custom subscription pricing plans are unlocked for early merchants upon trial completion.
           </p>
         </div>
 
-        {/* Beta Notice & Form Card */}
-        <div className="eve-public-card w-full max-w-xl bg-white/[0.02] border border-white/[0.08] backdrop-blur-xl rounded-2xl p-6 sm:p-8 shadow-2xl text-left space-y-6">
-          <div className="space-y-2 border-b border-white/[0.08] pb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
-              Private Beta Request
+        {/* Card Form */}
+        <div className="w-full max-w-xl bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-xl text-left space-y-6">
+          <div className="space-y-2 border-b border-border pb-4">
+            <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+              Request Early Access & Pricing Lock
             </h2>
-            <div className="space-y-2 text-xs text-zinc-400 leading-relaxed">
-              <p>Join the EVE early access waitlist.</p>
-              <p>Get notified when new onboarding slots open and receive updates as the platform evolves.</p>
-            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Join the EVE early access waitlist to lock in founder rates and reserve your brand's onboarding slot.
+            </p>
           </div>
 
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                <label htmlFor="email" className="block text-xs font-semibold text-foreground mb-1.5">
                   Work Email Address
                 </label>
                 <input
                   type="email"
                   id="email"
                   required
-                  placeholder="name@yourbrand.com"
+                  placeholder="founder@yourbrand.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50"
+                  className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                 />
               </div>
 
               <div className="space-y-2.5">
-                <span className="block text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Early Access Perks:</span>
-                <ul className="space-y-1.5 text-xs text-zinc-300">
-                  <li className="flex items-center gap-2">
-                    <Check size={14} className="text-emerald-400" /> Free historical inventory mapping audit
+                <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Early Access Perks:</span>
+                <ul className="space-y-2 text-xs text-muted-foreground">
+                  <li className="flex items-center gap-2 font-medium">
+                    <CheckCircle2 size={15} className="text-emerald-600 shrink-0" /> Full access during complimentary trial
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check size={14} className="text-emerald-400" /> Locked-in early adopter subscription discounts
+                  <li className="flex items-center gap-2 font-medium">
+                    <CheckCircle2 size={15} className="text-emerald-600 shrink-0" /> Historical inventory & PO mapping audit
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check size={14} className="text-emerald-400" /> Directly influence our predictive roadmap
+                  <li className="flex items-center gap-2 font-medium">
+                    <CheckCircle2 size={15} className="text-emerald-600 shrink-0" /> Guaranteed early adopter subscription discount lock
                   </li>
                 </ul>
               </div>
@@ -121,37 +123,50 @@ export default function PricingPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 text-white font-bold rounded-lg text-sm transition-all btn-primary-glow flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 text-white font-bold rounded-xl text-sm bg-indigo-600 hover:bg-indigo-700 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {loading ? "Joining..." : "Join Waitlist"}
                 <ArrowRight size={16} />
               </button>
             </form>
           ) : (
-            <div className="bg-purple-500/5 border border-purple-500/20 p-6 rounded-xl text-center space-y-3 animate-fade-in">
-              <div className="h-10 w-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold mx-auto">
+            <div className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-xl text-center space-y-3 animate-fade-in">
+              <div className="h-10 w-10 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold mx-auto">
                 ✓
               </div>
-              <h3 className="text-sm font-bold text-white">Added to Waitlist!</h3>
-              <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                Thank you for joining. We will notify you at <strong className="text-white">{email}</strong> as soon as your onboarding slot is ready and send you updates as the platform evolves.
+              <h3 className="text-sm font-bold text-foreground">Added to Waitlist!</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                Thank you for joining. We will notify you at <strong className="text-foreground">{email}</strong> as soon as your onboarding slot is ready and lock in your early access pricing.
               </p>
             </div>
           )}
         </div>
+
+        {/* Free trial direct link */}
+        <div className="pt-2">
+          <p className="text-xs text-muted-foreground">
+            Want to start immediately?{" "}
+            <Link href="/signup" className="font-bold text-indigo-600 hover:text-indigo-500 underline transition-colors">
+              Start Free Trial Now
+            </Link>
+          </p>
+        </div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full bg-transparent border-t border-white/[0.08] px-4 sm:px-6 py-8 flex flex-col md:flex-row items-center justify-between text-xs text-zinc-400 gap-4 relative z-10">
-        <div className="text-center md:text-left">
-          &copy; {new Date().getFullYear()} EVE. All rights reserved.
-        </div>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link href="/" className="text-zinc-300 hover:text-white transition-colors">Home</Link>
-          <Link href="/terms" className="text-zinc-300 hover:text-white transition-colors">Terms of Service</Link>
-          <Link href="/privacy" className="text-zinc-300 hover:text-white transition-colors">Privacy Policy</Link>
+      <footer className="w-full bg-background border-t border-border px-4 sm:px-6 py-12">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-4">
+          <div>&copy; {new Date().getFullYear()} EVE Inc. All rights reserved.</div>
+          <div className="flex flex-wrap justify-center gap-6 font-medium">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <Link href="/demo" className="hover:text-foreground transition-colors">Live Demo</Link>
+            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
+
