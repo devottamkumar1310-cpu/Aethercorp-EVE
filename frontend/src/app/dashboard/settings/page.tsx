@@ -117,7 +117,7 @@ export default function SettingsPage() {
     if (!session) return;
 
     try {
-      const response = await apiFetch(`${API_BASE_URL}/api/workspaces`, {
+      const response = await apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
         headers: {
           "Authorization": `Bearer ${session.access_token}`,
         },
@@ -148,10 +148,10 @@ export default function SettingsPage() {
 
       try {
         const [profileRes, workspacesRes] = await Promise.all([
-          apiFetch(`${API_BASE_URL}/api/me`, {
+          apiFetch(`${API_BASE_URL}/api/profile/me`, {
             headers: { "Authorization": `Bearer ${session.access_token}` },
           }),
-          apiFetch(`${API_BASE_URL}/api/workspaces`, {
+          apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
             headers: { "Authorization": `Bearer ${session.access_token}` },
           }),
         ]);

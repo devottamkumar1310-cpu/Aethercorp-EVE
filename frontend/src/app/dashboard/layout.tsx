@@ -249,11 +249,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     try {
       [profileSettled, wsSettled] = await Promise.allSettled([
-        apiFetch(`${API_BASE_URL}/api/me`, {
+        apiFetch(`${API_BASE_URL}/api/profile/me`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         }),
-        apiFetch(`${API_BASE_URL}/api/workspaces`, {
+        apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         }),
@@ -296,7 +296,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           devLog("[EVE] Workspaces empty on first fetch - retrying once after 1500ms");
           await new Promise<void>((resolve) => setTimeout(resolve, 1500));
           try {
-            const retryRes = await apiFetch(`${API_BASE_URL}/api/workspaces`, {
+            const retryRes = await apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             if (retryRes.ok) {

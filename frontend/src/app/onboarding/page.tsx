@@ -28,7 +28,7 @@ export default function OnboardingPage() {
       }
       
       try {
-        const response = await apiFetch(`${API_BASE_URL}/api/workspaces`, {
+        const response = await apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
           headers: {
             "Authorization": `Bearer ${session.access_token}`
           }
