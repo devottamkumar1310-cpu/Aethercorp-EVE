@@ -343,21 +343,47 @@ class ExecutiveFormatter:
             )
 
         total_locked = sum(value for _, value in holdings)
-        dead_locked = sum(value for item, value in holdings if item.get("is_dead_stock"))
         top_item, top_value = holdings[0]
         top_share = (top_value / total_locked * 100) if total_locked else 0.0
 
-        output = (
-            f"Decision:\n"
-            f"Release capital from SKU {top_item.get('sku')} ({top_item.get('name')}) first.\n\n"
-            f"Reason:\n"
-            f"${total_locked:,.2f} of working capital is tied up in on-hand stock across "
-            f"{len(holdings)} SKU(s). SKU {top_item.get('sku')} alone accounts for "
-            f"${top_value:,.2f} ({top_share:.1f}% of the total).\n\n"
-            f"Impact:\n"
-            f"Clearing the slow-moving portion frees up to ${dead_locked:,.2f} "
-            f"and reduces monthly carrying cost.\n\n"
-        )
+        def is_recoverable(item) -> bool:
+            """Capital only counts as recoverable if the stock is not selling."""
+            return bool(item.get("is_dead_stock")) or (item.get("avg_daily_sales", 0.0) or 0.0) == 0 \
+                or (item.get("days_until_stockout", 0) or 0) >= 180
+
+        recoverable = [(item, value) for item, value in holdings if is_recoverable(item)]
+        recoverable_locked = sum(value for _, value in recoverable)
+
+        # With nothing slow-moving there is no capital to release. Saying
+        # "release capital from X" and then "hold X" in the same answer — or
+        # quoting $0.00 of freed capital — is a contradiction, so this reports
+        # concentration instead.
+        if not recoverable:
+            output = (
+                f"Decision:\n"
+                f"No capital needs to be released. Inventory is healthy.\n\n"
+                f"Reason:\n"
+                f"${total_locked:,.2f} of working capital is held in on-hand stock across "
+                f"{len(holdings)} SKU(s), and every line is still selling. The largest "
+                f"single position is SKU {top_item.get('sku')} ({top_item.get('name')}) at "
+                f"${top_value:,.2f}, or {top_share:.1f}% of the total.\n\n"
+                f"Impact:\n"
+                f"Capital is turning at an acceptable rate. Monitor concentration rather "
+                f"than liquidating.\n\n"
+            )
+        else:
+            output = (
+                f"Decision:\n"
+                f"Release capital from SKU {recoverable[0][0].get('sku')} "
+                f"({recoverable[0][0].get('name')}) first.\n\n"
+                f"Reason:\n"
+                f"${total_locked:,.2f} of working capital is tied up in on-hand stock across "
+                f"{len(holdings)} SKU(s). ${recoverable_locked:,.2f} of that sits in "
+                f"{len(recoverable)} slow-moving or dead SKU(s) that are not selling.\n\n"
+                f"Impact:\n"
+                f"Clearing the slow-moving portion frees up to ${recoverable_locked:,.2f} "
+                f"and reduces monthly carrying cost.\n\n"
+            )
 
         output += "Where Your Capital Is Tied Up\n\n"
         actions = []
@@ -1447,9 +1473,43 @@ class ExecutiveFormatter:
 
         if db is not None and org_id is not None:
             q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+
+            # Domain guard. A question about projects must never be answered by
+            # an inventory or finance formatter. The reorder matcher below
+            # claims the bare phrase "immediate attention", which meant
+            # "Which projects need immediate attention?" was answered with SKU
+            # reorder advice. Project-worded questions are resolved here first
+            # and never fall through to the SKU branches.
+            if any(k in q_clean for k in ["project", "milestone", "sprint", "deadline", "task"]):
+                if any(k in q_clean for k in [
+                    "projects are delayed", "projects delayed", "delayed",
+                    "mitigate risk", "passed their deadline", "overdue",
+                ]):
+                    res = cls.format_project_delayed(db, org_id, question=question)
+                    if "No delayed" not in res:
+                        return res
+                elif any(k in q_clean for k in ["deadlines are at risk", "deadlines at risk"]):
+                    res = cls.format_project_deadlines_at_risk(db, org_id)
+                    if "No project" not in res:
+                        return res
+                elif any(k in q_clean for k in [
+                    "need attention", "needs attention", "immediate attention",
+                    "need immediate attention", "require attention",
+                ]):
+                    res = cls.format_project_attention(db, org_id)
+                    if "No projects" not in res:
+                        return res
+                elif any(k in q_clean for k in ["team focus", "focus", "priorities", "this week"]):
+                    res = cls.format_project_weekly_focus(db, org_id)
+                    if "No active" not in res:
+                        return res
+                # A project-domain question that matched no specific branch falls
+                # through to the generic executive briefing below — never to an
+                # inventory or finance formatter.
+
             # Note: "capital is trapped in slow..." deliberately stays with the
             # overstock formatter, which the orchestrator already routes it to.
-            if any(k in q_clean for k in [
+            elif any(k in q_clean for k in [
                 "working capital", "capital tied up", "capital is tied up", "capital tied",
                 "cash is tied up", "cash tied up",
             ]):

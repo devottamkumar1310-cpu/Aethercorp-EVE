@@ -115,6 +115,25 @@ class AnalyticsService:
         import uuid
         if isinstance(organization_id, str):
             organization_id = uuid.UUID(organization_id)
+
+        # Request-scoped memoisation. This analysis runs an 8-engine pipeline per
+        # SKU and measured 15.4s / 79 queries for 18 SKUs against production. A
+        # single deterministic chat turn calls it at least twice (executive board
+        # fallback, then the formatter), so without this the same work is paid for
+        # twice per request. The Session is created per request by get_db(), which
+        # is what scopes this cache; it never outlives the request.
+        cache_key = ("inventory_analysis", str(organization_id))
+        request_cache = getattr(db, "_eve_request_cache", None)
+        if request_cache is None:
+            request_cache = {}
+            try:
+                setattr(db, "_eve_request_cache", request_cache)
+            except Exception:
+                request_cache = None
+        if request_cache is not None and cache_key in request_cache:
+            logger.info(f"Inventory analysis cache hit for Org: {organization_id}")
+            return request_cache[cache_key]
+
         from app.services.data_quality_service import DataQualityService
         DataQualityService.check_and_block_if_corrupted(db, organization_id)
 
@@ -602,7 +621,7 @@ class AnalyticsService:
         if not top_actions:
             top_actions = ["No urgent actions needed. Maintain current strategy."]
 
-        return {
+        analysis = {
             "organization_id": organization_id,
             "total_skus": len(items),
             "out_of_stock_skus": out_of_stock_count,
@@ -610,16 +629,19 @@ class AnalyticsService:
             "dead_stock_skus": dead_stock_count,
             "average_risk_score": round(avg_risk, 1),
             "estimated_reorder_cost": round(total_reorder_cost, 2),
-            
+
             # Prioritization outputs
             "business_health_score": business_health_score,
             "business_health_grade": business_health_grade,
             "top_risks": top_risks,
             "top_opportunities": top_opportunities,
             "top_actions": top_actions,
-            
+
             "items_at_risk": sku_analyses
         }
+        if request_cache is not None:
+            request_cache[cache_key] = analysis
+        return analysis
 
     @classmethod
     def get_pricing_analysis(cls, db: Session, organization_id: int) -> Dict[str, Any]:

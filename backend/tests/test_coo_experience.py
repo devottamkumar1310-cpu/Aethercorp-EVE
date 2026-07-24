@@ -1529,3 +1529,75 @@ def test_working_capital_query_routes_to_deterministic_formatter():
         assert "Business Health" not in routed
     finally:
         db_session.close()
+
+
+def test_project_question_never_routes_to_inventory_formatter():
+    """
+    Regression guard: project intent must never resolve to an inventory formatter.
+
+    "Which projects need immediate attention?" used to answer with SKU reorder
+    advice, because the reorder matcher claims the bare phrase "immediate
+    attention" while the project matcher required the exact string "projects
+    need attention" -- which is not a substring of "projects need IMMEDIATE
+    attention". Production logs showed INTENT=Projects Query alongside
+    FORMATTER=format_sku_reorders.
+    """
+    clear_mock_org()
+    import datetime
+    from app.models.product import Product
+    from app.models.inventory import InventoryItem
+    from app.models.client import Client
+    from app.models.project import Project
+    from app.services.ai.executive_formatter import ExecutiveFormatter
+    from app.schemas.executive import ExecutiveSynthesisResult
+
+    db_session = TestingSessionLocal()
+    # Inventory that WOULD be returned if the query leaked to the SKU path.
+    prod = Product(
+        id=uuid.uuid4(), organization_id=MOCK_ORG_ID, sku="LEAK-SKU-001",
+        name="Should Not Appear", category="Outerwear", unit_cost=50.0,
+    )
+    db_session.add(prod)
+    db_session.flush()
+    db_session.add(InventoryItem(
+        id=uuid.uuid4(), organization_id=MOCK_ORG_ID, product_id=prod.id,
+        stock_on_hand=0, safety_stock=10, reorder_point=80,
+        lead_time_days=14, avg_daily_sales=3.0,
+    ))
+    client = Client(id=uuid.uuid4(), organization_id=MOCK_ORG_ID,
+                    company_name="Retail Co", status="active")
+    db_session.add(client)
+    db_session.flush()
+    db_session.add(Project(
+        id=uuid.uuid4(), organization_id=MOCK_ORG_ID, name="SS26 Launch",
+        client_id=client.id, budget=25000.0, status="active",
+        completion_percentage=15.0,
+        deadline=datetime.datetime.utcnow() + datetime.timedelta(days=2),
+    ))
+    db_session.commit()
+    db_session.close()
+
+    db_session = TestingSessionLocal()
+    try:
+        synthesis = ExecutiveSynthesisResult(
+            agent="COO Lead", summary="Generic briefing.", priorities=[],
+            expected_impact="N/A", findings_by_agent={},
+            recommendations_by_agent={}, confidence_scores={"Overall": 1.0},
+        )
+        for question in [
+            "Which projects need immediate attention?",
+            "Which projects need attention?",
+        ]:
+            res = ExecutiveFormatter.format_executive_response(
+                synthesis, question, db=db_session, org_id=MOCK_ORG_ID)
+            assert "LEAK-SKU-001" not in res, "%r leaked inventory SKUs" % question
+            assert "Recommended Reorder Quantity" not in res, (
+                "%r returned reorder advice" % question)
+
+        # The inventory question must still reach the inventory formatter.
+        reorder = ExecutiveFormatter.format_executive_response(
+            synthesis, "What should I reorder immediate attention?",
+            db=db_session, org_id=MOCK_ORG_ID)
+        assert "LEAK-SKU-001" in reorder, "inventory routing regressed"
+    finally:
+        db_session.close()

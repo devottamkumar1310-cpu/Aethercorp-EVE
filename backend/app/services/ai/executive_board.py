@@ -534,12 +534,10 @@ class ExecutiveBoard:
         q_lower = question.lower()
         
         overview = BusinessAnalyticsService.get_overview(db, org_id)
-        
+
         # --- GOVERNANCE: DATA SUFFICIENCY & EMPTY STATE CHECK ---
-        data_state, sufficiency_msg, available_domains = ExecutiveGovernanceValidator.validate_data_sufficiency(overview, question)
-        overview = BusinessAnalyticsService.get_overview(db, org_id)
-        
-        # --- GOVERNANCE: DATA SUFFICIENCY & EMPTY STATE CHECK ---
+        # (This block was duplicated verbatim; the second call re-ran 11 queries
+        # and ~1.3s of work only to overwrite identical results.)
         data_state, sufficiency_msg, available_domains = ExecutiveGovernanceValidator.validate_data_sufficiency(overview, question)
         if data_state == "NO_DATA":
             logger.warning(f"Fallback data sufficiency validation failed for org {org_id}: {sufficiency_msg}")

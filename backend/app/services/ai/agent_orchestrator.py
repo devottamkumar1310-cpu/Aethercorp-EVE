@@ -70,7 +70,9 @@ class AgentOrchestrator:
             is_working_capital_query = "working capital" in q_clean or "capital is tied up" in q_clean or "capital tied up" in q_clean or "capital tied" in q_clean
             is_biggest_risk_query = "biggest operational risk" in q_clean
             is_overstock_query = "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean
-            is_reorder_query = "reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean
+            # "project" guard: a project question must not be reported (or routed)
+            # as a SKU reorder just because it says "need immediate attention".
+            is_reorder_query = "project" not in q_clean and ("reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean)
             is_spending_query = "spending" in q_clean
             is_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" not in q_clean
             is_inventory_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" in q_clean
@@ -84,7 +86,7 @@ class AgentOrchestrator:
                 "projects delayed" in q_clean or
                 ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean))
             )
-            is_project_attention_query = "projects need attention" in q_clean
+            is_project_attention_query = "projects need attention" in q_clean or ("project" in q_clean and "attention" in q_clean)
             is_project_deadlines_query = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
             is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
 
@@ -533,7 +535,9 @@ class AgentOrchestrator:
             is_working_capital_query = "working capital" in q_clean or "capital is tied up" in q_clean or "capital tied up" in q_clean or "capital tied" in q_clean
             is_biggest_risk_query = "biggest operational risk" in q_clean
             is_overstock_query = "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean
-            is_reorder_query = "reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean
+            # "project" guard: a project question must not be reported (or routed)
+            # as a SKU reorder just because it says "need immediate attention".
+            is_reorder_query = "project" not in q_clean and ("reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean)
             is_spending_query = "spending" in q_clean
             is_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" not in q_clean
             is_inventory_profitability_query = ("profitability" in q_clean or "hurting profitability" in q_clean) and "inventory" in q_clean
@@ -547,7 +551,7 @@ class AgentOrchestrator:
                 "projects delayed" in q_clean or
                 ("project" in q_clean and ("deadline" in q_clean or "passed" in q_clean or "overdue" in q_clean or "mitigate" in q_clean))
             )
-            is_project_attention_query = "projects need attention" in q_clean
+            is_project_attention_query = "projects need attention" in q_clean or ("project" in q_clean and "attention" in q_clean)
             is_project_deadlines_query = "deadlines are at risk" in q_clean or "deadlines at risk" in q_clean
             is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
 

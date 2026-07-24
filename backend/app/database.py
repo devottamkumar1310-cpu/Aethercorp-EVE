@@ -124,19 +124,41 @@ def init_db():
     """
     Initializes database schemas. Creating tables if they do not exist.
     """
+    # Serialises schema creation across concurrently starting workers.
+    # The container runs `uvicorn --workers 2`, and Cloud Run may start several
+    # instances at once. create_all(checkfirst=True) inspects, then creates, so
+    # two workers could both pass the inspection and race, and the loser died
+    # with "type ... already exists", killing the parent process and failing the
+    # whole instance. A transaction-scoped advisory lock makes exactly one worker
+    # perform the DDL; the others block, then find the tables already present.
+    DDL_LOCK_KEY = 776699001
+
     try:
         # Import all models to ensure they are registered on Base.metadata
-        
-        # Check if pgvector is supported by the connection before building schemas
+        from sqlalchemy import text
 
         if "postgresql" in engine.url.drivername:
             with engine.begin() as conn:
-                from sqlalchemy import text
                 conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
                 logger.info("PostgreSQL pgvector extension verified.")
-        
-        Base.metadata.create_all(bind=engine)
+
+                # Held until this transaction commits, so create_all below is
+                # protected. It must run on THIS connection to be covered.
+                conn.execute(text("SELECT pg_advisory_xact_lock(:key)"), {"key": DDL_LOCK_KEY})
+                logger.info("Acquired schema-initialisation advisory lock.")
+                Base.metadata.create_all(bind=conn)
+        else:
+            # SQLite/tests: no cross-process contention to guard against.
+            Base.metadata.create_all(bind=engine)
+
         logger.info("Database schemas initialized successfully.")
     except Exception as e:
+        # Belt and braces: if another actor created the schema between our
+        # inspection and DDL, that is a benign race, not a reason to kill the
+        # worker and take the instance down with it.
+        message = str(e).lower()
+        if "already exists" in message or "duplicatetable" in message or "duplicateobject" in message:
+            logger.warning(f"Schema already present, continuing startup: {e}")
+            return
         logger.error(f"Error during database initialization: {e}")
         raise e
