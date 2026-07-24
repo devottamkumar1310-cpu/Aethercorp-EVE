@@ -41,7 +41,20 @@ def sync_user(
         
     from app.core.security import _provision_profile_idempotent
     profile = _provision_profile_idempotent(db, user_id, payload)
-    return {"status": "synced", "user_id": profile.id}
+
+    # Self-healing: if user has 0 memberships, auto-provision default workspace
+    from app.models.organization import Membership
+    memberships = db.query(Membership).filter(Membership.user_id == profile.id).all()
+    if not memberships:
+        try:
+            from app.routes.organization import onboard_demo, DemoOnboardRequest
+            from fastapi import BackgroundTasks
+            onboard_demo(DemoOnboardRequest(demo_company="luma"), background_tasks=BackgroundTasks(), current_user=profile, db=db)
+            logger.info(f"Auto-provisioned default workspace for user_id={profile.id}")
+        except Exception as exc:
+            logger.error(f"Auto-provisioning default workspace on sync failed: {exc}", exc_info=exc)
+
+    return {"status": "synced", "user_id": str(profile.id)}
 
 
 @router.post("/forgot-password")

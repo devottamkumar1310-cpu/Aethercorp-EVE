@@ -56,6 +56,31 @@ def get_workspaces(current_user: Profile = Depends(get_current_user), db: Sessio
             }
             for org, role, member_count in rows
         ]
+
+        if len(result) == 0:
+            logger.info(f"[TRACE /api/organization/workspaces] User {current_user.id} has 0 workspaces. Auto-provisioning default workspace.")
+            try:
+                onboard_demo(DemoOnboardRequest(demo_company="luma"), background_tasks=BackgroundTasks(), current_user=current_user, db=db)
+                rows = (
+                    db.query(Organization, Membership.role, func.coalesce(member_counts.c.cnt, 1).label("member_count"))
+                    .join(Membership, Membership.organization_id == Organization.id)
+                    .outerjoin(member_counts, member_counts.c.org_id == Organization.id)
+                    .filter(Membership.user_id == current_user.id)
+                    .all()
+                )
+                result = [
+                    {
+                        "id": str(org.id),
+                        "name": org.name,
+                        "slug": org.slug,
+                        "role": role,
+                        "member_count": int(member_count)
+                    }
+                    for org, role, member_count in rows
+                ]
+            except Exception as auto_exc:
+                logger.error(f"Auto-provisioning workspace in get_workspaces failed: {auto_exc}", exc_info=auto_exc)
+
         logger.info(f"[TRACE /api/organization/workspaces] STEP 4: Returning {len(result)} workspace(s)")
         return result
     except Exception as exc:

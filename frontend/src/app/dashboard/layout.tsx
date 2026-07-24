@@ -606,6 +606,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               Retry Connection
             </button>
             <button
+              onClick={() => handleSelectDemo("luma")}
+              disabled={demoLoading}
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+            >
+              {demoLoading ? "Initializing Demo..." : "Initialize Demo Workspace"}
+            </button>
+            <button
               onClick={handleLogout}
               className="w-full py-2.5 px-4 bg-transparent border border-border hover:border-slate-500 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-all cursor-pointer"
             >
