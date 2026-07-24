@@ -356,7 +356,7 @@ def _trace(org_id, item, rec_type, action, confidence, priority, recommended_act
 def _traces_luma(org_id) -> List[Dict]:
     c = _catalog_luma()
     return [
-        _trace(org_id, _lookup(c, "LM-1002"), "reorder",
+        _trace(org_id, _lookup(c, "LM-1002"), "low_stock",
                "Emergency replenishment for Silk Wrap Dress – Emerald", 0.97, "Critical",
                "Place an emergency air-freight order for 200 units of LM-1002 immediately. Enable backorders with a 10-day delivery promise to capture demand during the gap.",
                "Restore availability on the fastest-growing SKU in the catalog. Projected to recover $11,400 in otherwise-lost revenue during the restocking window.",
@@ -364,7 +364,7 @@ def _traces_luma(org_id) -> List[Dict]:
                "The Silk Wrap Dress is Luma's top-growth product — demand has increased 85% in 90 days. It is currently out of stock with a 14-day lead time.",
                "Estimated revenue at risk: $11,300. Air freight premium is approximately $1,200, yielding a 9.4x return on expedited shipping cost."),
 
-        _trace(org_id, _lookup(c, "LM-1001"), "reorder",
+        _trace(org_id, _lookup(c, "LM-1001"), "low_stock",
                "Accelerate reorder for Sculpted Blazer – Navy", 0.96, "High",
                "Place a purchase order for 150 units of LM-1001 this week. Current stock covers only 5.6 days against a 16-day supplier lead time.",
                "Maintain availability on a high-margin hero product ($228 retail, 64% gross margin) and prevent a 10-day stockout window.",
@@ -372,7 +372,7 @@ def _traces_luma(org_id) -> List[Dict]:
                "The Sculpted Blazer has only 18 units remaining and is selling 3.2 units per day — well above the reorder threshold. Lead time is 16 days.",
                "Revenue at risk: approximately $7,600. This is Luma's highest-margin outerwear product."),
 
-        _trace(org_id, _lookup(c, "LM-1003"), "reorder",
+        _trace(org_id, _lookup(c, "LM-1003"), "low_stock",
                "Increase safety stock for Ribbed Merino Turtleneck – Ivory", 0.95, "High",
                "Order 180 units of LM-1003 and raise the reorder point from 50 to 65 units to reflect accelerating demand.",
                "Avoid a projected 14-day stockout and capture $5,400 in revenue that would otherwise be lost.",
@@ -438,7 +438,7 @@ def _traces_drift(org_id) -> List[Dict]:
 def _traces_basecamp(org_id) -> List[Dict]:
     c = _catalog_basecamp()
     return [
-        _trace(org_id, _lookup(c, "BC-S003"), "reorder",
+        _trace(org_id, _lookup(c, "BC-S003"), "low_stock",
                "Emergency replenishment for French Terry Short – Navy", 0.98, "Critical",
                "Air-freight 400 units of BC-S003 immediately. Enable backorders on the website with a 'Ships in 7 days' promise. Begin pre-selling.",
                "Restore availability on a product selling 13 units/day. Capture $5,800+ in revenue that would otherwise be lost during the 14-day lead time.",
@@ -446,7 +446,7 @@ def _traces_basecamp(org_id) -> List[Dict]:
                "BC-S003 is completely out of stock while demand is at its seasonal peak: 13 units per day, up 63% over 90 days. This is the #1 revenue-at-risk product.",
                "Revenue at risk: $5,824 over the lead time. Air freight premium (~$600) yields a 9.7x return on expedited cost."),
 
-        _trace(org_id, _lookup(c, "BC-S001"), "reorder",
+        _trace(org_id, _lookup(c, "BC-S001"), "low_stock",
                "Accelerate reorder for Everyday Heavyweight Tee – White", 0.97, "Critical",
                "Place a purchase order for 500 units of BC-S001 this week. Current stock covers only 2.2 days against a 14-day lead time. Consider dual-sourcing from a domestic supplier for partial air-freight.",
                "Prevent a stockout on the highest-volume SKU in the catalog. Protect $4,500+ in at-risk revenue during the replenishment window.",
@@ -454,7 +454,7 @@ def _traces_basecamp(org_id) -> List[Dict]:
                "The White Heavyweight Tee is selling 16 units per day — up 167% over 90 days. Only 35 units remain. This is the fastest-moving product in the catalog.",
                "Revenue at risk: $4,608. This is Basecamp's signature product — a stockout damages both revenue and brand credibility."),
 
-        _trace(org_id, _lookup(c, "BC-S002"), "reorder",
+        _trace(org_id, _lookup(c, "BC-S002"), "low_stock",
                "Dual-source Black Heavyweight Tee to close lead-time gap", 0.96, "High",
                "Place a split order: 300 units from the primary supplier (CoreKnit, 18-day lead time) and 150 units from the domestic backup supplier (8-day lead time) at a $1.50/unit premium.",
                "Shorten the stockout window from 16 days to 6 days, saving approximately $2,700 in otherwise-lost revenue.",
