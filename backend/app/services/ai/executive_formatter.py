@@ -303,7 +303,7 @@ class ExecutiveFormatter:
             )
             actions.append(f"- SKU {sku_val}: {action_text}")
             
-        output += "Recommended Action:\n" + "\n".join(actions)
+        output += "### 💡 Strategic Recommendations\n" + "\n".join(actions)
         return output
 
     @classmethod
@@ -362,6 +362,7 @@ class ExecutiveFormatter:
                 f"   Recommended Reorder Quantity: {reorder_qty}\n\n"
             )
             
+        output += "### 💡 Strategic Recommendations\n- Reorder low stock items immediately to avoid revenue loss."
         return output.strip()
 
     @classmethod
@@ -448,7 +449,7 @@ class ExecutiveFormatter:
             )
             actions.append(f"- {name}: {action_text}")
             
-        output += "Recommended Action:\n" + "\n".join(actions)
+        output += "### 💡 Strategic Recommendations\n" + "\n".join(actions)
         return output.strip()
 
     @classmethod
@@ -561,6 +562,7 @@ class ExecutiveFormatter:
                 f"   Opportunity Score: {score} (Factors: {factors_str})\n"
                 f"   Recommended Action: {action}\n\n"
             )
+        output += "### 💡 Strategic Recommendations\n- Reach out to high-opportunity score clients first."
         return output.strip()
 
     @classmethod
@@ -761,14 +763,18 @@ class ExecutiveFormatter:
             rec_actions = "\n".join(actions)
             
             output = (
-                f"Answer:\n"
+                f"Issue:\n"
                 f"Identify delayed project(s) and reallocate resources immediately to resolve blockers.\n\n"
+                f"Cause:\n"
+                f"Overdue project tasks blocking progress.\n\n"
                 f"Evidence:\n"
                 f"{evidence_block}\n\n"
-                f"Recommendation:\n"
+                f"Mitigation:\n"
                 f"{rec_actions}\n\n"
-                f"Expected Impact:\n"
-                f"Protect project delivery timelines and prevent breach penalties."
+                f"Impact:\n"
+                f"Protect project delivery timelines and prevent breach penalties.\n\n"
+                f"### 💡 Strategic Recommendations\n"
+                f"{rec_actions}"
             )
             return output
             
@@ -800,7 +806,7 @@ class ExecutiveFormatter:
             )
             actions.append(f"- {name}: {action_text}")
             
-        output += "Recommended Action:\n" + "\n".join(actions)
+        output += "### 💡 Strategic Recommendations\n" + "\n".join(actions)
         return output.strip()
 
     @classmethod
@@ -869,6 +875,7 @@ class ExecutiveFormatter:
                 f"   Risk Level: {risk}\n"
                 f"   Recommended Action: {action}\n\n"
             )
+        output += "### 💡 Strategic Recommendations\n- Focus resources on projects with high overdue task counts."
         return output.strip()
 
     @classmethod
@@ -932,6 +939,7 @@ class ExecutiveFormatter:
                 f"   Completion Percentage: {progress:.1f}%\n"
                 f"   Risk Assessment: {assessment}\n\n"
             )
+        output += "### 💡 Strategic Recommendations\n- Expedite high-risk project deadlines with additional resource allocation."
         return output.strip()
 
     @classmethod
@@ -1045,6 +1053,7 @@ class ExecutiveFormatter:
                 f"   Deadline: {deadline} ({days_text})\n"
                 f"   Recommended Action: {action}\n\n"
             )
+        output += "### 💡 Strategic Recommendations\n- Address highest priority score projects first to maximize operational efficiency."
         return output.strip()
 
     @classmethod
@@ -1088,6 +1097,7 @@ class ExecutiveFormatter:
                 f"   Risk Level: {risk_level}\n"
                 f"   Recommended Action: {action}\n\n"
             )
+        output += "### 💡 Strategic Recommendations\n- Review software seat count and renegotiate vendor contract terms."
         return output.strip()
 
     @classmethod
@@ -1173,6 +1183,7 @@ class ExecutiveFormatter:
                     f"   Recommended Action: {action}\n\n"
                 )
                 
+        output += "### 💡 Strategic Recommendations\n- Pause promotions or raise pricing on low margin categories."
         return output.strip()
 
     @classmethod
@@ -1346,8 +1357,55 @@ class ExecutiveFormatter:
         Formats the final summary text to follow the 4-part Executive Communication order,
         or handles SKU-level recommendations for specific inventory and finance queries.
         """
-        import sys
+        import sys, re
         is_testing = "pytest" in sys.modules
+
+        if db is not None and org_id is not None:
+            q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
+            if any(k in q_clean for k in ["identify overstock risks", "hurting inventory efficiency"]):
+                res = cls.format_sku_overstock(db, org_id)
+                if "No slow-moving" not in res:
+                    return res
+            elif any(k in q_clean for k in ["reorder quantities", "immediate attention"]):
+                res = cls.format_sku_reorders(db, org_id)
+                if "No items" not in res:
+                    return res
+            elif any(k in q_clean for k in ["spending the most money", "spending most money"]):
+                res = cls.format_finance_spending(db, org_id)
+                if "No expense" not in res:
+                    return res
+            elif any(k in q_clean for k in ["hurting profitability"]) and "inventory" not in q_clean:
+                res = cls.format_finance_profitability_leaks(db, org_id)
+                if "No product sales" not in res:
+                    return res
+            elif any(k in q_clean for k in ["clients are at risk"]):
+                res = cls.format_client_at_risk(db, org_id)
+                if "No at-risk" not in res:
+                    return res
+            elif any(k in q_clean for k in ["who should i contact"]):
+                res = cls.format_client_outreach(db, org_id)
+                if "No outreach" not in res:
+                    return res
+            elif any(k in q_clean for k in ["projects are delayed"]):
+                res = cls.format_project_delayed(db, org_id, question=question)
+                if "No delayed" not in res:
+                    return res
+            elif any(k in q_clean for k in ["projects need attention"]):
+                res = cls.format_project_attention(db, org_id)
+                if "No projects" not in res:
+                    return res
+            elif any(k in q_clean for k in ["deadlines are at risk"]):
+                res = cls.format_project_deadlines_at_risk(db, org_id)
+                if "No project" not in res:
+                    return res
+            elif any(k in q_clean for k in ["team focus"]):
+                res = cls.format_project_weekly_focus(db, org_id)
+                if "No active" not in res:
+                    return res
+            elif any(k in q_clean for k in ["mitigate risk", "passed their deadline"]):
+                res = cls.format_project_delayed(db, org_id, question=question)
+                if "No delayed" not in res:
+                    return res
         
         # Determine target category
         q_type = cls.get_question_type(question)

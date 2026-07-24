@@ -6,6 +6,7 @@ from app.models.project import Project
 from app.models.task import Task
 from app.models.finance import Revenue, Expense
 from app.models.inventory import InventoryItem
+from app.models.product import Product
 from app.models.supplier import Supplier
 
 class BusinessAnalyticsService:
@@ -33,7 +34,9 @@ class BusinessAnalyticsService:
         net_profit = total_revenue - total_expenses
         
         # Inventory Metrics
-        total_inventory = db.query(InventoryItem).filter(InventoryItem.organization_id == organization_id).count()
+        total_products = db.query(Product).filter(Product.organization_id == organization_id).count()
+        total_items = db.query(InventoryItem).filter(InventoryItem.organization_id == organization_id).count()
+        total_inventory = max(total_products, total_items)
 
         # Supplier / Supply Chain Metrics
         total_suppliers = db.query(Supplier).filter(Supplier.organization_id == organization_id).count()

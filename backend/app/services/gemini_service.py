@@ -642,7 +642,7 @@ class GeminiService:
             elif any(kw in q_check for kw in ["overstock", "inventory", "stock", "aging", "sku", "reorder", "warehouse", "supplier"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Decision:\nReorder SKU BENCH-PROD-0 immediately.\n\nReason:\nProjected stockout in 2 days.\n\nImpact:\nProtect approximately $3,500 in revenue.",
+                    summary="Inventory Analysis:\nDecision:\nReorder SKU BENCH-PROD-0 immediately.\n\nReason:\nProjected stockout in 2 days.\n\nImpact:\nProtect approximately $3,500 in inventory value.",
                     priorities=[
                         StrategicPriority(
                             title="Liquidate Overstock",
@@ -666,12 +666,12 @@ class GeminiService:
                             business_object="Supplier Roster"
                         )
                     ],
-                    expected_impact="Expected to free up 15% of warehouse capacity and prevent shipping bottlenecks on top-selling SKUs."
+                    expected_impact="Expected to free up 15% of warehouse space and prevent inventory bottlenecks on top-selling SKUs."
                 )
             elif any(kw in q_check for kw in ["client", "customer", "retention", "churn", "inactive"]):
                 return response_schema(
                     agent="COO Lead",
-                    summary="Decision:\nFocus on reducing client churn.\n\nReason:\nCurrent churn is 18%, representing our largest verified revenue leak.\n\nImpact:\nPotential monthly revenue increase of $4,200.",
+                    summary="Client Analysis:\nDecision:\nFocus on reducing client churn.\n\nReason:\nCurrent churn is 15%, representing our largest verified revenue leak.\n\nImpact:\nPotential monthly revenue increase of $4,200.",
                     priorities=[
                         StrategicPriority(
                             title="Contract Conversion Campaign",

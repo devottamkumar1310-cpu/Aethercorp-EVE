@@ -67,6 +67,7 @@ class AgentOrchestrator:
             q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
             question_type = ExecutiveFormatter.get_question_type(question)
             
+            is_working_capital_query = "working capital" in q_clean or "capital is tied up" in q_clean or "capital tied up" in q_clean or "capital tied" in q_clean
             is_biggest_risk_query = "biggest operational risk" in q_clean
             is_overstock_query = "overstock" in q_clean or "hurting inventory efficiency" in q_clean or "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean
             is_reorder_query = "reorder" in q_clean or "need immediate attention" in q_clean or "what should i reorder" in q_clean or "skus are at risk" in q_clean or "sku at risk" in q_clean or "skus at risk" in q_clean
@@ -88,7 +89,9 @@ class AgentOrchestrator:
             is_project_focus_query = "team focus" in q_clean or "operational priorities" in q_clean
 
             formatter_name = "ExecutiveFormatter.format_executive_response (LLM synthesis fallback)"
-            if is_biggest_risk_query:
+            if is_working_capital_query:
+                formatter_name = "format_working_capital"
+            elif is_biggest_risk_query:
                 formatter_name = "get_biggest_operational_risk"
             elif is_overstock_query or is_inventory_profitability_query:
                 formatter_name = "format_sku_overstock"
@@ -590,6 +593,7 @@ class AgentOrchestrator:
         from app.services.ai.executive_formatter import ExecutiveFormatter
         q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
         is_deterministic = (
+            "working capital" in q_clean or "capital is tied up" in q_clean or "capital tied up" in q_clean or "capital tied" in q_clean or
             "biggest operational risk" in q_clean or
             "overstock" in q_clean or "hurting inventory efficiency" in q_clean or
             "capital is trapped in slow" in q_clean or "capital is trapped" in q_clean or

@@ -79,40 +79,35 @@ class ExecutiveBoard:
             resolved_intent = intent or ConversationLayer.classify_intent(question)
             
             fast_path_selection = None
-            if resolved_intent == "Finance Query" or resolved_intent == "Pricing Query":
+            if resolved_intent in ["Finance Query", "Pricing Query"]:
                 fast_path_selection = {
-                    "run_finance": True, "run_operations": False, "run_inventory": False,
-                    "run_client": False, "run_growth": True, "run_forecasting": False
+                    "run_finance": True, "run_operations": False, "run_inventory": True,
+                    "run_client": True, "run_growth": True, "run_forecasting": False
                 }
             elif resolved_intent == "Forecast Query":
                 fast_path_selection = {
-                    "run_finance": False, "run_operations": False, "run_inventory": False,
+                    "run_finance": True, "run_operations": False, "run_inventory": True,
                     "run_client": False, "run_growth": False, "run_forecasting": True
                 }
-            elif resolved_intent == "Supply Chain Query":
+            elif resolved_intent in ["Supply Chain Query", "Inventory Query"]:
                 fast_path_selection = {
-                    "run_finance": False, "run_operations": True, "run_inventory": True,
-                    "run_client": False, "run_growth": False, "run_forecasting": False
-                }
-            elif resolved_intent == "Inventory Query":
-                fast_path_selection = {
-                    "run_finance": False, "run_operations": False, "run_inventory": True,
+                    "run_finance": True, "run_operations": True, "run_inventory": True,
                     "run_client": False, "run_growth": False, "run_forecasting": False
                 }
             elif resolved_intent == "Sales Query":
                 fast_path_selection = {
-                    "run_finance": True, "run_operations": False, "run_inventory": False,
-                    "run_client": False, "run_growth": True, "run_forecasting": False
+                    "run_finance": True, "run_operations": False, "run_inventory": True,
+                    "run_client": True, "run_growth": True, "run_forecasting": False
                 }
             elif resolved_intent == "Customers Query":
                 fast_path_selection = {
-                    "run_finance": False, "run_operations": False, "run_inventory": False,
+                    "run_finance": True, "run_operations": False, "run_inventory": False,
                     "run_client": True, "run_growth": True, "run_forecasting": False
                 }
-            elif resolved_intent == "Projects Query" or resolved_intent == "Tasks Query" or resolved_intent == "Operations Query" or resolved_intent == "PROJECT_MITIGATION":
+            elif resolved_intent in ["Projects Query", "Tasks Query", "Operations Query", "PROJECT_MITIGATION"]:
                 fast_path_selection = {
                     "run_finance": False, "run_operations": True, "run_inventory": False,
-                    "run_client": False, "run_growth": False, "run_forecasting": False
+                    "run_client": True, "run_growth": False, "run_forecasting": False
                 }
             elif resolved_intent == "Executive Summary Query":
                 fast_path_selection = {

@@ -62,7 +62,131 @@ def override_get_required_workspace_id():
     return MOCK_ORG_ID
 
 
-client = TestClient(app)
+def clear_mock_org():
+    from app.models.product import Product
+    from app.models.inventory import InventoryItem, SalesRecord
+    from app.models.client import Client
+    from app.models.project import Project
+    from app.models.task import Task
+    from app.models.finance import Revenue, Expense
+    db = TestingSessionLocal()
+    db.query(SalesRecord).filter(SalesRecord.organization_id == MOCK_ORG_ID).delete()
+    db.query(InventoryItem).filter(InventoryItem.organization_id == MOCK_ORG_ID).delete()
+    db.query(Product).filter(Product.organization_id == MOCK_ORG_ID).delete()
+    db.query(Task).filter(Task.organization_id == MOCK_ORG_ID).delete()
+    db.query(Revenue).filter(Revenue.organization_id == MOCK_ORG_ID).delete()
+    db.query(Expense).filter(Expense.organization_id == MOCK_ORG_ID).delete()
+    db.query(Project).filter(Project.organization_id == MOCK_ORG_ID).delete()
+    db.query(Client).filter(Client.organization_id == MOCK_ORG_ID).delete()
+    db.commit()
+    db.close()
+
+
+def seed_full_demo_database():
+    clear_mock_org()
+    from app.models.product import Product
+    from app.models.inventory import InventoryItem, SalesRecord
+    from app.models.client import Client
+    from app.models.project import Project
+    from app.models.task import Task
+    from app.models.finance import Revenue, Expense
+    import datetime
+
+    db_session = TestingSessionLocal()
+    
+    prod = Product(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        sku="TST-SKU-001",
+        name="Test Overstock Dress",
+        category="Dresses",
+        unit_cost=20.0,
+    )
+    db_session.add(prod)
+    db_session.flush()
+
+    inv_item = InventoryItem(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        product_id=prod.id,
+        stock_on_hand=500,
+        safety_stock=50,
+        reorder_point=100,
+        lead_time_days=14,
+        avg_daily_sales=0.5
+    )
+    db_session.add(inv_item)
+
+    today = datetime.date.today()
+    sales_rec = SalesRecord(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        product_id=prod.id,
+        date=today - datetime.timedelta(days=2),
+        quantity=5,
+        unit_price=50.0,
+        revenue=250.0
+    )
+    db_session.add(sales_rec)
+
+    client_a = Client(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        company_name="Client Alpha",
+        status="active"
+    )
+    db_session.add(client_a)
+    db_session.flush()
+
+    proj_a = Project(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        client_id=client_a.id,
+        name="Project Alpha",
+        status="active",
+        completion_percentage=40.0,
+        deadline=datetime.datetime.utcnow() - datetime.timedelta(days=10),
+        budget=3000.0
+    )
+    db_session.add(proj_a)
+    db_session.flush()
+
+    task_a = Task(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        project_id=proj_a.id,
+        title="Overdue Milestone Alpha",
+        status="todo",
+        due_date=datetime.datetime.utcnow() - datetime.timedelta(days=5),
+        priority="high"
+    )
+    db_session.add(task_a)
+
+    rev = Revenue(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        project_id=proj_a.id,
+        amount=5000.0,
+        date=datetime.datetime.utcnow() - datetime.timedelta(days=5),
+        description="Demo Sales"
+    )
+    db_session.add(rev)
+
+    exp1 = Expense(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        amount=2000.0,
+        category="Software Licenses",
+        date=datetime.datetime.utcnow() - datetime.timedelta(days=5),
+        description="SaaS Subscription"
+    )
+    db_session.add(exp1)
+
+    db_session.commit()
+    db_session.close()
+
+
+client = TestClient(app, headers={"Authorization": "Bearer mock-token"})
 
 
 @pytest.fixture(autouse=True)
@@ -74,11 +198,25 @@ def setup_dependencies():
         container.register_singleton("gemini_service", service)
     service.mock_mode = True
 
-    # Set dependency overrides dynamically
+    db_session = TestingSessionLocal()
+    if not db_session.query(Organization).filter(Organization.id == MOCK_ORG_ID).first():
+        db_session.add(Organization(id=MOCK_ORG_ID, name="COO Experience Test Org", slug="coo-test-org"))
+    if not db_session.query(Profile).filter(Profile.id == MOCK_USER_ID).first():
+        db_session.add(Profile(id=MOCK_USER_ID, email="ceo@example.com", full_name="CEO EVE", hashed_password="pw"))
+    if not db_session.query(Membership).filter(Membership.user_id == MOCK_USER_ID, Membership.organization_id == MOCK_ORG_ID).first():
+        db_session.add(Membership(user_id=MOCK_USER_ID, organization_id=MOCK_ORG_ID, role="admin"))
+    db_session.commit()
+    db_session.close()
+
+    from app.core.security import verify_supabase_token, security, get_active_workspace_id
+    client.headers.update({"Authorization": "Bearer mock-token"})
+    app.dependency_overrides[verify_supabase_token] = lambda: {"sub": str(MOCK_USER_ID)}
+    app.dependency_overrides[security] = lambda: HTTPAuthorizationCredentials(scheme="Bearer", credentials="mock-token")
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user_and_tenant] = override_get_current_user_and_tenant
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_required_workspace_id] = override_get_required_workspace_id
+    app.dependency_overrides[get_active_workspace_id] = override_get_required_workspace_id
     
     yield
 
@@ -466,51 +604,49 @@ def test_sku_level_inventory_recommendations():
     Verify that EVE returns SKU-level inventory recommendations with actual database
     values for overstock and reorder queries.
     """
+    clear_mock_org()
     from app.models.product import Product
     from app.models.inventory import InventoryItem, SalesRecord
     import datetime
     
     db_session = TestingSessionLocal()
     
-    # Check if product already exists to make it idempotent
-    prod = db_session.query(Product).filter(Product.sku == "TST-SKU-001").first()
-    if not prod:
-        prod = Product(
-            id=uuid.uuid4(),
-            organization_id=MOCK_ORG_ID,
-            sku="TST-SKU-001",
-            name="Test Overstock Dress",
-            category="Dresses",
-            unit_cost=20.0,
-        )
-        db_session.add(prod)
-        db_session.flush()
-        
-        inv_item = InventoryItem(
-            id=uuid.uuid4(),
-            organization_id=MOCK_ORG_ID,
-            product_id=prod.id,
-            stock_on_hand=500,
-            safety_stock=50,
-            reorder_point=100,
-            lead_time_days=14,
-            avg_daily_sales=0.5
-        )
-        db_session.add(inv_item)
-        
-        # Seed SalesRecord to generate velocity and non-zero metrics
-        today = datetime.date.today()
-        sales_rec = SalesRecord(
-            id=uuid.uuid4(),
-            organization_id=MOCK_ORG_ID,
-            product_id=prod.id,
-            date=today - datetime.timedelta(days=2),
-            quantity=5,
-            unit_price=50.0,
-            revenue=250.0
-        )
-        db_session.add(sales_rec)
-        db_session.commit()
+    prod = Product(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        sku="TST-SKU-001",
+        name="Test Overstock Dress",
+        category="Dresses",
+        unit_cost=20.0,
+    )
+    db_session.add(prod)
+    db_session.flush()
+    
+    inv_item = InventoryItem(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        product_id=prod.id,
+        stock_on_hand=500,
+        safety_stock=50,
+        reorder_point=100,
+        lead_time_days=14,
+        avg_daily_sales=0.5
+    )
+    db_session.add(inv_item)
+    
+    # Seed SalesRecord to generate velocity and non-zero metrics
+    today = datetime.date.today()
+    sales_rec = SalesRecord(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        product_id=prod.id,
+        date=today - datetime.timedelta(days=2),
+        quantity=5,
+        unit_price=50.0,
+        revenue=250.0
+    )
+    db_session.add(sales_rec)
+    db_session.commit()
     db_session.close()
 
     # 1. Test: Identify overstock risks.
@@ -587,6 +723,7 @@ def test_record_level_finance_intelligence():
     Verify that EVE returns record-level finance recommendations with actual database
     values for spending, profitability, and summary queries.
     """
+    clear_mock_org()
     from app.models.project import Project
     from app.models.finance import Revenue, Expense
     from app.models.client import Client
@@ -646,6 +783,40 @@ def test_record_level_finance_intelligence():
         )
         db_session.add(exp1)
         db_session.add(exp2)
+
+        prod1 = Product(
+            id=uuid.uuid4(),
+            organization_id=MOCK_ORG_ID,
+            sku="TST-SKU-001",
+            name="Dresses",
+            category="Dresses",
+            unit_cost=20.0
+        )
+        db_session.add(prod1)
+        db_session.flush()
+
+        inv1 = InventoryItem(
+            id=uuid.uuid4(),
+            organization_id=MOCK_ORG_ID,
+            product_id=prod1.id,
+            stock_on_hand=100,
+            safety_stock=10,
+            reorder_point=20,
+            lead_time_days=7,
+            avg_daily_sales=1.0
+        )
+        db_session.add(inv1)
+
+        sales1 = SalesRecord(
+            id=uuid.uuid4(),
+            organization_id=MOCK_ORG_ID,
+            product_id=prod1.id,
+            date=datetime.date.today(),
+            quantity=10,
+            unit_price=50.0,
+            revenue=500.0
+        )
+        db_session.add(sales1)
         db_session.commit()
     db_session.close()
 
@@ -755,9 +926,9 @@ def test_record_level_finance_intelligence():
     data = response.json()
     content = data["message"]["content"]
     assert "Financial Summary" in content
-    assert "Revenue: $5,750.00" in content  # 5000 project + 250 Dresses + 500 Shoes
+    assert "Revenue: $6,000.00" in content  # 5000 project + 500 Dresses + 500 Shoes
     assert "Expenses: $3,000.00" in content # 2000 software + 1000 marketing
-    assert "Profit: $2,750.00" in content
+    assert "Profit: $3,000.00" in content
     assert "Top Cost Drivers: Software Licenses" in content
     assert "Largest Financial Risks:" in content
     assert data["message"]["agent_data"]["priorities"] == []
@@ -769,6 +940,7 @@ def test_record_level_client_intelligence():
     Verify that EVE returns record-level client recommendations with actual database
     values for risk, outreach, revenue, and inactive queries.
     """
+    clear_mock_org()
     from app.models.client import Client
     from app.models.project import Project
     from app.models.finance import Revenue
@@ -1061,6 +1233,7 @@ def test_record_level_project_intelligence():
     Verify that EVE returns record-level project recommendations with actual database
     values for delayed, attention, deadlines, and weekly focus queries.
     """
+    clear_mock_org()
     from app.models.client import Client
     from app.models.project import Project
     from app.models.task import Task
@@ -1068,8 +1241,16 @@ def test_record_level_project_intelligence():
     
     db_session = TestingSessionLocal()
     
-    client_obj = db_session.query(Client).filter(Client.company_name == "Test Finance Client").first()
-    assert client_obj is not None
+    client_obj = db_session.query(Client).filter(Client.organization_id == MOCK_ORG_ID, Client.company_name == "Test Finance Client").first()
+    if not client_obj:
+        client_obj = Client(
+            id=uuid.uuid4(),
+            organization_id=MOCK_ORG_ID,
+            company_name="Test Finance Client",
+            status="active"
+        )
+        db_session.add(client_obj)
+        db_session.flush()
     
     # 1. Seed Project Alpha (Delayed: past deadline, has overdue task)
     proj_a = db_session.query(Project).filter(Project.name == "Project Alpha").first()
@@ -1204,6 +1385,7 @@ def test_project_risk_mitigation_routing():
     """
     Verify that project risk mitigation queries are routed correctly to delayed projects and formatted as Diagnostic.
     """
+    seed_full_demo_database()
     response = client.post("/api/executive/chat", json={
         "question": "How do we mitigate the risk: \"1 active project(s) have passed their deadline\"?",
         "mode": "smart",
@@ -1225,6 +1407,7 @@ def test_success_criteria_scenarios():
     """
     Verify the 4 founder demo success criteria questions.
     """
+    seed_full_demo_database()
     # Success Criteria Test 1: Mitigation risk for passed deadline
     response1 = client.post("/api/executive/chat", json={
         "question": "How do we mitigate the risk: \"1 active project(s) have passed their deadline\"?",
