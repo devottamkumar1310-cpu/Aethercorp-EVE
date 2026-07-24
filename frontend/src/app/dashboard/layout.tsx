@@ -366,10 +366,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           sessionStorage.getItem("eve_initialized") === "true";
 
         try {
+          // Ensure profile & workspace records exist in backend database
+          try {
+            await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          } catch (syncErr) {
+            logger.warn("[EVE Layout] Pre-hydration auth sync warning:", syncErr);
+          }
+
           if (isAlreadyInitialized) {
-            // Sprint 1 Fix #2: Do NOT setLoading(false) here before workspaces resolve.
-            // The finally block handles setLoading(false) after the fetch completes.
-            // Sprint 2 UX: advance stage so animation doesn't freeze at stage 1 for returning users.
             if (mounted) setLoadingStage(2);
             await loadWorkspacesAndProfile(token);
           } else {
@@ -604,13 +611,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="w-full py-2.5 px-4 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer"
             >
               Retry Connection
-            </button>
-            <button
-              onClick={() => handleSelectDemo("luma")}
-              disabled={demoLoading}
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
-            >
-              {demoLoading ? "Initializing Demo..." : "Initialize Demo Workspace"}
             </button>
             <button
               onClick={handleLogout}

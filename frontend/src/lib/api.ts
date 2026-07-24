@@ -22,17 +22,19 @@ function resolveApiBaseUrl(): string {
     return envUrl;
   }
 
-  if (envUrl) {
-    logger.warn(`[EVE Config] NEXT_PUBLIC_API_URL (${JSON.stringify(envUrl)}) is invalid or non-absolute. Using production fallback.`);
-  } else if (typeof window !== "undefined") {
-    logger.warn("[EVE Config] NEXT_PUBLIC_API_URL is missing. Falling back to default production backend.");
+  if (typeof window !== "undefined") {
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      return "https://eve-backend-68416570138.us-central1.run.app";
+    }
+    return "http://127.0.0.1:8000";
   }
 
-  const defaultFallback = typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1"
-    ? "https://eve-backend-68416570138.us-central1.run.app"
-    : "http://127.0.0.1:8000";
+  // Server-side environment (Next.js Server Routes / SSR)
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
+    return "https://eve-backend-68416570138.us-central1.run.app";
+  }
 
-  return defaultFallback;
+  return "https://eve-backend-68416570138.us-central1.run.app";
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
