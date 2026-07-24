@@ -32,7 +32,16 @@ class GCPSecretManagerService:
             client = secretmanager.SecretManagerServiceClient()
             name = f"projects/{project}/secrets/{secret_id}/versions/latest"
             response = client.access_secret_version(request={"name": name})
-            return response.payload.data.decode("UTF-8").strip()
+            # Decode with utf-8-sig, not plain utf-8: secrets created from a
+            # UTF-8-with-BOM source (common on Windows) carry a leading BOM
+            # (U+FEFF). str.strip() does NOT remove it (U+FEFF is not
+            # whitespace in Python), so a plain utf-8 decode leaves e.g.
+            # GEMINI_API_KEY = "﻿AIza...". That BOM then reaches the
+            # Gemini SDK's gRPC metadata (x-goog-api-key), which must be ASCII,
+            # raising "'ascii' codec can't encode character '﻿'" and
+            # silently breaking the AI chat stream. utf-8-sig strips a leading
+            # BOM if present and is a no-op otherwise.
+            return response.payload.data.decode("utf-8-sig").strip()
         except Exception as e:
             logger.warning(
                 f"Failed to fetch secret '{secret_id}' from GCP Secret Manager for project '{project}': {e}. "
