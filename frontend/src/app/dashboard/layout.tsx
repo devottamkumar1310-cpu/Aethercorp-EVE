@@ -24,7 +24,7 @@ import {
   Database,
 } from "lucide-react";
 import { ProductTour } from "@/components/dashboard/ProductTour";
-import ProactiveAnalysisBanner from "@/components/dashboard/ProactiveAnalysisBanner";
+import { useProactiveAnalysis } from "@/hooks/useProactiveAnalysis";
 
 interface Workspace {
   id: string;
@@ -57,18 +57,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isProvenanceModalOpen, setIsProvenanceModalOpen] = useState(false);
   
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [showAnalysisBanner, setShowAnalysisBanner] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("eve_analysis_pending") === "1";
-    }
-    return false;
-  });
-  const [analysisOrgId, setAnalysisOrgId] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("eve_analysis_org_id") || null;
-    }
-    return null;
-  });
 
   const DEMO_WORKSPACES = [
     { id: "demo-luma", slug: "luma", apiSlug: "luma", name: "Luma & Co." },
@@ -152,18 +140,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, []);
 
-  // Listen for eve_analysis_started event from CSV upload pages
-  useEffect(() => {
-    const handleAnalysisStarted = () => {
-      const orgId = localStorage.getItem("eve_analysis_org_id");
-      if (orgId) {
-        setAnalysisOrgId(orgId);
-        setShowAnalysisBanner(true);
-      }
-    };
-    window.addEventListener("eve_analysis_started", handleAnalysisStarted);
-    return () => window.removeEventListener("eve_analysis_started", handleAnalysisStarted);
-  }, []);
+  // Proactive analysis runs silently in the background. The watcher renders
+  // nothing and only surfaces a toast when the run finishes or fails, so the
+  // user is never interrupted or made to wait on it.
+  useProactiveAnalysis({
+    sessionToken,
+    fallbackOrganizationId: activeWorkspaceId,
+    onComplete: () => router.refresh(),
+    onViewRecommendations: (destination) => router.push(destination.href),
+  });
 
   // Theme Sync on Mount — resolves 'system' to the actual OS preference.
   useEffect(() => {
@@ -1112,34 +1097,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                   </div>
                 ) : (
-                  <>
-                    {activeWorkspaceId && showAnalysisBanner && (
-                      <ProactiveAnalysisBanner
-                        organizationId={analysisOrgId ?? activeWorkspaceId}
-                        sessionToken={sessionToken}
-                        onComplete={() => {
-                          localStorage.removeItem("eve_analysis_pending");
-                          localStorage.removeItem("eve_analysis_org_id");
-                          router.refresh();
-                        }}
-                        onDismiss={() => {
-                          setShowAnalysisBanner(false);
-                          localStorage.removeItem("eve_analysis_pending");
-                          localStorage.removeItem("eve_analysis_org_id");
-                          router.push("/dashboard/traceability");
-                        }}
-                        onExpire={() => {
-                          // No analysis running (stale flag) or it timed out —
-                          // hide the banner and clear the flag so it does not
-                          // reappear on the next load.
-                          setShowAnalysisBanner(false);
-                          localStorage.removeItem("eve_analysis_pending");
-                          localStorage.removeItem("eve_analysis_org_id");
-                        }}
-                      />
-                    )}
-                    {children}
-                  </>
+                  children
                 )}
               </>
             );
