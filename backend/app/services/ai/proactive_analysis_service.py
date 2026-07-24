@@ -1,6 +1,8 @@
 import logging
 import uuid
 import asyncio
+import datetime
+from collections import Counter
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.services.ai.agent_orchestrator import AgentOrchestrator
@@ -11,14 +13,26 @@ logger = logging.getLogger("eve.services.ai.proactive_analysis")
 
 class ProactiveAnalysisService:
     @staticmethod
-    def _update_status(db: Session, org_id: uuid.UUID, status: str, step: int, error: str = None, rec_count: int = 0):
+    def _update_status(
+        db: Session,
+        org_id: uuid.UUID,
+        status: str,
+        step: int,
+        error: str = None,
+        rec_count: int = 0,
+        primary_type: str = None,
+    ):
         org = db.query(Organization).filter(Organization.id == org_id).first()
         if org:
             org.analysis_status = {
                 "status": status,
                 "step": step,
                 "error": error,
-                "recommendations_count": rec_count
+                "recommendations_count": rec_count,
+                # Dominant recommendation_type of this run, so the client can send
+                # the user to the surface where the result is actionable rather
+                # than to the audit trail. None when the run produced nothing.
+                "primary_type": primary_type,
             }
             db.commit()
 
@@ -42,7 +56,13 @@ class ProactiveAnalysisService:
             ProactiveAnalysisService._update_status(db, org_id, "in_progress", 3)
             # 2. Invoke standard orchestrator pipeline
             orchestrator = AgentOrchestrator()
-            
+
+            # Watermark taken before the run so the summary below reflects what
+            # THIS analysis produced. Counting every trace in the workspace would
+            # report a workspace total and call it "new".
+            # Naive UTC to match RecommendationTrace.created_at's default.
+            run_started_at = datetime.datetime.utcnow()
+
             await orchestrator.orchestrate(
                 db=db,
                 org_id=org_id,
@@ -55,10 +75,26 @@ class ProactiveAnalysisService:
             ProactiveAnalysisService._update_status(db, org_id, "in_progress", 4)
             await asyncio.sleep(1.0) # Simulate final trace creation step visualization
             
-            # Count the newly generated traces
-            count = db.query(RecommendationTrace).filter(RecommendationTrace.organization_id == org_id).count()
-            
-            ProactiveAnalysisService._update_status(db, org_id, "completed", 4, rec_count=count)
+            # Summarize only what this run generated.
+            new_traces = (
+                db.query(RecommendationTrace)
+                .filter(
+                    RecommendationTrace.organization_id == org_id,
+                    RecommendationTrace.created_at >= run_started_at,
+                )
+                .all()
+            )
+            count = len(new_traces)
+
+            # Dominant type decides where the client sends the user next. Ties
+            # break toward whichever type Counter saw first, which is stable
+            # enough for a navigation hint.
+            types = [t.recommendation_type for t in new_traces if t.recommendation_type]
+            primary_type = Counter(types).most_common(1)[0][0] if types else None
+
+            ProactiveAnalysisService._update_status(
+                db, org_id, "completed", 4, rec_count=count, primary_type=primary_type
+            )
             logger.info(f"[PROACTIVE ANALYSIS] Successfully generated baseline recommendations for Org {org_id}")
             
         except Exception as e:
