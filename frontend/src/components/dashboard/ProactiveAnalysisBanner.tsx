@@ -16,6 +16,14 @@ interface ProactiveAnalysisBannerProps {
   sessionToken: string;
   onComplete?: () => void;
   onDismiss?: () => void;
+  /**
+   * Called when there is no analysis to show — the backend reports status
+   * "none" (a stale trigger, or a run already consumed in a previous session)
+   * or polling times out without ever completing. The parent should clear its
+   * pending flag and unmount the banner. Without this the banner would render
+   * as an empty box that never goes away.
+   */
+  onExpire?: () => void;
 }
 
 const STEPS = [
@@ -30,6 +38,7 @@ export default function ProactiveAnalysisBanner({
   sessionToken,
   onComplete,
   onDismiss,
+  onExpire,
 }: ProactiveAnalysisBannerProps) {
   const [status, setStatus] = useState<AnalysisStatus["status"]>("in_progress");
   const [step, setStep] = useState<number>(1);
@@ -39,11 +48,13 @@ export default function ProactiveAnalysisBanner({
   const [dismissed, setDismissed] = useState(false);
   const onCompleteRef = useRef(onComplete);
   const onDismissRef = useRef(onDismiss);
+  const onExpireRef = useRef(onExpire);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
     onDismissRef.current = onDismiss;
-  }, [onComplete, onDismiss]);
+    onExpireRef.current = onExpire;
+  }, [onComplete, onDismiss, onExpire]);
 
   useEffect(() => {
     if (dismissed) return;
@@ -73,6 +84,18 @@ export default function ProactiveAnalysisBanner({
         if (controller.signal.aborted) return;
 
         const nextStatus = data.status ?? "in_progress";
+
+        // "none" means no analysis is actually running for this workspace —
+        // a stale pending flag, or a run already consumed. Never render the
+        // banner in that case: tear it down and let the parent clear its flag.
+        if (nextStatus === "none") {
+          shouldContinue = false;
+          setVisible(false);
+          setDismissed(true);
+          onExpireRef.current?.();
+          return;
+        }
+
         setStatus(nextStatus);
         setStep(data.step ?? 0);
 
@@ -92,8 +115,16 @@ export default function ProactiveAnalysisBanner({
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
       } finally {
-        if (shouldContinue && !controller.signal.aborted && pollCount < MAX_POLLS) {
-          timeoutId = setTimeout(checkStatus, 2000);
+        if (shouldContinue && !controller.signal.aborted) {
+          if (pollCount < MAX_POLLS) {
+            timeoutId = setTimeout(checkStatus, 2000);
+          } else {
+            // Timed out still "in_progress" — don't leave the banner spinning
+            // forever. Clear it so a refresh won't resurrect a dead run.
+            setVisible(false);
+            setDismissed(true);
+            onExpireRef.current?.();
+          }
         }
       }
     };
@@ -121,7 +152,7 @@ export default function ProactiveAnalysisBanner({
   if (!visible) return null;
 
   return (
-    <div className="mx-6 mt-6 overflow-hidden rounded-xl border border-violet-500/25 bg-gradient-to-r from-violet-950/40 via-purple-950/30 to-indigo-950/40 backdrop-blur-sm shadow-lg relative">
+    <div className="mx-6 mt-6 overflow-hidden rounded-xl border border-violet-500/25 bg-violet-500/[0.06] shadow-sm relative">
       {/* Subtle top accent line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/60 via-purple-500/80 to-indigo-500/60" />
 
@@ -162,7 +193,7 @@ export default function ProactiveAnalysisBanner({
                 </p>
               )}
               {status === "failed" && (
-                <p className="text-xs text-red-400 mt-0.5">{error}</p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{error}</p>
               )}
             </div>
           </div>
@@ -181,7 +212,7 @@ export default function ProactiveAnalysisBanner({
             {(status === "failed" || status === "completed") && (
               <button
                 onClick={handleDismiss}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 aria-label="Dismiss"
               >
                 <X className="h-4 w-4" />
@@ -206,22 +237,22 @@ export default function ProactiveAnalysisBanner({
                       ? "border-emerald-500/30 bg-emerald-500/10"
                       : isCurrent
                       ? "border-violet-500/40 bg-violet-500/10"
-                      : "border-white/5 bg-white/2"
+                      : "border-border bg-muted/40"
                   }`}
                 >
                   {isCompleted ? (
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                   ) : isCurrent ? (
-                    <Loader2 className="h-3.5 w-3.5 text-violet-400 animate-spin flex-shrink-0" />
+                    <Loader2 className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 animate-spin flex-shrink-0" />
                   ) : (
-                    <div className="h-3.5 w-3.5 rounded-full border border-white/15 flex-shrink-0" />
+                    <div className="h-3.5 w-3.5 rounded-full border border-muted-foreground/30 flex-shrink-0" />
                   )}
                   <span
                     className={`text-[11px] leading-tight ${
                       isCompleted
-                        ? "text-emerald-300 font-medium"
+                        ? "text-emerald-700 dark:text-emerald-300 font-medium"
                         : isCurrent
-                        ? "text-violet-300 font-medium"
+                        ? "text-violet-700 dark:text-violet-300 font-medium"
                         : "text-muted-foreground"
                     }`}
                   >

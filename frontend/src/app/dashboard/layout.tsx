@@ -729,7 +729,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
  : "text-muted-foreground hover:text-foreground"
  }`}
                     >
-                      <Icon size={16} className={`flex-shrink-0 transition-colors ${active && !isItemDisabled ? "text-violet-300" : "text-muted-foreground group-hover:text-foreground"}`} />
+                      <Icon size={16} className={`flex-shrink-0 transition-colors ${active && !isItemDisabled ? "text-[color:var(--eve-nav-active-fg)]" : "text-muted-foreground group-hover:text-foreground"}`} />
                       <span className={`animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>{item.label}</span>
                       {(item as any).isAI && (
                         <span className={`ml-auto text-[8px] font-bold bg-violet-600 text-white px-1.5 py-0.5 rounded-full tracking-wider ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>NEW</span>
@@ -1127,6 +1127,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           localStorage.removeItem("eve_analysis_pending");
                           localStorage.removeItem("eve_analysis_org_id");
                           router.push("/dashboard/traceability");
+                        }}
+                        onExpire={() => {
+                          // No analysis running (stale flag) or it timed out —
+                          // hide the banner and clear the flag so it does not
+                          // reappear on the next load.
+                          setShowAnalysisBanner(false);
+                          localStorage.removeItem("eve_analysis_pending");
+                          localStorage.removeItem("eve_analysis_org_id");
                         }}
                       />
                     )}

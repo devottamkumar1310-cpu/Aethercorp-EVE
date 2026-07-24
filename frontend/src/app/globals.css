@@ -1430,6 +1430,19 @@
   --eve-accent-softer: rgba(139, 92, 246, 0.06);
 }
 
+/* Active nav foreground must stay readable against the sidebar in BOTH themes.
+   On the light sidebar (#f4f4f5) a pale violet (purple-300) washes out to ~1.3:1,
+   so light uses a deep purple; dark keeps the bright violet it needs on #090d1a. */
+:root,
+[data-theme="light"],
+[data-theme="executive-light"] {
+  --eve-nav-active-fg: var(--eve-purple-700);
+}
+[data-theme="dark"],
+[data-theme="executive-dark"] {
+  --eve-nav-active-fg: var(--eve-purple-300);
+}
+
 /* Identity avatar — initials in a brand-gradient disc (header + menus) */
 .eve-avatar {
   display: inline-flex;
@@ -1453,7 +1466,7 @@
 }
 .eve-nav-link[data-active="true"] {
   background: var(--eve-accent-soft);
-  color: var(--eve-purple-300);
+  color: var(--eve-nav-active-fg);
   font-weight: 600;
 }
 .eve-nav-link[data-active="true"]::before {
@@ -1465,7 +1478,7 @@
   height: 1.05rem;
   width: 2.5px;
   border-radius: 9999px;
-  background: var(--eve-purple-400);
+  background: var(--eve-nav-active-fg);
 }
 .eve-nav-link[data-active="false"]:hover {
   background: var(--eve-accent-softer);
