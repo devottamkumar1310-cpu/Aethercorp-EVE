@@ -3,10 +3,13 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import {
   fetchInventoryDashboard,
   uploadMasterCSVAPI,
+  getHeaders,
 } from "@/services/businessService";
+
 import {
   Package,
   DollarSign,
@@ -30,7 +33,7 @@ import Link from "next/link";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
 import { ReorderCenter } from "@/components/inventory/ReorderCenter";
 import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
-import { API_BASE_URL } from "@/lib/api";
+
 
 interface ProductMetric {
   sku: string;
@@ -130,20 +133,13 @@ export default function InventoryDashboardPage() {
 
   const loadData = async (token: string) => {
     try {
-      const activeWorkspace = localStorage.getItem("active_workspace_id");
       const [dbData, alertRes, tracesRes] = await Promise.all([
         fetchInventoryDashboard(token),
-        fetch(`${API_BASE_URL}/api/inventory/alerts`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-Workspace-Id": activeWorkspace || "",
-          },
+        apiFetch(`${API_BASE_URL}/api/inventory/alerts`, {
+          headers: getHeaders(token),
         }),
-        fetch(`${API_BASE_URL}/api/recommendations?limit=100`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "X-Workspace-Id": activeWorkspace || "",
-          },
+        apiFetch(`${API_BASE_URL}/api/recommendations?limit=100`, {
+          headers: getHeaders(token),
         }),
       ]);
       setData(dbData);

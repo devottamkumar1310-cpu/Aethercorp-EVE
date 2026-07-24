@@ -247,9 +247,26 @@ app.include_router(executive.router)
 app.include_router(feedback.router)
 app.include_router(observability.router)
 
-
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.core.security import get_current_user, verify_supabase_token
+from app.models.profile import Profile
+
+@app.get("/api/me", tags=["profile"])
+def me_alias(
+    current_user: Profile = Depends(get_current_user),
+    payload: dict = Depends(verify_supabase_token),
+    db: Session = Depends(get_db)
+):
+    return profile.get_my_profile(current_user=current_user, payload=payload, db=db)
+
+@app.get("/api/workspaces", tags=["organization"])
+def workspaces_alias(
+    current_user: Profile = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return organization.get_workspaces(current_user=current_user, db=db)
+
 
 @app.get("/")
 def read_root():

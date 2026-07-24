@@ -60,9 +60,9 @@ export async function GET(request: Request) {
     // Sync with backend immediately after OAuth code exchange
     try {
       if (session) {
-        const { API_BASE_URL } = await import("@/lib/api");
+        const { API_BASE_URL, apiFetch } = await import("@/lib/api");
         devLog(`[AUTH CALLBACK] [SYNC] Syncing with backend auth endpoint`)
-        const syncResponse = await fetch(`${API_BASE_URL}/api/auth/sync`, {
+        const syncResponse = await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });

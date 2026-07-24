@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Lock, Mail, User, AlertTriangle, CheckCircle, Loader2, Sparkles } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function SignupPage() {
@@ -88,7 +88,7 @@ export default function SignupPage() {
     if (data?.session) {
       // Sync with backend
       try {
-        await fetch(`${API_BASE_URL}/api/auth/sync`, {
+        await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${data.session.access_token}` }
         });

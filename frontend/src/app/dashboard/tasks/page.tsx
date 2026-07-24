@@ -2,10 +2,10 @@
 import { logger } from "@/lib/logger";
 
 import { useEffect, useState } from "react";
-import { fetchTasks, fetchProjects, deleteTaskAPI } from "@/services/businessService";
+import { fetchTasks, fetchProjects, deleteTaskAPI, getHeaders } from "@/services/businessService";
 import { Task, Project } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import Link from "next/link";
 import { CheckSquare, Plus, ArrowLeft, Edit2, Trash2, Calendar, Sparkles, Inbox } from "lucide-react";
 import { TaskModal } from "@/components/business/TaskModal";
@@ -48,12 +48,8 @@ export default function TasksPage() {
   const loadAiTraces = async (token: string) => {
     setLoadingTraces(true);
     try {
-      const workspaceId = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
-      const res = await fetch(`${API_BASE_URL}/api/recommendations?limit=6`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "X-Workspace-Id": workspaceId || "",
-        },
+      const res = await apiFetch(`${API_BASE_URL}/api/recommendations?limit=6`, {
+        headers: getHeaders(token),
       });
       if (res.ok) {
         const data = await res.json();

@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Lock, Mail, AlertTriangle, CheckCircle, Loader2, Sparkles } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 function LoginForm() {
@@ -54,7 +54,7 @@ function LoginForm() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          await fetch(`${API_BASE_URL}/api/auth/sync`, {
+          await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${session.access_token}` }
           });

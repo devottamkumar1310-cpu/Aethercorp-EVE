@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Building2, ArrowRight, Sparkles, Brain, Loader2 } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 
 export default function OnboardingPage() {
@@ -28,7 +28,7 @@ export default function OnboardingPage() {
       }
       
       try {
-        const response = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
+        const response = await apiFetch(`${API_BASE_URL}/api/workspaces`, {
           headers: {
             "Authorization": `Bearer ${session.access_token}`
           }
@@ -69,7 +69,7 @@ export default function OnboardingPage() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/organization/onboard`, {
+      const response = await apiFetch(`${API_BASE_URL}/api/organization/onboard`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
+      const response = await apiFetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

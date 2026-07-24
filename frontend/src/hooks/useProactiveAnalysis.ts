@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 
 const PENDING_KEY = "eve_analysis_pending";
 const ORG_KEY = "eve_analysis_org_id";
@@ -158,7 +158,7 @@ export function useProactiveAnalysis({
         let keepPolling = true;
 
         try {
-          const res = await fetch(
+          const res = await apiFetch(
             `${API_BASE_URL}/api/organization/${organizationId}/analysis-status`,
             { headers: { Authorization: `Bearer ${sessionToken}` }, signal }
           );

@@ -6,7 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Sparkles, HelpCircle, HardDrive, Cpu, Compass, ListRestart, AlertTriangle, ShieldAlert, CheckCircle, Database } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
+import { getHeaders } from "@/services/businessService";
 import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
 import { selectTrace } from "@/lib/traceSelection";
 
@@ -60,14 +61,9 @@ export default function TraceabilityDashboard() {
         return;
       }
 
-      const headers: Record<string, string> = {
-        "Authorization": `Bearer ${token}`,
-        "X-Workspace-Id": workspaceId
-      };
-
       const offset = pageIndex * limit;
-      const resp = await fetch(`${API_BASE_URL}/api/recommendations?limit=${limit}&offset=${offset}`, {
-        headers,
+      const resp = await apiFetch(`${API_BASE_URL}/api/recommendations?limit=${limit}&offset=${offset}`, {
+        headers: getHeaders(token),
         signal,
       });
       if (!resp.ok) {

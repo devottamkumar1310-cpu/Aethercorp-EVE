@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger";
 import { useEffect, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { devLog } from "@/lib/logger";
 import Link from "next/link";
 import {
@@ -86,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setDemoLoading(true);
     setCreateError(null);
     try {
-      const resp = await fetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
+      const resp = await apiFetch(`${API_BASE_URL}/api/organization/onboard-demo`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -249,11 +249,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     try {
       [profileSettled, wsSettled] = await Promise.allSettled([
-        fetch(`${API_BASE_URL}/api/profile/me`, {
+        apiFetch(`${API_BASE_URL}/api/me`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         }),
-        fetch(`${API_BASE_URL}/api/organization/workspaces`, {
+        apiFetch(`${API_BASE_URL}/api/workspaces`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: controller.signal,
         }),
@@ -296,7 +296,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           devLog("[EVE] Workspaces empty on first fetch - retrying once after 1500ms");
           await new Promise<void>((resolve) => setTimeout(resolve, 1500));
           try {
-            const retryRes = await fetch(`${API_BASE_URL}/api/organization/workspaces`, {
+            const retryRes = await apiFetch(`${API_BASE_URL}/api/workspaces`, {
               headers: { Authorization: `Bearer ${token}` },
             });
             if (retryRes.ok) {
@@ -470,7 +470,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setCreateLoading(true);
     setCreateError(null);
     try {
-      const response = await fetch(`${API_BASE_URL}/api/organization/onboard`, {
+      const response = await apiFetch(`${API_BASE_URL}/api/organization/onboard`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionToken}` },
         body: JSON.stringify({ name: newWorkspaceName }),

@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { devLog } from "@/lib/logger";
 import {
   sendExecutiveChatStream,
@@ -423,7 +423,7 @@ export default function EVEChatWorkspace() {
       }).catch(err => logger.error("Panel group load failed", err));
 
       const workspaceIdForOverview = localStorage.getItem("active_workspace_id");
-      fetch(`${API_BASE_URL}/api/analytics/overview`, {
+      apiFetch(`${API_BASE_URL}/api/analytics/overview`, {
         headers: {
           Authorization: `Bearer ${token}`,
           ...(workspaceIdForOverview ? { "X-Workspace-Id": workspaceIdForOverview } : {})

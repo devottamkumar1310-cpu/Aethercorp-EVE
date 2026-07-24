@@ -21,44 +21,47 @@ class OnboardRequest(BaseModel):
 class DemoOnboardRequest(BaseModel):
     demo_company: str = "luma"
 
+from sqlalchemy import func
+
 @router.get("/workspaces")
 def get_workspaces(current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):
     logger.info(f"[TRACE /api/organization/workspaces] STEP 1: Request received — user_id={current_user.id}")
 
-    logger.info("[TRACE /api/organization/workspaces] STEP 2: Querying memberships")
-    logger.info("DB query start")
     try:
-        memberships = db.query(Membership).filter(Membership.user_id == current_user.id).all()
-        logger.info(f"[TRACE /api/organization/workspaces] STEP 2a: Found {len(memberships)} membership(s)")
+        # Subquery for member counts per organization
+        member_counts = (
+            db.query(
+                Membership.organization_id.label("org_id"),
+                func.count(Membership.user_id).label("cnt")
+            )
+            .group_by(Membership.organization_id)
+            .subquery()
+        )
+
+        rows = (
+            db.query(Organization, Membership.role, func.coalesce(member_counts.c.cnt, 1).label("member_count"))
+            .join(Membership, Membership.organization_id == Organization.id)
+            .outerjoin(member_counts, member_counts.c.org_id == Organization.id)
+            .filter(Membership.user_id == current_user.id)
+            .all()
+        )
+
+        result = [
+            {
+                "id": str(org.id),
+                "name": org.name,
+                "slug": org.slug,
+                "role": role,
+                "member_count": int(member_count)
+            }
+            for org, role, member_count in rows
+        ]
+        logger.info(f"[TRACE /api/organization/workspaces] STEP 4: Returning {len(result)} workspace(s)")
+        return result
     except Exception as exc:
-        logger.error(f"[TRACE /api/organization/workspaces] STEP 2 FAILED: {type(exc).__name__}: {exc}", exc_info=True)
+        logger.error(f"[TRACE /api/organization/workspaces] FAILED: {type(exc).__name__}: {exc}", exc_info=True)
         raise
 
-    result = []
-    for i, m in enumerate(memberships):
-        logger.info(f"[TRACE /api/organization/workspaces] STEP 3.{i}: Resolving org_id={m.organization_id}")
-        try:
-            org = db.query(Organization).filter(Organization.id == m.organization_id).first()
-            if org:
-                logger.info(f"[TRACE /api/organization/workspaces] STEP 3.{i}a: Found org name={org.name!r} slug={org.slug!r}")
-                member_count = db.query(Membership).filter(Membership.organization_id == org.id).count()
-                result.append({
-                    "id": str(org.id),
-                    "name": org.name,
-                    "slug": org.slug,
-                    "role": m.role,
-                    "member_count": member_count
-                })
-            else:
-                logger.warning(f"[TRACE /api/organization/workspaces] STEP 3.{i}: Org not found for org_id={m.organization_id} — skipping orphaned membership")
-        except Exception as exc:
-            logger.error(f"[TRACE /api/organization/workspaces] STEP 3.{i} FAILED: {type(exc).__name__}: {exc}", exc_info=True)
-            raise
-
-    logger.info("DB query finish")
-    logger.info(f"[TRACE /api/organization/workspaces] STEP 4: Returning {len(result)} workspace(s)")
-    logger.info("END organization/workspaces")
-    return result
 
 @router.post("/onboard")
 def onboard_workspace(request: OnboardRequest, current_user: Profile = Depends(get_current_user), db: Session = Depends(get_db)):

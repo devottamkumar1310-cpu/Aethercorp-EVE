@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { X, Package, Loader2 } from "lucide-react";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, apiFetch } from "@/lib/api";
+import { getHeaders } from "@/services/businessService";
 import { toast } from "sonner";
 
 interface AddProductModalProps {
@@ -32,15 +33,10 @@ export function AddProductModal({ isOpen, onClose, token, onSuccess }: AddProduc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const activeWorkspace = localStorage.getItem("active_workspace_id");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/inventory/product`, {
+      const res = await apiFetch(`${API_BASE_URL}/api/inventory/product`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-Workspace-Id": activeWorkspace || "",
-        },
+        headers: getHeaders(token, "application/json"),
         body: JSON.stringify(form),
       });
       if (!res.ok) {

@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { CheckCircle2, ShieldCheck, HardDrive, Cpu, RefreshCw, AlertCircle } from "lucide-react";
 
+import { API_BASE_URL, apiFetch } from "@/lib/api";
+
 interface HealthData {
   status: string;
   database: string;
@@ -21,7 +23,7 @@ export default function HealthDashboard() {
 
   const fetchHealth = async () => {
     try {
-      const resp = await fetch("/api/health");
+      const resp = await apiFetch(`${API_BASE_URL}/api/health`);
       if (!resp.ok) {
         throw new Error(`Unable to load platform status.`);
       }
