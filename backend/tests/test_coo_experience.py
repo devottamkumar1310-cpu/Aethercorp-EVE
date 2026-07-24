@@ -1457,3 +1457,75 @@ def test_success_criteria_scenarios():
     assert "Mitigation:" in content4
     assert "Impact:" in content4
 
+
+
+def test_working_capital_query_routes_to_deterministic_formatter():
+    """
+    Regression guard: "Where is my working capital tied up?" must return a
+    SKU-level working-capital breakdown, not the generic executive briefing.
+
+    This shipped broken because format_working_capital was referenced only in a
+    diagnostic print and never actually existed, so the query silently fell
+    through to format_executive_response and produced a Finance-flavoured
+    briefing citing margin_analysis.py.
+    """
+    clear_mock_org()
+    from app.models.product import Product
+    from app.models.inventory import InventoryItem
+    from app.services.ai.executive_formatter import ExecutiveFormatter
+    from app.schemas.executive import ExecutiveSynthesisResult
+
+    db_session = TestingSessionLocal()
+    # 180 units x $120 landed cost, minus a 10-unit safety buffer.
+    prod = Product(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        sku="WC-TEST-001",
+        name="Locked Capital Coat",
+        category="Outerwear",
+        unit_cost=120.0,
+    )
+    db_session.add(prod)
+    db_session.flush()
+    db_session.add(InventoryItem(
+        id=uuid.uuid4(),
+        organization_id=MOCK_ORG_ID,
+        product_id=prod.id,
+        stock_on_hand=180,
+        safety_stock=10,
+        reorder_point=20,
+        lead_time_days=21,
+        avg_daily_sales=0.0,
+    ))
+    db_session.commit()
+    db_session.close()
+
+    db_session = TestingSessionLocal()
+    try:
+        # The formatter itself must surface the SKU and its locked capital.
+        direct = ExecutiveFormatter.format_working_capital(db_session, MOCK_ORG_ID)
+        assert "WC-TEST-001" in direct
+        assert "working capital" in direct.lower()
+
+        # And the dispatcher must actually route the real question to it. This
+        # is the part that was broken: the formatter is useless if nothing calls it.
+        synthesis = ExecutiveSynthesisResult(
+            agent="COO Lead",
+            summary="Generic briefing.",
+            priorities=[],
+            expected_impact="N/A",
+            findings_by_agent={},
+            recommendations_by_agent={},
+            confidence_scores={"Overall": 1.0},
+        )
+        routed = ExecutiveFormatter.format_executive_response(
+            synthesis,
+            "Where is my working capital tied up?",
+            db=db_session,
+            org_id=MOCK_ORG_ID,
+        )
+        assert "WC-TEST-001" in routed, "working capital query did not reach format_working_capital"
+        assert "margin_analysis.py" not in routed
+        assert "Business Health" not in routed
+    finally:
+        db_session.close()

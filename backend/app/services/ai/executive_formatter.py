@@ -307,6 +307,91 @@ class ExecutiveFormatter:
         return output
 
     @classmethod
+    def format_working_capital(cls, db, org_id) -> str:
+        """
+        Answers "where is my working capital tied up" with the SKU-level breakdown.
+
+        Reads the same AnalyticsService.get_inventory_analysis payload as
+        Inventory Intelligence, so the figures quoted here cannot disagree with
+        the Reorder Center.
+        """
+        from app.services.analytics_service import AnalyticsService
+        analysis = AnalyticsService.get_inventory_analysis(db, org_id)
+        items = analysis.get("items_at_risk", [])
+
+        def locked_capital(item) -> float:
+            value = item.get("working_capital_locked", 0.0) or 0.0
+            if value <= 0.0:
+                # Same fallback basis as format_sku_overstock: stock above the
+                # safety buffer, valued at landed unit cost.
+                excess = item.get("stock_on_hand", 0) - item.get("safety_stock", 0)
+                value = max(0.0, excess * item.get("unit_cost", 0.0))
+            return value
+
+        holdings = [(item, locked_capital(item)) for item in items if item.get("stock_on_hand", 0) > 0]
+        holdings = [(item, value) for item, value in holdings if value > 0]
+        holdings.sort(key=lambda pair: pair[1], reverse=True)
+
+        if not holdings:
+            return (
+                "Decision:\n"
+                "No corrective action required.\n\n"
+                "Reason:\n"
+                "No capital is currently locked in excess or slow-moving stock.\n\n"
+                "Impact:\n"
+                "Working capital is fully productive."
+            )
+
+        total_locked = sum(value for _, value in holdings)
+        dead_locked = sum(value for item, value in holdings if item.get("is_dead_stock"))
+        top_item, top_value = holdings[0]
+        top_share = (top_value / total_locked * 100) if total_locked else 0.0
+
+        output = (
+            f"Decision:\n"
+            f"Release capital from SKU {top_item.get('sku')} ({top_item.get('name')}) first.\n\n"
+            f"Reason:\n"
+            f"${total_locked:,.2f} of working capital is tied up in on-hand stock across "
+            f"{len(holdings)} SKU(s). SKU {top_item.get('sku')} alone accounts for "
+            f"${top_value:,.2f} ({top_share:.1f}% of the total).\n\n"
+            f"Impact:\n"
+            f"Clearing the slow-moving portion frees up to ${dead_locked:,.2f} "
+            f"and reduces monthly carrying cost.\n\n"
+        )
+
+        output += "Where Your Capital Is Tied Up\n\n"
+        actions = []
+        for idx, (item, value) in enumerate(holdings[:5], 1):
+            sku_val = item.get("sku")
+            name_val = item.get("name")
+            share = (value / total_locked * 100) if total_locked else 0.0
+            velocity = item.get("avg_daily_sales", 0.0) or 0.0
+
+            if item.get("is_dead_stock") or velocity == 0:
+                status = "Dead stock"
+                action_text = f"Liquidate SKU {sku_val} ({name_val}) to recover ${value:,.2f} in locked capital."
+            elif item.get("days_until_stockout", 0) >= 180:
+                status = "Slow-moving"
+                action_text = f"Discount or bundle SKU {sku_val} ({name_val}) to release ${value:,.2f}."
+            else:
+                status = "Healthy"
+                action_text = f"Hold SKU {sku_val} ({name_val}); capital is turning at an acceptable rate."
+
+            output += (
+                f"{idx}. {name_val}\n"
+                f"   SKU: {sku_val}\n"
+                f"   Capital Locked: ${value:,.2f}\n"
+                f"   Share of Total: {share:.1f}%\n"
+                f"   Stock on Hand: {item.get('stock_on_hand', 0)}\n"
+                f"   Sales Velocity: {velocity:.3f} units/day\n"
+                f"   Status: {status}\n\n"
+            )
+            actions.append(f"- SKU {sku_val}: {action_text}")
+
+        output += "### 💡 Strategic Recommendations\n" + "\n".join(actions)
+        return output
+
+    @classmethod
     def format_sku_reorders(cls, db, org_id) -> str:
         trace_text = cls._format_trace_recommendations(db, org_id, ["low_stock"])
         if trace_text:
@@ -1362,7 +1447,16 @@ class ExecutiveFormatter:
 
         if db is not None and org_id is not None:
             q_clean = re.sub(r'[^\w\s]', '', question).strip().lower() if question else ""
-            if any(k in q_clean for k in ["identify overstock risks", "hurting inventory efficiency"]):
+            # Note: "capital is trapped in slow..." deliberately stays with the
+            # overstock formatter, which the orchestrator already routes it to.
+            if any(k in q_clean for k in [
+                "working capital", "capital tied up", "capital is tied up", "capital tied",
+                "cash is tied up", "cash tied up",
+            ]):
+                res = cls.format_working_capital(db, org_id)
+                if "No corrective action" not in res:
+                    return res
+            elif any(k in q_clean for k in ["identify overstock risks", "hurting inventory efficiency"]):
                 res = cls.format_sku_overstock(db, org_id)
                 if "No slow-moving" not in res:
                     return res
