@@ -88,6 +88,30 @@ def get_health(
     return InternalAnalyticsService.get_platform_health(db)
 
 
+@router.get("/ai")
+def get_ai_analytics(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns AI conversation statistics, prompt counts, and recommendation acceptance rates.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_ai_analytics(db)
+
+
+@router.get("/alerts")
+def get_alerts(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns real-time system alert flags.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_alerts(db)
+
+
 @router.get("/events")
 def get_recent_events(
     limit: int = Query(default=50, ge=1, le=200),

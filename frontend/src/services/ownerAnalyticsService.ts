@@ -5,6 +5,10 @@ export interface OverviewMetrics {
   new_users_24h: number;
   new_users_7d: number;
   new_users_30d: number;
+  active_users_5m: number;
+  active_users_15m: number;
+  active_users_24h: number;
+  retention_d7_pct: number;
   total_organizations: number;
   total_memberships: number;
   demo_workspaces: number;
@@ -21,6 +25,7 @@ export interface UserAnalytics {
     email: string;
     full_name: string | null;
     created_at: string | null;
+    last_active_at: string | null;
     is_active: boolean;
     subscription_status: string;
     plan_type: string;
@@ -30,6 +35,28 @@ export interface UserAnalytics {
     date: string;
     count: number;
   }>;
+}
+
+export interface AIAnalytics {
+  total_conversations: number;
+  total_prompts: number;
+  avg_response_time_ms: number;
+  ai_errors_24h: number;
+  total_recommendation_traces: number;
+  accepted_traces: number;
+  acceptance_rate_pct: number;
+  most_common_workflows: Array<{
+    name: string;
+    share_pct: number;
+  }>;
+}
+
+export interface SystemAlert {
+  id: string;
+  severity: "high" | "medium" | "low";
+  title: string;
+  message: string;
+  action: string;
 }
 
 export interface FeatureUsage {
@@ -43,6 +70,12 @@ export interface FeatureUsage {
 
 export interface PlatformHealth {
   status: string;
+  deployment: {
+    environment: string;
+    cloud_run_revision: string;
+    backend_version: string;
+    frontend_version: string;
+  };
   database: {
     status: string;
     latency_ms: number;
@@ -87,6 +120,22 @@ export const ownerAnalyticsService = {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error(`Failed to fetch user analytics: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getAIAnalytics(token: string): Promise<AIAnalytics> {
+    const res = await apiFetch(`${API_BASE_URL}/api/internal/ai`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`Failed to fetch AI analytics: ${res.statusText}`);
+    return res.json();
+  },
+
+  async getAlerts(token: string): Promise<SystemAlert[]> {
+    const res = await apiFetch(`${API_BASE_URL}/api/internal/alerts`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`Failed to fetch system alerts: ${res.statusText}`);
     return res.json();
   },
 

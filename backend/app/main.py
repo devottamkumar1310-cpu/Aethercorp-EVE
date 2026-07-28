@@ -140,6 +140,8 @@ class SecurityHeadersMiddleware:
         await self.app(scope, receive, send_wrapper)
 
 
+from app.core.internal_analytics_middleware import InternalTelemetryMiddleware
+app.add_middleware(InternalTelemetryMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # 2. Add CORSMiddleware LAST (executes FIRST — intercepts OPTIONS preflights
