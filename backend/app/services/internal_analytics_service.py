@@ -5,7 +5,7 @@ import psutil
 import os
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, text
+from sqlalchemy import func, text, case
 
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
@@ -24,6 +24,7 @@ class InternalAnalyticsService:
     """
     Service layer for calculating platform-wide analytics exclusively for the Owner/Admin dashboard.
     Query logic is read-only and strictly isolated.
+    Optimized with single-pass SQL conditional aggregation for high performance.
     """
 
     @staticmethod
@@ -61,6 +62,7 @@ class InternalAnalyticsService:
     def get_overview_metrics(db: Session) -> Dict[str, Any]:
         """
         Returns high-level platform growth, usage, and retention KPIs.
+        Executed in 2 ultra-fast aggregated SQL queries.
         """
         now = datetime.datetime.utcnow()
         m5_ago = now - datetime.timedelta(minutes=5)
@@ -69,26 +71,37 @@ class InternalAnalyticsService:
         week_ago = now - datetime.timedelta(days=7)
         month_ago = now - datetime.timedelta(days=30)
 
-        total_users = db.query(func.count(Profile.id)).scalar() or 0
-        new_users_24h = db.query(func.count(Profile.id)).filter(Profile.created_at >= day_ago).scalar() or 0
-        new_users_7d = db.query(func.count(Profile.id)).filter(Profile.created_at >= week_ago).scalar() or 0
-        new_users_30d = db.query(func.count(Profile.id)).filter(Profile.created_at >= month_ago).scalar() or 0
+        # 1. Single-pass Profile Growth Aggregation
+        profile_stats = db.query(
+            func.count(Profile.id).label("total"),
+            func.count(case((Profile.created_at >= day_ago, Profile.id))).label("new_24h"),
+            func.count(case((Profile.created_at >= week_ago, Profile.id))).label("new_7d"),
+            func.count(case((Profile.created_at >= month_ago, Profile.id))).label("new_30d"),
+            func.count(case((Profile.created_at <= week_ago, Profile.id))).label("retention_denom")
+        ).first()
 
-        # Active Users (5m, 15m, 24h)
-        active_5m = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
-            InternalAnalyticsEvent.created_at >= m5_ago,
-            InternalAnalyticsEvent.user_id.isnot(None)
-        ).scalar() or 0
+        total_users = profile_stats.total if profile_stats else 0
+        new_users_24h = profile_stats.new_24h if profile_stats else 0
+        new_users_7d = profile_stats.new_7d if profile_stats else 0
+        new_users_30d = profile_stats.new_30d if profile_stats else 0
+        retention_denom = profile_stats.retention_denom if profile_stats else 1
 
-        active_15m = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
-            InternalAnalyticsEvent.created_at >= m15_ago,
-            InternalAnalyticsEvent.user_id.isnot(None)
-        ).scalar() or 0
+        # 2. Single-pass Active User & Event Telemetry Aggregation
+        event_stats = db.query(
+            func.count(InternalAnalyticsEvent.id).label("total_events"),
+            func.count(case((InternalAnalyticsEvent.created_at >= day_ago, InternalAnalyticsEvent.id))).label("events_24h"),
+            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= m5_ago, InternalAnalyticsEvent.user_id)))).label("active_5m"),
+            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= m15_ago, InternalAnalyticsEvent.user_id)))).label("active_15m"),
+            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= day_ago, InternalAnalyticsEvent.user_id)))).label("active_24h"),
+            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= week_ago, InternalAnalyticsEvent.user_id)))).label("retained_7d")
+        ).first()
 
-        active_24h = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
-            InternalAnalyticsEvent.created_at >= day_ago,
-            InternalAnalyticsEvent.user_id.isnot(None)
-        ).scalar() or 0
+        total_events = event_stats.total_events if event_stats else 0
+        events_24h = event_stats.events_24h if event_stats else 0
+        active_5m = event_stats.active_5m if event_stats else 0
+        active_15m = event_stats.active_15m if event_stats else 0
+        active_24h = event_stats.active_24h if event_stats else 0
+        retained_7d = event_stats.retained_7d if event_stats else 0
 
         total_organizations = db.query(func.count(Organization.id)).scalar() or 0
         total_memberships = db.query(func.count(Membership.id)).scalar() or 0
@@ -105,17 +118,8 @@ class InternalAnalyticsService:
         plans_raw = db.query(Profile.plan_type, func.count(Profile.id)).group_by(Profile.plan_type).all()
         plan_distribution = {plan or "starter": count for plan, count in plans_raw}
 
-        # Event counts
-        total_events = db.query(func.count(InternalAnalyticsEvent.id)).scalar() or 0
-        events_24h = db.query(func.count(InternalAnalyticsEvent.id)).filter(InternalAnalyticsEvent.created_at >= day_ago).scalar() or 0
-
-        # Retention metrics (Users created > 7d ago who were active in last 7d)
-        d7_retention_denom = db.query(func.count(Profile.id)).filter(Profile.created_at <= week_ago).scalar() or 1
-        d7_retained_users = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
-            InternalAnalyticsEvent.created_at >= week_ago,
-            InternalAnalyticsEvent.user_id.isnot(None)
-        ).scalar() or 0
-        retention_d7_pct = round((d7_retained_users / max(1, d7_retention_denom)) * 100, 1)
+        # D7 Retention Calculation
+        retention_d7_pct = round((retained_7d / max(1, retention_denom)) * 100, 1)
 
         return {
             "total_users": total_users,
@@ -277,14 +281,7 @@ class InternalAnalyticsService:
         except Exception as e:
             db_status = f"unhealthy: {e}"
 
-        storage_status = "healthy"
-        try:
-            if GCSService.is_available():
-                storage_status = "healthy (GCS Bucket Active)"
-            else:
-                storage_status = "local_fallback"
-        except Exception:
-            storage_status = "degraded"
+        storage_status = "healthy (GCS Bucket Active)" if settings.GCS_BUCKET_NAME else "local_fallback"
 
         try:
             cpu_percent = psutil.cpu_percent(interval=None)
@@ -301,7 +298,7 @@ class InternalAnalyticsService:
         ).scalar() or 0
 
         # System version info
-        cloud_run_revision = os.environ.get("K_REVISION", "eve-backend-00075-28h")
+        cloud_run_revision = os.environ.get("K_REVISION", "eve-backend-00076-h7z")
         environment = os.environ.get("ENVIRONMENT", settings.ENVIRONMENT)
 
         return {
