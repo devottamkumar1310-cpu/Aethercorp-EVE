@@ -23,6 +23,10 @@ export async function GET(request: Request) {
   // 2. If code exists, attempt PKCE code-to-session exchange
   if (code) {
     const cookieStore = await cookies()
+
+    // Track cookies that need to be written onto the response
+    const cookiesToForward: { name: string; value: string; options: Record<string, unknown> }[] = []
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -32,30 +36,34 @@ export async function GET(request: Request) {
             return cookieStore.getAll()
           },
           setAll(cookiesToSet) {
+            // Write cookies into the cookie store AND capture them for the response
             try {
-              cookiesToSet.forEach(({ name, value, options }) =>
+              cookiesToSet.forEach(({ name, value, options }) => {
                 cookieStore.set(name, value, options)
-              )
+                cookiesToForward.push({ name, value, options: options ?? {} })
+              })
             } catch (e) {
-              logger.warn("[AUTH CALLBACK] Cookie set error in server environment:", e)
+              // In a Route Handler context this is always allowed; log any
+              // unexpected errors without crashing the callback.
+              logger.warn("[AUTH CALLBACK] Cookie set error:", e)
             }
           },
         },
       }
     )
-    
+
     devLog(`[AUTH CALLBACK] [EXCHANGE] Exchanging code for session...`)
     const t0 = performance.now();
-    
-    // We can extract session directly from the exchange result instead of calling getSession() again.
+
     const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
-    
+
     if (exchangeError) {
       logger.error(`[AUTH CALLBACK] [ERROR] exchangeCodeForSession failed:`, exchangeError)
       return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(exchangeError.message)}`)
     }
-    const session = exchangeData?.session;
-    devLog(`[AUTH CALLBACK] [SUCCESS] Session created: ${!!session}`)
+
+    const session = exchangeData?.session;
+    devLog(`[AUTH CALLBACK] [SUCCESS] Session created: ${!!session}, cookies to forward: ${cookiesToForward.length}`)
 
     // Sync with backend immediately after OAuth code exchange
     try {
@@ -74,11 +82,22 @@ export async function GET(request: Request) {
       logger.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
     }
 
-    devLog(`[AUTH CALLBACK] [REDIRECT] Exchange successful.`)
-    return NextResponse.redirect(`${origin}${next}`)
+    // Build redirect response and forward all session cookies set during the
+    // code exchange. This is critical: without explicitly copying the cookies
+    // onto the NextResponse the browser never receives the auth token cookies
+    // and every subsequent request appears unauthenticated.
+    const redirectUrl = `${origin}${next}`
+    devLog(`[AUTH CALLBACK] [REDIRECT] Redirecting to: ${redirectUrl}`)
+    const response = NextResponse.redirect(redirectUrl)
+
+    for (const { name, value, options } of cookiesToForward) {
+      response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
+    }
+
+    return response
   }
 
-  // 3. Fallback if no code or error parameters are found in query parameters
-  logger.warn(`[AUTH CALLBACK] [WARNING] Request received without 'code' or 'error' parameters. Checking for hash fragments...`)
-  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent("Missing authorization code in link parameters")}`)
+  // 3. Fallback if no code or error parameters are found
+  logger.warn(`[AUTH CALLBACK] [WARNING] Request received without 'code' or 'error' parameters.`)
+  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent("Missing authorization code in callback URL")}`)
 }
