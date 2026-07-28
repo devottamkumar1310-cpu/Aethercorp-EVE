@@ -9,7 +9,7 @@ import app.models
 from app.main import app
 from app.database import Base, get_db
 from app.models.profile import Profile
-from app.core.security import get_current_user
+from app.core.security import verify_supabase_token
 
 # Test DB Setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -38,15 +38,10 @@ def test_internal_analytics_forbidden_for_non_admin():
     """
     Verifies that a non-admin account requesting /api/internal/overview receives HTTP 403 Forbidden.
     """
-    non_admin = Profile(
-        id=uuid.uuid4(),
-        email="regular_user_test@example.com",
-        hashed_password="hashed_test_pass",
-        full_name="Regular User",
-        plan_type="starter"
-    )
-
-    app.dependency_overrides[get_current_user] = lambda: non_admin
+    app.dependency_overrides[verify_supabase_token] = lambda: {
+        "sub": "00000000-0000-0000-0000-000000000099",
+        "email": "regular_user_test@example.com"
+    }
 
     response = client.get("/api/internal/overview")
     assert response.status_code == 403
@@ -58,15 +53,10 @@ def test_internal_analytics_allowed_for_owner_email():
     """
     Verifies that the owner admin email receives HTTP 200 OK and valid telemetry JSON.
     """
-    owner = Profile(
-        id=uuid.uuid4(),
-        email="devottamkumar1310@gmail.com",
-        hashed_password="hashed_test_pass",
-        full_name="Owner Admin",
-        plan_type="enterprise"
-    )
-
-    app.dependency_overrides[get_current_user] = lambda: owner
+    app.dependency_overrides[verify_supabase_token] = lambda: {
+        "sub": "00000000-0000-0000-0000-000000000001",
+        "email": "devottamkumar1310@gmail.com"
+    }
 
     response = client.get("/api/internal/overview")
     assert response.status_code == 200

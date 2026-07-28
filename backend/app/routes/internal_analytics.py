@@ -1,42 +1,58 @@
 import os
+import uuid
 import logging
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.core.security import get_current_user
+from app.core.security import verify_supabase_token
 from app.models.profile import Profile
-from app.models.organization import Membership
 from app.services.internal_analytics_service import InternalAnalyticsService
+from app.config import settings
 
 logger = logging.getLogger("eve.routes.internal_analytics")
 
 router = APIRouter(prefix="/api/internal", tags=["internal_analytics"])
 
 
-from app.config import settings
-
 def verify_owner_admin(
-    current_user: Profile = Depends(get_current_user),
+    payload: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ) -> Profile:
     """
     Strict security dependency for internal owner analytics.
-    Only allows the configured single owner account (default: devottamkumar1310@gmail.com).
+    Evaluates the cryptographically verified JWT payload email against OWNER_EMAIL.
+    Only allows the single configured owner account (devottamkumar1310@gmail.com).
     Raises HTTP 403 Forbidden for all non-owner users.
     Never relies on localStorage, cookies, client headers, or query params.
     """
     owner_email = (os.environ.get("OWNER_EMAIL") or settings.OWNER_EMAIL).strip().lower()
+    jwt_email = (payload.get("email") or "").strip().lower()
 
-    if not current_user.email or current_user.email.strip().lower() != owner_email:
-        logger.warning(f"[SECURITY ALERT] Unauthorized access attempt to /api/internal by user email '{current_user.email}' (id={current_user.id}). Required owner: '{owner_email}'.")
+    if not jwt_email or jwt_email != owner_email:
+        logger.warning(f"[SECURITY ALERT] Unauthorized access attempt to /api/internal by email '{jwt_email}'. Required owner: '{owner_email}'.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Owner privileges required."
         )
 
-    return current_user
+    user_id_str = payload.get("sub")
+    if user_id_str:
+        try:
+            user_id = uuid.UUID(user_id_str)
+            profile = db.query(Profile).filter(Profile.id == user_id).first()
+            if profile:
+                return profile
+        except Exception as e:
+            logger.warning(f"Owner profile DB lookup exception: {e}")
+
+    return Profile(
+        id=uuid.UUID(user_id_str) if user_id_str else uuid.uuid4(),
+        email=owner_email,
+        full_name="Owner Admin",
+        is_active=True
+    )
 
 
 @router.get("/overview")

@@ -5,7 +5,7 @@ import psutil
 import os
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, text, case
+from sqlalchemy import func, text
 
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
@@ -14,7 +14,6 @@ from app.models.executive_conversation import ExecutiveConversation, ExecutiveMe
 from app.models.memory import ChatMessage
 from app.models.recommendation_trace import RecommendationTrace
 from app.models.ai_recommendation import AIRecommendation
-from app.services.gcs_service import GCSService
 from app.config import settings
 
 logger = logging.getLogger("eve.services.internal_analytics")
@@ -24,7 +23,7 @@ class InternalAnalyticsService:
     """
     Service layer for calculating platform-wide analytics exclusively for the Owner/Admin dashboard.
     Query logic is read-only and strictly isolated.
-    Optimized with single-pass SQL conditional aggregation for high performance.
+    Clean, robust SQLAlchemy queries compatible across PostgreSQL and SQLite environments.
     """
 
     @staticmethod
@@ -62,7 +61,7 @@ class InternalAnalyticsService:
     def get_overview_metrics(db: Session) -> Dict[str, Any]:
         """
         Returns high-level platform growth, usage, and retention KPIs.
-        Executed in 2 ultra-fast aggregated SQL queries.
+        Executed in robust, clean SQLAlchemy queries.
         """
         now = datetime.datetime.utcnow()
         m5_ago = now - datetime.timedelta(minutes=5)
@@ -71,37 +70,36 @@ class InternalAnalyticsService:
         week_ago = now - datetime.timedelta(days=7)
         month_ago = now - datetime.timedelta(days=30)
 
-        # 1. Single-pass Profile Growth Aggregation
-        profile_stats = db.query(
-            func.count(Profile.id).label("total"),
-            func.count(case((Profile.created_at >= day_ago, Profile.id))).label("new_24h"),
-            func.count(case((Profile.created_at >= week_ago, Profile.id))).label("new_7d"),
-            func.count(case((Profile.created_at >= month_ago, Profile.id))).label("new_30d"),
-            func.count(case((Profile.created_at <= week_ago, Profile.id))).label("retention_denom")
-        ).first()
+        # Profile counts
+        total_users = db.query(func.count(Profile.id)).scalar() or 0
+        new_users_24h = db.query(func.count(Profile.id)).filter(Profile.created_at >= day_ago).scalar() or 0
+        new_users_7d = db.query(func.count(Profile.id)).filter(Profile.created_at >= week_ago).scalar() or 0
+        new_users_30d = db.query(func.count(Profile.id)).filter(Profile.created_at >= month_ago).scalar() or 0
+        retention_denom = db.query(func.count(Profile.id)).filter(Profile.created_at <= week_ago).scalar() or 1
 
-        total_users = profile_stats.total if profile_stats else 0
-        new_users_24h = profile_stats.new_24h if profile_stats else 0
-        new_users_7d = profile_stats.new_7d if profile_stats else 0
-        new_users_30d = profile_stats.new_30d if profile_stats else 0
-        retention_denom = profile_stats.retention_denom if profile_stats else 1
+        # Event & Active User Telemetry
+        total_events = db.query(func.count(InternalAnalyticsEvent.id)).scalar() or 0
+        events_24h = db.query(func.count(InternalAnalyticsEvent.id)).filter(InternalAnalyticsEvent.created_at >= day_ago).scalar() or 0
 
-        # 2. Single-pass Active User & Event Telemetry Aggregation
-        event_stats = db.query(
-            func.count(InternalAnalyticsEvent.id).label("total_events"),
-            func.count(case((InternalAnalyticsEvent.created_at >= day_ago, InternalAnalyticsEvent.id))).label("events_24h"),
-            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= m5_ago, InternalAnalyticsEvent.user_id)))).label("active_5m"),
-            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= m15_ago, InternalAnalyticsEvent.user_id)))).label("active_15m"),
-            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= day_ago, InternalAnalyticsEvent.user_id)))).label("active_24h"),
-            func.count(func.distinct(case((InternalAnalyticsEvent.created_at >= week_ago, InternalAnalyticsEvent.user_id)))).label("retained_7d")
-        ).first()
+        active_5m = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
+            InternalAnalyticsEvent.created_at >= m5_ago,
+            InternalAnalyticsEvent.user_id.isnot(None)
+        ).scalar() or 0
 
-        total_events = event_stats.total_events if event_stats else 0
-        events_24h = event_stats.events_24h if event_stats else 0
-        active_5m = event_stats.active_5m if event_stats else 0
-        active_15m = event_stats.active_15m if event_stats else 0
-        active_24h = event_stats.active_24h if event_stats else 0
-        retained_7d = event_stats.retained_7d if event_stats else 0
+        active_15m = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
+            InternalAnalyticsEvent.created_at >= m15_ago,
+            InternalAnalyticsEvent.user_id.isnot(None)
+        ).scalar() or 0
+
+        active_24h = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
+            InternalAnalyticsEvent.created_at >= day_ago,
+            InternalAnalyticsEvent.user_id.isnot(None)
+        ).scalar() or 0
+
+        retained_7d = db.query(func.count(func.distinct(InternalAnalyticsEvent.user_id))).filter(
+            InternalAnalyticsEvent.created_at >= week_ago,
+            InternalAnalyticsEvent.user_id.isnot(None)
+        ).scalar() or 0
 
         total_organizations = db.query(func.count(Organization.id)).scalar() or 0
         total_memberships = db.query(func.count(Membership.id)).scalar() or 0
@@ -213,7 +211,7 @@ class InternalAnalyticsService:
         # Recommendation acceptance rate
         total_traces = db.query(func.count(RecommendationTrace.id)).scalar() or 0
         accepted_traces = db.query(func.count(RecommendationTrace.id)).filter(
-            RecommendationTrace.user_action.in_(["accepted", "applied", "executed"])
+            RecommendationTrace.status.in_(["Accepted", "Reviewed", "Completed"])
         ).scalar() or 0
 
         acceptance_rate_pct = round((accepted_traces / max(1, total_traces)) * 100, 1) if total_traces > 0 else 100.0
@@ -298,7 +296,7 @@ class InternalAnalyticsService:
         ).scalar() or 0
 
         # System version info
-        cloud_run_revision = os.environ.get("K_REVISION", "eve-backend-00076-h7z")
+        cloud_run_revision = os.environ.get("K_REVISION", "eve-backend-00077-xrn")
         environment = os.environ.get("ENVIRONMENT", settings.ENVIRONMENT)
 
         return {

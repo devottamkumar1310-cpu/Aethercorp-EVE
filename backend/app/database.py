@@ -26,9 +26,9 @@ engine_args = {}
 if database_url.startswith("sqlite"):
     engine_args["connect_args"] = {"check_same_thread": False}
 else:
-    # Postgres specific connection pool limits
-    engine_args["pool_size"] = 20
-    engine_args["max_overflow"] = 10
+    # Postgres specific connection pool limits (Tuned for Supabase session mode limit)
+    engine_args["pool_size"] = 5
+    engine_args["max_overflow"] = 5
     # pool_pre_ping: validate connection health before checkout.
     # Eliminates 'idle in transaction' sessions that have been
     # abandoned by a previous request but not yet returned/closed.
