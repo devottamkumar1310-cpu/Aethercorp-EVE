@@ -103,63 +103,76 @@ export interface InternalEvent {
   created_at: string | null;
 }
 
+async function handleResponse<T>(res: Response, endpointName: string): Promise<T> {
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const json = await res.json();
+      detail = json.detail || json.message || "";
+    } catch {
+      // Ignore JSON parse failure
+    }
+
+    if (res.status === 403) {
+      throw new Error(detail || "Access Denied: Owner privileges required (HTTP 403).");
+    }
+    if (res.status === 401) {
+      throw new Error(detail || "Session Expired: Please log in again (HTTP 401).");
+    }
+
+    const statusFallback = res.statusText ? `HTTP ${res.status} ${res.statusText}` : `HTTP ${res.status} Error`;
+    throw new Error(detail || `Failed to fetch ${endpointName}: ${statusFallback}`);
+  }
+  return res.json();
+}
+
 export const ownerAnalyticsService = {
   async getOverview(token: string): Promise<OverviewMetrics> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/overview`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) {
-      if (res.status === 403) throw new Error("Access Denied: Owner privileges required.");
-      throw new Error(`Failed to fetch overview: ${res.statusText}`);
-    }
-    return res.json();
+    return handleResponse<OverviewMetrics>(res, "overview");
   },
 
   async getUsers(token: string, limit = 50): Promise<UserAnalytics> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/users?limit=${limit}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Failed to fetch user analytics: ${res.statusText}`);
-    return res.json();
+    return handleResponse<UserAnalytics>(res, "user analytics");
   },
 
   async getAIAnalytics(token: string): Promise<AIAnalytics> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/ai`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Failed to fetch AI analytics: ${res.statusText}`);
-    return res.json();
+    return handleResponse<AIAnalytics>(res, "AI analytics");
   },
 
   async getAlerts(token: string): Promise<SystemAlert[]> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/alerts`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Failed to fetch system alerts: ${res.statusText}`);
-    return res.json();
+    return handleResponse<SystemAlert[]>(res, "system alerts");
   },
 
   async getFeatureUsage(token: string): Promise<FeatureUsage> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/feature-usage`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Failed to fetch feature usage: ${res.statusText}`);
-    return res.json();
+    return handleResponse<FeatureUsage>(res, "feature usage");
   },
 
   async getHealth(token: string): Promise<PlatformHealth> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/health`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Failed to fetch platform health: ${res.statusText}`);
-    return res.json();
+    return handleResponse<PlatformHealth>(res, "platform health");
   },
 
   async getEvents(token: string, limit = 50): Promise<InternalEvent[]> {
     const res = await apiFetch(`${API_BASE_URL}/api/internal/events?limit=${limit}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) throw new Error(`Failed to fetch internal events: ${res.statusText}`);
-    return res.json();
+    return handleResponse<InternalEvent[]>(res, "recent events");
   },
 };

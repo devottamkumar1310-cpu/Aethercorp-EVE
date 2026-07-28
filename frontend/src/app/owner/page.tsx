@@ -32,7 +32,6 @@ import {
   PieChart,
   AlertTriangle,
   Inbox,
-  Sparkles,
 } from "lucide-react";
 
 export default function OwnerAnalyticsPage() {
@@ -103,12 +102,12 @@ export default function OwnerAnalyticsPage() {
     fetchAllData();
   }, [fetchAllData]);
 
-  // Initial Full Loading Experience (Skeleton cards)
+  // Initial Full Loading Experience (Light Skeleton cards)
   if (loading && !overview) {
     return <OwnerDashboardSkeleton />;
   }
 
-  // Initial Error State (Dedicated Component)
+  // Initial Error State (Dedicated Light Component)
   if (error && !overview) {
     return (
       <div className="py-12">
@@ -124,20 +123,20 @@ export default function OwnerAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Executive Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800/80 pb-6">
+    <div className="space-y-8 pb-12 font-sans">
+      {/* Executive Header Bar (Light Mode) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
           <div className="flex items-center space-x-3">
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              Owner Executive Telemetry <ShieldCheck className="h-6 w-6 text-amber-400" />
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+              Owner Executive Telemetry <ShieldCheck className="h-6 w-6 text-amber-600" />
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] font-mono font-bold text-amber-400 uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-[10px] font-mono font-bold text-amber-900 uppercase tracking-wider">
               Platform Admin
             </span>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Live active users, AI performance, system health, and production security telemetry.
+          <p className="text-xs text-slate-500 font-mono mt-1">
+            Real-time active users, AI performance, system health, and production security telemetry.
           </p>
         </div>
 
@@ -150,7 +149,7 @@ export default function OwnerAnalyticsPage() {
           <button
             onClick={() => fetchAllData(true)}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-all font-mono text-xs font-semibold shadow-lg shadow-amber-500/5 active:scale-95"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all font-mono text-xs font-bold shadow-sm active:scale-95"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
             {refreshing ? "Refreshing..." : "Refresh Telemetry"}
@@ -158,16 +157,16 @@ export default function OwnerAnalyticsPage() {
         </div>
       </div>
 
-      {/* Non-Blocking Warning Toast (Data Resilience) */}
+      {/* Non-Blocking Warning Toast (Light Mode) */}
       {warningMessage && (
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono flex items-center justify-between backdrop-blur-xl">
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-2.5">
-            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
             <span>{warningMessage}</span>
           </div>
           <button
             onClick={() => fetchAllData(true)}
-            className="underline hover:text-white font-bold ml-4"
+            className="underline hover:text-amber-950 font-bold ml-4"
           >
             Retry Now
           </button>
@@ -186,7 +185,6 @@ export default function OwnerAnalyticsPage() {
           changeBadge={`${overview?.retention_d7_pct ?? 100}% D7 Retention`}
           badgeType="success"
           icon={Users}
-          gradient="from-amber-500/15 to-orange-500/5"
         />
 
         <OwnerMetricCard
@@ -196,7 +194,6 @@ export default function OwnerAnalyticsPage() {
           changeBadge="Online Stream"
           badgeType="success"
           icon={Radio}
-          gradient="from-emerald-500/15 to-teal-500/5"
         />
 
         <OwnerMetricCard
@@ -206,7 +203,6 @@ export default function OwnerAnalyticsPage() {
           changeBadge={`${overview?.total_memberships ?? 0} memberships`}
           badgeType="neutral"
           icon={Building2}
-          gradient="from-sky-500/15 to-blue-500/5"
         />
 
         <OwnerMetricCard
@@ -216,7 +212,6 @@ export default function OwnerAnalyticsPage() {
           changeBadge="Active Stream"
           badgeType="warning"
           icon={Activity}
-          gradient="from-purple-500/15 to-pink-500/5"
         />
       </div>
 
@@ -229,47 +224,47 @@ export default function OwnerAnalyticsPage() {
       {/* User Adoption, Active Users & Top Features */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* User Signups & Last Activity List */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-2xl space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-amber-400" /> User Accounts & Activity Timestamps
+        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <UserPlus className="h-4 w-4 text-amber-600" /> User Accounts & Activity Timestamps
             </h3>
-            <span className="text-xs font-mono text-slate-400">Latest accounts</span>
+            <span className="text-xs font-mono text-slate-500">Latest accounts</span>
           </div>
 
           {!userAnalytics?.users || userAnalytics.users.length === 0 ? (
             <div className="py-8 text-center space-y-2 font-mono text-xs text-slate-500">
-              <Inbox className="h-8 w-8 mx-auto text-slate-600" />
+              <Inbox className="h-8 w-8 mx-auto text-slate-400" />
               <p>No user account telemetry has been recorded yet.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-mono">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
-                    <th className="pb-2.5 px-2">User Email</th>
-                    <th className="pb-2.5 px-2">Plan</th>
-                    <th className="pb-2.5 px-2">Registered</th>
-                    <th className="pb-2.5 px-2">Last Active</th>
-                    <th className="pb-2.5 px-2 text-right">Orgs</th>
+                  <tr className="border-b border-slate-200 text-slate-500 uppercase text-[10px] bg-slate-50">
+                    <th className="py-2.5 px-3">User Email</th>
+                    <th className="py-2.5 px-3">Plan</th>
+                    <th className="py-2.5 px-3">Registered</th>
+                    <th className="py-2.5 px-3">Last Active</th>
+                    <th className="py-2.5 px-3 text-right">Orgs</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/40 text-slate-300">
+                <tbody className="divide-y divide-slate-100 text-slate-700">
                   {userAnalytics.users.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-2.5 px-2 text-white font-medium">{u.email}</td>
-                      <td className="py-2.5 px-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-amber-300 border border-slate-700 capitalize font-bold">
+                    <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-2.5 px-3 text-slate-900 font-medium">{u.email}</td>
+                      <td className="py-2.5 px-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-900 border border-amber-200 capitalize font-bold">
                           {u.plan_type}
                         </span>
                       </td>
-                      <td className="py-2.5 px-2 text-slate-400">
+                      <td className="py-2.5 px-3 text-slate-500">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString() : "-"}
                       </td>
-                      <td className="py-2.5 px-2 text-slate-400">
+                      <td className="py-2.5 px-3 text-slate-500">
                         {u.last_active_at ? new Date(u.last_active_at).toLocaleTimeString() : "Never"}
                       </td>
-                      <td className="py-2.5 px-2 text-right text-slate-300">{u.organizations_count}</td>
+                      <td className="py-2.5 px-3 text-right text-slate-700 font-semibold">{u.organizations_count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -279,29 +274,29 @@ export default function OwnerAnalyticsPage() {
         </div>
 
         {/* Top API Endpoints & Latencies */}
-        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 backdrop-blur-2xl space-y-4 shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-              <PieChart className="h-4 w-4 text-sky-400" /> Top Endpoints & Latency
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <PieChart className="h-4 w-4 text-sky-600" /> Top Endpoints & Latency
             </h3>
           </div>
 
           {!featureUsage?.top_endpoints || featureUsage.top_endpoints.length === 0 ? (
             <div className="py-8 text-center space-y-2 font-mono text-xs text-slate-500">
-              <Inbox className="h-8 w-8 mx-auto text-slate-600" />
+              <Inbox className="h-8 w-8 mx-auto text-slate-400" />
               <p>No telemetry has been collected yet.</p>
             </div>
           ) : (
             <div className="space-y-3 pt-1">
               {featureUsage.top_endpoints.slice(0, 6).map((ep) => (
-                <div key={ep.endpoint} className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/60 space-y-1 font-mono hover:border-slate-700 transition-colors">
+                <div key={ep.endpoint} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1 font-mono hover:bg-slate-100/80 transition-colors">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-200 truncate max-w-[160px]">{ep.endpoint}</span>
-                    <span className="text-emerald-400 font-bold">{ep.avg_latency_ms} ms</span>
+                    <span className="text-slate-900 font-medium truncate max-w-[160px]">{ep.endpoint}</span>
+                    <span className="text-emerald-700 font-bold">{ep.avg_latency_ms} ms</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-slate-500">
                     <span>Calls recorded: {ep.count}</span>
-                    <span className="capitalize text-slate-400">P95: ~{Math.round(ep.avg_latency_ms * 1.3)}ms</span>
+                    <span className="capitalize text-slate-600">P95: ~{Math.round(ep.avg_latency_ms * 1.3)}ms</span>
                   </div>
                 </div>
               ))}
