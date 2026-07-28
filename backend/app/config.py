@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     FOUNDER_MODE: bool = True
+    OWNER_EMAIL: str = "devottamkumar1310@gmail.com"
 
     def __init__(self, **values):
         super().__init__(**values)

@@ -15,31 +15,25 @@ logger = logging.getLogger("eve.routes.internal_analytics")
 router = APIRouter(prefix="/api/internal", tags=["internal_analytics"])
 
 
+from app.config import settings
+
 def verify_owner_admin(
     current_user: Profile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ) -> Profile:
     """
     Strict security dependency for internal owner analytics.
-    Only allows designated owner emails or members with owner/admin privileges.
-    Raises HTTP 403 Forbidden for non-admin users.
+    Only allows the configured single owner account (default: devottamkumar1310@gmail.com).
+    Raises HTTP 403 Forbidden for all non-owner users.
+    Never relies on localStorage, cookies, client headers, or query params.
     """
-    default_owners = "devottamkumar1310@gmail.com,devottamkumar1310-cpu@gmail.com,admin@aethercorp.com"
-    allowed_emails_raw = os.environ.get("OWNER_ADMIN_EMAILS", default_owners)
-    allowed_emails = [e.strip().lower() for e in allowed_emails_raw.split(",") if e.strip()]
+    owner_email = (os.environ.get("OWNER_EMAIL") or settings.OWNER_EMAIL).strip().lower()
 
-    is_owner_email = current_user.email.lower() in allowed_emails
-
-    has_admin_membership = db.query(Membership).filter(
-        Membership.user_id == current_user.id,
-        Membership.role.in_(["owner", "admin"])
-    ).first() is not None
-
-    if not (is_owner_email or has_admin_membership):
-        logger.warn(f"[SECURITY ALERT] Non-owner user {current_user.email} (id={current_user.id}) attempted to access /api/internal routes.")
+    if not current_user.email or current_user.email.strip().lower() != owner_email:
+        logger.warning(f"[SECURITY ALERT] Unauthorized access attempt to /api/internal by user email '{current_user.email}' (id={current_user.id}). Required owner: '{owner_email}'.")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Owner/Admin privileges required."
+            detail="Access denied. Owner privileges required."
         )
 
     return current_user
