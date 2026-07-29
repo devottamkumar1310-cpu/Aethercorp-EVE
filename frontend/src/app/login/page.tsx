@@ -79,7 +79,7 @@ function LoginForm() {
             <Sparkles className="h-3.5 w-3.5 text-[color:var(--eve-accent)]" /> EVE Portal Access
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Welcome Back</h1>
-          <p className="text-xs text-muted-foreground">Sign in to your Executive Operating System</p>
+          <p className="text-xs text-muted-foreground">Sign in to your inventory workspace</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -184,7 +184,7 @@ function LoginForm() {
           <p className="text-xs text-muted-foreground">
             Don't have an account?{" "}
             <Link href="/signup" className="font-bold text-[color:var(--eve-accent)] hover:underline transition-colors">
-              Start Free Trial
+              Start free trial
             </Link>
           </p>
         </div>

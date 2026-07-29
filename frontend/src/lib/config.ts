@@ -23,11 +23,15 @@ export const POSITIONING = {
 } as const;
 
 /**
- * Demo booking. Replace with your real Cal.com (or Calendly) link.
- * Set NEXT_PUBLIC_BOOKING_URL in Vercel to override without a deploy.
+ * Demo booking. Set NEXT_PUBLIC_BOOKING_URL to your real Cal.com/Calendly
+ * link — it can be changed in Vercel without a deploy.
+ *
+ * There is deliberately NO placeholder fallback. A hardcoded default shipped a
+ * link that 404'd on every page, which is worse than no button at all: it
+ * burns the highest-intent click in the funnel. When unset, BookDemoButton
+ * falls back to a mailto so the CTA still reaches a human.
  */
-export const BOOKING_URL =
-  process.env.NEXT_PUBLIC_BOOKING_URL || "https://cal.com/eve-inventory/15min";
+export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || "";
 
 export const BOOKING_CTA = "Book a 15-min inventory teardown";
 

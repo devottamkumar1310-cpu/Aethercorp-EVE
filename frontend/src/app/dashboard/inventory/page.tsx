@@ -427,9 +427,14 @@ export default function InventoryDashboardPage() {
           <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-4 text-left">
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">
               <div className="h-8 w-8 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 rounded-lg flex items-center justify-center font-bold text-sm">1</div>
-              <h4 className="font-bold text-foreground text-sm">Upload Stock Data</h4>
+              <h4 className="font-bold text-foreground text-sm">Upload your Shopify export</h4>
+              {/* One path, not two. Offering "Shopify export OR our template"
+                  presented two incompatible schemas as equivalent choices and
+                  stalled users at the single most important step. The template
+                  remains available as a fallback below. */}
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Export your products from Shopify or download our template, and upload the CSV here.
+                Shopify admin &rarr; Products &rarr; Export. Upload the file exactly as it
+                downloads — no editing, no renaming columns.
               </p>
             </div>
             <div className="p-5 bg-card border border-border rounded-2xl space-y-2">

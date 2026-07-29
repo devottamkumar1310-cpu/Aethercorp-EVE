@@ -93,7 +93,20 @@ function VerifyEmailForm() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Verify Your Email</h1>
           <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
-            We sent a verification link to <span className="font-semibold text-foreground">{email || "your registered email"}</span>. Please check your inbox and confirm.
+            We sent a verification link to <span className="font-semibold text-foreground">{email || "your registered email"}</span>. Click it and you&apos;ll land straight in your workspace.
+            {/* Two additions from the audit: this screen previously offered no
+                escape from a typo'd address and no spam hint, making it a hard
+                stop between signup and any value. */}
+            <span className="block mt-3 text-xs text-muted-foreground">
+              Not there in a minute? Check spam — it arrives from Supabase, not from eveinventory.in.
+            </span>
+            <span className="block mt-2 text-xs text-muted-foreground">
+              Wrong address?{" "}
+              <Link href="/signup" className="font-semibold text-[color:var(--eve-accent)] hover:underline">
+                Sign up again with the right one
+              </Link>
+              .
+            </span>
           </p>
         </div>
 

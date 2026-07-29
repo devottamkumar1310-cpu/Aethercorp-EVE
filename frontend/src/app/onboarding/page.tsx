@@ -279,26 +279,20 @@ export default function OnboardingPage() {
           </div>
 
           {/* Custom Brand Workspace Setup */}
+          {/* Creating an empty workspace here was a guaranteed non-activation:
+              the user landed on a dashboard with nothing in it and no insight
+              to react to. It is now a de-emphasised text link rather than a
+              card of equal weight to the demo brands, and it names the work it
+              requires so the choice is informed. Workspace creation also
+              remains available in Settings. */}
           {!showManualForm ? (
             <button
               onClick={() => setShowManualForm(true)}
               disabled={loading || loadingDemo}
-              aria-label="Configure a blank workspace with your own data"
-              className="w-full text-left p-4 bg-background border border-border hover:border-border rounded-xl transition-all group cursor-pointer"
+              aria-label="Start with an empty workspace and upload your own Shopify export"
+              className="w-full text-center py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-secondary text-muted-foreground rounded-xl group-hover:bg-secondary group-hover:text-foreground transition-colors shrink-0">
-                  <Building2 size={20} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-foreground transition-colors">
-                    Configure Blank Workspace
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                    Start clean. Create a fresh organization environment and upload your brand's sales CSVs and inventory records.
-                  </p>
-                </div>
-              </div>
+              Or start empty and upload your own Shopify export &rarr;
             </button>
           ) : (
             <form onSubmit={handleCreateWorkspace} className="p-5 bg-background border border-border rounded-xl space-y-4 animate-fade-in">

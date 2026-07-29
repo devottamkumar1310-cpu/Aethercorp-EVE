@@ -28,9 +28,9 @@ export function AuthShell({ children }: AuthShellProps) {
             <div className="flex flex-col">
               <span className="text-base font-extrabold tracking-tight text-foreground flex items-center gap-1.5">
                 EVE
-                <span className="chip chip-accent text-[10px] font-semibold px-2 py-0.5">OS 2.0</span>
+                
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Executive Operating System</span>
+              <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Inventory Intelligence for Shopify Fashion Brands</span>
             </div>
           </Link>
 
@@ -45,7 +45,7 @@ export function AuthShell({ children }: AuthShellProps) {
               href="/signup"
               className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md"
             >
-              Start Free Trial
+              Start free trial
             </Link>
           </div>
         </div>

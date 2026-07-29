@@ -695,7 +695,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <div className={`flex flex-col min-w-0 animate-fade-in ${isSidebarCollapsed ? "md:hidden block" : "block"}`}>
             <span className="font-semibold text-foreground text-sm tracking-tight leading-none">EVE</span>
-            <span className="text-[10px] text-muted-foreground font-medium tracking-wide mt-1 leading-none">Executive Operating System</span>
+            <span className="text-[10px] text-muted-foreground font-medium tracking-wide mt-1 leading-none">Inventory Intelligence</span>
           </div>
           
           <button

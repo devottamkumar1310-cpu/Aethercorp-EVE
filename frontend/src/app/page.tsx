@@ -132,17 +132,17 @@ export default function LandingPage() {
             <div className="flex flex-col">
               <span className="text-base font-extrabold tracking-tight text-foreground flex items-center gap-1.5">
                 EVE
-                <span className="chip chip-accent text-[10px] font-semibold px-2 py-0.5">OS 2.0</span>
+                
               </span>
-              <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Executive Operating System</span>
+              <span className="text-[10px] text-muted-foreground font-medium hidden sm:inline">Inventory Intelligence for Shopify Fashion Brands</span>
             </div>
           </Link>
 
           {/* Desktop Navigation Links */}
           <nav aria-label="Primary" className="hidden md:flex items-center gap-8 text-xs font-semibold text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Capabilities</a>
-            <a href="#traceability" className="hover:text-foreground transition-colors">Decision Traceability</a>
-            <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
+            <a href="#features" className="hover:text-foreground transition-colors">What it does</a>
+            <a href="#traceability" className="hover:text-foreground transition-colors">How it works</a>
+            <a href="#workflow" className="hover:text-foreground transition-colors">Setup</a>
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
           </nav>
@@ -159,7 +159,7 @@ export default function LandingPage() {
               href="/signup"
               className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md"
             >
-              Start Free Trial
+              Start free trial
             </Link>
           </div>
 
@@ -182,14 +182,14 @@ export default function LandingPage() {
             aria-label="Mobile"
             className="md:hidden border-b border-border bg-card p-6 flex flex-col gap-4 animate-fade-in"
           >
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Capabilities</a>
-            <a href="#traceability" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Decision Traceability</a>
-            <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Workflow</a>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">What it does</a>
+            <a href="#traceability" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">How it works</a>
+            <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Setup</a>
             <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">Pricing</Link>
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-sm font-semibold text-muted-foreground hover:text-foreground py-1">FAQ</a>
             <div className="pt-4 border-t border-border flex flex-col gap-2.5">
               <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-semibold py-2.5 rounded-xl border border-border text-foreground hover:bg-muted transition-colors">Sign In</Link>
-              <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-bold bg-primary text-primary-foreground py-2.5 rounded-xl shadow-sm">Start Free Trial</Link>
+              <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full text-center text-xs font-bold bg-primary text-primary-foreground py-2.5 rounded-xl shadow-sm">Start free trial</Link>
             </div>
           </nav>
         )}
@@ -370,8 +370,11 @@ export default function LandingPage() {
               <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block shrink-0" aria-hidden />
               <span className="text-xs font-mono text-muted-foreground ml-2 truncate">app.eveinventory.in/dashboard/{activeTab}</span>
             </div>
-            <span className="chip chip-success px-2.5 py-0.5 text-[10px] font-semibold shrink-0">
-              <Activity size={10} className="animate-pulse" aria-hidden /> Live Workspace Synced
+            {/* Honest label. This panel is a static preview, not a live
+                session — claiming otherwise contradicts /demo and is the kind
+                of detail a skeptical founder checks. */}
+            <span className="chip px-2.5 py-0.5 text-[10px] font-semibold shrink-0 text-muted-foreground border border-border">
+              <Activity size={10} aria-hidden /> Demo brand — Luma &amp; Co.
             </span>
           </div>
 
@@ -382,25 +385,29 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-5 rounded-xl bg-muted/40 border border-border space-y-2">
                     <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Inventory Valuation (COGS)</span>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-foreground">$148,320</div>
-                    <span className="text-[11px] t-success font-semibold">Healthy Capital Ratio</span>
+                    {/* These figures are the ACTUAL seeded Luma & Co. values
+                        (backend/app/commands/seed_scenarios.py), matching
+                        /demo. A visitor who clicks through must see the same
+                        numbers. */}
+                    <div className="text-2xl sm:text-3xl font-extrabold text-foreground">$112,402</div>
+                    <span className="text-[11px] text-muted-foreground font-semibold">18 SKUs across sizes &amp; colours</span>
                   </div>
                   <div className="panel-danger p-5 rounded-xl border space-y-2">
                     <span className="text-xs font-semibold uppercase tracking-wider t-danger">Stockout Risk SKUs</span>
-                    <div className="text-2xl sm:text-3xl font-extrabold t-danger">2 SKUs</div>
-                    <span className="text-[11px] t-danger font-semibold">Depleting within 5 days</span>
+                    <div className="text-2xl sm:text-3xl font-extrabold t-danger">3 SKUs</div>
+                    <span className="text-[11px] t-danger font-semibold">Depleting within 6 days</span>
                   </div>
                   <div className="panel-warning p-5 rounded-xl border space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-wider t-warning">Dead Stock Capital</span>
-                    <div className="text-2xl sm:text-3xl font-extrabold t-warning">$18,450</div>
-                    <span className="text-[11px] t-warning font-semibold">Trapped in non-moving variants</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider t-warning">Revenue At Risk</span>
+                    <div className="text-2xl sm:text-3xl font-extrabold t-warning">$7,600</div>
+                    <span className="text-[11px] t-warning font-semibold">If hero SKUs stock out</span>
                   </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex justify-between items-center mb-3 gap-3">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Variant Replenishment Suggestions</h3>
-                    <span className="text-[10px] text-muted-foreground shrink-0">Updated by EVE just now</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">Sample output</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs min-w-[550px]">
@@ -414,18 +421,27 @@ export default function LandingPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border/60 text-foreground">
+                        {/* Real Luma & Co. SKUs, matching /demo and the seeded
+                            workspace a visitor lands in. */}
                         <tr>
-                          <td className="py-3 px-3 font-medium">Classic Cotton Tee — Black / M</td>
-                          <td className="py-3 px-3 text-right font-mono">12 units</td>
-                          <td className="py-3 px-3 text-right font-mono">2.4 / day</td>
-                          <td className="py-3 px-3 text-right"><span className="chip chip-danger px-2 py-0.5 text-[10px] font-semibold">5 Days Left</span></td>
-                          <td className="py-3 px-3 text-right font-bold t-accent">Reorder 150 units</td>
+                          <td className="py-3 px-3 font-medium">Silk Wrap Dress — Emerald / M</td>
+                          <td className="py-3 px-3 text-right font-mono">0 units</td>
+                          <td className="py-3 px-3 text-right font-mono">1.9 / day</td>
+                          <td className="py-3 px-3 text-right"><span className="chip chip-danger px-2 py-0.5 text-[10px] font-semibold">Out of stock</span></td>
+                          <td className="py-3 px-3 text-right font-bold t-accent">Reorder now — 14d lead time</td>
                         </tr>
                         <tr>
-                          <td className="py-3 px-3 font-medium">Cargo Jogger — Navy / XL</td>
-                          <td className="py-3 px-3 text-right font-mono">342 units</td>
-                          <td className="py-3 px-3 text-right font-mono">0.8 / day</td>
-                          <td className="py-3 px-3 text-right"><span className="chip chip-warning px-2 py-0.5 text-[10px] font-semibold">180+ Days</span></td>
+                          <td className="py-3 px-3 font-medium">Ribbed Merino Turtleneck — Ivory</td>
+                          <td className="py-3 px-3 text-right font-mono">7 units</td>
+                          <td className="py-3 px-3 text-right font-mono">2.0 / day</td>
+                          <td className="py-3 px-3 text-right"><span className="chip chip-danger px-2 py-0.5 text-[10px] font-semibold">3.5 days left</span></td>
+                          <td className="py-3 px-3 text-right font-bold t-accent">Reorder this week</td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-3 font-medium">Cashmere Crew Sweater — Oatmeal</td>
+                          <td className="py-3 px-3 text-right font-mono">191 units</td>
+                          <td className="py-3 px-3 text-right font-mono">2.0 / day</td>
+                          <td className="py-3 px-3 text-right"><span className="chip chip-warning px-2 py-0.5 text-[10px] font-semibold">95 days cover</span></td>
                           <td className="py-3 px-3 text-right font-bold t-warning">Hold PO / Clearance</td>
                         </tr>
                       </tbody>
@@ -691,7 +707,7 @@ export default function LandingPage() {
               href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
             >
-              Start Free Trial
+              Start free trial
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
             <Link
@@ -717,16 +733,16 @@ export default function LandingPage() {
               <span className="font-extrabold text-foreground text-sm">EVE Operating System</span>
             </div>
             <p className="text-muted-foreground max-w-sm leading-relaxed">
-              The Executive Operating System for e-commerce founders, D2C brands, and retail operators. Autonomous inventory forecasting, decision traceability, and capital recovery.
+              The Inventory Intelligence for Shopify Fashion Brands for e-commerce founders, D2C brands, and retail operators. Autonomous inventory forecasting, decision traceability, and capital recovery.
             </p>
           </div>
 
           <div className="space-y-3">
             <span className="font-bold text-foreground uppercase tracking-wider block">Product</span>
             <ul className="space-y-2 text-muted-foreground font-medium">
-              <li><a href="#features" className="hover:text-foreground transition-colors">Capabilities</a></li>
-              <li><a href="#traceability" className="hover:text-foreground transition-colors">Decision Traceability</a></li>
-              <li><a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a></li>
+              <li><a href="#features" className="hover:text-foreground transition-colors">What it does</a></li>
+              <li><a href="#traceability" className="hover:text-foreground transition-colors">How it works</a></li>
+              <li><a href="#workflow" className="hover:text-foreground transition-colors">Setup</a></li>
               <li><Link href="/demo" className="hover:text-foreground transition-colors">Interactive Demo</Link></li>
             </ul>
           </div>
@@ -734,7 +750,7 @@ export default function LandingPage() {
           <div className="space-y-3">
             <span className="font-bold text-foreground uppercase tracking-wider block">Company</span>
             <ul className="space-y-2 text-muted-foreground font-medium">
-              <li><Link href="/signup" className="hover:text-foreground transition-colors">Start Free Trial</Link></li>
+              <li><Link href="/signup" className="hover:text-foreground transition-colors">Start free trial</Link></li>
               <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
               <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               <li><Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link></li>

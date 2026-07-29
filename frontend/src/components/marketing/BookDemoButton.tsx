@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays } from "lucide-react";
-import { BOOKING_URL, BOOKING_CTA } from "@/lib/config";
+import { BOOKING_URL, BOOKING_CTA, POSITIONING } from "@/lib/config";
 import { track } from "@/lib/analytics";
 
 type Variant = "primary" | "secondary" | "ghost";
@@ -33,11 +33,17 @@ export function BookDemoButton({
   className?: string;
   showIcon?: boolean;
 }) {
+  // Without a configured booking link, fall back to email rather than sending
+  // the highest-intent click in the funnel to a dead URL.
+  const configured = Boolean(BOOKING_URL);
+  const href = configured
+    ? BOOKING_URL
+    : `mailto:${POSITIONING.supportEmail}?subject=${encodeURIComponent("Inventory teardown request")}`;
+
   return (
     <a
-      href={BOOKING_URL}
-      target="_blank"
-      rel="noopener noreferrer"
+      href={href}
+      {...(configured ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       onClick={() => track("demo_booking_clicked", { location })}
       className={`inline-flex items-center justify-center gap-2 rounded-xl font-bold transition-all ${VARIANTS[variant]} ${className}`}
     >
