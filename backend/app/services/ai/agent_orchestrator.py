@@ -202,7 +202,14 @@ class AgentOrchestrator:
                         {"role": m.role, "content": m.content} for m in history_msgs
                     ]
 
-            telemetry_token = init_telemetry()
+            # Scope is attached here so the AI runtime can attribute every
+            # downstream Gemini call to this org/user without threading ids
+            # through the agent call chain.
+            telemetry_token = init_telemetry(
+                organization_id=org_id,
+                user_id=user_id,
+                feature="executive_chat",
+            )
             try:
                 from app.models.organization import Organization
                 workspace = db.query(Organization).filter(Organization.id == org_id).first()

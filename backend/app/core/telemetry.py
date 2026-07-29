@@ -4,16 +4,43 @@ from typing import Dict, Any
 # Context variable to store telemetry of the current request/run
 telemetry_context = contextvars.ContextVar("telemetry_context", default=None)
 
-def init_telemetry():
-    """Initializes the telemetry data structure in the current context."""
+def init_telemetry(organization_id=None, user_id=None, feature=None):
+    """
+    Initializes the telemetry data structure in the current context.
+
+    organization_id/user_id/feature are carried here so the AI runtime can
+    attribute spend without every call site threading them through its
+    signature. All are optional — background jobs legitimately have no owning
+    org, and their usage is still recorded (against a null org) and still
+    counts toward the global cap.
+    """
     data = {
         "prompt_tokens": 0,
         "completion_tokens": 0,
         "token_cost": 0.0,
         "agents": {},  # {agent_name: {status: str, latency_ms: int}}
+        "organization_id": organization_id,
+        "user_id": user_id,
+        "feature": feature,
     }
     token = telemetry_context.set(data)
     return token
+
+
+def set_ai_scope(organization_id=None, user_id=None, feature=None):
+    """
+    Attaches or updates AI attribution scope on an already-active context.
+    Used where the org is resolved after telemetry has been initialised.
+    """
+    ctx = telemetry_context.get()
+    if ctx is None:
+        return
+    if organization_id is not None:
+        ctx["organization_id"] = organization_id
+    if user_id is not None:
+        ctx["user_id"] = user_id
+    if feature is not None:
+        ctx["feature"] = feature
 
 def record_tokens(prompt: int, completion: int, cost: float, agent_name: str = None):
     """Records token usage and cost in the current telemetry context if active."""

@@ -23,5 +23,6 @@ from .recommendation_trace import RecommendationTrace
 from .recommendation_audit_event import RecommendationAuditEvent
 from .waitlist import WaitlistEntry
 from .internal_analytics import InternalAnalyticsEvent
+from .ai_usage import AIUsageLog
 
 # This ensures all models are imported and registered with SQLAlchemy's Base.metadata

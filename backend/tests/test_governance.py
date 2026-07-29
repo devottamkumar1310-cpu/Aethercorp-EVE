@@ -1,6 +1,7 @@
 import pytest
 import uuid
 import datetime
+from decimal import Decimal
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -317,7 +318,9 @@ def test_daily_cost_budget_safeguard():
         db_session.add(conversation)
         db_session.flush()
 
-        # Seed 3 assistant messages with $0.75 cost each (total = $2.25, which exceeds default $2.00 limit)
+        # Seed 3 assistant messages. These carry telemetry for the
+        # /api/observability/costs endpoint, which still reads message-level
+        # agent_data.
         for i in range(3):
             msg = ExecutiveMessage(
                 conversation_id=conversation.id,
@@ -334,6 +337,25 @@ def test_daily_cost_budget_safeguard():
                 }
             )
             db_session.add(msg)
+
+        # Spend itself now lives in ai_usage_logs — the single source of truth
+        # written by app.core.ai_runtime. CostGovernanceService reads it from
+        # there rather than parsing JSON out of chat messages, so it sees
+        # inventory analysis and document intelligence too, not just chat.
+        # $0.75 x 3 = $2.25, over the default $2.00 per-org daily budget.
+        from app.models.ai_usage import AIUsageLog
+        for i in range(3):
+            db_session.add(AIUsageLog(
+                organization_id=MOCK_ORG_ID,
+                feature="executive_chat",
+                provider="google",
+                model="gemini-2.5-flash",
+                input_tokens=1000,
+                output_tokens=500,
+                latency_ms=1500,
+                cost_usd=Decimal("0.75"),
+                status="success",
+            ))
         db_session.commit()
 
         # Send a chat request

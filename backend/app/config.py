@@ -32,6 +32,19 @@ class Settings(BaseSettings):
     GCS_BUCKET_NAME: Optional[str] = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    # --- AI cost governance (see app/core/ai_runtime.py) ---
+    # Hard ceiling on total AI spend per UTC day, across all organizations.
+    # Set to 0 to disable. NOTE: the cap is checked pre-flight, so concurrent
+    # multi-agent fan-out can overshoot it by roughly the fan-out width — pick
+    # this value knowing the real ceiling is cap x concurrent agents.
+    AI_DAILY_CAP_USD: float = 25.0
+    # Emergency stop. Flipping this in Cloud Run env takes ~1 minute and needs
+    # no code deploy.
+    AI_KILL_SWITCH: bool = False
+    # Upper bound on retries regardless of what a caller requests. The previous
+    # per-method default of 10 meant a persistent failure could bill 10 times.
+    AI_MAX_RETRIES: int = 3
+
     FOUNDER_MODE: bool = True
     OWNER_EMAIL: str = "devottamkumar1310@gmail.com"
 
