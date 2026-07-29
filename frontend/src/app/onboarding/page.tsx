@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Building2, ArrowRight, Sparkles, Brain, Loader2 } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { track, identify } from "@/lib/analytics";
+import { track, identify, setOrganization } from "@/lib/analytics";
 
 export default function OnboardingPage() {
   const [workspaceName, setWorkspaceName] = useState("");
@@ -30,11 +30,10 @@ export default function OnboardingPage() {
 
       // Google OAuth users never pass through the signup page, so this is the
       // first point at which we can attach an identity to their events.
+      // Google OAuth users never pass through the signup page, so this is the
+      // first point at which we can attach a stable identity to their events.
       if (session.user?.id) {
-        identify(session.user.id, {
-          email: session.user.email,
-          signup_method: session.user.app_metadata?.provider ?? "unknown",
-        });
+        identify(session.user.id);
       }
 
       try {
@@ -108,7 +107,9 @@ export default function OnboardingPage() {
 
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
-      track("workspace_created", { type: "blank" });
+      setOrganization(data.organization_id);
+      track("workspace_created", { source: "blank", workspace_id: data.organization_id });
+      track("onboarding_completed", { source: "blank" });
 
       router.push("/dashboard/inventory");
     } catch (e: any) {
@@ -144,8 +145,12 @@ export default function OnboardingPage() {
 
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
-      track("workspace_created", { type: "demo", demo_company: demoCompany });
-      track("demo_workspace_started", { demo_company: demoCompany });
+      setOrganization(data.organization_id);
+      track("demo_workspace_created", {
+        demo_company: demoCompany,
+        workspace_id: data.organization_id,
+      });
+      track("onboarding_completed", { source: "demo", demo_company: demoCompany });
 
       router.push("/dashboard/inventory");
     } catch (e: any) {

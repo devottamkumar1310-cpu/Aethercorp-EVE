@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Lock, Mail, AlertTriangle, CheckCircle, Loader2, Sparkles } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { track, identify } from "@/lib/analytics";
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -56,6 +57,8 @@ function LoginForm() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
+          if (session.user?.id) identify(session.user.id);
+          track("login_completed", { method: "email" });
           await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${session.access_token}` }

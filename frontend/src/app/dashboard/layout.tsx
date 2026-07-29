@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { devLog } from "@/lib/logger";
+import { track, identify, setOrganization, resetAnalytics } from "@/lib/analytics";
 import Link from "next/link";
 import {
   Building2,
@@ -38,6 +39,21 @@ import { NAV_ITEMS } from "@/config/navigation";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
+
+  // Re-attach identity and workspace scope on every app load. Google OAuth
+  // users never pass through the login form, and a page refresh must not
+  // orphan events from their organization.
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await createClient().auth.getSession();
+      if (cancelled || !data.session?.user?.id) return;
+      identify(data.session.user.id);
+      setOrganization(activeWorkspaceId);
+    })();
+    return () => { cancelled = true; };
+  }, [activeWorkspaceId]);
   const [profile, setProfile] = useState<any>(null);
   const isExempt = profile?.email === "devottamkumar1310@gmail.com" || profile?.subscription_status === "founder";
   const [sessionToken, setSessionToken] = useState<string>("");
@@ -503,6 +519,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     const supabase = createClient();
+    // Track before reset — reset() clears the distinct_id, so an event fired
+    // afterwards would be attributed to a fresh anonymous person.
+    track("logout_completed");
+    resetAnalytics();
     await supabase.auth.signOut();
     // Intentionally DO NOT remove active_workspace_id from localStorage.
     // This ensures the user's workspace selection persists across logins.
@@ -637,7 +657,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     .join("")) || "U";
 
   return (
-    <div className="eve-app min-h-screen bg-background text-foreground flex font-sans transition-colors duration-200">
+    // data-ph-mask makes the entire authenticated app render as placeholder
+    // blocks in PostHog session replay. This is the privacy boundary: every
+    // SKU name, quantity, financial figure and recommendation inside the
+    // dashboard is masked by default, including in components that do not
+    // exist yet. Marketing and auth pages stay full-fidelity, which is where
+    // the conversion funnel actually needs to be watched.
+    <div
+      data-ph-mask
+      className="eve-app min-h-screen bg-background text-foreground flex font-sans transition-colors duration-200"
+    >
       {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div

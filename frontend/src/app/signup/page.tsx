@@ -88,10 +88,13 @@ export default function SignupPage() {
     }
 
     if (data?.session) {
+      // Stable Supabase user id — never changes, so journeys stitch across
+      // sessions and devices. No name or email is forwarded as a property.
       if (data.user?.id) {
-        identify(data.user.id, { email, full_name: fullName, signup_method: "email" });
+        identify(data.user.id);
       }
       track("signup_completed", { method: "email", requires_verification: false });
+      track("free_trial_started", { method: "email" });
       // Sync with backend
       try {
         await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
@@ -105,6 +108,7 @@ export default function SignupPage() {
     } else {
       track("signup_completed", { method: "email", requires_verification: true });
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
+
     }
   };
 

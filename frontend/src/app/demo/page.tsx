@@ -87,12 +87,15 @@ export default function DemoPage() {
    */
   const openLiveWorkspace = async () => {
     setOpening(true);
-    track("demo_workspace_started", { demo_company: "luma", source: "demo_page" });
 
     if (signedIn) {
+      // The workspace itself is created in /onboarding, which fires
+      // demo_workspace_created — tracking it here too would double-count.
       router.push("/onboarding?demo=luma");
       return;
     }
+
+    track("signup_started", { method: "google", source: "demo_page", demo_company: "luma" });
 
     const { error } = await createClient().auth.signInWithOAuth({
       provider: "google",

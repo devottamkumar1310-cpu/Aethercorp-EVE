@@ -10,6 +10,7 @@ import {
   getHeaders,
 } from "@/services/businessService";
 import { track } from "@/lib/analytics";
+import { useTrackOnce } from "@/lib/useTrackOnce";
 
 import {
   Package,
@@ -176,12 +177,19 @@ export default function InventoryDashboardPage() {
     if (!file.name.endsWith(".csv")) { toast.error("Only CSV files are supported."); return; }
     const toastId = toast.loading(`Uploading Master CSV...`);
     setUploadingMaster(true);
+    // Only file SIZE is measured — never the contents.
+    const fileSizeKb = Math.round(file.size / 1024);
+    const uploadStartedAt = Date.now();
+    track("csv_upload_started", { file_size_kb: fileSizeKb });
     try {
       const result = await uploadMasterCSVAPI(sessionToken, file);
-      track("csv_uploaded", {
-        rows_total: result?.total_rows ?? null,
-        rows_valid: result?.valid_rows ?? null,
-        file_size_kb: Math.round(file.size / 1024),
+      track("csv_upload_completed", {
+        row_count: result?.total_rows ?? null,
+        valid_row_count: result?.valid_rows ?? null,
+        invalid_row_count: result?.invalid_rows ?? null,
+        file_size_kb: fileSizeKb,
+        upload_duration_ms: Date.now() - uploadStartedAt,
+        success: true,
       });
       toast.success(`Master file processed!`, { id: toastId });
       setImportSummary({ ...result, type: "master" });
@@ -203,9 +211,13 @@ export default function InventoryDashboardPage() {
       
       // Upload failures are the single biggest activation drop-off, so the
       // reason is captured explicitly rather than inferred from a funnel gap.
+      // missing_columns are CSV *header* names, not row data.
       track("csv_upload_failed", {
         missing_columns: parsedSummary?.missing_columns ?? null,
-        file_size_kb: Math.round(file.size / 1024),
+        error_type: parsedSummary?.missing_columns?.length ? "missing_columns" : "parse_or_server_error",
+        file_size_kb: fileSizeKb,
+        upload_duration_ms: Date.now() - uploadStartedAt,
+        success: false,
       });
 
       if (parsedSummary && parsedSummary.status === "error") {
@@ -257,22 +269,19 @@ export default function InventoryDashboardPage() {
     });
   }, [data, search, categoryFilter, sortField, sortDir]);
 
+  // Page view fires once per mount (StrictMode-safe).
+  useTrackOnce("inventory_page_viewed");
+
   // Activation moment: the first time a user sees real risk or dead-stock
   // numbers, not merely a rendered page. This is the denominator for
-  // "activated user" — fired once per session, before the early returns so
-  // hook order stays stable.
-  const [insightTracked, setInsightTracked] = useState(false);
-  useEffect(() => {
-    if (insightTracked || !alerts) return;
-    const deadCount = alerts.dead_stock?.length ?? 0;
-    const lowCount = alerts.low_stock?.length ?? 0;
-    if (deadCount === 0 && lowCount === 0) return;
-    track("first_insight_viewed", {
-      dead_stock_count: deadCount,
-      low_stock_count: lowCount,
-    });
-    setInsightTracked(true);
-  }, [alerts, insightTracked]);
+  // "activated user". Counts only — no SKU names, no capital values.
+  const deadStockCount = alerts?.dead_stock?.length ?? 0;
+  const lowStockCount = alerts?.low_stock?.length ?? 0;
+  useTrackOnce(
+    "recommendations_viewed",
+    { dead_stock_count: deadStockCount, low_stock_count: lowStockCount },
+    Boolean(alerts) && (deadStockCount > 0 || lowStockCount > 0)
+  );
 
   // Declared unconditionally (before the loading/empty-state early returns below) so
   // this hook always runs in the same order on every render — placing it after those

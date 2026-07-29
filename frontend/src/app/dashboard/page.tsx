@@ -6,6 +6,7 @@ import { fetchDashboardSummary, fetchActivityLogs, fetchClients, fetchInventoryA
 import { DashboardSummary, ActivityLog, Client } from "@/types/business";
 import { createClient } from "@/lib/supabase/client";
 import { devLog } from "@/lib/logger";
+import { useTrackOnce } from "@/lib/useTrackOnce";
 
 import { ExecutiveTimeline } from "@/components/dashboard/ExecutiveTimeline";
 
@@ -19,6 +20,8 @@ import { ProjectModal } from "@/components/business/ProjectModal";
 import { fetchTrends, fetchRisks, fetchOpportunities } from "@/services/intelligenceService";
 
 export default function DashboardPage() {
+  useTrackOnce("dashboard_viewed");
+
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [trends, setTrends] = useState<any>(null);

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { devLog } from "@/lib/logger";
+import { track } from "@/lib/analytics";
 import {
   sendExecutiveChatStream,
   listConversations,
@@ -577,6 +578,12 @@ export default function EVEChatWorkspace() {
     setIsGreeting(isGreet);
     setChatLoading(true);
 
+    // Message LENGTH only — the prompt itself never leaves the app.
+    track("ai_chat_message_sent", { message_length: messageText.length, mode: chatMode });
+    track("analysis_started", { source: "executive_chat", mode: chatMode });
+    const analysisStartedAt = Date.now();
+    let analysisFailed = false;
+
     let accumulatedContent = "";
     let activeConversationId = conversationId;
 
@@ -607,6 +614,14 @@ export default function EVEChatWorkspace() {
               )
             );
           } else if (type === "error") {
+            // Outcome only — the error text can quote model output.
+            analysisFailed = true;
+            track("analysis_failed", {
+              source: "executive_chat",
+              error_type: "stream_error",
+              analysis_duration_ms: Date.now() - analysisStartedAt,
+              success: false,
+            });
             accumulatedContent = typeof content === "string" && content
               ? content
               : "EVE couldn't complete that answer. Please try again.";
@@ -618,12 +633,28 @@ export default function EVEChatWorkspace() {
               )
             );
           } else if (type === "done") {
+            if (!analysisFailed) {
+              track("analysis_completed", {
+                source: "executive_chat",
+                mode: chatMode,
+                analysis_duration_ms: Date.now() - analysisStartedAt,
+                success: true,
+              });
+            }
             if (activeConversationId) {
               getConversation(activeConversationId, sessionToken).then((detail) => {
                 const lastMsg = [...detail.messages]
                   .reverse()
                   .find(m => m.role === "assistant" && m.agent_data);
                 if (lastMsg) {
+                  // Count of recommendations produced — never their text.
+                  const priorities = lastMsg.agent_data?.priorities;
+                  if (Array.isArray(priorities) && priorities.length > 0) {
+                    track("recommendation_generated", {
+                      source: "executive_chat",
+                      recommendation_count: priorities.length,
+                    });
+                  }
                   setSelectedReasoning(lastMsg.agent_data);
                   setMessages((prev) =>
                     prev.map((msg) =>
@@ -648,6 +679,17 @@ export default function EVEChatWorkspace() {
 
     } catch (err: any) {
       logger.error("Chat streaming failed:", err);
+      // Guarded: a stream that emits an `error` frame and then throws would
+      // otherwise emit analysis_failed twice for one message.
+      if (!analysisFailed) {
+        analysisFailed = true;
+        track("analysis_failed", {
+          source: "executive_chat",
+          error_type: "network_or_client",
+          analysis_duration_ms: Date.now() - analysisStartedAt,
+          success: false,
+        });
+      }
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantTempId
