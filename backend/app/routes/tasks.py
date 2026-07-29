@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.services.task_service import TaskService
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 
 router = APIRouter(prefix="/api/tasks", tags=["Tasks"])
@@ -39,7 +39,13 @@ def update_task(task_id: uuid.UUID, task_update: TaskUpdate, db: Session = Depen
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_task(task_id: uuid.UUID, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):
+def delete_task(
+    task_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))  # Minimum manager role required for permanent task deletion
+):
     success = TaskService.delete_task(db=db, task_id=task_id, user_id=current_user.id, workspace_id=workspace_id)
     if not success:
         raise HTTPException(status_code=404, detail="Task not found")

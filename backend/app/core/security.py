@@ -49,7 +49,9 @@ def verify_supabase_token(request: Request = None, credentials: HTTPAuthorizatio
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    if token == "mock-token":
+    # Mock token is ONLY permitted in non-production environments (local dev / CI).
+    # In production this bypass is disabled unconditionally to prevent unauthenticated access.
+    if token == "mock-token" and settings.ENVIRONMENT not in ("production", "prod"):
         return {"sub": "00000000-0000-0000-0000-000000000000", "email": "mock@test.com"}
 
     try:
@@ -157,7 +159,11 @@ def _provision_profile_idempotent(db: Session, user_id: uuid.UUID, payload: dict
             if existing_by_email:
                 if existing_by_email.id == user_id:
                     return existing_by_email
-                logger.info(f"Found orphaned profile ID {existing_by_email.id} for email {email}. Purging and creating fresh profile with ID {user_id}.")
+                logger.critical(
+                    f"[SECURITY AUDIT] Auto-triggering purge_orphaned_profile: "
+                    f"email={email} | old_profile_id={existing_by_email.id} | new_auth_id={user_id}. "
+                    "This replaces an orphaned profile on re-registration. Review if unexpected."
+                )
                 try:
                     from app.services.account_service import AccountService
                     AccountService.purge_orphaned_profile(db, email)

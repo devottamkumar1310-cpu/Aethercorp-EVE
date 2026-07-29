@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.client import ClientCreate, ClientUpdate, ClientResponse
 from app.services.client_service import ClientService
-from app.core.security import get_current_user, get_required_workspace_id
+from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
 from app.models.profile import Profile
 
 router = APIRouter(prefix="/api/clients", tags=["Clients"])
@@ -33,7 +33,13 @@ def update_client(client_id: uuid.UUID, client_update: ClientUpdate, db: Session
     return client
 
 @router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_client(client_id: uuid.UUID, db: Session = Depends(get_db), current_user: Profile = Depends(get_current_user), workspace_id: uuid.UUID = Depends(get_required_workspace_id)):
+def delete_client(
+    client_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user),
+    workspace_id: uuid.UUID = Depends(get_required_workspace_id),
+    _role = Depends(require_workspace_role("manager"))  # Minimum manager role required for permanent client deletion
+):
     success = ClientService.delete_client(db=db, client_id=client_id, user_id=current_user.id, workspace_id=workspace_id)
     if not success:
         raise HTTPException(status_code=404, detail="Client not found")
