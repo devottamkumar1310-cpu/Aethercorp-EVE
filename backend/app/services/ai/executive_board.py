@@ -48,8 +48,18 @@ class ExecutiveBoard:
         conversation_history: Optional[List[dict]] = None,
         intent: Optional[str] = None,
         workspace_name: Optional[str] = None,
-        scenario_type: Optional[str] = None
+        scenario_type: Optional[str] = None,
+        depth: str = "standard"
     ) -> ExecutiveSynthesisResult:
+        """
+        depth:
+          "standard" — normal routing (fast-path intent, else LLM router).
+          "baseline" — inventory analysis only. Used for the automatic run that
+                       follows a CSV upload, where the user asked for nothing
+                       and only inventory signal is actionable. Skips the LLM
+                       router and the other five specialists: 2 Gemini calls
+                       instead of up to 8, with an identical result shape.
+        """
         run_finance = True
         run_operations = True
         run_inventory = True
@@ -75,7 +85,20 @@ class ExecutiveBoard:
 
         # 1. Intent Routing Classifier
         run_forecasting = False
-        if mode == "smart":
+
+        # Baseline depth short-circuits routing entirely. This runs before the
+        # mode checks so no router call can be issued: the question is one WE
+        # generated after an upload, so classifying it costs a request and
+        # tells us nothing we don't already know.
+        if depth in ("baseline", "lightweight"):
+            logger.info("Baseline depth: lightweight proactive analysis via deterministic Python inventory analysis + COO executive synthesis (0 router calls, 0 sub-agent LLM calls).")
+            run_finance = False
+            run_operations = False
+            run_inventory = False
+            run_client = False
+            run_growth = False
+            run_forecasting = False
+        elif mode == "smart":
             resolved_intent = intent or ConversationLayer.classify_intent(question)
             
             fast_path_selection = None
@@ -256,6 +279,40 @@ class ExecutiveBoard:
         # --------------------------------------------------------
 
         # 2. Parallel Sub-Agent Execution
+        results = {}
+
+        # For baseline / lightweight depth, perform Python deterministic inventory computation
+        if depth in ("baseline", "lightweight"):
+            from app.services.analytics_service import AnalyticsService
+            from app.schemas.executive import AgentAnalysisResult
+            inv_analysis = AnalyticsService.get_inventory_analysis(db, org_id)
+            items_at_risk = inv_analysis.get("items_at_risk", [])
+            reorder_items = [item for item in items_at_risk if item.get("stock_on_hand", 0) < item.get("reorder_point", 0)]
+            reorder_items.sort(key=lambda x: x.get("stockout_risk_score", 0), reverse=True)
+            dead_stock = inv_analysis.get("dead_stock", []) or [item for item in items_at_risk if item.get("is_dead_stock")]
+
+            findings = []
+            if reorder_items:
+                top_reorder = reorder_items[0]
+                findings.append(f"Reorder alert: SKU '{top_reorder.get('sku')}' stock ({int(top_reorder.get('stock_on_hand', 0))}) is below ROP ({int(top_reorder.get('reorder_point', 0))}).")
+            if dead_stock:
+                top_dead = dead_stock[0]
+                findings.append(f"Dead stock alert: SKU '{top_dead.get('sku')}' has ${top_dead.get('working_capital_locked', 0.0):,.2f} in locked capital.")
+            if not findings:
+                findings.append("Catalog stock levels and inventory turnover are within healthy operational thresholds.")
+
+            recs = [f"Reorder SKU {item.get('sku')} (Target Qty: {item.get('recommended_reorder_qty', 0)})" for item in reorder_items[:3]]
+            if dead_stock:
+                recs.append(f"Liquidate dead stock SKU {dead_stock[0].get('sku')} to release ${dead_stock[0].get('working_capital_locked', 0.0):,.2f}")
+
+            results["inventory"] = AgentAnalysisResult(
+                agent="Inventory Agent",
+                summary=f"Deterministic Inventory Scan: {len(reorder_items)} SKUs at stockout risk, {len(dead_stock)} dead stock SKUs.",
+                findings=findings,
+                recommendations=recs or ["Maintain current stock levels."],
+                confidence=0.95
+            )
+
         tasks = {}
         if run_finance:
             tasks["finance"] = self.finance_agent.analyze(
@@ -283,7 +340,6 @@ class ExecutiveBoard:
             tasks["forecasting"] = self.forecasting_agent.analyze(db, org_id, question)
 
         # Run in parallel using asyncio.gather wrapped with timing
-        results = {}
         if tasks:
             keys = list(tasks.keys())
             coros = [timed_agent_run(key, tasks[key]) for key in keys]

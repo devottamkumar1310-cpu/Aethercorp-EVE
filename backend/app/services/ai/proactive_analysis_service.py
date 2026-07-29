@@ -50,8 +50,14 @@ class ProactiveAnalysisService:
             await asyncio.sleep(1.0) # Simulate processing data
             ProactiveAnalysisService._update_status(db, org_id, "in_progress", 2)
             
-            # 1. Synthesize the proactive query
-            query = "What is the biggest operational risk right now and what should I reorder? Analyze our business and provide critical strategic recommendations based on current metrics."
+            # 1. Synthesize the proactive query.
+            # Scoped to inventory because that is what depth="baseline" below
+            # actually analyses — asking about "our business" invited a full
+            # board run and produced findings from agents that never ran.
+            query = (
+                "What is the biggest inventory risk right now and what should I reorder? "
+                "Base your answer on current stock levels, sell-through and dead stock."
+            )
             
             ProactiveAnalysisService._update_status(db, org_id, "in_progress", 3)
             # 2. Invoke standard orchestrator pipeline
@@ -63,14 +69,22 @@ class ProactiveAnalysisService:
             # Naive UTC to match RecommendationTrace.created_at's default.
             run_started_at = datetime.datetime.utcnow()
 
-            await orchestrator.orchestrate(
+            # depth="baseline" performs lightweight proactive analysis: 0 router calls,
+            # 0 sub-agent LLM calls (deterministic Python inventory computation), and
+            # 1 COO synthesis call. This run is automatic on CSV upload.
+            msg = await orchestrator.orchestrate(
                 db=db,
                 org_id=org_id,
                 question=query,
                 mode="smart",
                 user_id=user_id,
-                developer_mode=False
+                developer_mode=False,
+                depth="baseline"
             )
+
+            if msg and msg.agent_data:
+                from app.services.ai.memory_service import save_recommendation
+                save_recommendation(db, org_id, "EVE COO Baseline", msg.agent_data)
             
             ProactiveAnalysisService._update_status(db, org_id, "in_progress", 4)
             await asyncio.sleep(1.0) # Simulate final trace creation step visualization

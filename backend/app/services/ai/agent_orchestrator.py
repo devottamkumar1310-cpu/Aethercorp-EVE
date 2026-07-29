@@ -29,8 +29,14 @@ class AgentOrchestrator:
         user_id: Optional[uuid.UUID] = None,
         language: Optional[str] = "en",
         developer_mode: Optional[bool] = None,
-        document_id: Optional[uuid.UUID] = None
+        document_id: Optional[uuid.UUID] = None,
+        depth: str = "standard"
     ) -> ExecutiveMessage:
+        """
+        depth is passed through to ExecutiveBoard.run_board. "baseline" limits
+        the run to the Inventory Agent plus COO synthesis; the full board runs
+        only on an explicit user request. See run_board for the rationale.
+        """
         import datetime
         import time
         import logging
@@ -226,7 +232,8 @@ class AgentOrchestrator:
                     conversation_history=conversation_history,
                     intent=intent,
                     workspace_name=workspace_name,
-                    scenario_type=scenario_type
+                    scenario_type=scenario_type,
+                    depth=depth
                 )
                 # Stamp LLM provenance onto the result so it flows through model_dump()
                 coo_result.llm_provider = "google"
