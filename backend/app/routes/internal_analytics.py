@@ -139,3 +139,76 @@ def get_recent_events(
     Protected strictly by verify_owner_admin.
     """
     return InternalAnalyticsService.get_recent_events(db, limit=limit)
+
+
+@router.get("/executive-summary")
+def get_executive_summary(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns synthesized AI executive daily summary and health & security rating scores.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_executive_summary(db)
+
+
+@router.get("/user-advanced")
+def get_advanced_user_analytics(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns DAU, WAU, MAU, stickiness, retention cohorts, session durations, and environment distributions.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_advanced_user_analytics(db)
+
+
+@router.get("/product-funnel")
+def get_product_funnel(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns feature adoption stats and user journey conversion funnel drop-offs.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_product_analytics(db)
+
+
+@router.get("/security-soc")
+def get_security_soc(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns Cyber Security Operations (SOC) telemetry, authentication logs, and threat detection flags.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_security_soc_analytics(db)
+
+
+@router.get("/predictive")
+def get_predictive_analytics(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns 30-day predictive forecasts for user growth, API load, storage, and AI token budgets.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_predictive_analytics(db)
+
+
+@router.get("/performance-live")
+def get_live_performance(
+    admin: Profile = Depends(verify_owner_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns live system resource usage, P95/P99 latencies, and service availability statuses.
+    Protected strictly by verify_owner_admin.
+    """
+    return InternalAnalyticsService.get_live_performance_observability(db)
+

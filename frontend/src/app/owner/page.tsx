@@ -11,6 +11,12 @@ import {
   InternalEvent,
   AIAnalytics,
   SystemAlert,
+  ExecutiveSummary,
+  AdvancedUserAnalytics,
+  ProductFunnel,
+  SecuritySOC,
+  PredictiveAnalytics,
+  LivePerformance,
 } from "@/services/ownerAnalyticsService";
 
 import { OwnerMetricCard } from "@/components/owner/OwnerMetricCard";
@@ -20,6 +26,13 @@ import { AlertCards } from "@/components/owner/AlertCards";
 import { AIAnalyticsCard } from "@/components/owner/AIAnalyticsCard";
 import { OwnerErrorState } from "@/components/owner/OwnerErrorState";
 import { OwnerDashboardSkeleton } from "@/components/owner/OwnerDashboardSkeleton";
+
+import { AIExecutiveSummaryBanner } from "@/components/owner/AIExecutiveSummaryBanner";
+import { AdvancedUserAnalyticsCard } from "@/components/owner/AdvancedUserAnalyticsCard";
+import { ProductFunnelCard } from "@/components/owner/ProductFunnelCard";
+import { CyberSecuritySOCCard } from "@/components/owner/CyberSecuritySOCCard";
+import { PredictiveAnalyticsCard } from "@/components/owner/PredictiveAnalyticsCard";
+import { PerformanceObservabilityCard } from "@/components/owner/PerformanceObservabilityCard";
 
 import {
   Users,
@@ -32,9 +45,28 @@ import {
   PieChart,
   AlertTriangle,
   Inbox,
+  LayoutDashboard,
+  Filter,
+  Bot,
+  Lock,
+  TrendingUp,
+  Cpu,
+  Bell,
 } from "lucide-react";
 
+type ActiveTab =
+  | "overview"
+  | "users"
+  | "funnel"
+  | "ai"
+  | "security"
+  | "predictive"
+  | "performance"
+  | "alerts";
+
 export default function OwnerAnalyticsPage() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
+
   const [overview, setOverview] = useState<OverviewMetrics | null>(null);
   const [userAnalytics, setUserAnalytics] = useState<UserAnalytics | null>(null);
   const [aiData, setAiData] = useState<AIAnalytics | null>(null);
@@ -42,6 +74,14 @@ export default function OwnerAnalyticsPage() {
   const [featureUsage, setFeatureUsage] = useState<FeatureUsage | null>(null);
   const [health, setHealth] = useState<PlatformHealth | null>(null);
   const [events, setEvents] = useState<InternalEvent[]>([]);
+
+  // Extended Telemetry States
+  const [summary, setSummary] = useState<ExecutiveSummary | null>(null);
+  const [advUserAnalytics, setAdvUserAnalytics] = useState<AdvancedUserAnalytics | null>(null);
+  const [productFunnel, setProductFunnel] = useState<ProductFunnel | null>(null);
+  const [securitySOC, setSecuritySOC] = useState<SecuritySOC | null>(null);
+  const [predictive, setPredictive] = useState<PredictiveAnalytics | null>(null);
+  const [livePerformance, setLivePerformance] = useState<LivePerformance | null>(null);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -62,7 +102,21 @@ export default function OwnerAnalyticsPage() {
       const token = data.session?.access_token;
       if (!token) throw new Error("Authentication token expired. Please re-authenticate.");
 
-      const [ovData, usrData, aiRes, alrtData, featData, hlthData, evtData] = await Promise.all([
+      const [
+        ovData,
+        usrData,
+        aiRes,
+        alrtData,
+        featData,
+        hlthData,
+        evtData,
+        execSum,
+        advUsr,
+        prodFn,
+        socData,
+        predData,
+        perfData,
+      ] = await Promise.all([
         ownerAnalyticsService.getOverview(token),
         ownerAnalyticsService.getUsers(token, 20),
         ownerAnalyticsService.getAIAnalytics(token),
@@ -70,6 +124,12 @@ export default function OwnerAnalyticsPage() {
         ownerAnalyticsService.getFeatureUsage(token),
         ownerAnalyticsService.getHealth(token),
         ownerAnalyticsService.getEvents(token, 30),
+        ownerAnalyticsService.getExecutiveSummary(token).catch(() => null),
+        ownerAnalyticsService.getAdvancedUserAnalytics(token).catch(() => null),
+        ownerAnalyticsService.getProductFunnel(token).catch(() => null),
+        ownerAnalyticsService.getSecuritySOC(token).catch(() => null),
+        ownerAnalyticsService.getPredictiveAnalytics(token).catch(() => null),
+        ownerAnalyticsService.getLivePerformance(token).catch(() => null),
       ]);
 
       setOverview(ovData);
@@ -80,13 +140,19 @@ export default function OwnerAnalyticsPage() {
       setHealth(hlthData);
       setEvents(evtData);
 
+      if (execSum) setSummary(execSum);
+      if (advUsr) setAdvUserAnalytics(advUsr);
+      if (prodFn) setProductFunnel(prodFn);
+      if (socData) setSecuritySOC(socData);
+      if (predData) setPredictive(predData);
+      if (perfData) setLivePerformance(perfData);
+
       const nowIso = new Date().toISOString();
       setLastSuccessTime(nowIso);
     } catch (err: any) {
       console.error("[OWNER TELEMETRY FETCH ERROR]", err);
       const errMsg = err.message || "Failed to establish connection with owner telemetry backend.";
 
-      // Data Validation & Resilience: If previous data exists, retain it and display a warning toast
       if (overview || userAnalytics) {
         setWarningMessage(`Temporary connection hiccup: ${errMsg}. Displaying cached telemetry from session.`);
       } else {
@@ -102,12 +168,10 @@ export default function OwnerAnalyticsPage() {
     fetchAllData();
   }, [fetchAllData]);
 
-  // Initial Full Loading Experience (Light Skeleton cards)
   if (loading && !overview) {
     return <OwnerDashboardSkeleton />;
   }
 
-  // Initial Error State (Dedicated Light Component)
   if (error && !overview) {
     return (
       <div className="py-12">
@@ -122,21 +186,32 @@ export default function OwnerAnalyticsPage() {
     );
   }
 
+  const tabs = [
+    { id: "overview", label: "Executive Overview", icon: LayoutDashboard },
+    { id: "users", label: "User Analytics", icon: Users },
+    { id: "funnel", label: "Product Funnel", icon: Filter },
+    { id: "ai", label: "AI Intelligence", icon: Bot },
+    { id: "security", label: "Cyber Security SOC", icon: Lock },
+    { id: "predictive", label: "Predictive Analytics", icon: TrendingUp },
+    { id: "performance", label: "Observability", icon: Cpu },
+    { id: "alerts", label: "Alert Center", icon: Bell, count: alerts.length },
+  ] as const;
+
   return (
-    <div className="space-y-8 pb-12 font-sans">
-      {/* Executive Header Bar (Light Mode) */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6">
+    <div className="space-y-8 pb-12 font-sans bg-slate-50 min-h-screen text-slate-900">
+      {/* Top Executive Header Bar (Light Mode) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-6 bg-white p-6 rounded-2xl shadow-xs">
         <div>
           <div className="flex items-center space-x-3">
             <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-              Owner Executive Telemetry <ShieldCheck className="h-6 w-6 text-amber-600" />
+              Executive Operations & Security Center <ShieldCheck className="h-6 w-6 text-amber-600" />
             </h1>
             <span className="px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-[10px] font-mono font-bold text-amber-900 uppercase tracking-wider">
-              Platform Admin
+              Owner Mode
             </span>
           </div>
           <p className="text-xs text-slate-500 font-mono mt-1">
-            Real-time active users, AI performance, system health, and production security telemetry.
+            Real-time business intelligence, product analytics, cyber security operations (SOC), and infrastructure observability.
           </p>
         </div>
 
@@ -149,164 +224,222 @@ export default function OwnerAnalyticsPage() {
           <button
             onClick={() => fetchAllData(true)}
             disabled={refreshing}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all font-mono text-xs font-bold shadow-sm active:scale-95"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all font-mono text-xs font-bold shadow-xs active:scale-95 cursor-pointer"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            {refreshing ? "Refreshing..." : "Refresh Telemetry"}
+            {refreshing ? "Refreshing..." : "Refresh Intelligence"}
           </button>
         </div>
       </div>
 
-      {/* Non-Blocking Warning Toast (Light Mode) */}
+      {/* Non-Blocking Warning Toast */}
       {warningMessage && (
         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono flex items-center justify-between shadow-2xs">
           <div className="flex items-center gap-2.5">
             <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
             <span>{warningMessage}</span>
           </div>
-          <button
-            onClick={() => fetchAllData(true)}
-            className="underline hover:text-amber-950 font-bold ml-4"
-          >
+          <button onClick={() => fetchAllData(true)} className="underline hover:text-amber-950 font-bold ml-4">
             Retry Now
           </button>
         </div>
       )}
 
-      {/* Real-Time Platform Alerts Banner */}
-      <AlertCards alerts={alerts} loading={false} />
+      {/* AI Daily Operations Synthesis Banner */}
+      <AIExecutiveSummaryBanner summary={summary} />
 
-      {/* KPI Overview Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <OwnerMetricCard
-          title="Total Registered Users"
-          value={overview?.total_users ?? 0}
-          subtext={`+${overview?.new_users_24h ?? 0} in 24h | +${overview?.new_users_7d ?? 0} in 7d`}
-          changeBadge={`${overview?.retention_d7_pct ?? 100}% D7 Retention`}
-          badgeType="success"
-          icon={Users}
-        />
-
-        <OwnerMetricCard
-          title="Live Active Users"
-          value={overview?.active_users_5m ?? 0}
-          subtext={`${overview?.active_users_15m ?? 0} active in 15m | ${overview?.active_users_24h ?? 0} active in 24h`}
-          changeBadge="Online Stream"
-          badgeType="success"
-          icon={Radio}
-        />
-
-        <OwnerMetricCard
-          title="Total Organizations"
-          value={overview?.total_organizations ?? 0}
-          subtext={`${overview?.custom_workspaces ?? 0} custom | ${overview?.demo_workspaces ?? 0} demo`}
-          changeBadge={`${overview?.total_memberships ?? 0} memberships`}
-          badgeType="neutral"
-          icon={Building2}
-        />
-
-        <OwnerMetricCard
-          title="Internal Events (24h)"
-          value={overview?.events_24h ?? 0}
-          subtext={`Total recorded: ${(overview?.total_events ?? 0).toLocaleString()}`}
-          changeBadge="Active Stream"
-          badgeType="warning"
-          icon={Activity}
-        />
+      {/* Interactive Command Center Navigation Tabs */}
+      <div className="flex items-center space-x-1 border-b border-slate-200 overflow-x-auto pb-1 no-scrollbar">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as ActiveTab)}
+              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-mono text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                isActive
+                  ? "bg-slate-900 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span>{tab.label}</span>
+              {"count" in tab && tab.count > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500 text-white font-bold">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* AI Telemetry & LLM Performance */}
-      <AIAnalyticsCard aiData={aiData} loading={false} />
+      {/* TAB CONTENT PANELS */}
 
-      {/* System Infrastructure & Cloud Run Telemetry */}
-      <PlatformHealthCard health={health} loading={false} />
+      {/* TAB 1: EXECUTIVE OVERVIEW */}
+      {activeTab === "overview" && (
+        <div className="space-y-8">
+          {/* KPI Overview Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <OwnerMetricCard
+              title="Total Registered Users"
+              value={overview?.total_users ?? 0}
+              subtext={`+${overview?.new_users_24h ?? 0} in 24h | +${overview?.new_users_7d ?? 0} in 7d`}
+              changeBadge={`${overview?.retention_d7_pct ?? 100}% D7 Retention`}
+              badgeType="success"
+              icon={Users}
+            />
 
-      {/* User Adoption, Active Users & Top Features */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* User Signups & Last Activity List */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <UserPlus className="h-4 w-4 text-amber-600" /> User Accounts & Activity Timestamps
-            </h3>
-            <span className="text-xs font-mono text-slate-500">Latest accounts</span>
+            <OwnerMetricCard
+              title="Live Active Users"
+              value={overview?.active_users_5m ?? 0}
+              subtext={`${overview?.active_users_15m ?? 0} active in 15m | ${overview?.active_users_24h ?? 0} active in 24h`}
+              changeBadge="Online Stream"
+              badgeType="success"
+              icon={Radio}
+            />
+
+            <OwnerMetricCard
+              title="Total Organizations"
+              value={overview?.total_organizations ?? 0}
+              subtext={`${overview?.custom_workspaces ?? 0} custom | ${overview?.demo_workspaces ?? 0} demo`}
+              changeBadge={`${overview?.total_memberships ?? 0} memberships`}
+              badgeType="neutral"
+              icon={Building2}
+            />
+
+            <OwnerMetricCard
+              title="Internal Events (24h)"
+              value={overview?.events_24h ?? 0}
+              subtext={`Total recorded: ${(overview?.total_events ?? 0).toLocaleString()}`}
+              changeBadge="Active Stream"
+              badgeType="warning"
+              icon={Activity}
+            />
           </div>
 
-          {!userAnalytics?.users || userAnalytics.users.length === 0 ? (
-            <div className="py-8 text-center space-y-2 font-mono text-xs text-slate-500">
-              <Inbox className="h-8 w-8 mx-auto text-slate-400" />
-              <p>No user account telemetry has been recorded yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs font-mono">
-                <thead>
-                  <tr className="border-b border-slate-200 text-slate-500 uppercase text-[10px] bg-slate-50">
-                    <th className="py-2.5 px-3">User Email</th>
-                    <th className="py-2.5 px-3">Plan</th>
-                    <th className="py-2.5 px-3">Registered</th>
-                    <th className="py-2.5 px-3">Last Active</th>
-                    <th className="py-2.5 px-3 text-right">Orgs</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {userAnalytics.users.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-2.5 px-3 text-slate-900 font-medium">{u.email}</td>
-                      <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-900 border border-amber-200 capitalize font-bold">
-                          {u.plan_type}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-500">
-                        {u.created_at ? new Date(u.created_at).toLocaleDateString() : "-"}
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-500">
-                        {u.last_active_at ? new Date(u.last_active_at).toLocaleTimeString() : "Never"}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-slate-700 font-semibold">{u.organizations_count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          {/* User Adoption & Top Endpoints */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-amber-600" /> User Accounts & Activity Timestamps
+                </h3>
+                <span className="text-xs font-mono text-slate-500">Latest accounts</span>
+              </div>
 
-        {/* Top API Endpoints & Latencies */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <PieChart className="h-4 w-4 text-sky-600" /> Top Endpoints & Latency
-            </h3>
-          </div>
-
-          {!featureUsage?.top_endpoints || featureUsage.top_endpoints.length === 0 ? (
-            <div className="py-8 text-center space-y-2 font-mono text-xs text-slate-500">
-              <Inbox className="h-8 w-8 mx-auto text-slate-400" />
-              <p>No telemetry has been collected yet.</p>
-            </div>
-          ) : (
-            <div className="space-y-3 pt-1">
-              {featureUsage.top_endpoints.slice(0, 6).map((ep) => (
-                <div key={ep.endpoint} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1 font-mono hover:bg-slate-100/80 transition-colors">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-900 font-medium truncate max-w-[160px]">{ep.endpoint}</span>
-                    <span className="text-emerald-700 font-bold">{ep.avg_latency_ms} ms</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500">
-                    <span>Calls recorded: {ep.count}</span>
-                    <span className="capitalize text-slate-600">P95: ~{Math.round(ep.avg_latency_ms * 1.3)}ms</span>
-                  </div>
+              {!userAnalytics?.users || userAnalytics.users.length === 0 ? (
+                <div className="py-8 text-center space-y-2 font-mono text-xs text-slate-500">
+                  <Inbox className="h-8 w-8 mx-auto text-slate-400" />
+                  <p>No user account telemetry recorded yet.</p>
                 </div>
-              ))}
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-mono">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-slate-500 uppercase text-[10px] bg-slate-50">
+                        <th className="py-2.5 px-3">User Email</th>
+                        <th className="py-2.5 px-3">Plan</th>
+                        <th className="py-2.5 px-3">Registered</th>
+                        <th className="py-2.5 px-3">Last Active</th>
+                        <th className="py-2.5 px-3 text-right">Orgs</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {userAnalytics.users.map((u) => (
+                        <tr key={u.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="py-2.5 px-3 text-slate-900 font-medium">{u.email}</td>
+                          <td className="py-2.5 px-3">
+                            <span className="px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-900 border border-amber-200 capitalize font-bold">
+                              {u.plan_type}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-500">
+                            {u.created_at ? new Date(u.created_at).toLocaleDateString() : "-"}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-500">
+                            {u.last_active_at ? new Date(u.last_active_at).toLocaleTimeString() : "Never"}
+                          </td>
+                          <td className="py-2.5 px-3 text-right text-slate-700 font-semibold">
+                            {u.organizations_count}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* Live Internal Telemetry Event Log */}
-      <EventLogTable events={events} loading={false} />
+            {/* Top API Endpoints */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <PieChart className="h-4 w-4 text-sky-600" /> Top Endpoints & Latency
+                </h3>
+              </div>
+
+              {!featureUsage?.top_endpoints || featureUsage.top_endpoints.length === 0 ? (
+                <div className="py-8 text-center space-y-2 font-mono text-xs text-slate-500">
+                  <Inbox className="h-8 w-8 mx-auto text-slate-400" />
+                  <p>No telemetry collected yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-3 pt-1">
+                  {featureUsage.top_endpoints.slice(0, 6).map((ep) => (
+                    <div
+                      key={ep.endpoint}
+                      className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1 font-mono hover:bg-slate-100/80 transition-colors"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-900 font-medium truncate max-w-[160px]">
+                          {ep.endpoint}
+                        </span>
+                        <span className="text-emerald-700 font-bold">{ep.avg_latency_ms} ms</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500">
+                        <span>Calls: {ep.count}</span>
+                        <span className="capitalize text-slate-600">
+                          P95: ~{Math.round(ep.avg_latency_ms * 1.3)}ms
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <EventLogTable events={events} loading={false} />
+        </div>
+      )}
+
+      {/* TAB 2: ADVANCED USER ANALYTICS */}
+      {activeTab === "users" && <AdvancedUserAnalyticsCard data={advUserAnalytics} />}
+
+      {/* TAB 3: PRODUCT FUNNEL */}
+      {activeTab === "funnel" && <ProductFunnelCard data={productFunnel} />}
+
+      {/* TAB 4: AI INTELLIGENCE */}
+      {activeTab === "ai" && <AIAnalyticsCard aiData={aiData} loading={false} />}
+
+      {/* TAB 5: CYBER SECURITY SOC */}
+      {activeTab === "security" && <CyberSecuritySOCCard data={securitySOC} />}
+
+      {/* TAB 6: PREDICTIVE ANALYTICS */}
+      {activeTab === "predictive" && <PredictiveAnalyticsCard data={predictive} />}
+
+      {/* TAB 7: PERFORMANCE & OBSERVABILITY */}
+      {activeTab === "performance" && (
+        <div className="space-y-8">
+          <PlatformHealthCard health={health} loading={false} />
+          <PerformanceObservabilityCard data={livePerformance} />
+        </div>
+      )}
+
+      {/* TAB 8: ALERT CENTER */}
+      {activeTab === "alerts" && <AlertCards alerts={alerts} loading={false} />}
     </div>
   );
 }
