@@ -26,7 +26,9 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/inventory`,
+        // /onboarding forwards existing users to the dashboard automatically,
+        // so first-time Google sign-ins still get workspace setup.
+        redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
       }
     });
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Mail, ArrowRight, ArrowUpRight } from "lucide-react";
+import { BookDemoButton } from "@/components/marketing/BookDemoButton";
 
 export const metadata: Metadata = {
   title: "Contact EVE",
@@ -47,10 +48,10 @@ export default function ContactPage() {
               Sign In
             </Link>
             <Link
-              href="/pricing"
+              href="/signup"
               className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm hover:shadow-md"
             >
-              Join Waitlist
+              Start free trial
             </Link>
           </div>
         </div>
@@ -65,8 +66,8 @@ export default function ContactPage() {
               Get in touch with EVE
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              EVE is currently in an invitation-only private beta. Have a question, want a demo, or need
-              help? Reach out and the team will get back to you.
+              Questions about whether EVE fits your catalogue? Book 15 minutes and we&apos;ll
+              look at your inventory together — or just email, and a human replies.
             </p>
           </div>
 
@@ -110,18 +111,17 @@ export default function ContactPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <BookDemoButton
+              variant="primary"
+              location="contact_main"
+              className="w-full sm:w-auto px-6 py-3 text-sm"
+            />
             <Link
-              href="/pricing"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-sm hover:shadow-md"
-            >
-              Join the Waitlist
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
-            <Link
-              href="/"
+              href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border hover:border-[color:var(--eve-accent)]/40 rounded-xl transition-all"
             >
-              Back to Home
+              Start free trial
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
           </div>
         </div>

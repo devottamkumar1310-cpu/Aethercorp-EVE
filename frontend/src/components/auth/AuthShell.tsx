@@ -70,7 +70,7 @@ export function AuthShell({ children }: AuthShellProps) {
           <div>&copy; {new Date().getFullYear()} EVE Inc. All rights reserved.</div>
           <div className="flex flex-wrap justify-center gap-6 font-medium">
             <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing &amp; Waitlist</Link>
+            <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link href="/demo" className="hover:text-foreground transition-colors">Live Demo</Link>
             <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>

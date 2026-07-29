@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Lock, Mail, User, AlertTriangle, CheckCircle, Loader2, Sparkles } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { track, identify } from "@/lib/analytics";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -59,7 +60,8 @@ export default function SignupPage() {
     setLoading(true);
     setError(null);
     setMessage(null);
-    
+    track("signup_started", { method: "email" });
+
     const supabase = createClient();
     
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -86,6 +88,10 @@ export default function SignupPage() {
     }
 
     if (data?.session) {
+      if (data.user?.id) {
+        identify(data.user.id, { email, full_name: fullName, signup_method: "email" });
+      }
+      track("signup_completed", { method: "email", requires_verification: false });
       // Sync with backend
       try {
         await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
@@ -97,6 +103,7 @@ export default function SignupPage() {
       }
       router.push("/onboarding");
     } else {
+      track("signup_completed", { method: "email", requires_verification: true });
       router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     }
   };
@@ -278,11 +285,16 @@ export default function SignupPage() {
             type="button"
             onClick={async () => {
               setError(null);
+              track("signup_started", { method: "google" });
               const supabase = createClient();
               const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
-                  redirectTo: `${window.location.origin}/auth/callback?next=/dashboard/inventory`,
+                  // Route through /onboarding, not straight to the dashboard.
+                  // Onboarding is idempotent — it forwards users who already
+                  // have a workspace — so Google users get the demo-brand
+                  // picker instead of landing in an empty inventory table.
+                  redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
                 }
               });
               if (error) setError(error.message);

@@ -18,6 +18,9 @@ import {
   ChevronDown,
   Activity,
 } from "lucide-react";
+import { POSITIONING } from "@/lib/config";
+import { track } from "@/lib/analytics";
+import { BookDemoButton } from "@/components/marketing/BookDemoButton";
 
 type TabKey = "overview" | "inventory" | "traceability";
 
@@ -31,6 +34,10 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("inventory");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+  useEffect(() => {
+    track("landing_view");
+  }, []);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -59,23 +66,53 @@ export default function LandingPage() {
 
   // Mirrors the in-app FAQ (dashboard → Help & Learning Center → FAQ) so the
   // landing page and product stay consistent. Do not invent generic SaaS FAQs.
+  // Written as direct, extractable answers to the questions founders actually
+  // ask before buying — which is also what answer engines quote. Each answer
+  // leads with the fact, then the detail. Mirrored into FAQPage JSON-LD below.
   const faqs = [
     {
-      q: "Can you prove this right now?",
-      a: "Yes. You can upload any supplier invoice, contract, or inventory ledger CSV to the Document Hub and query EVE immediately in the chat console. EVE will instantly extract data, run planning diagnostics, and surface cash-flow impact recommendations.",
+      q: "Does EVE work with my Shopify store?",
+      a: "Yes. Export your products from Shopify admin and upload the CSV unchanged — EVE reads Shopify's native export format, including grouped variant rows, size and colour options, and cost-per-item. You do not need to rename a single column. A direct Shopify app integration is on the roadmap; today the import takes about 60 seconds.",
     },
     {
-      q: "Where does the AI get its business data?",
-      a: "EVE reads from the central database schema (Clients, Projects, Finances, and Inventory tables) plus any documents uploaded to the Document Hub.",
+      q: "How long until I see something useful?",
+      a: "Under two minutes for most catalogues. After upload, EVE shows your stockout risk list ranked by revenue exposure, your dead stock with the capital tied up in it, and reorder quantities per variant.",
     },
     {
-      q: "Is my company data kept secure?",
-      a: "Yes. All uploaded files are stored securely in encrypted buckets, and database access is locked at the workspace boundary.",
+      q: "How is EVE different from Stocky or Inventory Planner?",
+      a: "EVE is built specifically for fashion, so it forecasts at variant level — size and colour — rather than treating a style as one SKU. That is the difference between 'the tee is selling' and 'you are about to run out of mediums and will be sitting on XLs in March'. EVE also explains every recommendation with the data behind it.",
+    },
+    {
+      q: "What does EVE cost?",
+      a: "Plans start at $79/month for up to 500 SKUs, $199/month for growing brands with variant-level forecasting and the AI assistant, and $449/month for unlimited SKUs. Every plan includes a 14-day free trial with no credit card required.",
+    },
+    {
+      q: "Is my inventory data safe?",
+      a: "Yes. EVE's AI has read-only access — it analyses your data and never writes back to your store. Files are stored in encrypted buckets, and every database query is scoped to your workspace boundary so no other tenant can reach your data.",
+    },
+    {
+      q: "What kind of brand is EVE built for?",
+      a: "Founder-led D2C fashion and apparel brands on Shopify, typically between $250k and $20M in annual revenue, managing anywhere from 50 to several thousand variants across sizes and colours.",
     },
   ];
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <div className="landing-page min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200">
+      {/* FAQPage schema — lets answer engines quote these directly. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
 
       {/* Skip link for keyboard users */}
       <a
@@ -172,25 +209,27 @@ export default function LandingPage() {
 
         <div className="max-w-4xl space-y-6 sm:space-y-8 relative z-10">
 
-          {/* Early-access banner pill */}
+          {/* Category pill — states the entity, not a scarcity claim */}
           <Link
-            href="/pricing"
+            href="/demo"
             className="chip-accent inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-sm max-w-full hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 transition-transform"
           >
             <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="text-left">Now in private beta — onboarding e-commerce brands weekly. Join the waitlist.</span>
+            <span className="text-left">See what EVE finds in a real fashion catalogue</span>
             <ArrowRight className="h-3 w-3 shrink-0" aria-hidden />
           </Link>
 
           {/* Main Headline */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-foreground">
-            The Executive Operating System <br />
-            <span className="eve-gradient-text">for E-Commerce Founders</span>
+            Know what to reorder. <br />
+            <span className="eve-gradient-text">Before you sell out.</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Predict stockout dates, isolate dead stock capital, and automate supplier purchase orders with sub-second decision traceability. Built for e-commerce CEOs, D2C brands, and apparel retailers.
+            EVE is the inventory intelligence platform for Shopify fashion brands. Upload your
+            Shopify export and see, in under two minutes, which sizes are about to stock out,
+            how much cash is trapped in dead stock, and exactly what to reorder.
           </p>
 
           {/* CTAs */}
@@ -199,37 +238,82 @@ export default function LandingPage() {
               href="/signup"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
             >
-              Start Free Trial
+              Start free trial
               <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
             </Link>
-            <Link
-              href="/demo"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border hover:border-[color:var(--eve-accent)]/40 rounded-xl transition-all"
-            >
-              Explore Live Interactive Demo
-            </Link>
+            <BookDemoButton
+              variant="secondary"
+              location="landing_hero"
+              className="w-full sm:w-auto px-8 py-3.5 text-sm"
+            />
           </div>
 
           <p className="text-xs text-muted-foreground font-medium">
-            Full-feature free trial • Onboarding e-commerce brands weekly • Upload your inventory CSV to get started
+            14-day free trial • No credit card • Works with your native Shopify CSV export
           </p>
         </div>
       </section>
 
-      {/* 3. Executive Credibility & Proof Strip */}
-      <section aria-label="Key metrics" className="border-y border-border/60 bg-muted/30 py-8 px-4 sm:px-6">
+      {/* 3. Proof strip — claims a founder can verify in the product itself.
+          Deliberately no invented customer counts or fake logos. */}
+      <section aria-label="What EVE does" className="border-y border-border/60 bg-muted/30 py-8 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { v: "Sub-Second", l: "Decision Traceability Sync" },
-            { v: "100%", l: "Audit Trail Evidence" },
-            { v: "Variant-Level", l: "Size & Color Velocity Math" },
-            { v: "< 2 min", l: "Setup & Data Ingestion" },
+            { v: "Under 2 min", l: "From Shopify export to first insight" },
+            { v: "Size & colour", l: "Variant-level velocity, not just SKU totals" },
+            { v: "Read-only AI", l: "Never writes back to your store" },
+            { v: "Every number", l: "Traceable to the data behind it" },
           ].map((m) => (
             <div key={m.l} className="space-y-1">
               <div className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">{m.v}</div>
               <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{m.l}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 3b. Founder trust block — with no customers yet, a named human is the
+          strongest credibility signal available, and it costs nothing. */}
+      <section aria-label="Who builds EVE" className="px-4 sm:px-6 py-12">
+        <div className="max-w-3xl mx-auto rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            <div className="h-16 w-16 shrink-0 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-white text-xl font-extrabold shadow-md">
+              DK
+            </div>
+            <div className="space-y-3">
+              <div>
+                <div className="text-sm font-extrabold text-foreground">Devottam Kumar</div>
+                <div className="text-xs text-muted-foreground font-medium">Founder, EVE</div>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                I&apos;m building EVE with a small group of fashion founders, one catalogue at a
+                time. If you upload your data and EVE tells you something useless, I want to hear
+                it directly — I answer every email myself.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 pt-1">
+                <a
+                  href={`mailto:${POSITIONING.supportEmail}`}
+                  className="text-xs font-bold text-[color:var(--eve-accent)] hover:underline"
+                >
+                  {POSITIONING.supportEmail}
+                </a>
+                <a
+                  href={POSITIONING.linkedIn}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold text-[color:var(--eve-accent)] hover:underline"
+                >
+                  LinkedIn
+                </a>
+                <BookDemoButton
+                  variant="ghost"
+                  location="landing_founder_block"
+                  label="Book 15 minutes with me"
+                  className="text-xs px-0"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -651,7 +735,7 @@ export default function LandingPage() {
             <span className="font-bold text-foreground uppercase tracking-wider block">Company</span>
             <ul className="space-y-2 text-muted-foreground font-medium">
               <li><Link href="/signup" className="hover:text-foreground transition-colors">Start Free Trial</Link></li>
-              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing & Waitlist</Link></li>
+              <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
               <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               <li><Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link></li>
             </ul>

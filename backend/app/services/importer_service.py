@@ -32,6 +32,158 @@ class ImporterService:
         missing = [f for f in required_fields if f not in df.columns]
         return len(missing) == 0, missing
 
+    # Shopify's native exports use their own header vocabulary. Merchants
+    # download these straight from Shopify admin and upload them to us, so
+    # they must import without the merchant editing a single cell.
+    #
+    # Covers both:
+    #   - Products export  (Handle, Title, Variant SKU, Variant Inventory Qty, ...)
+    #   - Inventory export (Handle, Title, SKU, Available, On hand, ...)
+    SHOPIFY_COLUMN_ALIASES = {
+        # Identity
+        "variant_sku": "sku",
+        "sku": "sku",
+        "variant_barcode": "barcode",
+        # Naming
+        "title": "name",
+        "product_title": "name",
+        "item_name": "name",
+        "product_name": "name",
+        "product": "name",
+        # Category
+        "type": "category",
+        "product_type": "category",
+        "product_category": "category",
+        # Quantity — Shopify uses several depending on which report you export
+        "variant_inventory_qty": "quantity",
+        "available": "quantity",
+        "on_hand": "quantity",
+        "stock_on_hand": "quantity",
+        "inventory_quantity": "quantity",
+        "stock": "quantity",
+        "qty": "quantity",
+        # Money
+        "variant_price": "selling_price",
+        "price": "selling_price",
+        "selling_price": "selling_price",
+        "cost_per_item": "unit_cost",
+        "variant_cost": "unit_cost",
+        "cost": "unit_cost",
+        "unit_cost": "unit_cost",
+        # Supplier
+        "vendor": "supplier",
+        "supplier_name": "supplier",
+        # Sales
+        "sales_qty": "sales_quantity",
+        "sold_qty": "sales_quantity",
+        "qty_sold": "sales_quantity",
+        "units_sold": "sales_quantity",
+    }
+
+    @classmethod
+    def normalize_shopify_export(cls, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Rewrites a native Shopify CSV export into EVE's canonical column names.
+
+        Beyond renaming, this handles two Shopify quirks that would otherwise
+        silently corrupt an import:
+
+        1. Grouped rows — in a products export only the FIRST row of each
+           `handle` carries Title/Vendor/Type. Every subsequent variant row
+           leaves them blank. Forward-filling within the handle group is what
+           stops 80% of a catalogue importing with an empty product name.
+
+        2. Variant identity — a bare title like "Classic Tee" repeats across
+           every size/colour. We append the Option values so the fashion
+           variant detector can actually see "Classic Tee — M / Black".
+
+        Safe to run on non-Shopify files: unknown columns pass through
+        untouched and missing columns are simply skipped.
+        """
+        # Canonical header form: lowercase, underscores, no punctuation noise
+        # ("Body (HTML)" -> "body_html", "Variant Inventory Qty" -> "variant_inventory_qty")
+        def _clean(col: str) -> str:
+            cleaned = str(col).strip().lower()
+            for ch in ("(", ")", "[", "]", ":", "/"):
+                cleaned = cleaned.replace(ch, " ")
+            return "_".join(cleaned.split())
+
+        df.columns = [_clean(c) for c in df.columns]
+
+        is_shopify_export = "handle" in df.columns or "variant_sku" in df.columns
+
+        # 1. Forward-fill product-level fields down each handle group.
+        if is_shopify_export and "handle" in df.columns:
+            group_fields = [f for f in ("title", "vendor", "type", "product_category") if f in df.columns]
+            if group_fields:
+                df[group_fields] = df.groupby("handle")[group_fields].ffill()
+
+        # 2. Build a variant-aware display name before `title` is renamed.
+        option_value_cols = [
+            c for c in ("option1_value", "option2_value", "option3_value") if c in df.columns
+        ]
+        if is_shopify_export and "title" in df.columns and option_value_cols:
+            def _compose_name(row) -> str:
+                base = str(row.get("title") or "").strip()
+                parts = [
+                    str(row[c]).strip()
+                    for c in option_value_cols
+                    if pd.notna(row.get(c)) and str(row[c]).strip() not in ("", "Default Title")
+                ]
+                return f"{base} — {' / '.join(parts)}" if base and parts else base
+
+            df["title"] = df.apply(_compose_name, axis=1)
+
+        # 3a. Resolve the Type/Product Category collision in favour of `type`.
+        #     For fashion, Shopify's "Type" (Tops, Outerwear) is the useful
+        #     signal; "Product Category" is their broad taxonomy ("Apparel"),
+        #     which is too coarse to segment a catalogue by. Keep the taxonomy
+        #     under a non-colliding name rather than discarding it.
+        if "type" in df.columns and "product_category" in df.columns:
+            df = df.rename(columns={"product_category": "product_taxonomy"})
+
+        # 3b. Rename to canonical names.
+        #    Several source headers can map to the same target (Shopify ships
+        #    both "Type" and "Product Category"). Only the first match wins —
+        #    renaming both would produce a duplicate column, and df["category"]
+        #    would then return a DataFrame instead of a Series downstream.
+        claimed = {c for c in df.columns if c in cls.SHOPIFY_COLUMN_ALIASES.values()}
+        rename_map = {}
+        for col in df.columns:
+            target = cls.SHOPIFY_COLUMN_ALIASES.get(col)
+            if not target or target == col or target in claimed:
+                continue
+            rename_map[col] = target
+            claimed.add(target)
+        if rename_map:
+            df = df.rename(columns=rename_map)
+
+        # 4. Fall back to `handle` for SKU when a merchant exports without SKUs.
+        #    An unidentifiable row is worse than a synthetic-but-stable id.
+        if "sku" not in df.columns and "handle" in df.columns:
+            df["sku"] = df["handle"].astype(str)
+        elif "sku" in df.columns and "handle" in df.columns:
+            missing_sku = df["sku"].isna() | (df["sku"].astype(str).str.strip().isin(["", "nan"]))
+            if missing_sku.any():
+                suffix = df.groupby("handle").cumcount().astype(str)
+                df.loc[missing_sku, "sku"] = (
+                    df.loc[missing_sku, "handle"].astype(str) + "-" + suffix[missing_sku]
+                )
+
+        # 5. Drop Shopify's image-only continuation rows — they repeat a handle
+        #    with no variant data and would import as phantom zero-stock SKUs.
+        if is_shopify_export and "image_src" in df.columns and "quantity" in df.columns:
+            phantom = df["quantity"].isna() & df.get("selling_price", pd.Series(index=df.index)).isna()
+            if phantom.any():
+                df = df[~phantom].copy()
+
+        if is_shopify_export:
+            logger.info(
+                f"Shopify export detected — normalized {len(rename_map)} columns, {len(df)} rows retained."
+            )
+
+        return df
+
     @classmethod
     def import_inventory(cls, db: Session, org_id: Any, df: pd.DataFrame) -> Dict[str, Any]:
         """
@@ -45,9 +197,10 @@ class ImporterService:
                 org_id = uuid.UUID(org_id)
             except ValueError:
                 pass
-        list(df.columns)
-        df.columns = [c.strip().lower() for c in df.columns]
-        
+        # Accept native Shopify exports here too — a merchant who picks the
+        # "inventory" upload should not hit a different parser than "master".
+        df = cls.normalize_shopify_export(df)
+
         # 1. Missing columns validation
         is_valid, missing = cls.validate_schema(df, ["sku", "name"])
         if not is_valid:
@@ -610,18 +763,9 @@ class ImporterService:
             except ValueError:
                 pass
         
-        df.columns = [c.strip().lower().replace(" ", "_") for c in df.columns]
-        
-        # Mapping common aliases
-        col_map = {}
-        for c in df.columns:
-            if c in ["item_name", "product_name", "product"]: col_map[c] = "name"
-            elif c in ["stock_on_hand", "stock", "inventory_quantity"]: col_map[c] = "quantity"
-            elif c in ["cost", "unit_cost"]: col_map[c] = "unit_cost"
-            elif c in ["price", "selling_price"]: col_map[c] = "selling_price"
-            elif c in ["vendor", "supplier_name"]: col_map[c] = "supplier"
-            elif c in ["sales_qty", "sold_qty", "qty_sold"]: col_map[c] = "sales_quantity"
-        df.rename(columns=col_map, inplace=True)
+        # Handles both EVE's own template and native Shopify exports, which is
+        # the flow the product actually instructs merchants to use.
+        df = cls.normalize_shopify_export(df)
 
         is_valid, missing = cls.validate_schema(df, ["sku"])
         if not is_valid:

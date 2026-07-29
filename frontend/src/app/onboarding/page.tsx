@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Building2, ArrowRight, Sparkles, Brain, Loader2 } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { track, identify } from "@/lib/analytics";
 
 export default function OnboardingPage() {
   const [workspaceName, setWorkspaceName] = useState("");
@@ -26,7 +27,16 @@ export default function OnboardingPage() {
         router.push("/login");
         return;
       }
-      
+
+      // Google OAuth users never pass through the signup page, so this is the
+      // first point at which we can attach an identity to their events.
+      if (session.user?.id) {
+        identify(session.user.id, {
+          email: session.user.email,
+          signup_method: session.user.app_metadata?.provider ?? "unknown",
+        });
+      }
+
       try {
         const response = await apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
           headers: {
@@ -34,8 +44,21 @@ export default function OnboardingPage() {
           }
         });
         
+        // /demo sends founders here with ?demo=luma so the live workspace opens
+        // in one click instead of making them choose a brand they don't know.
+        // Read from location rather than useSearchParams to avoid forcing a
+        // Suspense boundary around this client page.
+        const requestedDemo =
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("demo")
+            : null;
+
         if (response.ok) {
           const workspaces = await response.json();
+          if (requestedDemo && (!Array.isArray(workspaces) || workspaces.length === 0)) {
+            await handleCreateDemoWorkspace(requestedDemo);
+            return;
+          }
           if (Array.isArray(workspaces) && workspaces.length > 0) {
             // User already has workspaces — restore active workspace and skip onboarding
             const storedId = localStorage.getItem("active_workspace_id");
@@ -85,6 +108,7 @@ export default function OnboardingPage() {
 
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
+      track("workspace_created", { type: "blank" });
 
       router.push("/dashboard/inventory");
     } catch (e: any) {
@@ -120,6 +144,8 @@ export default function OnboardingPage() {
 
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
+      track("workspace_created", { type: "demo", demo_company: demoCompany });
+      track("demo_workspace_started", { demo_company: demoCompany });
 
       router.push("/dashboard/inventory");
     } catch (e: any) {

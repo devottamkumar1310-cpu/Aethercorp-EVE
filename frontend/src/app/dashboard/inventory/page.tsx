@@ -9,6 +9,7 @@ import {
   uploadMasterCSVAPI,
   getHeaders,
 } from "@/services/businessService";
+import { track } from "@/lib/analytics";
 
 import {
   Package,
@@ -177,6 +178,11 @@ export default function InventoryDashboardPage() {
     setUploadingMaster(true);
     try {
       const result = await uploadMasterCSVAPI(sessionToken, file);
+      track("csv_uploaded", {
+        rows_total: result?.total_rows ?? null,
+        rows_valid: result?.valid_rows ?? null,
+        file_size_kb: Math.round(file.size / 1024),
+      });
       toast.success(`Master file processed!`, { id: toastId });
       setImportSummary({ ...result, type: "master" });
       setShowImportSummary(true);
@@ -195,6 +201,13 @@ export default function InventoryDashboardPage() {
         parsedSummary = JSON.parse(err.message);
       } catch {}
       
+      // Upload failures are the single biggest activation drop-off, so the
+      // reason is captured explicitly rather than inferred from a funnel gap.
+      track("csv_upload_failed", {
+        missing_columns: parsedSummary?.missing_columns ?? null,
+        file_size_kb: Math.round(file.size / 1024),
+      });
+
       if (parsedSummary && parsedSummary.status === "error") {
         setImportSummary({ ...parsedSummary, type: "master" });
         setShowImportSummary(true);
@@ -243,6 +256,23 @@ export default function InventoryDashboardPage() {
       return (a[sortField] - b[sortField]) * dir;
     });
   }, [data, search, categoryFilter, sortField, sortDir]);
+
+  // Activation moment: the first time a user sees real risk or dead-stock
+  // numbers, not merely a rendered page. This is the denominator for
+  // "activated user" — fired once per session, before the early returns so
+  // hook order stays stable.
+  const [insightTracked, setInsightTracked] = useState(false);
+  useEffect(() => {
+    if (insightTracked || !alerts) return;
+    const deadCount = alerts.dead_stock?.length ?? 0;
+    const lowCount = alerts.low_stock?.length ?? 0;
+    if (deadCount === 0 && lowCount === 0) return;
+    track("first_insight_viewed", {
+      dead_stock_count: deadCount,
+      low_stock_count: lowCount,
+    });
+    setInsightTracked(true);
+  }, [alerts, insightTracked]);
 
   // Declared unconditionally (before the loading/empty-state early returns below) so
   // this hook always runs in the same order on every render — placing it after those
