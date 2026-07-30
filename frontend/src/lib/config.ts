@@ -23,17 +23,23 @@ export const POSITIONING = {
 } as const;
 
 /**
- * Demo booking. Set NEXT_PUBLIC_BOOKING_URL to your real Cal.com/Calendly
- * link — it can be changed in Vercel without a deploy.
+ * Founder call booking. Set NEXT_PUBLIC_BOOKING_URL to your real Cal.com/
+ * Calendly link — it can be changed in Vercel without a deploy.
+ *
+ * SECONDARY PATH ONLY. EVE is product-led: the primary journey is landing →
+ * free trial → Google sign-in → demo workspace → upload CSV → first insight,
+ * and nothing on a marketing surface should compete with it. A founder call is
+ * the escape hatch for someone who is stuck or wants a deeper conversation
+ * after trying the product — never the headline action, never a primary button.
  *
  * There is deliberately NO placeholder fallback. A hardcoded default shipped a
- * link that 404'd on every page, which is worse than no button at all: it
- * burns the highest-intent click in the funnel. When unset, BookDemoButton
- * falls back to a mailto so the CTA still reaches a human.
+ * link that 404'd on every page, which is worse than no button at all. When
+ * unset, BookDemoButton falls back to a mailto so the link still reaches a human.
  */
 export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || "";
 
-export const BOOKING_CTA = "Book a 15-min inventory teardown";
+/** Deliberately assistance-shaped, not sales-shaped. */
+export const BOOKING_CTA = "Book 15 minutes with the founder";
 
 /**
  * Pricing.
@@ -98,7 +104,9 @@ export const PRICING = {
         "Custom onboarding & data migration",
         "Direct founder Slack channel",
       ],
-      cta: "Talk to us",
+      // Every plan self-serves. Gating the top tier behind "Talk to us" made
+      // the most valuable visitor the only one who couldn't try the product.
+      cta: "Start free trial",
       highlighted: false,
     },
   ],

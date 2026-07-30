@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Mail, ArrowRight, ArrowUpRight } from "lucide-react";
+import { Mail, ArrowUpRight } from "lucide-react";
 import { BookDemoButton } from "@/components/marketing/BookDemoButton";
+import { StartFreeTrialButton } from "@/components/marketing/StartFreeTrialButton";
 
 export const metadata: Metadata = {
   title: "Contact EVE",
@@ -66,8 +67,9 @@ export default function ContactPage() {
               Get in touch with EVE
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
-              Questions about whether EVE fits your catalogue? Book 15 minutes and we&apos;ll
-              look at your inventory together — or just email, and a human replies.
+              You don&apos;t need to talk to us to use EVE — the trial is one click with Google
+              and answers most questions faster than we can. But if you&apos;d rather ask a
+              human first, email us or book 15 minutes; a person replies either way.
             </p>
           </div>
 
@@ -110,19 +112,18 @@ export default function ContactPage() {
             </a>
           </div>
 
+          {/* Trial first, even here. Contact is where people land when they
+              think they need permission to start — they don't. */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <BookDemoButton
-              variant="primary"
+            <StartFreeTrialButton
               location="contact_main"
               className="w-full sm:w-auto px-6 py-3 text-sm"
             />
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border hover:border-[color:var(--eve-accent)]/40 rounded-xl transition-all"
-            >
-              Start free trial
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
+            <BookDemoButton
+              variant="secondary"
+              location="contact_main"
+              className="w-full sm:w-auto px-6 py-3 text-sm"
+            />
           </div>
         </div>
       </main>

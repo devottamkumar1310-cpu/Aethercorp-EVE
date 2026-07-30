@@ -98,7 +98,9 @@ export default function SignupPage() {
         identify(data.user.id);
       }
       track("signup_completed", { method: "email", requires_verification: false });
-      track("free_trial_started", { method: "email" });
+      // free_trial_started now fires in /onboarding, at the moment a workspace
+      // actually exists. Google is the primary trial entry and never touches
+      // this page, so firing it here measured only the minority path.
       // Sync with backend
       try {
         await apiFetch(`${API_BASE_URL}/api/auth/sync`, {

@@ -7,6 +7,7 @@ import { PRICING, FOUNDING_OFFER, REVENUE_RANGES, POSITIONING } from "@/lib/conf
 import { joinWaitlist } from "@/lib/services/waitlistService";
 import { track } from "@/lib/analytics";
 import { BookDemoButton } from "@/components/marketing/BookDemoButton";
+import { StartFreeTrialButton } from "@/components/marketing/StartFreeTrialButton";
 
 export default function PricingPage() {
   const [email, setEmail] = useState("");
@@ -147,37 +148,41 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                {plan.cta === "Talk to us" ? (
-                  <BookDemoButton
-                    variant={plan.highlighted ? "primary" : "secondary"}
-                    label="Talk to us"
-                    location={`pricing_plan_${plan.id}`}
-                    className="w-full py-3 text-xs"
-                  />
-                ) : (
-                  <Link
-                    href="/signup"
-                    className={`w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold transition-all ${
-                      plan.highlighted
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border"
-                    }`}
-                  >
-                    {plan.cta}
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                  </Link>
-                )}
+                {/* Every tier starts the same way. A "Talk to us" tier put the
+                    most valuable visitor into a sales queue instead of the
+                    product. */}
+                <StartFreeTrialButton
+                  variant={plan.highlighted ? "primary" : "secondary"}
+                  label={plan.cta}
+                  location={`pricing_plan_${plan.id}`}
+                  className="w-full py-3 text-xs"
+                />
               </div>
             ))}
           </div>
 
-          <p className="text-center text-xs text-muted-foreground pt-8">
-            Every plan includes the full {PRICING.trialDays}-day trial. Cancel any time — we
-            don&apos;t ask why, and we don&apos;t hold your data hostage.{" "}
-            <Link href="/contact" className="font-semibold text-[color:var(--eve-accent)] hover:underline">
-              Questions?
-            </Link>
-          </p>
+          <div className="text-center text-xs text-muted-foreground pt-8 space-y-2">
+            <p>
+              Every plan starts with the same {PRICING.trialDays}-day trial — one click with
+              Google, no credit card, no call. Cancel any time; we don&apos;t ask why, and we
+              don&apos;t hold your data hostage.
+            </p>
+            <p>
+              Not sure which tier fits your catalogue?{" "}
+              <Link href="/contact" className="font-semibold text-[color:var(--eve-accent)] hover:underline">
+                Email us
+              </Link>{" "}
+              or{" "}
+              <BookDemoButton
+                variant="ghost"
+                location="pricing_plans_footnote"
+                label="book 15 minutes with the founder"
+                showIcon={false}
+                className="text-xs underline underline-offset-2"
+              />
+              .
+            </p>
+          </div>
         </section>
 
         {/* Early access — now actually persisted */}
@@ -313,16 +318,21 @@ export default function PricingPage() {
                   <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
                     {alreadyRegistered
                       ? "We already have your details. If you haven't heard from us, email us directly and we'll jump the queue."
-                      : <>We&apos;ll reply to <strong className="text-foreground">{email}</strong> personally. If you&apos;d rather just talk now, grab a slot below.</>}
+                      : <>We&apos;ll reply to <strong className="text-foreground">{email}</strong> personally. You don&apos;t have to wait for us, though — the trial is open right now.</>}
                   </p>
-                  <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
-                    <BookDemoButton variant="primary" location="pricing_post_submit" className="px-5 py-2.5 text-xs" />
-                    <Link
-                      href="/signup"
-                      className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-xs font-bold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border transition-all"
-                    >
-                      Start the free trial
-                    </Link>
+                  <div className="pt-2 flex flex-col items-center gap-2">
+                    <StartFreeTrialButton
+                      label="Start the free trial"
+                      location="pricing_post_submit"
+                      className="px-5 py-2.5 text-xs"
+                    />
+                    <BookDemoButton
+                      variant="ghost"
+                      location="pricing_post_submit"
+                      label="Or book 15 minutes with the founder"
+                      showIcon={false}
+                      className="text-[11px] underline underline-offset-2"
+                    />
                   </div>
                 </div>
               )}

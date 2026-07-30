@@ -110,6 +110,9 @@ export default function OnboardingPage() {
       setOrganization(data.organization_id);
       track("workspace_created", { source: "blank", workspace_id: data.organization_id });
       track("onboarding_completed", { source: "blank" });
+      // Fires here rather than at signup: this is the one point every trial
+      // passes through, whether the founder came via Google or email.
+      track("free_trial_started", { source: "blank" });
 
       router.push("/dashboard/inventory");
     } catch (e: any) {
@@ -151,6 +154,7 @@ export default function OnboardingPage() {
         workspace_id: data.organization_id,
       });
       track("onboarding_completed", { source: "demo", demo_company: demoCompany });
+      track("free_trial_started", { source: "demo", demo_company: demoCompany });
 
       router.push("/dashboard/inventory");
     } catch (e: any) {

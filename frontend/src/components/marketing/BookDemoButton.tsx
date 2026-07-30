@@ -16,11 +16,19 @@ const VARIANTS: Record<Variant, string> = {
 };
 
 /**
- * The primary conversion event for founder-led sales. Every click is tracked
- * with attribution so we can tell which outreach channel produces calls.
+ * The optional assistance path — NOT a conversion path.
+ *
+ * EVE is product-led. The primary journey is StartFreeTrialButton → Google →
+ * demo workspace → upload → first insight; this exists for the visitor who is
+ * stuck, or who wants a deeper conversation after trying the product. It
+ * therefore defaults to `ghost` and should never be rendered as the highest-
+ * emphasis action on a page, or above the fold competing with the trial CTA.
+ *
+ * Clicks are still tracked (`demo_booking_clicked`, an append-only event name)
+ * so we can see how much demand for help the self-serve flow leaves behind.
  */
 export function BookDemoButton({
-  variant = "primary",
+  variant = "ghost",
   label = BOOKING_CTA,
   location,
   className = "",
@@ -34,11 +42,11 @@ export function BookDemoButton({
   showIcon?: boolean;
 }) {
   // Without a configured booking link, fall back to email rather than sending
-  // the highest-intent click in the funnel to a dead URL.
+  // someone who is asking for help to a dead URL.
   const configured = Boolean(BOOKING_URL);
   const href = configured
     ? BOOKING_URL
-    : `mailto:${POSITIONING.supportEmail}?subject=${encodeURIComponent("Inventory teardown request")}`;
+    : `mailto:${POSITIONING.supportEmail}?subject=${encodeURIComponent("Question about EVE")}`;
 
   return (
     <a

@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { POSITIONING } from "@/lib/config";
 import { track } from "@/lib/analytics";
 import { BookDemoButton } from "@/components/marketing/BookDemoButton";
+import { StartFreeTrialButton } from "@/components/marketing/StartFreeTrialButton";
 
 /**
  * The numbers below are the ACTUAL seeded figures for the Luma & Co. demo
@@ -183,16 +184,13 @@ export default function DemoPage() {
                 </>
               )}
             </button>
-            <BookDemoButton
-              variant="secondary"
-              location="demo_hero"
-              className="w-full sm:w-auto px-7 py-3.5 text-sm"
-            />
           </div>
+          {/* A single primary action. The booking link that used to sit beside
+              it competed with the one thing this page exists to make happen. */}
           <p className="text-xs text-muted-foreground">
             {signedIn
               ? "You're signed in — this opens instantly."
-              : "One click with Google. No password, no credit card."}
+              : "One click with Google. No password, no credit card, no sales call."}
           </p>
         </section>
 
@@ -293,13 +291,10 @@ export default function DemoPage() {
             and dead-stock list within two minutes.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md"
-            >
-              Start free trial
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
+            <StartFreeTrialButton
+              location="demo_bottom_cta"
+              className="w-full sm:w-auto px-7 py-3.5 text-sm"
+            />
             <Link
               href="/pricing"
               className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border rounded-xl transition-all"
@@ -307,6 +302,16 @@ export default function DemoPage() {
               See pricing
             </Link>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Want a second pair of eyes on your catalogue?{" "}
+            <BookDemoButton
+              variant="ghost"
+              location="demo_bottom_cta"
+              label="Book 15 minutes with the founder"
+              showIcon={false}
+              className="text-xs underline underline-offset-2"
+            />
+          </p>
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-1">
             <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" aria-hidden />
             EVE&apos;s AI has read-only access. It analyses your data; it never writes back to your store.

@@ -21,6 +21,7 @@ import {
 import { POSITIONING } from "@/lib/config";
 import { track } from "@/lib/analytics";
 import { BookDemoButton } from "@/components/marketing/BookDemoButton";
+import { StartFreeTrialButton } from "@/components/marketing/StartFreeTrialButton";
 
 type TabKey = "overview" | "inventory" | "traceability";
 
@@ -73,6 +74,10 @@ export default function LandingPage() {
     {
       q: "Does EVE work with my Shopify store?",
       a: "Yes. Export your products from Shopify admin and upload the CSV unchanged — EVE reads Shopify's native export format, including grouped variant rows, size and colour options, and cost-per-item. You do not need to rename a single column. A direct Shopify app integration is on the roadmap; today the import takes about 60 seconds.",
+    },
+    {
+      q: "Do I have to book a demo or talk to sales first?",
+      a: "No. EVE is self-serve from end to end: sign in with Google, land in a live workspace, upload your Shopify export, and read your first insight — usually inside two minutes, with no call and no credit card. You can book 15 minutes with the founder if you get stuck or want to go deeper, but it is optional and it is never a gate on using the product.",
     },
     {
       q: "How long until I see something useful?",
@@ -232,25 +237,33 @@ export default function LandingPage() {
             how much cash is trapped in dead stock, and exactly what to reorder.
           </p>
 
-          {/* CTAs */}
+          {/* CTAs — one primary self-serve path. The secondary action is a
+              lighter-weight way into the same product, never a sales call. */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2 w-full max-w-md mx-auto sm:max-w-none">
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
-            >
-              Start free trial
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
-            <BookDemoButton
-              variant="secondary"
+            <StartFreeTrialButton
               location="landing_hero"
               className="w-full sm:w-auto px-8 py-3.5 text-sm"
             />
+            <Link
+              href="/demo"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border hover:border-[color:var(--eve-accent)]/40 rounded-xl transition-all"
+            >
+              See a real catalogue first
+            </Link>
           </div>
 
-          <p className="text-xs text-muted-foreground font-medium">
-            14-day free trial • No credit card • Works with your native Shopify CSV export
-          </p>
+          <div className="space-y-1.5">
+            <p className="text-xs text-muted-foreground font-medium">
+              One click with Google • No credit card • No sales call • First insight in about two minutes
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Prefer email and a password?{" "}
+              <Link href="/signup" className="font-semibold text-[color:var(--eve-accent)] hover:underline">
+                Sign up that way instead
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </section>
 
@@ -305,10 +318,12 @@ export default function LandingPage() {
                 >
                   LinkedIn
                 </a>
+                {/* Optional, and deliberately the lowest-emphasis element on
+                    the page. Nobody has to talk to us to use EVE. */}
                 <BookDemoButton
                   variant="ghost"
                   location="landing_founder_block"
-                  label="Book 15 minutes with me"
+                  label="Stuck? Book 15 minutes with me"
                   className="text-xs px-0"
                 />
               </div>
@@ -616,17 +631,26 @@ export default function LandingPage() {
       <section id="workflow" className="py-16 sm:py-24 px-4 sm:px-6 bg-muted/20 border-y border-border/60">
         <div className="max-w-7xl mx-auto space-y-12">
           <div className="text-center space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider t-accent">Simple 3-Step Setup</div>
+            <div className="text-xs font-bold uppercase tracking-wider t-accent">No sales call required</div>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
-              From Raw Data to Execution in 2 Minutes
+              Sign in, upload, see your first insight
             </h2>
+            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+              The whole path from this page to a real recommendation about your own catalogue —
+              nothing here waits on us.
+            </p>
           </div>
 
-          <ol className="grid md:grid-cols-3 gap-8 text-center list-none">
+          {/* These steps are the literal product journey: Google sign-in →
+              demo workspace → upload → first insight. If the flow changes,
+              change this list; a founder who finds an extra gate here that
+              wasn't advertised is a founder who leaves. */}
+          <ol className="grid md:grid-cols-4 gap-6 text-center list-none">
             {[
-              { n: 1, t: "Upload Your Inventory CSV", d: "Drag and drop your master variant stock CSV. EVE parses the columns and reconciles SKU quantities automatically." },
-              { n: 2, t: "EVE Scans Health & Velocity", d: "EVE calculates sales velocity per variant size, evaluates lead times, and flags stockout risk dates." },
-              { n: 3, t: "Review & Execute Purchase Orders", d: "Receive exact reorder suggestions and audit evidence behind every recommendation." },
+              { n: 1, t: "Sign in with Google", d: "One click. No password to invent, no credit card, no form asking for your company size." },
+              { n: 2, t: "Land in a live workspace", d: "You start inside a real seeded fashion catalogue, so the product is already showing you something on the first screen." },
+              { n: 3, t: "Upload your Shopify export", d: "Export your products from Shopify admin and drop the file in unchanged — variant rows, sizes, colours and cost-per-item included." },
+              { n: 4, t: "Read your first insight", d: "Stockout risk ranked by revenue exposure, dead stock with the cash it holds, and reorder quantities per variant." },
             ].map((s) => (
               <li key={s.n} className="p-6 rounded-2xl border border-border bg-card space-y-3">
                 <div className="w-9 h-9 rounded-full bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center mx-auto shadow-sm">{s.n}</div>
@@ -635,6 +659,14 @@ export default function LandingPage() {
               </li>
             ))}
           </ol>
+
+          <div className="flex flex-col items-center gap-3">
+            <StartFreeTrialButton
+              location="landing_workflow"
+              className="w-full sm:w-auto px-8 py-3.5 text-sm"
+            />
+            <p className="text-xs text-muted-foreground">Takes about two minutes end to end.</p>
+          </div>
         </div>
       </section>
 
@@ -703,13 +735,10 @@ export default function LandingPage() {
             Join forward-thinking e-commerce founders and D2C brands using EVE to eliminate stockouts and reclaim trapped capital.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-            <Link
-              href="/signup"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
-            >
-              Start free trial
-              <ArrowRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
+            <StartFreeTrialButton
+              location="landing_bottom_cta"
+              className="w-full sm:w-auto px-8 py-3.5 text-sm"
+            />
             <Link
               href="/demo"
               className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 text-sm font-semibold bg-secondary text-secondary-foreground hover:bg-secondary/70 border border-border hover:border-[color:var(--eve-accent)]/40 rounded-xl transition-all"
@@ -717,6 +746,20 @@ export default function LandingPage() {
               Explore Live Demo
             </Link>
           </div>
+
+          {/* The only place a call is offered near a conversion point, and it
+              is a text link under the fold — an escape hatch, not an option of
+              equal weight. */}
+          <p className="text-xs text-muted-foreground">
+            Rather talk it through first?{" "}
+            <BookDemoButton
+              variant="ghost"
+              location="landing_bottom_cta"
+              label="Book 15 minutes with the founder"
+              showIcon={false}
+              className="text-xs underline underline-offset-2"
+            />
+          </p>
         </div>
       </section>
 
