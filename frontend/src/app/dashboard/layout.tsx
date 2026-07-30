@@ -118,6 +118,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         localStorage.setItem("active_workspace_id", data.organization_id);
         localStorage.setItem("eve_analysis_pending", "1");
         localStorage.setItem("eve_analysis_org_id", data.organization_id);
+        // Same gap as the modal above: demo workspaces spun up from the
+        // switcher emitted nothing. Fired before the reload discards it.
+        track("demo_workspace_created", {
+          source: "workspace_switcher",
+          demo_company: demoSlug,
+          workspace_id: data.organization_id,
+        });
         window.location.reload();
       } else {
         const errData = await resp.json().catch(() => ({ detail: "Failed to create demo workspace" }));
@@ -187,7 +194,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     sessionToken,
     fallbackOrganizationId: activeWorkspaceId,
     onComplete: () => router.refresh(),
-    onViewRecommendations: (destination) => router.push(destination.href),
+    onViewRecommendations: (destination) => {
+      // The funnel's last step: the founder acted on a result rather than
+      // merely having one rendered at them. recommendations_viewed measures
+      // exposure; this measures intent.
+      track("recommendation_clicked", { source: "analysis_toast", page: destination.href });
+      router.push(destination.href);
+    },
     onRetry: handleRetryAnalysis,
   });
 
@@ -529,6 +542,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
       const data = await response.json();
       localStorage.setItem("active_workspace_id", data.organization_id);
+      // Fired before the reload, which would otherwise discard it. Workspaces
+      // created from inside the app were previously invisible in the funnel —
+      // only the /onboarding path emitted this.
+      track("workspace_created", { source: "in_app_modal", workspace_id: data.organization_id });
       setIsCreateModalOpen(false);
       setNewWorkspaceName("");
       window.location.reload();
@@ -1163,7 +1180,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         has gone, so a merchant who was on another tab still
                         finds it. Renders nothing when there is nothing to say. */}
                     <AnalysisOutcomeBanner
-                      onView={(href) => router.push(href)}
+                      onView={(href) => {
+                        track("recommendation_clicked", { source: "analysis_banner", page: href });
+                        router.push(href);
+                      }}
                       onRetry={handleRetryAnalysis}
                     />
                     {children}

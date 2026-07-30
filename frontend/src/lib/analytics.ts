@@ -56,6 +56,7 @@ export type EveEvent =
   | "analysis_completed"
   | "analysis_failed"
   | "recommendation_generated"
+  | "recommendation_clicked"
   | "ai_chat_message_sent"
   // Product usage
   | "dashboard_viewed"
@@ -273,6 +274,36 @@ export function track(
   } catch (e) {
     logger.error(`[EVE Analytics] track(${event}) failed`, e);
   }
+}
+
+/**
+ * Fires an event at most once per browser tab session.
+ *
+ * The ref guard in useTrackOnce only survives re-renders, not a page refresh —
+ * and the auth and analysis events are reached by pages a founder reloads. A
+ * refresh must not add a second signup_completed, so the guard lives in
+ * sessionStorage: it survives reload and route changes within the tab, and
+ * resets on a genuinely new session, which is exactly the lifetime of a
+ * "this sign-in" or "this analysis run" event.
+ *
+ * `key` scopes the guard — pass a user id or run id so two different users (or
+ * two different analysis runs) in one tab each get their own event.
+ */
+export function trackOncePerSession(
+  event: EveEvent,
+  key: string,
+  properties: Record<string, unknown> = {}
+): void {
+  if (typeof window === "undefined") return;
+  const guard = `eve_once:${event}:${key}`;
+  try {
+    if (sessionStorage.getItem(guard)) return;
+    sessionStorage.setItem(guard, "1");
+  } catch {
+    // Storage blocked (private mode, quota). Emitting a possible duplicate is
+    // better than dropping the event entirely — PostHog dedupes by person.
+  }
+  track(event, properties);
 }
 
 /**

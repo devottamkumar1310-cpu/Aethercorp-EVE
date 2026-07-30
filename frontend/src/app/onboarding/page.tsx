@@ -7,7 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { Building2, ArrowRight, Sparkles, Brain, Loader2 } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { track, identify, setOrganization } from "@/lib/analytics";
+import { track, setOrganization } from "@/lib/analytics";
+import { trackAuthCompletion } from "@/lib/authEvents";
 
 export default function OnboardingPage() {
   const [workspaceName, setWorkspaceName] = useState("");
@@ -29,12 +30,10 @@ export default function OnboardingPage() {
       }
 
       // Google OAuth users never pass through the signup page, so this is the
-      // first point at which we can attach an identity to their events.
-      // Google OAuth users never pass through the signup page, so this is the
-      // first point at which we can attach a stable identity to their events.
-      if (session.user?.id) {
-        identify(session.user.id);
-      }
+      // first point at which we can attach a stable identity to their events —
+      // and the only place that can tell a new account from a returning one.
+      // Emits identify plus exactly one of signup_completed / login_completed.
+      trackAuthCompletion(session);
 
       try {
         const response = await apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {

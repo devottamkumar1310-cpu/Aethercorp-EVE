@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
+import { trackOncePerSession } from "@/lib/analytics";
 
 const PENDING_KEY = "eve_analysis_pending";
 const ORG_KEY = "eve_analysis_org_id";
@@ -12,6 +13,8 @@ const ORG_KEY = "eve_analysis_org_id";
  * their first analysis lost the result permanently and saw no reason why.
  */
 const OUTCOME_KEY = "eve_analysis_outcome";
+/** Per-run identity, so each run's funnel events fire exactly once. */
+const RUN_KEY = "eve_analysis_run_id";
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 90; // ~3 minutes — the backend's worst-case run
 
@@ -106,9 +109,28 @@ export function resolveAnalysisDestination(primaryType?: string | null): Analysi
   }
 }
 
+/**
+ * Identifies one analysis run so its events fire once each.
+ *
+ * A refresh mid-run re-enters start(), which would otherwise emit a second
+ * analysis_started for work already in flight. The id is generated lazily on
+ * first sight of a pending run and cleared with the run, so a retry — which
+ * re-arms the pending flag — correctly counts as a new run rather than being
+ * swallowed by the previous one's guard.
+ */
+function currentRunId(): string {
+  let id = localStorage.getItem(RUN_KEY);
+  if (!id) {
+    id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    localStorage.setItem(RUN_KEY, id);
+  }
+  return id;
+}
+
 function clearPendingFlags() {
   localStorage.removeItem(PENDING_KEY);
   localStorage.removeItem(ORG_KEY);
+  localStorage.removeItem(RUN_KEY);
 }
 
 interface UseProactiveAnalysisOptions {
@@ -195,6 +217,16 @@ export function useProactiveAnalysis({
       controller = new AbortController();
       const signal = controller.signal;
       let polls = 0;
+      const startedAt = Date.now();
+
+      // The proactive run is the activation moment the whole funnel exists to
+      // produce, and it emitted nothing — analysis_* fired only from the chat
+      // page.
+      const runId = currentRunId();
+      trackOncePerSession("analysis_started", runId, {
+        source: "proactive_upload",
+        organization_id: organizationId,
+      });
 
       // Terminal states always clear the flags before any user-facing effect.
       const finish = (announce?: () => void) => {
@@ -237,6 +269,14 @@ export function useProactiveAnalysis({
               data.error ||
               "EVE couldn't finish analysing your data. Your inventory numbers are unaffected — try again.";
             const retry = onRetryRef.current;
+            // Before finish(), which clears the run id these guards key on.
+            trackOncePerSession("analysis_failed", runId, {
+              source: "proactive_upload",
+              organization_id: organizationId,
+              error_type: "backend_reported",
+              duration_ms: Date.now() - startedAt,
+              success: false,
+            });
             finish(() => {
               storeOutcome({
                 kind: "failed",
@@ -261,6 +301,25 @@ export function useProactiveAnalysis({
               count > 0
                 ? `${count} new recommendation${count === 1 ? "" : "s"} ready`
                 : "Analysis complete";
+
+            trackOncePerSession("analysis_completed", runId, {
+              source: "proactive_upload",
+              organization_id: organizationId,
+              recommendation_count: count,
+              duration_ms: Date.now() - startedAt,
+              success: true,
+            });
+            // Separate from analysis_completed: a run that finishes having found
+            // nothing is a very different outcome from one that produced a
+            // recommendation, and only the latter can activate anyone.
+            if (count > 0) {
+              trackOncePerSession("recommendation_generated", runId, {
+                source: "proactive_upload",
+                organization_id: organizationId,
+                recommendation_count: count,
+              });
+            }
+
             finish(() => {
               // Persisted before the toast: the result must outlive it.
               storeOutcome({
@@ -301,6 +360,15 @@ export function useProactiveAnalysis({
               const message =
                 "Your analysis is taking longer than usual. Your inventory numbers are ready to use — you can retry the AI analysis whenever you like.";
               const retry = onRetryRef.current;
+              // A timeout is a failed activation even though the backend never
+              // said so; error_type keeps it separable from a reported failure.
+              trackOncePerSession("analysis_failed", runId, {
+                source: "proactive_upload",
+                organization_id: organizationId,
+                error_type: "client_timeout",
+                duration_ms: Date.now() - startedAt,
+                success: false,
+              });
               finish(() => {
                 storeOutcome({
                   kind: "timed_out",

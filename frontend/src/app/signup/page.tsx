@@ -97,10 +97,13 @@ export default function SignupPage() {
       if (data.user?.id) {
         identify(data.user.id);
       }
-      track("signup_completed", { method: "email", requires_verification: false });
-      // free_trial_started now fires in /onboarding, at the moment a workspace
-      // actually exists. Google is the primary trial entry and never touches
-      // this page, so firing it here measured only the minority path.
+      // signup_completed is NOT fired here. This branch pushes to /onboarding,
+      // which every authenticated arrival passes through and which fires it
+      // once per sign-in — firing in both places would double-count exactly the
+      // email signups. The unverified branch below keeps its own event because
+      // it never reaches /onboarding.
+      // free_trial_started likewise fires in /onboarding, at the moment a
+      // workspace actually exists.
       // Sync with backend
       try {
         await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
