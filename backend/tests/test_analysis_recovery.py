@@ -47,7 +47,13 @@ def override_get_db():
 
 @pytest.fixture(autouse=True, scope="module")
 def manage_dependency_overrides():
+    """
+    Starts from a clean override table — see test_demo_import_guard for why.
+    These tests assert tenant scoping, so inheriting another suite's
+    get_current_user override would make them meaningless.
+    """
     saved = api_app.dependency_overrides.copy()
+    api_app.dependency_overrides.clear()
     api_app.dependency_overrides[get_db] = override_get_db
     yield
     api_app.dependency_overrides.clear()

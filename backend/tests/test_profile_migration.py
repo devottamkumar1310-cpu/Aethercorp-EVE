@@ -149,9 +149,18 @@ def test_legacy_profile_migration():
     old_profile = db.query(Profile).filter(Profile.id == old_uuid).first()
     assert old_profile is None
     
-    # Assert membership associated with the old profile/org was purged
-    updated_membership = db.query(Membership).filter(Membership.user_id == new_uuid).first()
-    assert updated_membership is None
+    # The legacy org's membership must NOT carry over to the new profile — that
+    # is what this test exists to prove. Scoped to the legacy org specifically,
+    # because sync_user separately self-heals a user with no memberships by
+    # provisioning a fresh demo workspace; asserting "no memberships at all"
+    # conflated the two and only held while that provisioning was broken under
+    # SQLite. See the note in test_user_without_workspace.
+    legacy_membership = (
+        db.query(Membership)
+        .filter(Membership.user_id == new_uuid, Membership.organization_id == org.id)
+        .first()
+    )
+    assert legacy_membership is None, "legacy org access must not survive migration"
     db.close()
 
 def test_concurrent_profile_migrations():
@@ -237,7 +246,15 @@ def test_user_without_workspace():
     assert user is not None
     assert user.id == new_uuid
     
-    # Ensure checking membership returns None but does not fail
+    # sync_user self-heals a user with no workspaces by provisioning the Luma
+    # demo (app/routes/auth.py), so a membership is the CORRECT outcome here.
+    #
+    # This previously asserted None, and passed only because clean_org_data
+    # raised on SQLite ("type 'UUID' is not supported") — provisioning failed,
+    # sync_user swallowed the error, and no membership was written. The test was
+    # pinning a broken code path. Postgres always bound that parameter fine, so
+    # production was auto-provisioning correctly the whole time; only the test
+    # environment saw the failure.
     membership = db.query(Membership).filter(Membership.user_id == user.id).first()
-    assert membership is None
+    assert membership is not None, "sync_user should auto-provision a workspace"
     db.close()

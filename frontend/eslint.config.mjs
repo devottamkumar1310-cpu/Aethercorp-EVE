@@ -23,6 +23,14 @@ const eslintConfig = defineConfig([
       "react-hooks/static-components": "off",
       "react-hooks/immutability": "off"
     }
+  },
+  {
+    // Test files run under `node --test`, not the bundler, so CommonJS require
+    // is the correct form there rather than a lint violation to work around.
+    files: ["**/*.test.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off"
+    }
   }
 ]);
 

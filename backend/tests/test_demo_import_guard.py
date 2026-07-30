@@ -50,7 +50,20 @@ def override_get_db():
 
 @pytest.fixture(autouse=True, scope="module")
 def manage_dependency_overrides():
+    """
+    Starts from a clean override table.
+
+    Several suites that run earlier alphabetically install overrides for
+    get_current_user, get_active_workspace_id and friends and never remove
+    them. Inheriting those would pin every request here to one mock user and
+    one forced workspace — which is precisely the authorization machinery these
+    tests exist to prove, so they would pass or fail for reasons unrelated to
+    the code under test. Clearing first means the real JWT and membership path
+    runs no matter what executed before. The previous table is restored on the
+    way out so this file changes nothing for anyone else.
+    """
     saved = api_app.dependency_overrides.copy()
+    api_app.dependency_overrides.clear()
     api_app.dependency_overrides[get_db] = override_get_db
     yield
     api_app.dependency_overrides.clear()
