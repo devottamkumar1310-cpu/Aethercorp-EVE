@@ -154,20 +154,30 @@ export async function updateRecommendationStatusAPI(token: string, traceId: stri
 async function uploadCSVFile(url: string, token: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  
+
   const headers = getHeaders(token);
-  
+
   const res = await apiFetch(`${API_BASE_URL}${url}`, {
     method: "POST",
     headers,
     body: formData
   });
-  
+
   if (!res.ok) {
     let errorMsg = `Failed to upload file to ${url}`;
     try {
       const errorData = await res.json();
-      errorMsg = errorData.detail || errorMsg;
+      // The importer reports a failed import as a structured body (status,
+      // missing_columns, errors) with no `detail` key. Reading only `detail`
+      // discarded it and left the caller with a generic string, so the
+      // "your CSV is missing these columns" summary could never render.
+      // Forward the whole body; callers JSON.parse it back.
+      errorMsg =
+        typeof errorData?.detail === "string"
+          ? errorData.detail
+          : errorData
+            ? JSON.stringify(errorData)
+            : errorMsg;
     } catch {}
     throw new Error(errorMsg);
   }
@@ -177,7 +187,67 @@ async function uploadCSVFile(url: string, token: string, file: File) {
 export const uploadInventoryCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/inventory', token, file);
 export const uploadSalesCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/sales', token, file);
 export const uploadCostsCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/costs', token, file);
-export const uploadMasterCSVAPI = (token: string, file: File) => uploadCSVFile('/api/inventory/upload/master', token, file);
+/**
+ * Import mode for the master CSV.
+ *
+ * "merge"   — upsert by SKU into the active workspace (the default, unchanged).
+ * "replace" — clear the workspace first. Only valid on a demo workspace; the
+ *             backend refuses it on a workspace holding the merchant's own data.
+ */
+export type MasterImportMode = "merge" | "replace";
+
+export const uploadMasterCSVAPI = (
+  token: string,
+  file: File,
+  mode: MasterImportMode = "merge"
+) =>
+  uploadCSVFile(
+    `/api/inventory/upload/master?mode=${encodeURIComponent(mode)}`,
+    token,
+    file
+  );
+
+export interface WorkspaceSummary {
+  id: string;
+  name: string;
+  slug: string;
+  role: string;
+  member_count: number;
+  /** True while the workspace still holds the seeded demo catalogue. */
+  is_demo: boolean;
+}
+
+export async function fetchWorkspaces(token: string): Promise<WorkspaceSummary[]> {
+  const res = await apiFetch(`${API_BASE_URL}/api/organization/workspaces`, {
+    headers: getHeaders(token)
+  });
+  if (!res.ok) throw new Error("Failed to fetch workspaces");
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
+/**
+ * Creates an empty workspace and returns its id. Used when a merchant chooses
+ * to import their catalogue into a workspace of their own rather than over the
+ * demo they were exploring.
+ */
+export async function createWorkspace(token: string, name: string): Promise<string> {
+  const res = await apiFetch(`${API_BASE_URL}/api/organization/onboard`, {
+    method: "POST",
+    headers: getHeaders(token, "application/json"),
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) {
+    let message = "Failed to create workspace";
+    try {
+      const body = await res.json();
+      if (typeof body?.detail === "string") message = body.detail;
+    } catch {}
+    throw new Error(message);
+  }
+  const data = await res.json();
+  return data.organization_id as string;
+}
 
 export const submitFeedbackAPI = (
   token: string,

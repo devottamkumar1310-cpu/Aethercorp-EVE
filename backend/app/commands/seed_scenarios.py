@@ -551,6 +551,12 @@ def _exec_copy(scenario: str, catalog: List[Dict]):
 from sqlalchemy import text
 
 def clean_org_data(db, org_id):
+    # Bind the id as text. psycopg2 interpolates client-side, so Postgres sees an
+    # untyped literal and coerces it to uuid exactly as before — but SQLite's
+    # driver cannot bind a uuid.UUID at all, which made every caller of this
+    # function impossible to cover in the in-memory test suite. This path is
+    # destructive and now guards a merchant's real catalogue, so it needs tests.
+    org_id = str(org_id)
     print(f"  Cleaning existing data for org {org_id}...")
     db.execute(text("DELETE FROM recommendation_traces WHERE organization_id = :oid"), {"oid": org_id})
     db.execute(text("DELETE FROM executive_messages WHERE conversation_id IN (SELECT id FROM executive_conversations WHERE organization_id = :oid)"), {"oid": org_id})

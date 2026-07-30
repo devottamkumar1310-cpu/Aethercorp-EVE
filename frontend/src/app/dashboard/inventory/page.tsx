@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
@@ -8,6 +8,9 @@ import {
   fetchInventoryDashboard,
   uploadMasterCSVAPI,
   getHeaders,
+  fetchWorkspaces,
+  createWorkspace,
+  type MasterImportMode,
 } from "@/services/businessService";
 import { track } from "@/lib/analytics";
 import { useTrackOnce } from "@/lib/useTrackOnce";
@@ -35,6 +38,10 @@ import Link from "next/link";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
 import { ReorderCenter } from "@/components/inventory/ReorderCenter";
 import { AIDisclaimer } from "@/components/ui/AIDisclaimer";
+import {
+  DemoImportGuardDialog,
+  type DemoImportChoice,
+} from "@/components/inventory/DemoImportGuardDialog";
 
 
 interface ProductMetric {
@@ -113,6 +120,16 @@ export default function InventoryDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [sessionToken, setSessionToken] = useState<string>("");
   const [uploadingMaster, setUploadingMaster] = useState(false);
+  // Demo-import guard: the chosen file is held here until the merchant decides
+  // where it should land, so they never have to re-select it.
+  const [showDemoGuard, setShowDemoGuard] = useState(false);
+  const [checkingWorkspace, setCheckingWorkspace] = useState(false);
+  /** Synchronous re-entry lock — see handleFileUpload for why state won't do. */
+  const importInFlightRef = useRef(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [demoWorkspaceName, setDemoWorkspaceName] = useState("");
+  const [guardBusy, setGuardBusy] = useState<DemoImportChoice | null>(null);
+  const [guardError, setGuardError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortField, setSortField] = useState<SortField>("revenue");
@@ -171,18 +188,143 @@ export default function InventoryDashboardPage() {
     init();
   }, [router]);
 
+  /**
+   * Entry point for both upload controls.
+   *
+   * A workspace still holding seeded demo data is intercepted here: importing a
+   * real catalogue into it would upsert the merchant's SKUs alongside the demo
+   * brand's and silently corrupt every metric on the page. The file is held and
+   * the merchant chooses a destination first.
+   */
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Reset the input immediately: without this, re-picking the same file after
+    // cancelling the dialog fires no change event and the control looks dead.
+    e.target.value = "";
     if (!file) return;
     if (!file.name.endsWith(".csv")) { toast.error("Only CSV files are supported."); return; }
+
+    // A ref, not state: setState is async, so two clicks landing in the same
+    // tick would both pass a state-based check and start two concurrent
+    // imports. The importer appends sales rows rather than upserting them, so
+    // a double import silently doubles sales velocity — and with it every
+    // days-of-cover, stockout date and reorder quantity on the page.
+    if (importInFlightRef.current || showDemoGuard) return;
+    importInFlightRef.current = true;
+    setCheckingWorkspace(true);
+
+    try {
+      const activeId = localStorage.getItem("active_workspace_id");
+      let demo: { id: string; name: string } | null = null;
+      try {
+        const workspaces = await fetchWorkspaces(sessionToken);
+        const active = workspaces.find((w) => w.id === activeId);
+        if (active?.is_demo) demo = { id: active.id, name: active.name };
+      } catch {
+        // A workspace lookup failure must not block the import. Falling through
+        // to a normal merge matches the behaviour before this guard existed.
+      }
+
+      if (demo) {
+        setPendingFile(file);
+        setDemoWorkspaceName(demo.name);
+        setGuardError(null);
+        setGuardBusy(null);
+        setShowDemoGuard(true);
+        // The dialog owns the file now; its own buttons gate re-entry.
+        return;
+      }
+
+      await performUpload(file, "merge");
+    } finally {
+      importInFlightRef.current = false;
+      setCheckingWorkspace(false);
+    }
+  };
+
+  /** Resolves the merchant's choice from the demo guard dialog. */
+  const handleDemoImportChoice = async (choice: DemoImportChoice, brandName: string) => {
+    const file = pendingFile;
+    if (!file) return;
+    if (importInFlightRef.current) return;
+    importInFlightRef.current = true;
+    setGuardError(null);
+    setGuardBusy(choice);
+
+    // Only meaningful on the create path: tells the failure handler that a
+    // workspace now exists and the merchant has been moved into it.
+    let createdWorkspace = false;
+
+    try {
+      if (choice === "create_workspace") {
+        const newId = await createWorkspace(sessionToken, brandName);
+        // getHeaders() reads this on every call, so the import below — and the
+        // dashboard reload after it — target the new workspace, not the demo.
+        localStorage.setItem("active_workspace_id", newId);
+        createdWorkspace = true;
+        track("workspace_created", { source: "demo_import_guard", workspace_id: newId });
+      }
+
+      setShowDemoGuard(false);
+      setPendingFile(null);
+      setGuardBusy(null);
+      // A brand-new workspace is empty, so a merge into it is already clean.
+      const ok = await performUpload(file, choice === "replace_demo" ? "replace" : "merge");
+
+      // Either way the merchant has been moved to a different workspace, so say
+      // so. Without this they are silently relocated and left to work out on
+      // their own where the demo brand they were just looking at went.
+      if (createdWorkspace) {
+        if (ok) {
+          toast.success(`You're now in "${brandName}"`, {
+            description: "Your catalogue was imported here. The demo brand is still available in the workspace switcher.",
+            duration: 8000,
+          });
+        } else {
+          toast.info(`Workspace "${brandName}" is ready but empty`, {
+            description: "Your import didn't go through. Upload your CSV again to fill it — your demo workspace is untouched in the workspace switcher.",
+            duration: 12000,
+          });
+        }
+      }
+    } catch (err: any) {
+      // createWorkspace failed, so nothing has moved. The dialog stays open with
+      // the file still held and the merchant can retry or pick the other route.
+      setGuardBusy(null);
+      setGuardError(err?.message || "Something went wrong. Please try again.");
+    } finally {
+      importInFlightRef.current = false;
+    }
+  };
+
+  /**
+   * Covers the whole import span — the workspace check as well as the request —
+   * so the control cannot be re-triggered during the lookup that precedes it.
+   */
+  const importBusy = uploadingMaster || checkingWorkspace;
+
+  const cancelDemoImport = () => {
+    setShowDemoGuard(false);
+    setPendingFile(null);
+    setGuardBusy(null);
+    setGuardError(null);
+  };
+
+  /** Returns true if the catalogue actually landed, so callers can recover. */
+  const performUpload = async (file: File, mode: MasterImportMode): Promise<boolean> => {
+    // The workspace this import is going to, captured BEFORE the request. The
+    // active workspace can change mid-upload (another tab, or the switcher), and
+    // re-reading it afterwards would stamp the analysis run with the wrong org.
+    const targetOrgId = localStorage.getItem("active_workspace_id");
+
     const toastId = toast.loading(`Uploading Master CSV...`);
     setUploadingMaster(true);
     // Only file SIZE is measured — never the contents.
     const fileSizeKb = Math.round(file.size / 1024);
     const uploadStartedAt = Date.now();
-    track("csv_upload_started", { file_size_kb: fileSizeKb });
+    track("csv_upload_started", { file_size_kb: fileSizeKb, mode });
     try {
-      const result = await uploadMasterCSVAPI(sessionToken, file);
+      const result = await uploadMasterCSVAPI(sessionToken, file, mode);
       track("csv_upload_completed", {
         row_count: result?.total_rows ?? null,
         valid_row_count: result?.valid_rows ?? null,
@@ -194,15 +336,16 @@ export default function InventoryDashboardPage() {
       toast.success(`Master file processed!`, { id: toastId });
       setImportSummary({ ...result, type: "master" });
       setShowImportSummary(true);
-      // Trigger proactive analysis banner
-      const activeWorkspace = localStorage.getItem("active_workspace_id");
-      if (activeWorkspace) {
+      // Trigger proactive analysis banner, pinned to the org we just imported
+      // into rather than whatever is active by the time this resolves.
+      if (targetOrgId) {
         localStorage.setItem("eve_analysis_pending", "1");
-        localStorage.setItem("eve_analysis_org_id", activeWorkspace);
+        localStorage.setItem("eve_analysis_org_id", targetOrgId);
         // Force layout to re-read localStorage by dispatching a storage event
         window.dispatchEvent(new Event("eve_analysis_started"));
       }
       await loadData(sessionToken);
+      return true;
     } catch (err: any) {
       let parsedSummary = null;
       try {
@@ -227,14 +370,22 @@ export default function InventoryDashboardPage() {
       } else {
         toast.error("Data synchronization failed. Please review your CSV structure.", { id: toastId });
       }
+      return false;
     } finally {
       setUploadingMaster(false);
-      e.target.value = "";
+      // The file input is cleared in handleFileUpload, before the guard runs.
     }
   };
 
   const downloadTemplate = () => {
-    const headers = "sku,name,category,stock_on_hand,lead_time_days,unit_cost,selling_price,date,sales_quantity\\nSKU-001,Premium Top,Tops,80,10,15.50,45.00,2026-06-01,2\\n";
+    // Real newlines. These were escaped as "\\n", which emitted a single line
+    // containing the literal characters backslash-n — every downloaded template
+    // was an unusable one-row file that failed on import.
+    const headers = [
+      "sku,name,category,stock_on_hand,lead_time_days,unit_cost,selling_price,date,sales_quantity",
+      "SKU-001,Premium Top,Tops,80,10,15.50,45.00,2026-06-01,2",
+      "",
+    ].join("\n");
     const filename = "master_template.csv";
     const blob = new Blob([headers], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -456,13 +607,13 @@ export default function InventoryDashboardPage() {
           {/* Call to Actions */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 max-w-md mx-auto">
             <label className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-indigo-500/40 hover:border-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-xl text-sm font-semibold cursor-pointer transition-all text-center">
-              {uploadingMaster ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload size={16} />}
-              <span>{uploadingMaster ? "Uploading..." : "Upload Master CSV"}</span>
+              {importBusy ? <Loader2 className="animate-spin h-4 w-4" /> : <Upload size={16} />}
+              <span>{importBusy ? "Uploading..." : "Upload Master CSV"}</span>
               <input
                 type="file"
                 accept=".csv"
                 className="hidden"
-                disabled={uploadingMaster}
+                disabled={importBusy}
                 onChange={(e) => handleFileUpload(e)}
               />
             </label>
@@ -474,6 +625,16 @@ export default function InventoryDashboardPage() {
             </button>
           </div>
         </div>
+
+        <DemoImportGuardDialog
+          open={showDemoGuard}
+          fileName={pendingFile?.name ?? null}
+          demoWorkspaceName={demoWorkspaceName}
+          busy={guardBusy}
+          error={guardError}
+          onChoose={handleDemoImportChoice}
+          onCancel={cancelDemoImport}
+        />
       </main>
     );
   }
@@ -717,15 +878,15 @@ export default function InventoryDashboardPage() {
               </button>
             </div>
             <label className="flex items-center justify-center gap-2 w-full py-2.5 px-3 border border-dashed border-border hover:border-primary/40 bg-muted/30 hover:bg-muted/60 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer transition-all">
-              {uploadingMaster
+              {importBusy
                 ? <Loader2 className="animate-spin h-4 w-4 text-primary" />
                 : <Upload size={14} className="text-muted-foreground" />}
-              <span>{uploadingMaster ? "Processing spreadsheet..." : "Upload Master CSV"}</span>
+              <span>{importBusy ? "Processing spreadsheet..." : "Upload Master CSV"}</span>
               <input
                 type="file"
                 accept=".csv"
                 className="hidden"
-                disabled={uploadingMaster}
+                disabled={importBusy}
                 onChange={(e) => handleFileUpload(e)}
               />
             </label>
@@ -1254,6 +1415,17 @@ export default function InventoryDashboardPage() {
         onClose={() => setIsAddModalOpen(false)}
         token={sessionToken}
         onSuccess={() => loadData(sessionToken)}
+      />
+
+      {/* Stops a real catalogue being merged into seeded demo data. */}
+      <DemoImportGuardDialog
+        open={showDemoGuard}
+        fileName={pendingFile?.name ?? null}
+        demoWorkspaceName={demoWorkspaceName}
+        busy={guardBusy}
+        error={guardError}
+        onChoose={handleDemoImportChoice}
+        onCancel={cancelDemoImport}
       />
     </main>
   );

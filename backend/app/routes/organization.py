@@ -52,7 +52,13 @@ def get_workspaces(current_user: Profile = Depends(get_current_user), db: Sessio
                 "name": org.name,
                 "slug": org.slug,
                 "role": role,
-                "member_count": int(member_count)
+                "member_count": int(member_count),
+                # scenario_type is NULL for workspaces the user created themselves,
+                # so it is the authoritative demo marker. The client uses this to
+                # refuse to merge a real Shopify catalogue into seeded demo data —
+                # do not reintroduce slug prefix matching, which false-positives on
+                # a real brand that happens to be called "Luma".
+                "is_demo": org.scenario_type is not None,
             }
             for org, role, member_count in rows
         ]

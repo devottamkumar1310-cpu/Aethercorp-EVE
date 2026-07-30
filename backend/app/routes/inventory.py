@@ -189,6 +189,7 @@ def upload_product_costs_csv(
 @router.post("/upload/master", status_code=status.HTTP_201_CREATED)
 def upload_master_csv(
     file: UploadFile = File(...),
+    mode: str = "merge",
     db: Session = Depends(get_db),
     token_context: dict = Depends(get_current_user_and_tenant),
     _: None = Depends(rate_limit(requests=10, window_seconds=60)),
@@ -197,9 +198,25 @@ def upload_master_csv(
 ):
     """
     Uploads and parses a master CSV (e.g. Shopify export).
+
+    mode="merge" (default) upserts by SKU into whatever the workspace already
+    holds — the historical behaviour, correct for a workspace that is already
+    the merchant's own.
+
+    mode="replace" clears the workspace first. It exists for exactly one case:
+    a merchant importing their real catalogue into a workspace still holding
+    seeded demo data. Merging those two produces an inventory valuation that is
+    part real and part fiction, which is worse than either alone. Guarded to
+    demo workspaces only — see below.
     """
     org_id = token_context["organization_id"]
-    logger.info(f"Master Upload: Received file '{file.filename}' from tenant Org: {org_id}")
+    logger.info(f"Master Upload: Received file '{file.filename}' from tenant Org: {org_id} (mode={mode})")
+
+    if mode not in ("merge", "replace"):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"status": "error", "message": "mode must be 'merge' or 'replace'."}
+        )
 
     try:
         contents = file.file.read()
@@ -221,6 +238,56 @@ def upload_master_csv(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={"status": "error", "message": f"Failed to parse CSV file: {str(pe)}"}
             )
+
+        if mode == "replace":
+            from app.models.organization import Organization
+            from app.commands.seed_scenarios import clean_org_data
+
+            org = db.query(Organization).filter(Organization.id == org_id).first()
+            if org is None:
+                raise HTTPException(status_code=404, detail="Workspace not found")
+
+            # HARD GUARD: replace is destructive, so it is permitted ONLY on a
+            # workspace we provisioned as a demo. A merchant's own workspace can
+            # never be wiped through this path, whatever the client sends.
+            if org.scenario_type is None:
+                return JSONResponse(
+                    status_code=status.HTTP_409_CONFLICT,
+                    content={
+                        "status": "error",
+                        "message": "This workspace already holds your own data. Import without replace, or delete the workspace explicitly.",
+                    },
+                )
+
+            # Validate BEFORE deleting anything. A malformed CSV must never be
+            # able to empty a workspace — the merchant would lose the demo they
+            # were still evaluating and get nothing in return.
+            precheck = ImporterService.normalize_shopify_export(df.copy())
+            is_valid, missing = ImporterService.validate_schema(precheck, ["sku"])
+            if not is_valid:
+                return JSONResponse(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    content={
+                        "status": "error", "total_rows": len(df), "valid_rows": 0,
+                        "invalid_rows": len(df), "duplicate_rows": 0,
+                        "missing_columns": missing,
+                        "errors": [{
+                            "row": 0, "column": "headers", "value": None,
+                            "message": f"Missing required columns: {missing}",
+                        }],
+                    },
+                )
+
+            # Same org-scoped cleanup the seeder runs before provisioning a demo.
+            clean_org_data(db, org_id)
+
+            # The workspace now holds the merchant's data, not ours. Clearing
+            # scenario_type retires the demo badge, stops the import guard from
+            # firing again, and makes is_demo report the truth.
+            org.scenario_type = None
+            db.add(org)
+            db.commit()
+            logger.info(f"Master Upload: replaced demo data for Org {org_id}; workspace is now merchant-owned")
 
         report = ImporterService.import_master(db, org_id, df)
         if report["status"] == "error":
