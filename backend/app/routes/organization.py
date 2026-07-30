@@ -247,17 +247,77 @@ def onboard_demo(request: DemoOnboardRequest, background_tasks: BackgroundTasks,
 
     return {"status": "success", "organization_id": str(org.id), "slug": org.slug}
 
+def _member_org_or_404(org_id: str, current_user: Profile, db: Session) -> Organization:
+    """
+    Resolves a workspace the caller actually belongs to.
+
+    Membership is checked in the same query rather than after the fetch: without
+    it any authenticated user could read another tenant's analysis status by id,
+    which exposes their recommendation counts and failure messages. 404 rather
+    than 403 so a non-member cannot probe which workspace ids exist.
+    """
+    # Coerce explicitly: the path param is a string, and comparing it to a UUID
+    # column relies on the driver adapting it. A malformed id is a 404, not a 500.
+    try:
+        org_uuid = _uuid.UUID(str(org_id))
+    except (ValueError, AttributeError, TypeError):
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    org = (
+        db.query(Organization)
+        .join(Membership, Membership.organization_id == Organization.id)
+        .filter(Organization.id == org_uuid, Membership.user_id == current_user.id)
+        .first()
+    )
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return org
+
+
 @router.get("/{org_id}/analysis-status")
 def get_analysis_status(
     org_id: str,
     db: Session = Depends(get_db),
     current_user: Profile = Depends(get_current_user)
 ):
-    org = db.query(Organization).filter(Organization.id == org_id).first()
-    if not org:
-        raise HTTPException(status_code=404, detail="Organization not found")
-        
+    org = _member_org_or_404(org_id, current_user, db)
     return org.analysis_status or {"status": "none", "step": 0}
+
+
+@router.post("/{org_id}/analysis/retry")
+def retry_analysis(
+    org_id: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: Profile = Depends(get_current_user)
+):
+    """
+    Re-runs the proactive analysis for a workspace.
+
+    A failed or timed-out first analysis used to be terminal: the merchant had
+    re-uploaded nothing wrong, but the only way to get a recommendation was to
+    import their catalogue again. This lets the UI offer a retry instead.
+
+    Deliberately not gated on the previous run having failed — a merchant who
+    never saw a result should be able to ask for one, whatever state the record
+    is in. Re-entry is cheap: the run is idempotent in effect, since it writes
+    recommendations rather than mutating inventory.
+    """
+    org = _member_org_or_404(org_id, current_user, db)
+
+    if (org.analysis_status or {}).get("status") == "in_progress":
+        # Already running — report it rather than starting a second run that
+        # would race the first and double the recommendations.
+        return {"status": "in_progress", "message": "Analysis is already running."}
+
+    ProactiveAnalysisService._update_status(db, org.id, "in_progress", 1)
+    background_tasks.add_task(
+        ProactiveAnalysisService.generate_baseline_recommendations_async,
+        org.id,
+        current_user.id,
+    )
+    logger.info(f"[PROACTIVE ANALYSIS] Retry requested for Org {org.id} by user {current_user.id}")
+    return {"status": "in_progress", "message": "Analysis restarted."}
 
 @router.delete("/{org_id}")
 def delete_workspace(

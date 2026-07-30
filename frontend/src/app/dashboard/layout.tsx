@@ -24,8 +24,11 @@ import {
   Clock,
   Database,
 } from "lucide-react";
+import { toast } from "sonner";
 import { ProductTour } from "@/components/dashboard/ProductTour";
-import { useProactiveAnalysis } from "@/hooks/useProactiveAnalysis";
+import { useProactiveAnalysis, clearStoredOutcome } from "@/hooks/useProactiveAnalysis";
+import { retryAnalysis } from "@/services/businessService";
+import { AnalysisOutcomeBanner } from "@/components/dashboard/AnalysisOutcomeBanner";
 
 interface Workspace {
   id: string;
@@ -159,11 +162,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Proactive analysis runs silently in the background. The watcher renders
   // nothing and only surfaces a toast when the run finishes or fails, so the
   // user is never interrupted or made to wait on it.
+  /**
+   * Restarts a failed or timed-out analysis. Shared by the toast action and the
+   * persistent banner so both routes behave identically.
+   */
+  const handleRetryAnalysis = () => {
+    const orgId = localStorage.getItem("eve_analysis_org_id") || activeWorkspaceId;
+    if (!orgId) return;
+    clearStoredOutcome();
+    retryAnalysis(sessionTokenRef.current, orgId)
+      .then(() => {
+        // Re-arm the watcher so the retried run is tracked like any other.
+        localStorage.setItem("eve_analysis_pending", "1");
+        localStorage.setItem("eve_analysis_org_id", orgId);
+        window.dispatchEvent(new Event("eve_analysis_started"));
+        toast.info("Analysis restarted", {
+          description: "EVE is looking at your data again. You can keep working — we'll tell you when it's done.",
+        });
+      })
+      .catch((e) => toast.error(e?.message || "Couldn't restart the analysis."));
+  };
+
   useProactiveAnalysis({
     sessionToken,
     fallbackOrganizationId: activeWorkspaceId,
     onComplete: () => router.refresh(),
     onViewRecommendations: (destination) => router.push(destination.href),
+    onRetry: handleRetryAnalysis,
   });
 
   // Theme Sync on Mount — resolves 'system' to the actual OS preference.
@@ -1133,7 +1158,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                   </div>
                 ) : (
-                  children
+                  <>
+                    {/* Keeps the last analysis result on screen after its toast
+                        has gone, so a merchant who was on another tab still
+                        finds it. Renders nothing when there is nothing to say. */}
+                    <AnalysisOutcomeBanner
+                      onView={(href) => router.push(href)}
+                      onRetry={handleRetryAnalysis}
+                    />
+                    {children}
+                  </>
                 )}
               </>
             );

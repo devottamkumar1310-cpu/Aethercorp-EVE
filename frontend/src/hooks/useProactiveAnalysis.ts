@@ -6,8 +6,50 @@ import { API_BASE_URL, apiFetch } from "@/lib/api";
 
 const PENDING_KEY = "eve_analysis_pending";
 const ORG_KEY = "eve_analysis_org_id";
+/**
+ * The last terminal outcome, kept so a result survives a missed toast. Toasts
+ * are the only channel this hook had, so a merchant who switched tabs during
+ * their first analysis lost the result permanently and saw no reason why.
+ */
+const OUTCOME_KEY = "eve_analysis_outcome";
 const POLL_INTERVAL_MS = 2000;
 const MAX_POLLS = 90; // ~3 minutes — the backend's worst-case run
+
+export type AnalysisOutcomeKind = "completed" | "failed" | "timed_out";
+
+export interface StoredAnalysisOutcome {
+  kind: AnalysisOutcomeKind;
+  organizationId: string;
+  /** Merchant-readable. The backend maps exceptions before they reach here. */
+  message: string;
+  count?: number;
+  href?: string;
+  label?: string;
+}
+
+export function readStoredOutcome(): StoredAnalysisOutcome | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(OUTCOME_KEY);
+    return raw ? (JSON.parse(raw) as StoredAnalysisOutcome) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearStoredOutcome() {
+  if (typeof window !== "undefined") localStorage.removeItem(OUTCOME_KEY);
+}
+
+function storeOutcome(outcome: StoredAnalysisOutcome) {
+  try {
+    localStorage.setItem(OUTCOME_KEY, JSON.stringify(outcome));
+    // Lets the banner pick it up without waiting for a route change.
+    window.dispatchEvent(new Event("eve_analysis_outcome"));
+  } catch {
+    // Storage full or blocked — the toast below is still shown.
+  }
+}
 
 type AnalysisStatus = "none" | "in_progress" | "completed" | "failed";
 
@@ -80,6 +122,12 @@ interface UseProactiveAnalysisOptions {
    * destination resolved from the run's results, so the caller only navigates.
    */
   onViewRecommendations?: (destination: AnalysisOutcome) => void;
+  /**
+   * Invoked from the "Try again" action on a failed or timed-out run. Without
+   * it those toasts are terminal and the merchant's only route to a first
+   * insight is re-importing a catalogue that imported perfectly well.
+   */
+  onRetry?: () => void;
 }
 
 /**
@@ -101,14 +149,17 @@ export function useProactiveAnalysis({
   fallbackOrganizationId,
   onComplete,
   onViewRecommendations,
+  onRetry,
 }: UseProactiveAnalysisOptions) {
   const onCompleteRef = useRef(onComplete);
   const onViewRef = useRef(onViewRecommendations);
+  const onRetryRef = useRef(onRetry);
   const fallbackOrgRef = useRef(fallbackOrganizationId);
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
     onViewRef.current = onViewRecommendations;
+    onRetryRef.current = onRetry;
     fallbackOrgRef.current = fallbackOrganizationId;
   });
 
@@ -182,8 +233,22 @@ export function useProactiveAnalysis({
 
           if (status === "failed") {
             keepPolling = false;
-            const description = data.error || "EVE could not finish analyzing your data.";
-            finish(() => toast.error("Analysis failed", { description }));
+            const description =
+              data.error ||
+              "EVE couldn't finish analysing your data. Your inventory numbers are unaffected — try again.";
+            const retry = onRetryRef.current;
+            finish(() => {
+              storeOutcome({
+                kind: "failed",
+                organizationId: organizationId as string,
+                message: description,
+              });
+              toast.error("Analysis didn't finish", {
+                description,
+                duration: 10000,
+                ...(retry ? { action: { label: "Try again", onClick: retry } } : {}),
+              });
+            });
             return;
           }
 
@@ -192,23 +257,31 @@ export function useProactiveAnalysis({
             const count = data.recommendations_count ?? 0;
             const view = onViewRef.current;
             const destination = resolveAnalysisDestination(data.primary_type);
+            const title =
+              count > 0
+                ? `${count} new recommendation${count === 1 ? "" : "s"} ready`
+                : "Analysis complete";
             finish(() => {
-              toast.success(
-                count > 0
-                  ? `${count} new recommendation${count === 1 ? "" : "s"} ready`
-                  : "Analysis complete",
-                {
-                  description: "EVE finished analyzing your business data.",
-                  ...(view
-                    ? {
-                        action: {
-                          label: destination.label,
-                          onClick: () => view(destination),
-                        },
-                      }
-                    : {}),
-                }
-              );
+              // Persisted before the toast: the result must outlive it.
+              storeOutcome({
+                kind: "completed",
+                organizationId: organizationId as string,
+                message: title,
+                count,
+                href: destination.href,
+                label: destination.label,
+              });
+              toast.success(title, {
+                description: "EVE finished analysing your business data.",
+                ...(view
+                  ? {
+                      action: {
+                        label: destination.label,
+                        onClick: () => view(destination),
+                      },
+                    }
+                  : {}),
+              });
               onCompleteRef.current?.();
             });
             return;
@@ -220,9 +293,26 @@ export function useProactiveAnalysis({
             if (polls < MAX_POLLS) {
               pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
             } else {
-              // Timed out while still in progress. Clear silently so the next
-              // page load does not resurrect a run we can no longer track.
-              finish();
+              // Stop watching, but never silently. Clearing the flags with no
+              // message left a merchant waiting indefinitely for a first
+              // insight that would never announce itself — the single worst
+              // moment in the activation flow, and the one most likely to end
+              // the trial. Say what happened and offer the way out.
+              const message =
+                "Your analysis is taking longer than usual. Your inventory numbers are ready to use — you can retry the AI analysis whenever you like.";
+              const retry = onRetryRef.current;
+              finish(() => {
+                storeOutcome({
+                  kind: "timed_out",
+                  organizationId: organizationId as string,
+                  message,
+                });
+                toast.warning("Analysis is taking longer than usual", {
+                  description: message,
+                  duration: 12000,
+                  ...(retry ? { action: { label: "Try again", onClick: retry } } : {}),
+                });
+              });
             }
           }
         }

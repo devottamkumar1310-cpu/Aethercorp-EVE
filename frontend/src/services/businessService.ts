@@ -207,6 +207,19 @@ export const uploadMasterCSVAPI = (
     file
   );
 
+/**
+ * Re-runs the proactive analysis for a workspace. Backs the "Try again" action
+ * on a failed or timed-out run, so a merchant never has to re-import a
+ * catalogue that imported correctly just to get a first insight.
+ */
+export async function retryAnalysis(token: string, organizationId: string): Promise<void> {
+  const res = await apiFetch(
+    `${API_BASE_URL}/api/organization/${organizationId}/analysis/retry`,
+    { method: "POST", headers: getHeaders(token) }
+  );
+  if (!res.ok) throw new Error("Couldn't restart the analysis. Please try again shortly.");
+}
+
 export interface WorkspaceSummary {
   id: string;
   name: string;

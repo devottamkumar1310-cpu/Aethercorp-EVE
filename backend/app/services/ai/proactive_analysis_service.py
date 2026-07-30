@@ -11,6 +11,50 @@ from app.models.recommendation_trace import RecommendationTrace
 
 logger = logging.getLogger("eve.services.ai.proactive_analysis")
 
+# A founder's first AI run must never surface a provider stack trace, an
+# SQLAlchemy repr or a raw HTTP body. Those read as "this product is broken"
+# even when the cause is transient, and this text lands during the first two
+# minutes of a trial. Every message says the same three things: what happened,
+# that their inventory data is safe, and what to do next.
+_GENERIC_FAILURE = (
+    "EVE couldn't finish analysing your data. Your inventory numbers are "
+    "unaffected — try running the analysis again."
+)
+
+
+def _friendly_error(exc: Exception) -> str:
+    """Maps an exception to merchant-readable text. The raw error stays in logs."""
+    try:
+        from app.core.ai_runtime import AIBudgetExceededError
+        if isinstance(exc, AIBudgetExceededError):
+            if getattr(exc, "reason", "") == "daily_cap":
+                return (
+                    "EVE has reached today's analysis limit. Your upload is saved "
+                    "and your inventory numbers are ready — analysis resumes tomorrow."
+                )
+            return (
+                "AI analysis is paused at the moment. Your upload is saved and your "
+                "inventory numbers are unaffected."
+            )
+    except Exception:  # pragma: no cover - import guard only
+        pass
+
+    name = type(exc).__name__.lower()
+    text = str(exc).lower()
+
+    if "timeout" in name or "timeout" in text or "timed out" in text:
+        return (
+            "The analysis took too long and stopped. Your inventory numbers are "
+            "unaffected — try running it again."
+        )
+    if "connection" in name or "network" in name or "unavailable" in text:
+        return (
+            "EVE couldn't reach the analysis service. Your upload is saved — "
+            "try again in a moment."
+        )
+    return _GENERIC_FAILURE
+
+
 class ProactiveAnalysisService:
     @staticmethod
     def _update_status(
@@ -112,8 +156,12 @@ class ProactiveAnalysisService:
             logger.info(f"[PROACTIVE ANALYSIS] Successfully generated baseline recommendations for Org {org_id}")
             
         except Exception as e:
+            # Raw detail to the log, merchant-readable text to the status the UI
+            # renders. str(e) previously went straight to a toast description.
             logger.error(f"[PROACTIVE ANALYSIS] Failed to generate recommendations: {e}", exc_info=True)
-            ProactiveAnalysisService._update_status(db, org_id, "failed", 0, error=str(e))
+            ProactiveAnalysisService._update_status(
+                db, org_id, "failed", 0, error=_friendly_error(e)
+            )
         finally:
             db.close()
 
