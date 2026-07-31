@@ -7,12 +7,12 @@ import { POSITIONING, PRICING } from "@/lib/config";
  * inherits the root title and competes with the homepage for the same query.
  */
 export const metadata: Metadata = {
-  title: "Pricing",
-  description: `${POSITIONING.name} pricing for Shopify fashion brands — plans from $${PRICING.plans[0].price}/month with a ${PRICING.trialDays}-day free trial and no credit card required.`,
+  title: "Pricing Coming Soon",
+  description: `${POSITIONING.name} pricing is coming soon. ${PRICING.supportingCopy}`,
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: `Pricing | ${POSITIONING.name}`,
-    description: `Plans from $${PRICING.plans[0].price}/month. ${PRICING.trialDays}-day free trial, no credit card.`,
+    title: `Pricing Coming Soon | ${POSITIONING.name}`,
+    description: PRICING.supportingCopy,
     url: `${POSITIONING.domain}/pricing`,
   },
 };

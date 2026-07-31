@@ -42,82 +42,23 @@ export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || "";
 export const BOOKING_CTA = "Book 15 minutes with the founder";
 
 /**
- * Pricing.
- *
- * These are placeholder numbers chosen to be defensible for a founder-led
- * D2C brand doing $500k–$5M/yr. Change them — but do NOT ship a pricing page
- * without numbers on it. Ambiguous pricing costs more conversions than
- * mispricing does.
+ * Pricing — Coming Soon configuration.
  */
 export const PRICING = {
-  /** Shown as a scarcity anchor on the pricing page. Set to null to hide. */
-  foundingSpotsTotal: 20,
-  currency: "$",
-  trialDays: 14,
-  plans: [
-    {
-      id: "starter",
-      name: "Starter",
-      price: 79,
-      cadence: "/mo",
-      blurb: "For brands under $500k/yr finding their first inventory rhythm.",
-      features: [
-        "Up to 500 SKUs",
-        "Stockout risk prediction",
-        "Dead stock capital analysis",
-        "Reorder recommendations",
-        "CSV + Shopify export import",
-        "Email support",
-      ],
-      cta: "Start free trial",
-      highlighted: false,
-    },
-    {
-      id: "growth",
-      name: "Growth",
-      price: 199,
-      cadence: "/mo",
-      blurb: "For scaling fashion brands managing real variant complexity.",
-      features: [
-        "Up to 5,000 SKUs",
-        "Everything in Starter",
-        "Variant-level size & colour velocity",
-        "AI Executive Assistant",
-        "Document intelligence (invoices, POs)",
-        "Decision traceability audit trail",
-        "Priority support",
-      ],
-      cta: "Start free trial",
-      highlighted: true,
-    },
-    {
-      id: "operator",
-      name: "Operator",
-      price: 449,
-      cadence: "/mo",
-      blurb: "For multi-collection brands with a real ops function.",
-      features: [
-        "Unlimited SKUs",
-        "Everything in Growth",
-        "Multi-workspace support",
-        "Supplier & lead-time intelligence",
-        "Custom onboarding & data migration",
-        "Direct founder Slack channel",
-      ],
-      // Every plan self-serves. Gating the top tier behind "Talk to us" made
-      // the most valuable visitor the only one who couldn't try the product.
-      cta: "Start free trial",
-      highlighted: false,
-    },
-  ],
+  headline: "Pricing Coming Soon",
+  subheadline:
+    "We're working closely with our first group of fashion brands to finalize pricing based on real customer feedback.",
+  supportingCopy:
+    "Join the waitlist to get early access, founding customer benefits, and be the first to know when pricing is announced.",
+  primaryCTA: "Join the Waitlist",
+  secondaryText: "No credit card required.",
 } as const;
 
-/** Founding-customer offer shown while we onboard our first cohort. */
+/** Founding-customer offer. */
 export const FOUNDING_OFFER = {
-  enabled: true,
-  headline: "Founding customer pricing",
-  detail:
-    "The first 20 brands lock these rates for 12 months, get onboarding done with us directly, and shape the roadmap.",
+  enabled: false,
+  headline: "",
+  detail: "",
 } as const;
 
 export const REVENUE_RANGES = [

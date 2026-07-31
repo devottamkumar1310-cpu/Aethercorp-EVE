@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
-import { POSITIONING, PRICING } from "@/lib/config";
+import { POSITIONING } from "@/lib/config";
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 
 export const viewport: Viewport = {
@@ -141,13 +141,11 @@ function StructuredData() {
           "Shopify CSV import",
           "AI executive assistant",
         ],
-        offers: PRICING.plans.map((plan) => ({
+        offers: {
           "@type": "Offer",
-          name: plan.name,
-          price: String(plan.price),
-          priceCurrency: "USD",
+          name: "Early Access Waitlist",
           url: `${POSITIONING.domain}/pricing`,
-        })),
+        },
       },
     ],
   };

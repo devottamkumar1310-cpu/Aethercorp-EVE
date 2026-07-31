@@ -88,7 +88,7 @@ export default function LandingPage() {
     },
     {
       q: "What does EVE cost?",
-      a: "Plans start at $79/month for up to 500 SKUs, $199/month for growing brands with variant-level forecasting and the AI assistant, and $449/month for unlimited SKUs. Every plan includes a 14-day free trial with no credit card required.",
+      a: "We are currently working closely with our first group of fashion brands to finalize pricing based on real customer feedback. Join the waitlist on our Pricing page to get early access, founding customer benefits, and be notified as soon as pricing is announced.",
     },
     {
       q: "Is my inventory data safe?",
