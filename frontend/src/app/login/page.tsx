@@ -1,5 +1,6 @@
 "use client";
-import { logger } from "@/lib/logger";
+
+import { logger, devLog } from "@/lib/logger";
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,13 +23,15 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     setError(null);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("oauth_click_time", String(performance.now()));
+      sessionStorage.setItem("auth_flow_start_wall", String(Date.now()));
+    }
     const supabase = createClient();
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // /onboarding forwards existing users to the dashboard automatically,
-        // so first-time Google sign-ins still get workspace setup.
         redirectTo: `${window.location.origin}/auth/callback?next=/onboarding`,
       }
     });
@@ -42,6 +45,7 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    const t0 = performance.now();
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -53,19 +57,16 @@ function LoginForm() {
       setError(error.message);
       setLoading(false);
     } else {
-      // Sync with backend
+      const tAuth = performance.now();
+      devLog(`[TELEMETRY][PERF] Password Auth Time: ${(tAuth - t0).toFixed(2)}ms`);
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           if (session.user?.id) identify(session.user.id);
           track("login_completed", { method: "email" });
-          await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${session.access_token}` }
-          });
         }
       } catch (e) {
-        logger.error("Sync failed", e);
+        logger.error("Login tracking failed", e);
       }
       router.push("/dashboard/inventory");
     }

@@ -104,11 +104,12 @@ export async function GET(request: Request) {
     const { data: exchangeData, error: exchangeError } =
       await supabase.auth.exchangeCodeForSession(code)
 
+    const tSessionCreated = performance.now();
+    devLog(`[TELEMETRY][PERF] Session creation: ${(tSessionCreated - t0).toFixed(2)}ms`);
+
     if (exchangeError) {
       logger.error(`[AUTH CALLBACK] [ERROR] exchangeCodeForSession failed:`, exchangeError)
 
-      // "invalid flow state" / "code verifier" is internal Supabase wording.
-      // A founder hitting this needs an instruction, not a stack trace.
       const raw = exchangeError.message ?? ""
       const isFlowStateError = /flow state|code verifier|code_verifier|expired/i.test(raw)
       const message = isFlowStateError
@@ -121,26 +122,40 @@ export async function GET(request: Request) {
     const session = exchangeData?.session;
     devLog(`[AUTH CALLBACK] [SUCCESS] Session: ${!!session}, cookies: ${cookiesToForward.length}`)
 
-    // Provision the backend profile before handing off, so the destination
-    // page never races an unsynced user.
+    let targetDestination = next;
     try {
       if (session) {
+        const tSyncStart = performance.now();
         const { API_BASE_URL, apiFetch } = await import("@/lib/api");
         const syncResponse = await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
-        devLog(`[AUTH CALLBACK] [SYNC] status: ${syncResponse.status}`)
-        devLog(`[TELEMETRY][PERF] OAuth callback + sync: ${(performance.now() - t0).toFixed(2)}ms`);
+        const tSyncEnd = performance.now();
+        devLog(`[TELEMETRY][PERF] Profile & Workspace sync: ${(tSyncEnd - tSyncStart).toFixed(2)}ms`);
+
+        if (syncResponse.ok) {
+          const syncData = await syncResponse.json();
+          if ((next === '/onboarding' || next === '/') && syncData.has_workspace) {
+            targetDestination = '/dashboard/inventory';
+            devLog(`[AUTH CALLBACK] Direct dashboard handoff for existing/synced workspace: ${syncData.default_workspace_id}`);
+          }
+          if (syncData.default_workspace_id) {
+            cookiesToForward.push({
+              name: 'active_workspace_id',
+              value: syncData.default_workspace_id,
+              options: { path: '/', maxAge: 60 * 60 * 24 * 30 }
+            });
+          }
+        }
       }
     } catch (syncError) {
       logger.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
     }
 
-    // Forward every cookie set during the exchange onto the redirect response.
-    // Without this the browser never receives the auth token and every
-    // subsequent request looks unauthenticated.
-    const response = NextResponse.redirect(`${origin}${next}`)
+    devLog(`[TELEMETRY][PERF] Callback processing total: ${(performance.now() - t0).toFixed(2)}ms -> redirecting to ${targetDestination}`);
+
+    const response = NextResponse.redirect(`${origin}${targetDestination}`)
     for (const { name, value, options } of cookiesToForward) {
       response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
     }

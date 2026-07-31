@@ -51,10 +51,18 @@ def sync_user(
             from fastapi import BackgroundTasks
             onboard_demo(DemoOnboardRequest(demo_company="luma"), background_tasks=BackgroundTasks(), current_user=profile, db=db)
             logger.info(f"Auto-provisioned default workspace for user_id={profile.id}")
+            memberships = db.query(Membership).filter(Membership.user_id == profile.id).all()
         except Exception as exc:
             logger.error(f"Auto-provisioning default workspace on sync failed: {exc}", exc_info=exc)
 
-    return {"status": "synced", "user_id": str(profile.id)}
+    default_ws_id = str(memberships[0].organization_id) if memberships else None
+    return {
+        "status": "synced",
+        "user_id": str(profile.id),
+        "has_workspace": len(memberships) > 0,
+        "default_workspace_id": default_ws_id,
+        "workspaces": [{"id": str(m.organization_id), "role": m.role} for m in memberships]
+    }
 
 
 @router.post("/forgot-password")

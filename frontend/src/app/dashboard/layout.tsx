@@ -412,40 +412,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       const proceedWithSession = async (token: string) => {
         const tHydrate = performance.now();
-        devLog(`[TELEMETRY][PERF] Session Hydration Duration: ${(tHydrate - tStart).toFixed(2)}ms`);
+        devLog(`[TELEMETRY][PERF] Session Hydration Start: ${(tHydrate - tStart).toFixed(2)}ms`);
         setSessionToken(token);
-        sessionTokenRef.current = token; // Eagerly sync ref so onAuthStateChange guard works before React re-render
-        const isAlreadyInitialized =
-          typeof window !== "undefined" &&
-          sessionStorage.getItem("eve_initialized") === "true";
+        sessionTokenRef.current = token;
 
+        // Log end-to-end Google OAuth performance if initiated from login page
+        if (typeof window !== "undefined") {
+          const oauthClickTime = sessionStorage.getItem("oauth_click_time");
+          if (oauthClickTime) {
+            const totalEndToEnd = performance.now() - parseFloat(oauthClickTime);
+            devLog(`[TELEMETRY][PERF] Total Google Sign-In Time (Click to Interactive): ${totalEndToEnd.toFixed(2)}ms`);
+            sessionStorage.removeItem("oauth_click_time");
+          }
+        }
+
+        // Fast-path: If user already has an active workspace stored, unblock dashboard IMMEDIATELY
+        const storedWorkspaceId = typeof window !== "undefined" ? localStorage.getItem("active_workspace_id") : null;
+        if (storedWorkspaceId) {
+          setActiveWorkspaceId(storedWorkspaceId);
+          if (mounted) setLoading(false);
+          devLog(`[TELEMETRY][PERF] Dashboard Interactive (Fast Path): ${(performance.now() - tStart).toFixed(2)}ms`);
+        }
+
+        // Background sync & workspace/profile hydration (non-blocking for returning users)
         try {
-          // Ensure profile & workspace records exist in backend database
-          try {
-            await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` }
-            });
-          } catch (syncErr) {
-            logger.warn("[EVE Layout] Pre-hydration auth sync warning:", syncErr);
-          }
+          // Fire-and-forget sync so it never blocks dashboard rendering
+          apiFetch(`${API_BASE_URL}/api/auth/sync`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }
+          }).catch((syncErr) => logger.warn("[EVE Layout] Background auth sync warning:", syncErr));
 
-          if (isAlreadyInitialized) {
-            if (mounted) setLoadingStage(2);
-            await loadWorkspacesAndProfile(token);
-          } else {
-            if (mounted) setLoadingStage(2); // Loading Workspace
-            await loadWorkspacesAndProfile(token);
-            if (mounted) setLoadingStage(3); // Loading Business Data
-            if (mounted) setLoadingStage(4); // Preparing AI Executive
-            if (typeof window !== "undefined") {
-              sessionStorage.setItem("eve_initialized", "true");
-            }
-          }
+          await loadWorkspacesAndProfile(token);
           if (mounted) setInitError(null);
         } catch (err: any) {
-          logger.error("[EVE] Dashboard initialization failed:", err);
-          if (mounted) {
+          logger.error("[EVE] Dashboard workspace/profile background load failed:", err);
+          if (mounted && !storedWorkspaceId) {
             const msg: string = err?.message ?? "";
             let userMessage: string;
             if (msg.includes("timed out")) {
@@ -465,8 +466,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }
         } finally {
           const tFinish = performance.now();
-          devLog(`[TELEMETRY][PERF] Workspace/Profile Load Duration: ${(tFinish - tHydrate).toFixed(2)}ms`);
-          devLog(`[TELEMETRY][PERF] Time to Dashboard Interactive: ${(tFinish - tStart).toFixed(2)}ms`);
+          devLog(`[TELEMETRY][PERF] Workspace/Profile Hydration Complete: ${(tFinish - tHydrate).toFixed(2)}ms`);
+          devLog(`[TELEMETRY][PERF] Total Dashboard Ready: ${(tFinish - tStart).toFixed(2)}ms`);
           if (mounted) setLoading(false);
         }
       };
