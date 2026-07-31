@@ -7,8 +7,9 @@
  * whichever trace was first in the list, regardless of which SKU or specific
  * record the link actually pointed at.
  */
-/* eslint-disable @typescript-eslint/no-require-imports -- plain CommonJS on purpose,
-   so this runs directly under `node --test` with zero bundler/framework involved. */
+// Plain CommonJS on purpose, so this runs directly under `node --test` with no
+// bundler or framework involved. The rule is disabled for all *.test.js in
+// eslint.config.mjs, so the inline directive this used to carry is redundant.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { selectTrace } = require("./traceSelection");

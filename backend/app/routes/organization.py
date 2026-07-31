@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from app.core.scenario import scenario_for_demo
 from app.database import get_db
 from app.core.security import get_current_user, get_required_workspace_id, require_workspace_role
+from app.core.rate_limiter import rate_limit
 from app.models.profile import Profile
 from app.models.organization import Organization, Membership
 from app.services.ai.proactive_analysis_service import ProactiveAnalysisService
@@ -289,7 +290,12 @@ def retry_analysis(
     org_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: Profile = Depends(get_current_user)
+    current_user: Profile = Depends(get_current_user),
+    # Every other endpoint that can start a paid AI run is rate limited; this
+    # one shipped without it. The in-progress check below and the daily cost cap
+    # bound the damage, but between runs a caller could loop retries and burn
+    # the workspace's AI budget. Matches the executive-analysis limit.
+    _: None = Depends(rate_limit(requests=5, window_seconds=60)),
 ):
     """
     Re-runs the proactive analysis for a workspace.
