@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { POSITIONING } from "@/lib/config";
 import { track } from "@/lib/analytics";
-import { BookDemoButton } from "@/components/marketing/BookDemoButton";
 import { StartFreeTrialButton } from "@/components/marketing/StartFreeTrialButton";
 
 type TabKey = "overview" | "inventory" | "traceability";
@@ -318,14 +317,6 @@ export default function LandingPage() {
                 >
                   LinkedIn
                 </a>
-                {/* Optional, and deliberately the lowest-emphasis element on
-                    the page. Nobody has to talk to us to use EVE. */}
-                <BookDemoButton
-                  variant="ghost"
-                  location="landing_founder_block"
-                  label="Stuck? Book 15 minutes with me"
-                  className="text-xs px-0"
-                />
               </div>
             </div>
           </div>
@@ -746,20 +737,6 @@ export default function LandingPage() {
               Explore Live Demo
             </Link>
           </div>
-
-          {/* The only place a call is offered near a conversion point, and it
-              is a text link under the fold — an escape hatch, not an option of
-              equal weight. */}
-          <p className="text-xs text-muted-foreground">
-            Rather talk it through first?{" "}
-            <BookDemoButton
-              variant="ghost"
-              location="landing_bottom_cta"
-              label="Book 15 minutes with the founder"
-              showIcon={false}
-              className="text-xs underline underline-offset-2"
-            />
-          </p>
         </div>
       </section>
 
