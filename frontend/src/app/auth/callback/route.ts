@@ -5,6 +5,19 @@ import { NextResponse } from 'next/server'
 import { devLog } from '@/lib/logger'
 
 /**
+ * How long the callback will wait on the backend profile sync before giving up
+ * and redirecting anyway.
+ *
+ * Chosen against measured production latency: the sync sits at a ~4s median
+ * (already dominated by backend cold start) with a 94s tail. A ceiling above
+ * ~5s stops protecting anyone, and one much below it would discard the
+ * direct-to-dashboard handoff on a normal warm sign-in. This is a floor on how
+ * bad the experience can get, not a fix for the latency itself — that is the
+ * backend cold start, tracked separately.
+ */
+const SYNC_TIMEOUT_MS = 5000;
+
+/**
  * Resolve the public-facing origin.
  *
  * Behind Vercel's proxy `new URL(request.url).origin` is the internal
@@ -127,10 +140,34 @@ export async function GET(request: Request) {
       if (session) {
         const tSyncStart = performance.now();
         const { API_BASE_URL, apiFetch } = await import("@/lib/api");
-        const syncResponse = await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        });
+
+        // Bounded wait. This request blocks the redirect, so the founder sits on
+        // a blank /auth/callback for exactly as long as it takes. Production
+        // logs show /api/auth/sync at a 4s median and a 94s worst case, because
+        // signing in is usually the first request after the backend has scaled
+        // to zero and it pays the whole cold start. Ninety seconds of white
+        // screen immediately after "Continue with Google" reads as "this is
+        // broken", and there was no ceiling on it at all.
+        //
+        // On timeout we fall through to `next` — the pre-handoff destination.
+        // That is safe: /onboarding is idempotent and forwards users who
+        // already have a workspace, and sync itself is self-healing and will be
+        // driven by the destination page. We lose the direct-to-dashboard
+        // shortcut for that one sign-in, not correctness.
+        const syncAbort = new AbortController();
+        const syncTimeout = setTimeout(() => syncAbort.abort(), SYNC_TIMEOUT_MS);
+
+        let syncResponse: Response;
+        try {
+          syncResponse = await apiFetch(`${API_BASE_URL}/api/auth/sync`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+            signal: syncAbort.signal,
+          });
+        } finally {
+          clearTimeout(syncTimeout);
+        }
+
         const tSyncEnd = performance.now();
         devLog(`[TELEMETRY][PERF] Profile & Workspace sync: ${(tSyncEnd - tSyncStart).toFixed(2)}ms`);
 
@@ -150,7 +187,18 @@ export async function GET(request: Request) {
         }
       }
     } catch (syncError) {
-      logger.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
+      // A timeout is an expected outcome here, not a fault — distinguish it so
+      // a cold-start-induced abort is not investigated as a sync bug, and so
+      // the rate of these is visible as the cold-start signal it actually is.
+      const timedOut = syncError instanceof DOMException && syncError.name === "AbortError";
+      if (timedOut) {
+        logger.warn(
+          `[AUTH CALLBACK] Profile sync exceeded ${SYNC_TIMEOUT_MS}ms (backend likely cold) — ` +
+          `redirecting to ${targetDestination} without waiting.`
+        );
+      } else {
+        logger.error(`[AUTH CALLBACK] [ERROR] Backend sync failed:`, syncError);
+      }
     }
 
     devLog(`[TELEMETRY][PERF] Callback processing total: ${(performance.now() - t0).toFixed(2)}ms -> redirecting to ${targetDestination}`);
