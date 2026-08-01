@@ -24,7 +24,13 @@ from app.services.ai.executive_board import ExecutiveBoard
 from app.audit.ground_truth import calculate_ground_truth
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "eve_audit_benchmarks.db")
-DATABASE_URL = "postgresql://postgres.kqncbxoftcqvzslsmswf:Po6P8mo36Yf3NanQ@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+
+# Follows the configured application database, which is Neon as of the
+# 2026-08-01 migration. This previously hardcoded a Supabase Postgres URL with
+# its password in source, which both pinned this script to the old database and
+# committed a live credential to git.
+from app.config import settings  # noqa: E402
+DATABASE_URL = settings.DATABASE_URL
 
 # Dipti Context
 USER_ID = uuid.UUID("9e3f929a-2e59-487f-a827-82ce8df09594")
