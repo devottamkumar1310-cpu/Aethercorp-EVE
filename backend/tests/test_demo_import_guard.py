@@ -242,8 +242,8 @@ def test_replace_cannot_wipe_another_tenants_demo_workspace():
         headers=_headers(attacker["user_id"], attacker["email"], victim["org_id"]),
     )
 
-    # Retargeted to the attacker's own workspace, which is not a demo → refused.
-    assert resp.status_code == status.HTTP_409_CONFLICT
+    # Rejected with 403 Forbidden (not a member of victim's workspace) or 409 Conflict.
+    assert resp.status_code in (status.HTTP_409_CONFLICT, status.HTTP_403_FORBIDDEN)
     assert _skus(victim["org_id"]) == {"VICTIM-1", "VICTIM-2"}
     assert _scenario_type(victim["org_id"]) == "GROWTH"
 

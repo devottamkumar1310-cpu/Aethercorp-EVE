@@ -23,6 +23,9 @@ import {
   Moon,
   Clock,
   Database,
+  User,
+  CreditCard,
+  HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ProductTour } from "@/components/dashboard/ProductTour";
@@ -64,6 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [loadingStage, setLoadingStage] = useState(0);
   const [theme, setTheme] = useState("dark");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
@@ -981,23 +985,74 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <div className="h-5 w-px bg-sidebar-border" />
 
-              {/* Profile */}
-              <div className="flex items-center gap-2.5">
-                <div className="eve-avatar h-8 w-8 text-[11px]">{initials}</div>
-                <div className="hidden sm:flex flex-col leading-tight">
-                  <span className="text-xs font-semibold text-foreground leading-none">{profile?.full_name || "Guest"}</span>
-                  <span className="text-[10px] text-muted-foreground mt-1 leading-none">{profile?.email || ""}</span>
-                </div>
-              </div>
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-sidebar-accent transition-all cursor-pointer focus:outline-none"
+                  aria-expanded={isProfileMenuOpen}
+                  aria-label="User account menu"
+                >
+                  <div className="eve-avatar h-8 w-8 text-[11px] font-bold">{initials}</div>
+                  <div className="hidden sm:flex flex-col leading-tight text-left">
+                    <span className="text-xs font-semibold text-foreground leading-none">{profile?.full_name || "Guest"}</span>
+                    <span className="text-[10px] text-muted-foreground mt-1 leading-none max-w-[120px] truncate">{profile?.email || ""}</span>
+                  </div>
+                  <ChevronDown size={12} className="text-muted-foreground hidden sm:block" />
+                </button>
 
-              <button
-                onClick={handleLogout}
-                className="p-2 text-muted-foreground hover:text-red-400 hover:bg-sidebar-accent rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                title="Sign Out"
-                aria-label="Sign out"
-              >
-                <LogOut size={16} />
-              </button>
+                {isProfileMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-56 bg-sidebar border border-sidebar-border rounded-xl shadow-xl z-50 overflow-hidden text-sidebar-foreground animate-fade-in">
+                      <div className="p-3 border-b border-sidebar-border bg-sidebar-accent/30">
+                        <p className="text-xs font-bold text-foreground truncate">{profile?.full_name || "Account"}</p>
+                        <p className="text-[10px] text-muted-foreground truncate mt-0.5">{profile?.email || ""}</p>
+                      </div>
+                      <div className="py-1 text-xs">
+                        <Link
+                          href="/dashboard/settings"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-sidebar-accent transition-colors text-sidebar-foreground font-medium"
+                        >
+                          <User size={14} className="text-indigo-400" />
+                          <span>Account Settings</span>
+                        </Link>
+                        <Link
+                          href="/dashboard/billing"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-sidebar-accent transition-colors text-sidebar-foreground font-medium"
+                        >
+                          <CreditCard size={14} className="text-emerald-400" />
+                          <span>Billing &amp; Plan</span>
+                        </Link>
+                        <Link
+                          href="/dashboard/help"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2 hover:bg-sidebar-accent transition-colors text-sidebar-foreground font-medium"
+                        >
+                          <HelpCircle size={14} className="text-amber-400" />
+                          <span>Help &amp; Documentation</span>
+                        </Link>
+                      </div>
+                      <div className="p-1 border-t border-sidebar-border">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-red-500/10 text-red-500 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          <LogOut size={14} />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </header>

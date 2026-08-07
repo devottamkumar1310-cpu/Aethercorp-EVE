@@ -246,24 +246,32 @@ def get_active_workspace_id(
 ) -> Optional[uuid.UUID]:
     """
     Extracts and validates the active workspace from the X-Workspace-Id header.
-    If header is missing, invalid, or user is not a member, falls back to the user's first membership.
-    If no workspaces exist, returns None.
+    If header is specified, user MUST be a member of that workspace (raises 403 otherwise).
+    If header is missing, falls back to the user's primary membership.
     """
     if x_workspace_id:
         try:
             workspace_uuid = uuid.UUID(x_workspace_id)
-            membership = db.query(Membership).filter(
-                Membership.user_id == current_user.id,
-                Membership.organization_id == workspace_uuid
-            ).first()
-            if membership:
-                return workspace_uuid
-            else:
-                logger.warning(f"[EVE Security] User {current_user.id} requested non-member workspace {x_workspace_id}. Falling back to primary membership.")
         except ValueError:
-            logger.warning(f"[EVE Security] Invalid X-Workspace-Id format {x_workspace_id!r}. Falling back to primary membership.")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid X-Workspace-Id format"
+            )
 
-    # Primary membership fallback
+        membership = db.query(Membership).filter(
+            Membership.user_id == current_user.id,
+            Membership.organization_id == workspace_uuid
+        ).first()
+
+        if not membership:
+            logger.warning(f"[EVE Security] User {current_user.id} denied access to non-member workspace {x_workspace_id}.")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not a member of this workspace"
+            )
+        return workspace_uuid
+
+    # Primary membership fallback when no header is supplied
     membership = db.query(Membership).filter(Membership.user_id == current_user.id).first()
     return membership.organization_id if membership else None
 

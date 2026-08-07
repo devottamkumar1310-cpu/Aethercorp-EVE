@@ -189,6 +189,8 @@ def seed_full_demo_database():
 client = TestClient(app, headers={"Authorization": "Bearer mock-token"})
 
 
+from fastapi.security import HTTPAuthorizationCredentials
+
 @pytest.fixture(autouse=True)
 def setup_dependencies():
     # Ensure gemini_service is registered in container
@@ -219,6 +221,8 @@ def setup_dependencies():
     app.dependency_overrides[get_active_workspace_id] = override_get_required_workspace_id
     
     yield
+
+    app.dependency_overrides.clear()
 
 
 def test_greeting_intent_routing():

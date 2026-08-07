@@ -764,6 +764,7 @@ export default function LandingPage() {
               <li><a href="#traceability" className="hover:text-foreground transition-colors">How it works</a></li>
               <li><a href="#workflow" className="hover:text-foreground transition-colors">Setup</a></li>
               <li><Link href="/demo" className="hover:text-foreground transition-colors">Interactive Demo</Link></li>
+              <li><Link href="/glossary" className="hover:text-foreground transition-colors">Inventory Glossary</Link></li>
             </ul>
           </div>
 
@@ -772,6 +773,7 @@ export default function LandingPage() {
             <ul className="space-y-2 text-muted-foreground font-medium">
               <li><Link href="/signup" className="hover:text-foreground transition-colors">Start free trial</Link></li>
               <li><Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
+              <li><Link href="/founder" className="hover:text-foreground transition-colors">About the Founder</Link></li>
               <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               <li><Link href="/login" className="hover:text-foreground transition-colors">Sign In</Link></li>
             </ul>

@@ -20,7 +20,8 @@ import {
   Menu,
   Monitor,
   Sun,
-  Moon
+  Moon,
+  CreditCard,
 } from "lucide-react";
 import { API_BASE_URL, apiFetch } from "@/lib/api";
 
@@ -182,7 +183,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (loading) return;
 
-    const sections = ["profile", "appearance", "email", "workspaces", "security", "danger-zone"];
+    const sections = ["profile", "appearance", "email", "workspaces", "billing", "security", "danger-zone"];
 
     const handleScroll = () => {
       const container = document.querySelector("main") || document.documentElement;
@@ -429,6 +430,7 @@ export default function SettingsPage() {
             { id: "appearance", label: "Appearance", icon: Palette },
             { id: "email", label: "Email Management", icon: Mail },
             { id: "workspaces", label: "Workspaces", icon: Building2 },
+            { id: "billing", label: "Billing & Plan", icon: CreditCard },
             ...(!isGoogleUser ? [{ id: "security", label: "Security & Keys", icon: Lock }] : []),
             { id: "danger-zone", label: "Danger Zone", icon: AlertTriangle }
           ].map((sec) => {
@@ -824,6 +826,39 @@ export default function SettingsPage() {
             </div>
           </section>
         )}
+
+        {/* Billing & Plan Section */}
+        <section id="billing" className="scroll-mt-24 bg-card rounded-xl border border-border shadow-sm overflow-hidden transition-all">
+          <div className="px-6 py-4 border-b border-border bg-secondary flex items-center justify-between">
+            <h2 className="text-sm font-semibold flex items-center text-foreground tracking-wide font-sans">
+              <CreditCard className="h-4 w-4 mr-2.5 text-indigo-500" />
+              Billing &amp; Early Access Plan
+            </h2>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+              <Check className="h-3 w-3" />
+              Early Access Included
+            </span>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg border border-border bg-muted/20">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Early Access Founding Plan</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Full platform access with variant-level forecasting, Decision Traceability, and EVE AI. Zero credit card or payment setup required.
+                </p>
+              </div>
+              <a
+                href="/dashboard/billing"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors shrink-0"
+              >
+                View Plan Details
+              </a>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Pricing plans will be announced prior to public launch. Early adopters will receive at least 30 days&apos; advance notice before any billing begins.
+            </p>
+          </div>
+        </section>
 
         {/* Danger Zone Section */}
         <section id="danger-zone" className="scroll-mt-24 bg-red-500/5 rounded-xl border border-red-500/20 shadow-sm overflow-hidden transition-all">

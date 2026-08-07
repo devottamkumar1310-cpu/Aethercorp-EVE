@@ -10,7 +10,8 @@ import {
   HelpCircle,
   CheckSquare,
   Sparkles,
-  DollarSign
+  DollarSign,
+  CreditCard,
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -37,6 +38,7 @@ export const NAV_ITEMS = [
   {
     label: "Platform",
     items: [
+      { href: "/dashboard/billing", label: "Billing & Plan", icon: CreditCard },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
       { href: "/dashboard/help", label: "Help", icon: HelpCircle },
     ],

@@ -28,11 +28,11 @@ class WaitlistJoinRequest(BaseModel):
 
 def get_current_user_optional(
     request: Request,
+    db: Session = Depends(get_db),
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
 ) -> Optional[Profile]:
     if not credentials:
         return None
-    db = next(get_db())
     try:
         payload = verify_supabase_token(request, credentials)
         user_id_str = payload.get("sub")
