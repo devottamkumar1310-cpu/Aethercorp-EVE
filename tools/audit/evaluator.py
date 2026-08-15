@@ -341,12 +341,15 @@ async def run_evaluator():
         db.close()
 
 def generate_report(results, truth):
-    # Calculate scores based on ground truth alignment
-    # Let's write the report structure
-    report_path = os.path.join(os.path.dirname(__file__), "../../../C:/Users/Devottam/.gemini/antigravity/brain/f524667d-b961-4186-b7d4-9706f18588cf/eve_performance_audit_report.md")
-    # Actually let's use the absolute path in artifacts directory directly
-    abs_report_path = "C:/Users/Devottam/.gemini/antigravity/brain/f524667d-b961-4186-b7d4-9706f18588cf/eve_performance_audit_report.md"
-    
+    # Report lands in the repo's gitignored reports/ directory so a benchmark run
+    # works on any machine. Override with EVE_AUDIT_REPORT_PATH to write elsewhere.
+    default_dir = os.path.join(os.path.dirname(__file__), "..", "..", "reports")
+    abs_report_path = os.environ.get(
+        "EVE_AUDIT_REPORT_PATH",
+        os.path.abspath(os.path.join(default_dir, "eve_performance_audit_report.md")),
+    )
+    os.makedirs(os.path.dirname(abs_report_path), exist_ok=True)
+
     with open(abs_report_path, "w", encoding="utf-8") as f:
         f.write(f"""# EVE Performance Audit Report — Production Readiness Evaluation
 

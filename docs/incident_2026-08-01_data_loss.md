@@ -14,7 +14,8 @@ Verified by direct observation:
 
 - Cloud Run and local development use **the same database**. `DATABASE_URL` is a
   Secret Manager secret with **exactly one version ever** (v1, 2026-06-21),
-  resolving to `postgres.kqncbxoftcqvzslsmswf@aws-1-ap-southeast-1.pooler.supabase.com`.
+  resolving to the shared Supabase connection pooler (host and project
+  identifier redacted — this repository is public).
 - **All application tables in `public` are empty.** `profiles`, `organizations`,
   `memberships`, `products`, `inventory_items`, `sales_records`,
   `recommendation_traces`, `recommendations` — all `count(*) = 0`.

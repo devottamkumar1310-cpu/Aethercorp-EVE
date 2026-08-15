@@ -13,31 +13,31 @@ EVE (Enterprise Virtual Executive) has been hardened to transition from a protot
 ## 2. Hardening Pillars & Architecture
 
 ### A. Single Source of Truth (SSOT)
-- **Mechanism**: The math calculations for replenishment safety stock, stockout predictions, dynamic margin optimizations, and estimated profits are centered entirely inside [AnalyticsService](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/analytics_service.py).
+- **Mechanism**: The math calculations for replenishment safety stock, stockout predictions, dynamic margin optimizations, and estimated profits are centered entirely inside [AnalyticsService](../backend/app/services/analytics_service.py).
 - **Alignment**:
   - The `/api/dashboard` route and the `/api/chat` route consume the exact same database aggregation metrics.
-  - The [ExecutiveOrchestrator](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/agents/executive_orchestrator.py) is refactored to fetch metrics directly from `AnalyticsService`, ensuring that CEO summaries align 100% with the founder dashboard numbers.
+  - The [ExecutiveOrchestrator](../backend/app/agents/executive_orchestrator.py) is refactored to fetch metrics directly from `AnalyticsService`, ensuring that CEO summaries align 100% with the founder dashboard numbers.
 - **Explainability**: Every recommendation includes float confidence scores, detailed explainability factors (methods and parameters used), and provenance source tracing (timestamp and calculating service).
 
 ### B. Authentication & Authorization Guardrails
-- **Mechanism**: Refactored the API gateway bearer verification in [security.py](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/core/security.py) using `HTTPBearer(auto_error=False)` to prevent default FastAPI 403 Forbidden overrides.
+- **Mechanism**: Refactored the API gateway bearer verification in [security.py](../backend/app/core/security.py) using `HTTPBearer(auto_error=False)` to prevent default FastAPI 403 Forbidden overrides.
 - **Resilience**: Any missing, invalid, or expired JWT tokens consistently trigger a structured `401 Unauthorized` response with a standard `WWW-Authenticate: Bearer` header.
 
 ### C. Multi-Tenant Data Isolation
 - **Mechanism**: All database queries are filtered strictly by `organization_id`.
-- **Tenancy Boundary**: Scoped conversational session storage and short-term history memory in [ShortTermMemoryService](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/memory/short_term.py) and [MemoryManager](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/memory/memory_manager.py) to prevent tenancy leaks.
+- **Tenancy Boundary**: Scoped conversational session storage and short-term history memory in [ShortTermMemoryService](../backend/app/memory/short_term.py) and [MemoryManager](../backend/app/memory/memory_manager.py) to prevent tenancy leaks.
 
 ### D. CSV Validation & Data Quality Engine
 - **Mechanism**: Implemented a comprehensive file parsing gateway in the inventory upload route to catch empty files, oversized payloads, and corrupted headers.
-- **Data Quality Service**: [DataQualityService](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/data_quality_service.py) enforces bounds checks (e.g. no negative stock, no negative cost/price, and no duplicate SKUs). If a critical corruption is detected, calculations are immediately blocked and raise a structured `400 Bad Request` containing quality details.
+- **Data Quality Service**: [DataQualityService](../backend/app/services/data_quality_service.py) enforces bounds checks (e.g. no negative stock, no negative cost/price, and no duplicate SKUs). If a critical corruption is detected, calculations are immediately blocked and raise a structured `400 Bad Request` containing quality details.
 - **Format**: All gateway errors are returned as clean, unwrapped, top-level JSON error payloads.
 
 ### E. Agent Failure Recovery
-- **Mechanism**: Sub-agent crashes (e.g. pricing or inventory agents raising an exception or returning a status failure) are trapped in [Orchestrator._execute_node](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/orchestration/orchestrator.py).
-- **Graceful Degradation**: If a sub-agent crashes, it completes the task node with a failure status payload and allows the task graph to continue. [ExecutiveOrchestrator](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/agents/executive_orchestrator.py) catches the failure status, substitutes safe deterministic values, and returns fallback text (`"Pricing analysis unavailable."`) instead of failing the user interaction.
+- **Mechanism**: Sub-agent crashes (e.g. pricing or inventory agents raising an exception or returning a status failure) are trapped in [Orchestrator._execute_node](../backend/app/orchestration/orchestrator.py).
+- **Graceful Degradation**: If a sub-agent crashes, it completes the task node with a failure status payload and allows the task graph to continue. [ExecutiveOrchestrator](../backend/app/agents/executive_orchestrator.py) catches the failure status, substitutes safe deterministic values, and returns fallback text (`"Pricing analysis unavailable."`) instead of failing the user interaction.
 
 ### F. Gemini Outage Fallbacks
-- **Mechanism**: Wrapped Gemini API calls inside [GeminiService](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/gemini_service.py) to catch rate-limits (429), timeouts, and service outages, raising a unified `GeminiOutageError`.
+- **Mechanism**: Wrapped Gemini API calls inside [GeminiService](../backend/app/services/gemini_service.py) to catch rate-limits (429), timeouts, and service outages, raising a unified `GeminiOutageError`.
 - **Local Fallback**: Route handlers catch `GeminiOutageError` and seamlessly fall back to local/deterministic heuristic models, preserving system usability.
 
 ### G. Prompt Injection Resistance
@@ -45,7 +45,7 @@ EVE (Enterprise Virtual Executive) has been hardened to transition from a protot
 - **Safety Block**: Flagged injection attempts immediately short-circuit and return a structured warning response payload without hitting the model endpoint.
 
 ### H. Compliance Audit Trail
-- **Mechanism**: Created [AuditLog](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/models/audit_log.py) model and [AuditLogger](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/audit_logger.py) to write critical system events (CSV uploads, auth events, LLM tokens/costs, agent executions) directly to a SQL database for audit compliance.
+- **Mechanism**: Created [AuditLog](../backend/app/models/audit_log.py) model and [AuditLogger](../backend/app/services/audit_logger.py) to write critical system events (CSV uploads, auth events, LLM tokens/costs, agent executions) directly to a SQL database for audit compliance.
 
 ---
 

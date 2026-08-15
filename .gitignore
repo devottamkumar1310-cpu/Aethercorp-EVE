@@ -3,22 +3,26 @@
 # ==============================================================================
 
 # 1. Environment Variables & Secrets
+# .env.example files ARE tracked: they document required configuration.
+# Keep the negation AFTER the broad patterns so it wins (last match wins).
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.production
+.env.*
 *.env
 !.env.example
+!**/.env.example
 
 # 2. Python & Backend
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# Test & lint caches
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
+coverage/
 coverage.xml
 htmlcov/
 
@@ -26,16 +30,13 @@ htmlcov/
 venv/
 .venv/
 env/
-.env_python/
 ENV/
+.env_python/
 
-# Databases
+# Databases (local/test only — EVE uses managed Postgres in every environment)
 *.db
 *.sqlite
 *.sqlite3
-test_temp.db
-eve_mvp.db
-eve_audit_benchmarks.db
 
 # 3. Next.js, Node & Frontend
 node_modules/
@@ -48,8 +49,9 @@ out/
 build/
 dist/
 .vercel/
+*.tsbuildinfo
 
-# 4. OS & IDE Specific
+# 4. OS Specific
 .DS_Store
 .DS_Store?
 ._*
@@ -58,25 +60,23 @@ dist/
 ehthumbs.db
 Thumbs.db
 
-# IDEs
+# 5. IDEs & local agent/tool workspace state
 .idea/
 .vscode/
 .vs/
 .gemini/
 .claude/
 .codex/
-# Document uploads
-backend/uploads/
-uploads/ 
-.gemini/
-uploads/
-.vercel
-.env*
+.cursor/
 
-# Build & Verification Artifacts
-*.tsbuildinfo
+# 6. Runtime & generated artifacts
+# Document uploads (merchant data — never committed)
+uploads/
+backend/uploads/
+# Generated audit/benchmark output (see app/audit/evaluator.py)
+reports/
+backups/
+# Logs and scratch files
 *.log
 *.tmp
 test_results.txt
-*_report.md
-

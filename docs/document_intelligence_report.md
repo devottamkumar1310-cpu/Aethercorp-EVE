@@ -21,11 +21,11 @@ graph TD
     I -->|Run Forecasting / Insights| J[Dashboard Updates & Recommendations]
 ```
 
-The system is implemented as a modular package located in [document_intelligence/](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/document_intelligence/):
-- **[ingestion_service.py](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/document_intelligence/ingestion_service.py)**: Orchestrates the classification, extraction, validation, DB write-back, and COO generation pipeline.
-- **[document_classifier.py](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/document_intelligence/document_classifier.py)**: Analyzes content signatures to auto-classify files into Sales/Purchase Invoices, Purchase Orders, Receipts, or Inventory/Sales Reports.
-- **[extraction_engine.py](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/document_intelligence/extraction_engine.py)**: Utilizes Gemini Structured Output JSON decoding with local deterministic fallbacks for offline testing.
-- **[validation_engine.py](file:///c:/Users/Devottam/OneDrive/Pictures/Desktop/Project/aethercorp-eve/backend/app/services/document_intelligence/validation_engine.py)**: Executes quality scoring logic and tracks validation issues (duplicates, mathematical errors, negative values).
+The system is implemented as a modular package located in [document_intelligence/](../backend/app/services/document_intelligence/):
+- **[ingestion_service.py](../backend/app/services/document_intelligence/ingestion_service.py)**: Orchestrates the classification, extraction, validation, DB write-back, and COO generation pipeline.
+- **[document_classifier.py](../backend/app/services/document_intelligence/document_classifier.py)**: Analyzes content signatures to auto-classify files into Sales/Purchase Invoices, Purchase Orders, Receipts, or Inventory/Sales Reports.
+- **[extraction_engine.py](../backend/app/services/document_intelligence/extraction_engine.py)**: Utilizes Gemini Structured Output JSON decoding with local deterministic fallbacks for offline testing.
+- **[validation_engine.py](../backend/app/services/document_intelligence/validation_engine.py)**: Executes quality scoring logic and tracks validation issues (duplicates, mathematical errors, negative values).
 
 ---
 
