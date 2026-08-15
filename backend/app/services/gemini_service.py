@@ -34,7 +34,17 @@ from app.schemas.agent_response import AgentResponseSchema, TokenUsageSchema
 logger = logging.getLogger("eve.services.gemini_service")
 
 PROVIDER = "google"
-DEFAULT_MODEL = "gemini-2.5-flash"
+
+# THE single source of truth for which model EVE calls. Every other module must
+# import this rather than hardcoding a model string — six places did, which is
+# why the 2.5 retirement was a repo-wide change instead of a one-line one.
+#
+# gemini-2.5-flash was retired (shutdown 2026-10-16) and began refusing new
+# callers before that date with "no longer available to new users". Google's
+# documented replacement for the 2.5-flash line is gemini-3.6-flash.
+DEFAULT_MODEL = "gemini-3.6-flash"
+# Reported as llm_model_version on recommendation traces for provenance.
+DEFAULT_MODEL_VERSION = "gemini-3.6-flash"
 
 # Shown when the daily cap or kill switch refuses a call. Deliberately honest —
 # returning fabricated analysis as though it were real would be worse than

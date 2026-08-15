@@ -69,6 +69,7 @@ export type EveEvent =
   // these firing on marketing pages.
   | "landing_view"
   | "pricing_viewed"
+  | "pricing_plan_selected"
   | "signup_started"
   | "waitlist_submitted"
   | "demo_booking_clicked";

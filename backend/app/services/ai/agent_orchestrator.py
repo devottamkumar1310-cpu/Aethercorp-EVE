@@ -4,6 +4,10 @@ import logging
 import asyncio
 from typing import Optional
 
+# The single source of truth for which Gemini model EVE calls. Imported here so
+# provenance stamping below never hardcodes a model string again.
+from app.services.gemini_service import DEFAULT_MODEL, DEFAULT_MODEL_VERSION
+
 logger = logging.getLogger("eve.services.ai.agent_orchestrator")
 from sqlalchemy.orm import Session
 from app.models.executive_conversation import ExecutiveConversation, ExecutiveMessage
@@ -43,8 +47,6 @@ class AgentOrchestrator:
         from fastapi import HTTPException
         from app.core.telemetry import init_telemetry, get_telemetry, clear_telemetry
         from app.services.cost_governance_service import CostGovernanceService
-        from app.config import settings
-        
         logger = logging.getLogger("eve.services.ai.agent_orchestrator")
 
         if document_id:
@@ -169,15 +171,17 @@ class AgentOrchestrator:
                 commit=False
             )
         else:
-            # Runaway usage budget safeguard limit check (only for non-static LLM execution)
-            daily_limit = getattr(settings, "DAILY_ORG_AI_BUDGET", 2.0)
+            # Runaway-cost circuit breaker (only for non-static LLM execution).
+            # The ceiling is derived per plan from price, non-AI costs and a
+            # minimum gross-margin floor — see app/core/ai_budget.py. The previous
+            # code read an undefined setting and fell back to $2/day ($60/month),
+            # which exceeded the revenue of the entry plan it was meant to protect.
+            from app.core.ai_budget import check_budget
+
             daily_spent = CostGovernanceService.get_daily_cost(db, org_id)
-            if daily_spent >= daily_limit:
-                logger.warning(f"AI execution blocked for org {org_id}: spent ${daily_spent:.2f} >= limit ${daily_limit:.2f}")
-                raise HTTPException(
-                    status_code=402,
-                    detail=f"Runaway usage safeguard: Organization daily AI budget limit of ${daily_limit:.2f} exceeded (spent today: ${daily_spent:.2f})."
-                )
+            budget_refusal = check_budget(db, org_id, daily_spent)
+            if budget_refusal:
+                raise HTTPException(status_code=402, detail=budget_refusal)
 
             AuditLogger.log(
                 db=db,
@@ -237,8 +241,8 @@ class AgentOrchestrator:
                 )
                 # Stamp LLM provenance onto the result so it flows through model_dump()
                 coo_result.llm_provider = "google"
-                coo_result.llm_model = "gemini-2.5-flash"
-                coo_result.llm_model_version = "gemini-2.5-flash-latest"
+                coo_result.llm_model = DEFAULT_MODEL
+                coo_result.llm_model_version = DEFAULT_MODEL_VERSION
                 coo_result.temperature = 1.0
                 coo_result.top_k = 64
                 coo_result.top_p = 0.95
@@ -266,7 +270,7 @@ class AgentOrchestrator:
                 timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
                 
                 logger.error(
-                    f"[AI COO ERROR] workspace_id={org_id} user_id={user_id} model=gemini-2.5-flash "
+                    f"[AI COO ERROR] workspace_id={org_id} user_id={user_id} model={DEFAULT_MODEL} "
                     f"error_type={error_type} timestamp={timestamp} error_msg={err_str}"
                 )
                 
@@ -453,7 +457,7 @@ class AgentOrchestrator:
                         title_res = await self.gemini_service.generate_text(
                             prompt=title_prompt,
                             system_instruction="You are a professional business advisor. Generate short, professional chat titles.",
-                            model="gemini-2.5-flash",
+                            model=DEFAULT_MODEL,
                             timeout=5.0
                         )
                         generated_title = title_res.strip().strip('"').strip("'").strip()
@@ -912,8 +916,8 @@ class AgentOrchestrator:
         # Stamp LLM provenance on the streaming-path result
         import datetime as _dt
         coo_result.llm_provider = "google"
-        coo_result.llm_model = "gemini-2.5-flash"
-        coo_result.llm_model_version = "gemini-2.5-flash-latest"
+        coo_result.llm_model = DEFAULT_MODEL
+        coo_result.llm_model_version = DEFAULT_MODEL_VERSION
         coo_result.temperature = 1.0
         coo_result.top_k = 64
         coo_result.top_p = 0.95

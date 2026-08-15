@@ -43,7 +43,12 @@ class ExecutiveSynthesisResult(BaseModel):
 
     # LLM Provenance — populated by agent execution layer
     llm_provider: Optional[str] = "google"
-    llm_model: Optional[str] = "gemini-2.5-flash"
+    # Placeholder only. The orchestrator overwrites this with
+    # gemini_service.DEFAULT_MODEL on every real run, so this value is what a
+    # result carries when it was never sent to a model at all (static intents,
+    # deterministic fallback). Kept as a literal so schemas stay free of service
+    # imports; the authoritative model string lives in gemini_service.
+    llm_model: Optional[str] = "gemini-3.6-flash"
     llm_model_version: Optional[str] = None
     temperature: Optional[float] = None
     top_p: Optional[float] = None
@@ -53,6 +58,13 @@ class ExecutiveSynthesisResult(BaseModel):
     response_timestamp: Optional[datetime] = None
     # Origin
     user_id: Optional[str] = None
+    # Per-SKU structured risk data from the baseline/lightweight deterministic
+    # inventory scan (stockout and dead-stock candidates). Carried alongside the
+    # prose summary so memory_service can persist correctly-typed
+    # RecommendationTrace rows — the dashboard and AlertEngine only surface
+    # "low_stock"/"dead_stock" typed traces, and free-text keyword matching on
+    # the synthesis summary can never reliably produce those types.
+    risk_items: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
 
 class GeminiExecutiveSynthesisResult(BaseModel):
     agent: str = Field(default="COO Lead", description="The name of the agent synthesizing the results")

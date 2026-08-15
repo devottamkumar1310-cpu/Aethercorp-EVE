@@ -281,6 +281,12 @@ class ExecutiveBoard:
         # 2. Parallel Sub-Agent Execution
         results = {}
 
+        # Structured per-SKU risk data from the baseline scan, carried through to
+        # the synthesis result so memory_service can persist correctly-typed
+        # ("low_stock" / "dead_stock") RecommendationTrace rows. Populated only
+        # for baseline/lightweight depth; every other depth leaves this empty.
+        risk_items = []
+
         # For baseline / lightweight depth, perform Python deterministic inventory computation
         if depth in ("baseline", "lightweight"):
             from app.services.analytics_service import AnalyticsService
@@ -301,7 +307,7 @@ class ExecutiveBoard:
             if not findings:
                 findings.append("Catalog stock levels and inventory turnover are within healthy operational thresholds.")
 
-            recs = [f"Reorder SKU {item.get('sku')} (Target Qty: {item.get('recommended_reorder_qty', 0)})" for item in reorder_items[:3]]
+            recs = [f"Reorder SKU {item.get('sku')} (Target Qty: {item.get('reorder_quantity', 0)})" for item in reorder_items[:3]]
             if dead_stock:
                 recs.append(f"Liquidate dead stock SKU {dead_stock[0].get('sku')} to release ${dead_stock[0].get('working_capital_locked', 0.0):,.2f}")
 
@@ -312,6 +318,38 @@ class ExecutiveBoard:
                 recommendations=recs or ["Maintain current stock levels."],
                 confidence=0.95
             )
+
+            for item in reorder_items[:5]:
+                risk_items.append({
+                    "rec_type": "low_stock",
+                    "sku": item.get("sku"),
+                    "name": item.get("name"),
+                    "action": f"Reorder SKU {item.get('sku')} ({item.get('name')}) — {item.get('reorder_quantity', 0)} units recommended.",
+                    "confidence": 0.9,
+                    "financial_impact": item.get("revenue_at_risk", 0.0),
+                    "observation": {
+                        "product": item.get("name"),
+                        "sku": item.get("sku"),
+                        "current_inventory": item.get("stock_on_hand", 0),
+                        "inventory_remaining_days": item.get("days_until_stockout", 0),
+                        "recommended_reorder": item.get("reorder_quantity", 0),
+                        "reorder_point": item.get("reorder_point", 0),
+                    },
+                })
+            for item in dead_stock[:5]:
+                risk_items.append({
+                    "rec_type": "dead_stock",
+                    "sku": item.get("sku"),
+                    "name": item.get("name"),
+                    "action": f"Liquidate dead stock SKU {item.get('sku')} ({item.get('name')}) to release ${item.get('working_capital_locked', 0.0):,.2f}.",
+                    "confidence": 0.85,
+                    "financial_impact": item.get("working_capital_locked", 0.0),
+                    "observation": {
+                        "product": item.get("name"),
+                        "sku": item.get("sku"),
+                        "current_inventory": item.get("stock_on_hand", 0),
+                    },
+                })
 
         tasks = {}
         if run_finance:
@@ -389,6 +427,7 @@ class ExecutiveBoard:
 
         synthesis.findings_by_agent = findings_by_agent
         synthesis.recommendations_by_agent = recommendations_by_agent
+        synthesis.risk_items = risk_items
         
         avg_confidence = sum(confidence_scores.values()) / max(1, len(confidence_scores))
         confidence_scores["Overall"] = round(synthesis.confidence_scores.get("Overall") or avg_confidence, 2)
@@ -646,8 +685,23 @@ class ExecutiveBoard:
         opps_data = detect_opportunities(db, org_id)
         trends = calculate_trends(db, org_id)
         
-        score = health.get("score", 50.0)
-        status = health.get("status", "warning")
+        # get_health_score deliberately returns score=None when a workspace has no
+        # clients AND no revenue — an "insufficient data" signal, not a zero. That
+        # is the normal state for a Shopify-only merchant (real inventory, but no
+        # CRM or finance rows), i.e. exactly EVE's target customer.
+        #
+        # `.get("score", 50.0)` does NOT protect against it: the key is present,
+        # its value is None, so the default never applies. int(None) then raised
+        # below and took the whole deterministic fallback down — converting a
+        # degraded-but-useful answer into a 503 at the precise moment Gemini was
+        # unavailable and the fallback was the only thing left.
+        #
+        # None is preserved rather than coerced: substituting 50 would fabricate a
+        # business figure, which is worse than admitting the score is unavailable.
+        raw_score = health.get("score")
+        score = raw_score if isinstance(raw_score, (int, float)) else None
+        score_text = f"{score}/100" if score is not None else "not yet available"
+        status = health.get("status") or "warning"
         
         risks = [r.get("title", r["description"]) if isinstance(r, dict) else str(r) for r in risks_data.get("risks", [])]
         [o.get("title", o["description"]) if isinstance(o, dict) else str(o) for o in opps_data.get("opportunities", [])]
@@ -1118,7 +1172,7 @@ class ExecutiveBoard:
             total_tasks = overview.get("total_tasks", 0)
             
             summary = (
-                f"**General Strategic Briefing**: Business health score stands at **{score}/100** (Status: {status.upper()}). "
+                f"**General Strategic Briefing**: Business health score stands at **{score_text}** (Status: {status.upper()}). "
                 f"Our primary objective this week is to clear project blockers and protect active inventory margins."
             )
             
@@ -1175,8 +1229,12 @@ class ExecutiveBoard:
                 business_object="Business Capital"
             ))
 
-            expected_impact = f"Mitigate stockout risks and lift general business health score from {score} back above 80."
-            findings_by_agent = {"COO Agent": [f"Health Score: {score}", f"Active risks: {len(risks)}"]}
+            expected_impact = (
+                f"Mitigate stockout risks and lift general business health score from {score} back above 80."
+                if score is not None
+                else "Mitigate stockout risks and establish a business health baseline."
+            )
+            findings_by_agent = {"COO Agent": [f"Health Score: {score_text}", f"Active risks: {len(risks)}"]}
             recommendations_by_agent = {"COO Agent": [p.description for p in priorities]}
             confidence_scores = {"Overall": 0.88}
             
@@ -1197,7 +1255,10 @@ class ExecutiveBoard:
         fallback_res.risk_classification = ExecutiveGovernanceValidator.classify_risk(priorities)
         fallback_res.detected_conflicts, fallback_res.trade_off_analysis = ExecutiveGovernanceValidator.detect_conflicts(findings_by_agent, recommendations_by_agent)
         fallback_res.evidence_used = {
-            "business_health_score": int(score),
+            # None when the workspace has no revenue/client data to score. The
+            # evidence dict is Dict[str, Any], so this stays schema-valid and the
+            # consumer can distinguish "unknown" from a real low score.
+            "business_health_score": int(score) if score is not None else None,
             "risk_count": low_stock_count,
             "opportunity_count": overstock_count,
             "revenue_at_risk": total_rev_at_risk,

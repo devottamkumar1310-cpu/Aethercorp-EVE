@@ -39,6 +39,7 @@ class RecommendationTraceService:
         input_metrics: dict = None,
         business_rules: list = None,
         calculations: list = None,
+        estimated_financial_impact: float = None,
     ) -> RecommendationTrace:
         """
         Creates and persists a detailed decision recommendation trace in the database.
@@ -146,6 +147,7 @@ class RecommendationTraceService:
             input_metrics=input_metrics,
             business_rules=business_rules,
             calculations=calculations,
+            estimated_financial_impact=estimated_financial_impact,
             # Phase 2 Hardening
             evidence_validation_status=evidence_status,
             evidence_validation_reason=evidence_reason,

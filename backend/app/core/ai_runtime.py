@@ -40,10 +40,28 @@ logger = logging.getLogger("eve.core.ai_runtime")
 # ---------------------------------------------------------------------------
 PRICING: dict[Tuple[str, str], Tuple[Decimal, Decimal, Decimal]] = {
     # (provider, model): (input_per_mtok, output_per_mtok, cached_input_per_mtok)
+    #
+    # Rates are the published paid-tier prices at ai.google.dev/gemini-api/docs/pricing.
+    #
+    # gemini-3.6-flash is EVE's current model. Its price RISES on 2027-01-01 to
+    # $1.50 / $7.50 — see PRICING_2027 below. That is a 2x step, so anything that
+    # reasons about margin must model both.
+    ("google", "gemini-3.6-flash"):      (Decimal("0.75"), Decimal("3.75"), Decimal("0.075")),
+    ("google", "gemini-3.5-flash"):      (Decimal("1.50"), Decimal("9.00"), Decimal("0.15")),
+    ("google", "gemini-3.1-flash-lite"): (Decimal("0.10"), Decimal("0.40"), Decimal("0.025")),
+    # Retired 2026-10-16, kept ONLY so historical AIUsageLog rows written before
+    # the migration still cost out correctly in reports. Do not call these.
     ("google", "gemini-2.5-flash"):      (Decimal("0.30"), Decimal("2.50"), Decimal("0.075")),
     ("google", "gemini-2.5-flash-lite"): (Decimal("0.10"), Decimal("0.40"), Decimal("0.025")),
     ("google", "gemini-2.5-pro"):        (Decimal("1.25"), Decimal("10.00"), Decimal("0.31")),
     ("google", "gemini-2.0-flash"):      (Decimal("0.10"), Decimal("0.40"), Decimal("0.025")),
+}
+
+# Announced price change effective 2027-01-01. Held separately rather than
+# swapped in on the date, because billing history must keep costing out at the
+# rate that actually applied when the call was made.
+PRICING_2027: dict[Tuple[str, str], Tuple[Decimal, Decimal, Decimal]] = {
+    ("google", "gemini-3.6-flash"): (Decimal("1.50"), Decimal("7.50"), Decimal("0.15")),
 }
 
 # An unknown model must NOT cost zero. Silent $0 for a model someone added last

@@ -25,7 +25,6 @@ import app.services.gemini_service
 import app.services.analytics_service
 import app.services.competitor_service
 import app.services.report_service
-import app.services.shopify_service
 import app.services.supplier_service
 import app.memory.embeddings
 import app.memory.retrieval
@@ -229,7 +228,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(inventory.router)
 app.include_router(chat.router)
 app.include_router(dashboard.router)
-from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability, document_intelligence, health, recommendation_trace, account, waitlist, internal_analytics
+from app.routes import auth, profile, organization, clients, projects, tasks, finance, analytics, activity, intelligence, executive, feedback, observability, document_intelligence, health, recommendation_trace, account, waitlist, internal_analytics, integrations_shopify, integrations_messaging, billing
 app.include_router(auth.router)
 app.include_router(account.router)
 app.include_router(health.router)
@@ -249,6 +248,9 @@ app.include_router(executive.router)
 app.include_router(feedback.router)
 app.include_router(observability.router)
 app.include_router(internal_analytics.router)
+app.include_router(integrations_shopify.router)
+app.include_router(integrations_messaging.router)
+app.include_router(billing.router)
 
 from sqlalchemy.orm import Session
 from app.database import get_db

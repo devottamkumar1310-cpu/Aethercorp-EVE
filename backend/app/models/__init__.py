@@ -24,5 +24,14 @@ from .recommendation_audit_event import RecommendationAuditEvent
 from .waitlist import WaitlistEntry
 from .internal_analytics import InternalAnalyticsEvent
 from .ai_usage import AIUsageLog
+from .shopify import (
+    ShopifyConnection,
+    ShopifySyncJob,
+    ShopifyWebhookEvent,
+    ShopifyProductMapping,
+    ShopifyOAuthState,
+)
+from .channel import ChannelLink, ChannelLinkCode, ChannelMessageEvent
+from .billing import StripeCustomer, StripeSubscription, StripeWebhookEvent
 
 # This ensures all models are imported and registered with SQLAlchemy's Base.metadata

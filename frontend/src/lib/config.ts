@@ -42,24 +42,41 @@ export const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL || "";
 export const BOOKING_CTA = "Book 15 minutes with the founder";
 
 /**
- * Pricing — Coming Soon configuration.
+ * Pricing page copy.
+ *
+ * Numeric truth (prices, limits, feature flags) is NOT duplicated here — it
+ * is served by GET /api/billing/plans, sourced from backend/app/core/plans.py.
+ * Changing a price means changing it in exactly one place, backend-side; a
+ * second copy here would drift the moment either side changed alone.
+ *
+ * This object holds only marketing copy the backend has no business owning.
  */
 export const PRICING = {
-  headline: "Pricing Coming Soon",
+  headline: "Simple pricing for founders who need real answers.",
   subheadline:
-    "We're working closely with our first group of fashion brands to finalize pricing based on real customer feedback.",
-  supportingCopy:
-    "Join the waitlist to get early access, founding customer benefits, and be the first to know when pricing is announced.",
-  primaryCTA: "Join the Waitlist",
-  secondaryText: "No credit card required.",
+    "Every plan includes EVE's full inventory intelligence — the difference is store count, catalogue size, and how you reach EVE.",
+  trialCopy: "14-day free trial. No credit card required to start.",
 } as const;
 
-/** Founding-customer offer. */
-export const FOUNDING_OFFER = {
-  enabled: false,
-  headline: "",
-  detail: "",
-} as const;
+/** Marketing copy per plan, keyed to the `key` field GET /api/billing/plans returns. */
+export const PLAN_MARKETING: Record<
+  string,
+  { tagline: string; forWhom: string; popular?: boolean }
+> = {
+  operator: {
+    tagline: "Run your store with EVE.",
+    forWhom: "Solo founder, one store, growing past spreadsheets.",
+  },
+  command: {
+    tagline: "Make EVE your business command center.",
+    forWhom: "Established brand where stockouts cost real revenue.",
+    popular: true,
+  },
+  chief: {
+    tagline: "Run your business with an executive operating system.",
+    forWhom: "Multi-store operator who wants EVE in the loop daily.",
+  },
+};
 
 export const REVENUE_RANGES = [
   "Pre-launch",

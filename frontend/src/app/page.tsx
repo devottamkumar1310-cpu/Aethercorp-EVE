@@ -88,7 +88,7 @@ export default function LandingPage() {
     },
     {
       q: "What does EVE cost?",
-      a: "We are currently working closely with our first group of fashion brands to finalize pricing based on real customer feedback. Join the waitlist on our Pricing page to get early access, founding customer benefits, and be notified as soon as pricing is announced.",
+      a: "EVE has three plans, each with full inventory intelligence — the difference is store count, catalogue size, and channel access. Every plan starts with a 14-day free trial, no credit card required. See current pricing on our Pricing page.",
     },
     {
       q: "Is my inventory data safe?",

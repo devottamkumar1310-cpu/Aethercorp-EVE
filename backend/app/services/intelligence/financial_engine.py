@@ -16,7 +16,15 @@ class FinancialEngine(BaseEngine):
             unit_cost = context.parameters.get("unit_cost_override", 20.0)
             selling_price = 40.0
 
-            if context.db and context.organization_id:
+            # unit_cost_override was already being read above but then
+            # unconditionally overwritten by this query on every call — the
+            # query's own unit_cost result was always identical to the
+            # override, making it pure waste. Skip it only when BOTH overrides
+            # are present, so a caller passing just one still gets the
+            # original (fully correct) query for both fields.
+            if "unit_cost_override" in context.parameters and "selling_price_override" in context.parameters:
+                selling_price = context.parameters["selling_price_override"] or 40.0
+            elif context.db and context.organization_id:
                 org_id = context.organization_id
                 if isinstance(org_id, str):
                     org_id = uuid.UUID(org_id)

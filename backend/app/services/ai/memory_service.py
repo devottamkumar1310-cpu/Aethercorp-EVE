@@ -2,6 +2,7 @@ import uuid
 import logging
 from typing import List, Optional, Any
 from sqlalchemy.orm import Session
+from app.services.gemini_service import DEFAULT_MODEL, DEFAULT_MODEL_VERSION
 from app.models.executive_memory import BusinessGoal
 from app.models.ai_recommendation import AIRecommendation
 
@@ -141,6 +142,22 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
         # Use the synthesis summary as the raw_response if the model didn't carry one
         raw_response_built = data.get("raw_response") or str(data.get("summary", ""))[:2000]
 
+        # `data` came through ExecutiveSynthesisResult.model_dump(mode="json")
+        # (see agent_orchestrator.py), which serialises user_id to a plain
+        # STRING. RecommendationTrace.triggered_by_user_id is a UUID column,
+        # and passing a string into it fails at the SQL binding layer — which
+        # was previously swallowed by the broad except below, so a
+        # RecommendationTrace silently failed to persist on every call that
+        # had a real user_id. Empty is a display gap; missing is a
+        # traceability gap, so this is coerced rather than left to fail.
+        raw_user_id = data.get("user_id")
+        triggered_user_id: Optional[uuid.UUID] = None
+        if raw_user_id:
+            try:
+                triggered_user_id = uuid.UUID(str(raw_user_id))
+            except (ValueError, AttributeError):
+                logger.warning(f"Unparseable user_id in agent_data, dropping provenance: {raw_user_id!r}")
+
         RecommendationTraceService.create_trace(
             db=db,
             org_id=org_id,
@@ -151,21 +168,60 @@ def save_recommendation(db: Session, org_id: uuid.UUID, agent_source: str, resul
             metrics=metrics_dict,
             reasoning=[reasoning] if reasoning else ["EVE COO analyzed historical context and recommended action."],
             # Provenance extraction (if available in result)
-            triggered_by_user_id=data.get("user_id"),
-            trigger_type="USER_PROMPT" if data.get("user_id") else "SYSTEM_GENERATED",
-            created_from_query=True if data.get("user_id") else False,
+            triggered_by_user_id=triggered_user_id,
+            trigger_type="USER_PROMPT" if triggered_user_id else "SYSTEM_GENERATED",
+            created_from_query=bool(triggered_user_id),
             source_agent=agent_source,
             llm_provider=data.get("llm_provider", "google"),
-            llm_model=data.get("llm_model", "gemini-2.5-flash"),
-            llm_model_version=data.get("llm_model_version", "gemini-2.5-flash-latest"),
+            llm_model=data.get("llm_model", DEFAULT_MODEL),
+            llm_model_version=data.get("llm_model_version", DEFAULT_MODEL_VERSION),
             raw_prompt=raw_prompt_built,
             raw_response=raw_response_built,
             input_metrics=data.get("input_metrics"),
             business_rules=data.get("business_rules"),
             calculations=data.get("calculations")
         )
+
+        # The aggregate trace above captures the COO's prose synthesis, whose
+        # recommendation_type comes from keyword-matching that text — it can
+        # never land on "low_stock"/"dead_stock", which is what the dashboard's
+        # stockout/reorder/dead-stock cards and AlertEngine.build_alerts()
+        # specifically filter on (see analytics_service.get_dashboard_metrics).
+        # risk_items carries the SAME deterministic per-SKU scan already computed
+        # in executive_board.py's baseline path — persisting one correctly-typed
+        # trace per item surfaces that existing intelligence instead of inventing
+        # anything new.
+        for risk_item in (data.get("risk_items") or []):
+            try:
+                RecommendationTraceService.create_trace(
+                    db=db,
+                    org_id=org_id,
+                    rec_type=risk_item.get("rec_type", "inventory"),
+                    action=risk_item.get("action", ""),
+                    confidence=float(risk_item.get("confidence", 0.8)),
+                    sources=["Deterministic Inventory Scan"],
+                    metrics={"sku": risk_item.get("sku"), "name": risk_item.get("name")},
+                    reasoning=[risk_item.get("action", "")],
+                    evidence_snapshot={"observation": risk_item.get("observation") or {}},
+                    estimated_financial_impact=risk_item.get("financial_impact"),
+                    triggered_by_user_id=triggered_user_id,
+                    trigger_type="USER_PROMPT" if triggered_user_id else "SYSTEM_GENERATED",
+                    created_from_query=bool(triggered_user_id),
+                    source_agent=agent_source,
+                    llm_provider=data.get("llm_provider", "google"),
+                    llm_model=data.get("llm_model", DEFAULT_MODEL),
+                    llm_model_version=data.get("llm_model_version", DEFAULT_MODEL_VERSION),
+                )
+            except Exception as item_exc:
+                logger.warning(f"Failed to persist per-SKU risk trace for {risk_item.get('sku')}: {item_exc}")
     except Exception as e:
         logger.warning(f"Failed to generate RecommendationTrace in memory_service: {e}")
+        # A failed flush leaves the session unable to commit ANYTHING further
+        # until it is rolled back — without this, the AIRecommendation added
+        # above would also silently fail to save, turning a traceability gap
+        # into a data-loss bug. Rolling back expires `rec`, so it is re-added.
+        db.rollback()
+        db.add(rec)
     db.commit()
     db.refresh(rec)
     return rec

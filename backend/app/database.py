@@ -120,6 +120,24 @@ def convert_datetimes_to_utc(target, context):
             setattr(target, key, value.replace(tzinfo=datetime.timezone.utc))
 
 
+def as_naive_utc(value):
+    """
+    Normalises a datetime read off a model to naive UTC.
+
+    The listener above makes every datetime tz-AWARE once a row has been loaded,
+    while models are written with naive datetime.utcnow(). Comparing the two
+    directly raises "can't compare offset-naive and offset-aware datetimes" — and
+    only on the path where the row was loaded in a different request from the one
+    that wrote it, which is exactly the production path and not the obvious test.
+    Any expiry check against a persisted timestamp must go through this.
+    """
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+
+
 def init_db():
     """
     Initializes database schemas. Creating tables if they do not exist.

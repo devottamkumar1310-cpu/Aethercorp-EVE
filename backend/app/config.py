@@ -44,9 +44,65 @@ class Settings(BaseSettings):
     # Upper bound on retries regardless of what a caller requests. The previous
     # per-method default of 10 meant a persistent failure could bill 10 times.
     AI_MAX_RETRIES: int = 3
+    # Per-workspace daily AI ceiling. 0 = derive it from the workspace's plan
+    # economics (app/core/ai_budget.py), which is the intended behaviour. Set a
+    # positive value only to override every plan during an incident.
+    # This previously did not exist at all: the orchestrator read it via getattr
+    # with a $2/day fallback, so every workspace silently ran on a $60/month
+    # ceiling — more than the entry plan's revenue.
+    DAILY_ORG_AI_BUDGET: float = 0.0
 
     FOUNDER_MODE: bool = True
     OWNER_EMAIL: str = "devottamkumar1310@gmail.com"
+
+    # --- Third-party integrations (see docs/INTEGRATIONS.md) ---
+    # Public base URL of THIS backend. Shopify, Telegram and Meta all call us at
+    # absolute URLs, so the OAuth redirect and webhook endpoints cannot be derived
+    # from the request — a proxied request reports the internal host. Falls back to
+    # CLOUD_RUN_SERVICE_URL when unset.
+    BACKEND_PUBLIC_URL: str = ""
+    # Optional dedicated key for encrypting stored integration credentials.
+    # Empty -> derived from SECRET_KEY (see app/core/crypto.py).
+    INTEGRATION_ENCRYPTION_KEY: str = ""
+
+    # Shopify custom/public app credentials.
+    SHOPIFY_API_KEY: str = ""
+    SHOPIFY_API_SECRET: str = ""
+    SHOPIFY_SCOPES: str = "read_products,read_inventory,read_orders"
+    SHOPIFY_API_VERSION: str = "2024-07"
+    # How far back the initial order backfill reaches. EVE's forecasting works on
+    # daily sell-through, so a quarter of history is enough to seed it without
+    # importing years of orders the agents never read.
+    SHOPIFY_ORDER_SYNC_DAYS: int = 90
+
+    # Telegram Bot API.
+    TELEGRAM_BOT_TOKEN: str = ""
+    # Echoed by Telegram in X-Telegram-Bot-Api-Secret-Token on every update.
+    TELEGRAM_WEBHOOK_SECRET: str = ""
+
+    # WhatsApp Business Cloud API (Meta).
+    WHATSAPP_ACCESS_TOKEN: str = ""
+    WHATSAPP_PHONE_NUMBER_ID: str = ""
+    WHATSAPP_VERIFY_TOKEN: str = ""
+    WHATSAPP_APP_SECRET: str = ""
+    WHATSAPP_API_VERSION: str = "v21.0"
+
+    # Stripe billing. Test-mode keys (sk_test_.../pk_test_...) work identically
+    # to live keys against Stripe's API — nothing else in the app needs to know
+    # which mode it's in. Price IDs are per-plan-per-interval (6 total: 3 plans x
+    # monthly/annual), created in the Stripe Dashboard against the approved
+    # prices in app/core/plans.py.
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_OPERATOR_MONTHLY: str = ""
+    STRIPE_PRICE_OPERATOR_ANNUAL: str = ""
+    STRIPE_PRICE_COMMAND_MONTHLY: str = ""
+    STRIPE_PRICE_COMMAND_ANNUAL: str = ""
+    STRIPE_PRICE_CHIEF_MONTHLY: str = ""
+    STRIPE_PRICE_CHIEF_ANNUAL: str = ""
+    # Trial length offered at Checkout. Matches Profile.trial_end_date's existing
+    # pre-Stripe trial so a founder's countdown does not jump when they subscribe.
+    STRIPE_TRIAL_DAYS: int = 14
 
     def __init__(self, **values):
         super().__init__(**values)
@@ -88,6 +144,33 @@ class Settings(BaseSettings):
             frontend_url = GCPSecretManagerService.get_secret("FRONTEND_URL")
             if frontend_url:
                 self.FRONTEND_URL = frontend_url
+
+            # Integration credentials. Each is optional: a deployment with no
+            # Shopify app configured must still boot and serve the rest of EVE,
+            # so a missing secret disables that integration rather than failing.
+            for _secret_name in (
+                "INTEGRATION_ENCRYPTION_KEY",
+                "SHOPIFY_API_KEY",
+                "SHOPIFY_API_SECRET",
+                "TELEGRAM_BOT_TOKEN",
+                "TELEGRAM_WEBHOOK_SECRET",
+                "WHATSAPP_ACCESS_TOKEN",
+                "WHATSAPP_PHONE_NUMBER_ID",
+                "WHATSAPP_VERIFY_TOKEN",
+                "WHATSAPP_APP_SECRET",
+                "BACKEND_PUBLIC_URL",
+                "STRIPE_SECRET_KEY",
+                "STRIPE_WEBHOOK_SECRET",
+                "STRIPE_PRICE_OPERATOR_MONTHLY",
+                "STRIPE_PRICE_OPERATOR_ANNUAL",
+                "STRIPE_PRICE_COMMAND_MONTHLY",
+                "STRIPE_PRICE_COMMAND_ANNUAL",
+                "STRIPE_PRICE_CHIEF_MONTHLY",
+                "STRIPE_PRICE_CHIEF_ANNUAL",
+            ):
+                _value = GCPSecretManagerService.get_secret(_secret_name)
+                if _value:
+                    setattr(self, _secret_name, _value)
 
         if self.GEMINI_API_KEY:
             self.GEMINI_MOCK_MODE = False

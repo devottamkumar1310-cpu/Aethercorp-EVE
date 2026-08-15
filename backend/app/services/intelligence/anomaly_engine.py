@@ -60,26 +60,34 @@ class AnomalyEngine(BaseEngine):
                 cost_increase_detected = True
                 cost_increase_msg = context.parameters.get("supplier_cost_anomaly_message", "Supplier invoice cost has increased.")
             elif context.db and context.organization_id:
-                # Query processed invoice documents
                 org_id = context.organization_id
                 if isinstance(org_id, str):
                     org_id = uuid.UUID(org_id)
-                    
-                # Look for invoice documents
-                invoices = context.db.query(ProcessedDocument).filter(
-                    ProcessedDocument.organization_id == org_id,
-                    ProcessedDocument.document_type == "Invoice",
-                    ProcessedDocument.status == "success"
-                ).all()
-                
-                # Check current product cost
-                product = context.db.query(Product).filter(
-                    Product.organization_id == org_id,
-                    Product.sku == context.sku
-                ).first()
-                
-                if product and product.unit_cost > 0:
-                    current_cost = product.unit_cost
+
+                # Batch analysis fetches the org's invoice set ONCE and passes it
+                # here — the set is identical for every SKU in one analysis run,
+                # so re-querying it per SKU (the original path, still used by any
+                # other caller) was pure repeated work at catalogue scale.
+                if "invoices_override" in context.parameters:
+                    invoices = context.parameters["invoices_override"]
+                else:
+                    invoices = context.db.query(ProcessedDocument).filter(
+                        ProcessedDocument.organization_id == org_id,
+                        ProcessedDocument.document_type == "Invoice",
+                        ProcessedDocument.status == "success"
+                    ).all()
+
+                # Same idea for unit_cost: the batch caller already has it.
+                if "unit_cost_override" in context.parameters:
+                    current_cost = context.parameters["unit_cost_override"]
+                else:
+                    product = context.db.query(Product).filter(
+                        Product.organization_id == org_id,
+                        Product.sku == context.sku
+                    ).first()
+                    current_cost = product.unit_cost if product else 0.0
+
+                if current_cost and current_cost > 0:
                     for inv in invoices:
                         extracted = inv.extracted_data or {}
                         # Check if this invoice matches our SKU and lists a cost

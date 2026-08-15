@@ -1,80 +1,78 @@
 # Shopify Integration Architecture
 
+> **Superseded by [`docs/INTEGRATIONS.md`](../../docs/INTEGRATIONS.md)**, which
+> covers Shopify alongside the Telegram and WhatsApp channels, external app
+> configuration, and deployment. This file is kept for the mapping-layer detail.
+
 ## Current State
 
-EVE has a complete **mapping layer** that translates between Shopify's data format and EVE's internal models. The integration service operates in mock mode — live API calls require OAuth implementation.
+The integration is live. OAuth, synchronisation and webhooks are implemented;
+the previous mock-mode service has been removed.
 
 ## Architecture
 
 ```
 Shopify Admin API
        ↓
-ShopifyService (API interaction layer)
+ShopifyAdminClient          app/services/shopify/client.py
+  rate-limit aware, cursor pagination
        ↓
-ShopifyMapper (data transformation)
-  ├── ShopifyProductMapper  → EVE Product (with parent_product_id, size, color)
-  ├── ShopifyInventoryMapper → EVE InventoryItem
-  └── ShopifyOrderMapper    → EVE SalesRecord
+ShopifySyncService          app/services/shopify/sync_service.py
        ↓
-EVE Database
+ShopifyMapper               app/services/shopify_mapper.py
+  ├── ShopifyProductMapper   → EVE Product (parent_product_id, size, color)
+  └── ShopifyOrderMapper     → EVE SalesRecord
+       ↓
+EVE canonical models
 ```
 
-## What's Implemented
+Inventory levels are aggregated in `ShopifySyncService.upsert_inventory_levels`
+rather than in the mapper: Shopify reports availability per
+(inventory_item, location) while EVE stores one figure per product, so the sum
+needs the product mappings that only the sync layer holds.
+
+## Components
 
 | Component | Status | File |
 |-----------|--------|------|
-| Product Mapper | ✅ Complete | `app/services/shopify_mapper.py` |
-| Inventory Mapper | ✅ Complete | `app/services/shopify_mapper.py` |
-| Order Mapper | ✅ Complete | `app/services/shopify_mapper.py` |
-| Connection Config | ✅ Complete | `app/services/shopify_mapper.py` |
-| Integration Service | ✅ Mock Mode | `app/services/shopify_service.py` |
-| Variant Detection | ✅ Complete | `app/fashion/variant_detector.py` |
+| Product mapper | Complete | `app/services/shopify_mapper.py` |
+| Order mapper | Complete | `app/services/shopify_mapper.py` |
+| Inventory aggregation | Complete | `app/services/shopify/sync_service.py` |
+| Variant detection | Complete | `app/fashion/variant_detector.py` |
+| OAuth 2.0 flow | Complete | `app/services/shopify/oauth_service.py` |
+| Admin API client | Complete | `app/services/shopify/client.py` |
+| Initial + delta sync | Complete | `app/services/shopify/sync_service.py` |
+| Webhooks (HMAC + idempotent) | Complete | `app/services/shopify/webhook_service.py` |
+| Reconciliation | Complete | `app/services/shopify/sync_service.py` |
+| Token encryption at rest | Complete | `app/core/crypto.py` |
+| HTTP routes | Complete | `app/routes/integrations_shopify.py` |
 
-## Remaining Work for Live Integration
+## Data model
 
-### 1. OAuth 2.0 Flow (Priority: HIGH)
-- Implement Shopify OAuth 2.0 authorization code flow
-- Store encrypted access tokens per organization
-- Handle token refresh and revocation
-- Add `ShopifyConnection` model to database
-- Estimated effort: **3-5 days**
+| Table | Purpose |
+|---|---|
+| `shopify_connections` | One connected store per workspace; encrypted token |
+| `shopify_sync_jobs` | Per-run counts, status, errors |
+| `shopify_webhook_events` | Delivery-id idempotency ledger |
+| `shopify_product_mappings` | Shopify variant ↔ EVE Product identity |
+| `shopify_oauth_states` | Single-use OAuth `state` nonces |
 
-### 2. Webhook Subscriptions (Priority: HIGH)
-- Subscribe to `products/update`, `orders/create`, `inventory_levels/update`
-- Add webhook endpoint at `POST /api/integrations/shopify/webhook`
-- Verify HMAC signatures for security
-- Process webhooks asynchronously via background task queue
-- Estimated effort: **2-3 days**
+Mapping lives in its own table rather than as columns on `Product`: `Product` is
+read by every agent and by the startup schema validator, so keeping external
+identity out of it leaves the canonical model untouched by this integration.
 
-### 3. Initial Sync (Priority: HIGH)
-- Paginated bulk import of all products, inventory, and historical orders
-- Rate limiting (Shopify allows 2 requests/second for REST API)
-- Progress tracking and error recovery
-- Estimated effort: **2-3 days**
+## Not implemented
 
-### 4. Ongoing Delta Sync (Priority: MEDIUM)
-- Scheduled job to sync inventory levels every 15 minutes
-- Order sync via webhooks (real-time) + polling fallback
-- Conflict resolution for concurrent updates
-- Estimated effort: **2-3 days**
+- **Price push-back to Shopify.** Requires `write_products` and should be an
+  explicit, confirmed action rather than a side effect of a recommendation.
+- **App Store listing.** The app works as a custom/private app today.
+- **GraphQL bulk operations.** REST with cursor pagination is sufficient at
+  D2C fashion catalogue sizes; revisit past a few thousand variants.
 
-### 5. Price Push-Back (Priority: LOW)
-- Push EVE pricing recommendations back to Shopify
-- Requires `write_products` scope
-- Should be opt-in with confirmation step
-- Estimated effort: **1-2 days**
+## Shopify API reference
 
-### 6. App Store Listing (Priority: LOW)
-- Create Shopify App listing for public distribution
-- App review and approval process
-- Estimated effort: **3-5 days**
-
-## Total Estimated Remaining Work: 13-21 days
-
-## Shopify API Reference
-
-- Products API: `GET /admin/api/2024-07/products.json`
-- Inventory Levels: `GET /admin/api/2024-07/inventory_levels.json`
-- Orders API: `GET /admin/api/2024-07/orders.json`
+- Products: `GET /admin/api/2024-07/products.json`
+- Inventory levels: `GET /admin/api/2024-07/inventory_levels.json`
+- Orders: `GET /admin/api/2024-07/orders.json`
 - OAuth: https://shopify.dev/docs/apps/auth/oauth
 - Webhooks: https://shopify.dev/docs/apps/webhooks

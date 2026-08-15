@@ -61,6 +61,7 @@ Thumbs.db
 # IDEs
 .idea/
 .vscode/
+.vs/
 .gemini/
 .claude/
 .codex/

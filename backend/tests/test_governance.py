@@ -342,7 +342,9 @@ def test_daily_cost_budget_safeguard():
         # written by app.core.ai_runtime. CostGovernanceService reads it from
         # there rather than parsing JSON out of chat messages, so it sees
         # inventory analysis and document intelligence too, not just chat.
-        # $0.75 x 3 = $2.25, over the default $2.00 per-org daily budget.
+        # $0.75 x 3 = $2.25. The ceiling is now derived per plan from the plan's
+        # economics (app/core/ai_budget.py) rather than a flat $2/day; $2.25 is
+        # over every plan's ceiling, so this still blocks.
         from app.models.ai_usage import AIUsageLog
         for i in range(3):
             db_session.add(AIUsageLog(
@@ -358,9 +360,8 @@ def test_daily_cost_budget_safeguard():
             ))
         db_session.commit()
 
-        # Send a chat request
-        # The agent_orchestrator should check the CostGovernanceService, detect spent is $2.25 >= $2.00 budget,
-        # and throw a 402 HTTP exception.
+        # The orchestrator checks CostGovernanceService, sees $2.25 against the
+        # workspace's derived ceiling, and raises 402.
         payload = {
             "question": "What is our current burn rate?",
             "mode": "smart",
@@ -368,7 +369,13 @@ def test_daily_cost_budget_safeguard():
         }
         response = client.post("/api/executive/chat", json=payload)
         assert response.status_code == 402
-        assert "safeguard" in response.json()["detail"].lower()
+        detail = response.json()["detail"].lower()
+        # The refusal must tell the merchant their data is safe and point at
+        # support. It deliberately does NOT read as an overrun quota — the cap is
+        # an internal cost breaker a real customer should never reach.
+        assert "paused" in detail
+        assert "unaffected" in detail
+        assert "limit exceeded" not in detail
 
     finally:
         db_session.close()

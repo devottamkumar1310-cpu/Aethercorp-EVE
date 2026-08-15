@@ -2,51 +2,91 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Loader2, AlertTriangle, ShieldCheck, Sparkles } from "lucide-react";
-import { REVENUE_RANGES, POSITIONING } from "@/lib/config";
-import { joinWaitlist } from "@/lib/services/waitlistService";
+import { useRouter } from "next/navigation";
+import { Check, Loader2, AlertTriangle, Sparkles, ArrowRight } from "lucide-react";
+import { POSITIONING, PRICING, PLAN_MARKETING } from "@/lib/config";
 import { track } from "@/lib/analytics";
+import { createClient } from "@/lib/supabase/client";
+import { fetchPlans, startCheckout, PlanInfo } from "@/services/billingService";
+import { logger } from "@/lib/logger";
+
+type Interval = "month" | "year";
+
+function formatLimit(plan: PlanInfo, key: "max_shopify_stores" | "max_skus"): string {
+  const value = plan[key];
+  if (value === null) return "Unlimited";
+  return value.toLocaleString();
+}
 
 export default function PricingPage() {
-  const [email, setEmail] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [companyWebsite, setCompanyWebsite] = useState("");
-  const [revenueRange, setRevenueRange] = useState("");
-  const [challenge, setChallenge] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [plans, setPlans] = useState<PlanInfo[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [interval, setInterval] = useState<Interval>("month");
+  const [authenticated, setAuthenticated] = useState(false);
+  const [startingPlan, setStartingPlan] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     track("pricing_viewed");
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchPlans()
+      .then((data) => {
+        if (!cancelled) setPlans(data);
+      })
+      .catch((err) => {
+        logger.error("Failed to load plans", err);
+        if (!cancelled) setLoadError("Could not load pricing right now. Please try again shortly.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await createClient().auth.getSession();
+      if (!cancelled) setAuthenticated(Boolean(data.session));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSelectPlan = async (planKey: string) => {
+    track("pricing_plan_selected", { plan: planKey, interval });
+    setActionError(null);
+
+    if (!authenticated) {
+      router.push(`/signup?plan=${planKey}&interval=${interval}`);
+      return;
+    }
+
+    const workspaceId = typeof window !== "undefined"
+      ? localStorage.getItem("active_workspace_id")
+      : null;
+    if (!workspaceId) {
+      router.push("/onboarding");
+      return;
+    }
+
+    setStartingPlan(planKey);
     try {
-      const result = await joinWaitlist({
-        email: email.trim(),
-        company_name: companyName.trim() || undefined,
-        company_website: companyWebsite.trim() || undefined,
-        revenue_range: revenueRange || undefined,
-        biggest_inventory_challenge: challenge.trim() || undefined,
-      });
-      track("waitlist_submitted", {
-        revenue_range: revenueRange || "unspecified",
-        has_website: Boolean(companyWebsite.trim()),
-        status: result.status,
-      });
-      setAlreadyRegistered(result.status === "already_registered");
-      setSubmitted(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setLoading(false);
+      const { data: { session } } = await createClient().auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+      const checkoutUrl = await startCheckout(token, planKey, interval);
+      window.location.href = checkoutUrl;
+    } catch (err: any) {
+      setActionError(err.message || "Could not start checkout. Please try again.");
+      setStartingPlan(null);
     }
   };
 
@@ -74,177 +114,180 @@ export default function PricingPage() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-xs font-semibold px-4 py-2 rounded-lg text-foreground hover:text-[color:var(--eve-accent)] transition-colors">
-              Sign In
-            </Link>
-            <Link
-              href="/demo"
-              className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm"
-            >
-              Explore Demo
-            </Link>
+            {authenticated ? (
+              <Link
+                href="/dashboard"
+                className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm"
+              >
+                Go to Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="text-xs font-semibold px-4 py-2 rounded-lg text-foreground hover:text-[color:var(--eve-accent)] transition-colors">
+                  Sign In
+                </Link>
+                <Link
+                  href="/signup"
+                  className="text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl transition-all shadow-sm"
+                >
+                  Start Free Trial
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full flex flex-col justify-center py-12 sm:py-20">
-        {/* Waitlist Section */}
-        <section className="max-w-4xl mx-auto w-full px-4 sm:px-6 text-center space-y-8">
-          {/* Eyebrow badge */}
+      <main className="flex-1 w-full py-14 sm:py-20">
+        {/* Headline */}
+        <section className="max-w-4xl mx-auto w-full px-4 sm:px-6 text-center space-y-5 mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-semibold tracking-wide">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Early Access</span>
+            <span>{PRICING.trialCopy}</span>
           </div>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-[1.1]">
+            {PRICING.headline}
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            {PRICING.subheadline}
+          </p>
 
-          {/* Headlines & Copy */}
-          <div className="space-y-4 max-w-3xl mx-auto">
-            <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-foreground leading-[1.1]">
-              Pricing Coming Soon
-            </h1>
-            <p className="text-lg sm:text-xl text-foreground/90 font-medium leading-relaxed max-w-2xl mx-auto">
-              We&apos;re working closely with our first group of fashion brands to finalize pricing based on real customer feedback.
-            </p>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-              Join the waitlist to get early access, founding customer benefits, and be the first to know when pricing is announced.
-            </p>
+          {/* Monthly / Annual toggle */}
+          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary border border-border">
+            {(["month", "year"] as Interval[]).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => setInterval(opt)}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  interval === opt
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {opt === "month" ? "Monthly" : "Annual — 2 months free"}
+              </button>
+            ))}
           </div>
+        </section>
 
-          {/* Form Card */}
-          <div className="max-w-xl mx-auto text-left pt-2">
-            <div className="bg-card border border-border/80 shadow-xl rounded-2xl p-6 sm:p-8 space-y-6 backdrop-blur-sm">
-              {!submitted ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  {error && (
-                    <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
-                      <span>{error}</span>
-                    </div>
-                  )}
+        {loadError && (
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 mb-8">
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
+              <span>{loadError}</span>
+            </div>
+          </div>
+        )}
 
-                  <div>
-                    <label htmlFor="email" className="block text-xs font-semibold text-foreground mb-1.5">
-                      Work email <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      required
-                      placeholder="founder@yourbrand.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all"
-                    />
-                  </div>
+        {actionError && (
+          <div className="max-w-2xl mx-auto px-4 sm:px-6 mb-8">
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 text-xs rounded-xl flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
+              <span>{actionError}</span>
+            </div>
+          </div>
+        )}
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="company" className="block text-xs font-semibold text-foreground mb-1.5">
-                        Brand name
-                      </label>
-                      <input
-                        type="text"
-                        id="company"
-                        placeholder="Acme Studios"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="website" className="block text-xs font-semibold text-foreground mb-1.5">
-                        Store URL
-                      </label>
-                      <input
-                        type="text"
-                        id="website"
-                        placeholder="acmestudios.com"
-                        value={companyWebsite}
-                        onChange={(e) => setCompanyWebsite(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all"
-                      />
-                    </div>
-                  </div>
+        {/* Plan cards */}
+        <section className="max-w-6xl mx-auto px-4 sm:px-6">
+          {!plans ? (
+            <div className="grid gap-6 sm:grid-cols-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card border border-border rounded-2xl p-6 h-96 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-3 items-stretch">
+              {plans.map((plan) => {
+                const marketing = PLAN_MARKETING[plan.key] || { tagline: plan.name, forWhom: "" };
+                const price = interval === "month" ? plan.monthly_price : plan.annual_price;
+                const perMonthEquivalent = interval === "year" ? Math.round(plan.annual_price / 12) : null;
+                const isPopular = Boolean(marketing.popular);
 
-                  <div>
-                    <label htmlFor="revenue" className="block text-xs font-semibold text-foreground mb-1.5">
-                      Annual revenue
-                    </label>
-                    <select
-                      id="revenue"
-                      value={revenueRange}
-                      onChange={(e) => setRevenueRange(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all"
-                    >
-                      <option value="">Prefer not to say</option>
-                      {REVENUE_RANGES.map((range) => (
-                        <option key={range} value={range}>{range}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label htmlFor="challenge" className="block text-xs font-semibold text-foreground mb-1.5">
-                      Biggest inventory headache right now
-                    </label>
-                    <textarea
-                      id="challenge"
-                      rows={3}
-                      placeholder="We keep selling out of mediums and sitting on XLs…"
-                      value={challenge}
-                      onChange={(e) => setChallenge(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[color:var(--eve-accent)]/20 focus:border-[color:var(--eve-accent)] transition-all resize-y"
-                    />
-                  </div>
-
-                  {/* Primary CTA */}
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full py-3.5 text-primary-foreground font-bold rounded-xl text-sm bg-primary hover:bg-primary/90 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                return (
+                  <div
+                    key={plan.key}
+                    className={`relative flex flex-col bg-card border rounded-2xl p-6 sm:p-7 shadow-sm transition-all ${
+                      isPopular ? "border-[color:var(--eve-accent)] ring-1 ring-[color:var(--eve-accent)]/40 shadow-lg" : "border-border"
+                    }`}
                   >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                        Submitting…
-                      </>
-                    ) : (
-                      <>
-                        Join the Waitlist
-                        <ArrowRight size={16} aria-hidden />
-                      </>
+                    {isPopular && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[color:var(--eve-accent)] text-white text-[10px] font-bold uppercase tracking-wider shadow-md">
+                        Most Popular
+                      </span>
                     )}
-                  </button>
 
-                  {/* Secondary Text */}
-                  <p className="text-xs text-muted-foreground text-center font-medium pt-1">
-                    No credit card required.
-                  </p>
-                </form>
-              ) : (
-                <div className="bg-emerald-500/10 border border-emerald-500/20 p-8 rounded-xl text-center space-y-4">
-                  <div className="h-12 w-12 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold mx-auto shadow-md">
-                    <Check className="h-6 w-6" aria-hidden />
+                    <div className="space-y-1.5 mb-5">
+                      <h2 className="text-xl font-extrabold text-foreground">{plan.name}</h2>
+                      <p className="text-sm font-semibold text-[color:var(--eve-accent)]">{marketing.tagline}</p>
+                      <p className="text-xs text-muted-foreground">{marketing.forWhom}</p>
+                    </div>
+
+                    <div className="mb-6">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-4xl font-extrabold text-foreground tabular-nums">
+                          ${interval === "month" ? price : perMonthEquivalent}
+                        </span>
+                        <span className="text-sm text-muted-foreground font-medium">/month</span>
+                      </div>
+                      {interval === "year" ? (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          ${plan.annual_price.toLocaleString()} billed annually · save ${plan.annual_savings.toLocaleString()}/yr
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">billed monthly</p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSelectPlan(plan.key)}
+                      disabled={startingPlan === plan.key}
+                      className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all mb-6 cursor-pointer disabled:opacity-60 ${
+                        isPopular
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+                          : "bg-secondary text-foreground hover:bg-muted border border-border"
+                      }`}
+                    >
+                      {startingPlan === plan.key ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                      ) : (
+                        <>
+                          Start Free Trial
+                          <ArrowRight size={14} aria-hidden />
+                        </>
+                      )}
+                    </button>
+
+                    <dl className="grid grid-cols-2 gap-2 text-xs mb-6 pb-6 border-b border-border/70">
+                      <div>
+                        <dt className="text-muted-foreground">Shopify stores</dt>
+                        <dd className="font-bold text-foreground">{formatLimit(plan, "max_shopify_stores")}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">SKU limit</dt>
+                        <dd className="font-bold text-foreground">{formatLimit(plan, "max_skus")}</dd>
+                      </div>
+                    </dl>
+
+                    <ul className="space-y-2.5 flex-1">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2.5 text-xs text-foreground">
+                          <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" aria-hidden />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <h3 className="text-base font-extrabold text-foreground">
-                    {alreadyRegistered ? "You're already on the list!" : "You're on the waitlist!"}
-                  </h3>
-                  <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                    {alreadyRegistered
-                      ? "We have your details. We will notify you as soon as pricing is announced and early access spots open."
-                      : <>Thank you for joining. We will reach out to <strong className="text-foreground">{email}</strong> with founding customer benefits and pricing updates.</>}
-                  </p>
-                  <p className="text-xs font-semibold text-muted-foreground pt-1">
-                    No credit card required.
-                  </p>
-                </div>
-              )}
+                );
+              })}
             </div>
+          )}
 
-            <div className="flex items-center justify-center gap-2 pt-6 text-xs text-muted-foreground">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" aria-hidden />
-              Your data stays in your workspace. EVE&apos;s AI has read-only access.
-            </div>
-          </div>
+          <p className="text-center text-xs text-muted-foreground mt-10">
+            {PRICING.trialCopy} No permanent free tier — every workspace runs on a real plan.
+          </p>
         </section>
       </main>
 

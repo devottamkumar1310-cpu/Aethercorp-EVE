@@ -205,6 +205,19 @@ class AnalyticsService:
                 continue
             valid_items.append(item)
 
+        # Fetched ONCE for the whole org rather than once per item. AnomalyEngine
+        # matches every invoice's line items against its SKU, and the invoice set
+        # is identical across all items in this call — profiling at 1,200 SKUs
+        # showed this was the single largest contributor to a ~4,800-query,
+        # ~10s run (invoices, at whole-org scope, were being re-fetched from
+        # scratch for every SKU). See "invoices_override" below.
+        from app.models.document import ProcessedDocument
+        all_invoices = db.query(ProcessedDocument).filter(
+            ProcessedDocument.organization_id == organization_id,
+            ProcessedDocument.document_type == "Invoice",
+            ProcessedDocument.status == "success"
+        ).all()
+
         # 1b. Run orchestrator in batch for maximum performance and alignment
         async def run_inventory_orchestration_batch():
             orchestrator = IntelligenceOrchestrator()
@@ -232,6 +245,14 @@ class AnalyticsService:
                     parameters={
                         "sales_series_override": sku_sales,
                         "unit_cost_override": product.unit_cost or 20.0,
+                        # Same idea as the two overrides above: the caller already
+                        # has this in memory from the bulk `items` fetch, so engines
+                        # that would otherwise re-query Product/ProcessedDocument
+                        # per SKU can use it directly. Each engine still falls back
+                        # to its original query when an override key is absent, so
+                        # any OTHER caller of these engines is unaffected.
+                        "selling_price_override": product.selling_price or 40.0,
+                        "invoices_override": all_invoices,
                         "abc_classifications": abc_classifications
                     }
                 )

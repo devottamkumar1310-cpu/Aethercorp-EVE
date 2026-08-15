@@ -1,14 +1,64 @@
 # ==============================================================================
 # PURPOSE: Shopify data mapping layer for EVE integration.
-# DATA FLOW: Shopify API responses -> EVE Product/InventoryItem/SalesRecord models.
+# DATA FLOW: Shopify API responses -> EVE Product / SalesRecord model fields.
 # EXTENSION POINTS: Add webhook payload parsing, bulk sync, delta updates.
+# ARCHITECTURAL DECISION:
+# - Pure field translation, no database access. The callers that persist the
+#   result live in app/services/shopify/ (sync_service, webhook_service).
+# - Inventory levels are NOT mapped here: EVE stores one stock figure per product
+#   while Shopify reports per (inventory_item, location), so the sum has to happen
+#   where the mappings are available. See ShopifySyncService.upsert_inventory_levels.
 # ==============================================================================
 
 import logging
-from typing import List, Dict, Any, Optional
+import re
+from typing import List, Dict, Any
 from datetime import datetime
 
 logger = logging.getLogger("eve.services.shopify_mapper")
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    """
+    Coerces a Shopify money/number field.
+
+    Shopify sends prices as STRINGS, and sends null for variants of some product
+    types (e.g. certain gift-card and service variants). A bare float() therefore
+    raises on real catalogues, and because the sync maps the whole catalogue in one
+    pass, a single such variant aborted the entire job — the merchant got no
+    products at all rather than all-but-one.
+    """
+    if value is None:
+        return default
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        logger.warning("Unparseable Shopify numeric value %r; defaulting.", value)
+        return default
+    # inf/NaN would propagate into margin and revenue arithmetic and poison every
+    # aggregate computed from it.
+    if result != result or result in (float("inf"), float("-inf")):
+        logger.warning("Non-finite Shopify numeric value %r; defaulting.", value)
+        return default
+    return result
+
+
+def normalize_parent_id(parent_name: str, fallback: str) -> str:
+    """
+    Builds the variant-group identifier for a Shopify product.
+
+    This MUST be human-readable. EVE's variant aggregation reports
+    parent_product_id to the founder AS the SKU (analytics_service.py, variant
+    aggregation), so using Shopify's numeric product id made agent answers read
+    "Reorder SKU 112" — a number that appears nowhere in the merchant's Shopify
+    admin and that they cannot act on.
+
+    Mirrors app/fashion/variant_detector._normalize_parent_id so Shopify-sourced
+    and CSV-sourced catalogues group and display identically.
+    """
+    cleaned = re.sub(r"[^a-zA-Z0-9\s\-]", "", parent_name or "")
+    slug = re.sub(r"\s+", "-", cleaned.strip().upper())
+    return slug or fallback
 
 
 class ShopifyProductMapper:
@@ -101,45 +151,20 @@ class ShopifyProductMapper:
             eve_products.append({
                 "sku": sku,
                 "name": display_name,
-                "parent_product_id": shopify_product_id,
+                # Human-readable group id, NOT the Shopify product id — see
+                # normalize_parent_id. The numeric id is preserved separately in
+                # shopify_product_id for sync identity.
+                "parent_product_id": normalize_parent_id(parent_title, shopify_product_id),
                 "category": product_type or "General",
                 "size": size,
                 "color": color,
                 "unit_cost": 0.0,  # Shopify doesn't expose COGS — must be uploaded separately
-                "selling_price": float(variant.get("price", 0.0)),
+                "selling_price": _safe_float(variant.get("price"), 0.0),
                 "shopify_variant_id": str(variant.get("id", "")),
                 "shopify_product_id": shopify_product_id,
             })
 
         return eve_products
-
-
-class ShopifyInventoryMapper:
-    """
-    Maps Shopify inventory levels to EVE InventoryItem fields.
-    """
-
-    @classmethod
-    def map_inventory_level(
-        cls,
-        shopify_level: Dict[str, Any],
-        sku_to_product_id: Dict[str, str]
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Maps a Shopify inventory_level object to EVE InventoryItem fields.
-        
-        Args:
-            shopify_level: Shopify inventory level API response
-            sku_to_product_id: Mapping from SKU -> EVE product.id
-        """
-        inventory_item_id = shopify_level.get("inventory_item_id")
-        available = shopify_level.get("available", 0)
-        # Note: Shopify uses inventory_item_id, not SKU directly.
-        # The caller must resolve the mapping.
-        return {
-            "stock_on_hand": max(0, available or 0),
-            "shopify_inventory_item_id": str(inventory_item_id),
-        }
 
 
 class ShopifyOrderMapper:
@@ -179,14 +204,18 @@ class ShopifyOrderMapper:
             if not sku or sku not in sku_to_product_id:
                 continue
 
-            quantity = int(item.get("quantity", 0))
-            unit_price = float(item.get("price", 0.0))
+            quantity = int(_safe_float(item.get("quantity"), 0.0))
+            unit_price = _safe_float(item.get("price"), 0.0)
+            # A negative line quantity would subtract from the day's units and
+            # understate sell-through, so it is discarded rather than trusted.
+            if quantity <= 0:
+                continue
             # Handle partial refunds
             refund_qty = 0
             for refund in shopify_order.get("refunds", []):
                 for refund_item in refund.get("refund_line_items", []):
                     if refund_item.get("line_item_id") == item.get("id"):
-                        refund_qty += int(refund_item.get("quantity", 0))
+                        refund_qty += int(_safe_float(refund_item.get("quantity"), 0.0))
 
             net_quantity = max(0, quantity - refund_qty)
             if net_quantity <= 0:
@@ -201,36 +230,3 @@ class ShopifyOrderMapper:
             })
 
         return records
-
-
-class ShopifyConnectionConfig:
-    """
-    Configuration holder for a Shopify store connection.
-    In production, access_token should be encrypted at rest.
-    """
-
-    def __init__(
-        self,
-        shop_domain: str,
-        access_token: str,
-        scopes: List[str] = None,
-        api_version: str = "2024-07",
-    ):
-        self.shop_domain = shop_domain
-        self.access_token = access_token
-        self.scopes = scopes or [
-            "read_products",
-            "read_inventory",
-            "read_orders",
-        ]
-        self.api_version = api_version
-
-    @property
-    def base_url(self) -> str:
-        return f"https://{self.shop_domain}/admin/api/{self.api_version}"
-
-    def get_headers(self) -> Dict[str, str]:
-        return {
-            "X-Shopify-Access-Token": self.access_token,
-            "Content-Type": "application/json",
-        }

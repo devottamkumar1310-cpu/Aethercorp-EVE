@@ -17,7 +17,12 @@ class ClassificationEngine(BaseEngine):
             frequency = 0
             monetary_value = 0.0
 
-            if context.db and context.organization_id:
+            # Batch analysis (analytics_service.get_inventory_analysis) already has
+            # this in memory and passes it here, sparing a per-SKU query; any other
+            # caller that omits the override gets the original query, unchanged.
+            if "selling_price_override" in context.parameters:
+                selling_price = context.parameters["selling_price_override"] or 40.0
+            elif context.db and context.organization_id:
                 org_id = context.organization_id
                 if isinstance(org_id, str):
                     org_id = uuid.UUID(org_id)

@@ -7,12 +7,12 @@ import { POSITIONING, PRICING } from "@/lib/config";
  * inherits the root title and competes with the homepage for the same query.
  */
 export const metadata: Metadata = {
-  title: "Pricing Coming Soon",
-  description: `${POSITIONING.name} pricing is coming soon. ${PRICING.supportingCopy}`,
+  title: "Pricing",
+  description: `${POSITIONING.name} pricing. ${PRICING.subheadline}`,
   alternates: { canonical: "/pricing" },
   openGraph: {
-    title: `Pricing Coming Soon | ${POSITIONING.name}`,
-    description: PRICING.supportingCopy,
+    title: `Pricing | ${POSITIONING.name}`,
+    description: PRICING.subheadline,
     url: `${POSITIONING.domain}/pricing`,
   },
 };

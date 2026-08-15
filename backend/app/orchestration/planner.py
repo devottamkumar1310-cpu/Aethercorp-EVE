@@ -102,7 +102,7 @@ class Planner:
         prompt = f"Goal: Decompose this instruction: '{goal}' into a sequenced task graph."
         
         try:
-            # Request LLM structure response (defaulting to Gemini-2.5-flash)
+            # Request LLM structured response (uses gemini_service.DEFAULT_MODEL)
             response = await self.gemini_service.generate_response(
                 prompt=prompt,
                 system_instruction=system_instruction,
