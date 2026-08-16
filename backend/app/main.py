@@ -196,14 +196,32 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    msg = str(exc)
+    # str(exc) embeds the rejected INPUT VALUE for every failing field
+    # ("... [type=int_parsing, input_value='<what the caller sent>']"). Echoing a
+    # request body back to whoever sent it turns a validation error into a
+    # reflection gadget, and any credential a client mistakenly posts to the
+    # wrong field would come straight back in the response. Only the field
+    # location and the reason are returned; the full error, with values, stays
+    # in the server log.
+    logger.warning(
+        "[VALIDATION ERROR] path=%s errors=%s", request.url.path, exc.errors()
+    )
+    safe_errors = [
+        {
+            "field": ".".join(str(part) for part in err.get("loc", ())),
+            "reason": err.get("msg", "Invalid value."),
+        }
+        for err in exc.errors()
+    ]
+    msg = "Request validation failed."
     return JSONResponse(
         status_code=422,
         content={
             "status": "error",
             "message": msg,
             "code": "VALIDATION_ERROR",
-            "detail": msg
+            "detail": msg,
+            "errors": safe_errors,
         }
     )
 
