@@ -24,17 +24,17 @@ function resolveApiBaseUrl(): string {
 
   if (typeof window !== "undefined") {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      return "https://eve-backend-68416570138.us-central1.run.app";
+      return "https://eve-backend-264f.onrender.com";
     }
     return "http://127.0.0.1:8000";
   }
 
   // Server-side environment (Next.js Server Routes / SSR)
   if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production") {
-    return "https://eve-backend-68416570138.us-central1.run.app";
+    return "https://eve-backend-264f.onrender.com";
   }
 
-  return "https://eve-backend-68416570138.us-central1.run.app";
+  return "https://eve-backend-264f.onrender.com";
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
