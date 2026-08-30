@@ -10,13 +10,13 @@ export const POSITIONING = {
   name: "EVE",
   legalName: "EVE Inc.",
   category: "Inventory Intelligence",
-  audience: "Shopify fashion brands",
+  audience: "Shopify and D2C fashion brands",
   /** The canonical sentence. Every surface must reinforce this exact claim. */
   oneLiner:
-    "EVE is the Inventory Intelligence platform for Shopify fashion brands.",
-  tagline: "Inventory Intelligence for Shopify Fashion Brands",
+    "EVE is the AI Inventory Intelligence platform for Shopify and D2C fashion brands.",
+  tagline: "AI Inventory Intelligence for Shopify & D2C Brands",
   description:
-    "EVE turns your Shopify inventory data into executive decisions — predict stockouts before they happen, surface the cash trapped in dead stock, and know exactly what to reorder, at variant level, across every size and colour.",
+    "EVE turns your Shopify inventory data into executive decisions — predict stockouts before they happen, surface cash trapped in dead stock, and get variant-level reorder recommendations across every size and colour.",
   domain: "https://eveinventory.in",
   supportEmail: "support@eveinventory.in",
   linkedIn: "https://www.linkedin.com/company/135245277/",

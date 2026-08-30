@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { POSITIONING } from "@/lib/config";
 import { COMPARISONS } from "@/lib/comparisons";
+import { TOPIC_PAGES } from "@/lib/topicPages";
+import { ARTICLES } from "@/lib/resources";
 
 /**
  * Only public, indexable marketing routes belong here. Adding authenticated
@@ -13,6 +15,7 @@ const ROUTES: { path: string; priority: number; changeFrequency: MetadataRoute.S
   { path: "/pricing", priority: 0.9, changeFrequency: "weekly" },
   { path: "/demo", priority: 0.8, changeFrequency: "monthly" },
   { path: "/glossary", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/resources", priority: 0.8, changeFrequency: "weekly" },
   { path: "/founder", priority: 0.6, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.6, changeFrequency: "monthly" },
   { path: "/signup", priority: 0.7, changeFrequency: "monthly" },
@@ -22,9 +25,7 @@ const ROUTES: { path: string; priority: number; changeFrequency: MetadataRoute.S
 ];
 
 /**
- * Comparison pages are generated from the same data module the routes render
- * from, so a new comparison lands in the sitemap automatically. A hand-kept
- * duplicate list is how sitemaps silently go stale.
+ * Comparison pages generated from COMPARISONS data module.
  */
 const COMPARISON_ROUTES: typeof ROUTES = [
   { path: "/vs", priority: 0.8, changeFrequency: "monthly" },
@@ -35,9 +36,27 @@ const COMPARISON_ROUTES: typeof ROUTES = [
   })),
 ];
 
+/**
+ * High-value SEO topic pages generated from TOPIC_PAGES.
+ */
+const TOPIC_ROUTES: typeof ROUTES = Object.keys(TOPIC_PAGES).map((slug) => ({
+  path: `/${slug}`,
+  priority: 0.85,
+  changeFrequency: "weekly" as const,
+}));
+
+/**
+ * Educational resource articles generated from ARTICLES.
+ */
+const RESOURCE_ROUTES: typeof ROUTES = ARTICLES.map((a) => ({
+  path: `/resources/${a.slug}`,
+  priority: 0.75,
+  changeFrequency: "monthly" as const,
+}));
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  return [...ROUTES, ...COMPARISON_ROUTES].map(
+  return [...ROUTES, ...TOPIC_ROUTES, ...RESOURCE_ROUTES, ...COMPARISON_ROUTES].map(
     ({ path, priority, changeFrequency }) => ({
       url: `${POSITIONING.domain}${path}`,
       lastModified,

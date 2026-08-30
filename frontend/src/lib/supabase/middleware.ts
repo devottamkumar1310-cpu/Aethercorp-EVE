@@ -82,8 +82,8 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   } else {
-    // Protect /dashboard and /onboarding for unauthenticated users
-    if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')) {
+    // Protect /dashboard, /onboarding, and /owner for unauthenticated users
+    if (pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding') || pathname.startsWith('/owner')) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       logger.log(`[MIDDLEWARE] [REDIRECT] Unauthenticated user redirected to login: ${url.pathname}`)

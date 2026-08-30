@@ -118,6 +118,46 @@ const TERMS: { term: string; slug: string; definition: string; detail: string }[
     detail:
       "Overstock and dead stock are related but distinct: overstock is a quantity judgement made at buying time, while dead stock is the eventual outcome when overstock does not clear. Overstock is still recoverable through promotion; dead stock generally is not, at full margin.",
   },
+  {
+    term: "Safety Stock",
+    slug: "safety-stock",
+    definition:
+      "A buffer quantity of inventory held to protect against unexpected demand surges or supplier lead time delays.",
+    detail:
+      "Safety stock acts as an insurance policy. In fashion, safety stock must be dynamically calculated per size variant rather than applied blanketly across a style, preventing cash lockup while mitigating stockouts on hero sizes.",
+  },
+  {
+    term: "Inventory Turnover",
+    slug: "inventory-turnover",
+    definition:
+      "A ratio showing how many times a brand sells and replaces its inventory over a given period (COGS divided by average inventory).",
+    detail:
+      "A high inventory turnover indicates strong demand velocity and cash efficiency, while low turnover highlights capital trapped in dead stock and slow-moving variants.",
+  },
+  {
+    term: "Demand Forecasting",
+    slug: "demand-forecasting",
+    definition:
+      "The process of estimating future customer demand using historical sales trends, seasonal patterns, and sales velocity data.",
+    detail:
+      "Effective demand forecasting in e-commerce evaluates variant-level sales velocity and lead time buffers so purchase orders are issued before stock depletion.",
+  },
+  {
+    term: "Inventory Carrying Cost",
+    slug: "inventory-carrying-cost",
+    definition:
+      "The total cost of holding inventory, including warehouse space, insurance, capital interest, shrinkage, and depreciation.",
+    detail:
+      "Carrying cost usually accounts for 20-30% of total inventory value annually. Unsold dead stock actively drains capital every month it remains on the shelf.",
+  },
+  {
+    term: "ABC Analysis",
+    slug: "abc-analysis",
+    definition:
+      "An inventory categorization technique that divides SKUs into three categories (A: high value, B: moderate, C: low value) based on revenue contribution.",
+    detail:
+      "In D2C fashion, 'Class A' hero variants drive the majority of gross margin. Stockout prevention efforts should be heavily focused on Class A SKUs to safeguard revenue.",
+  },
 ];
 
 function GlossarySchema() {
@@ -239,22 +279,34 @@ export default function GlossaryPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-4 text-sm">
             <Link
-              href="/"
+              href="/inventory-intelligence"
               className="font-semibold text-[color:var(--eve-accent)] hover:underline"
             >
-              How {POSITIONING.name} works
+              Inventory Intelligence
+            </Link>
+            <Link
+              href="/shopify-inventory-forecasting"
+              className="font-semibold text-[color:var(--eve-accent)] hover:underline"
+            >
+              Shopify Forecasting
+            </Link>
+            <Link
+              href="/stockout-prediction"
+              className="font-semibold text-[color:var(--eve-accent)] hover:underline"
+            >
+              Stockout Alerts
+            </Link>
+            <Link
+              href="/dead-stock-management"
+              className="font-semibold text-[color:var(--eve-accent)] hover:underline"
+            >
+              Dead Stock Recovery
             </Link>
             <Link
               href="/pricing"
               className="font-semibold text-[color:var(--eve-accent)] hover:underline"
             >
               Pricing
-            </Link>
-            <Link
-              href="/contact"
-              className="font-semibold text-[color:var(--eve-accent)] hover:underline"
-            >
-              Talk to the founder
             </Link>
           </div>
         </aside>
