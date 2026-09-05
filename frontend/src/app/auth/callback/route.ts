@@ -8,14 +8,10 @@ import { devLog } from '@/lib/logger'
  * How long the callback will wait on the backend profile sync before giving up
  * and redirecting anyway.
  *
- * Chosen against measured production latency: the sync sits at a ~4s median
- * (already dominated by backend cold start) with a 94s tail. A ceiling above
- * ~5s stops protecting anyone, and one much below it would discard the
- * direct-to-dashboard handoff on a normal warm sign-in. This is a floor on how
- * bad the experience can get, not a fix for the latency itself — that is the
- * backend cold start, tracked separately.
+ * Set to 15s to allow fast or warming backends to complete profile sync and direct-to-dashboard
+ * handoff, while preserving graceful fallback redirection without hitting Vercel function limits.
  */
-const SYNC_TIMEOUT_MS = 5000;
+const SYNC_TIMEOUT_MS = 15000;
 
 /**
  * Resolve the public-facing origin.

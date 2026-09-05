@@ -77,6 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
+  const [isWakingUp, setIsWakingUp] = useState(false);
   const [isProvenanceModalOpen, setIsProvenanceModalOpen] = useState(false);
   
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -296,11 +297,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const loadWorkspacesAndProfile = async (token: string) => {
-    // Use AbortController to enforce a 15-second timeout per request.
-    // This prevents an unresponsive backend from trapping users on the
-    // loading screen indefinitely.
+    // Use AbortController to enforce a 90-second timeout per request.
+    // This accommodates Render free-tier cold starts while providing a deterministic ceiling.
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
 
     let profileSettled: PromiseSettledResult<Response>;
     let wsSettled: PromiseSettledResult<Response>;
@@ -395,14 +395,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         logger.warn("[EVE] Failed to parse workspaces response:", e);
       }
     } else {
-      const reason =
-        wsSettled.status === "rejected"
-          ? wsSettled.reason?.name === "AbortError"
-            ? "Workspace request timed out"
-            : String(wsSettled.reason)
-          : `Workspace status ${wsSettled.value.status}`;
-      logger.error("[EVE] Workspaces load failed:", reason);
-      throw new Error("Unable to load executive workspace. Please verify your connection or try logging in again.");
+      if (wsSettled.status === "rejected") {
+        if (wsSettled.reason?.name === "AbortError") {
+          logger.error("[EVE] Workspaces load timed out after 90s");
+          throw new Error("Connection timed out after 90 seconds. The server took too long to respond. Please retry.");
+        }
+        logger.error("[EVE] Workspaces load network error:", wsSettled.reason);
+        throw new Error(String(wsSettled.reason?.message || "Cannot reach the server. Please check your internet connection."));
+      } else {
+        const status = wsSettled.value.status;
+        if (status === 401 || status === 403) {
+          logger.error(`[EVE] Workspaces load unauthorized: ${status}`);
+          throw new Error(`Authentication error (${status}): Your session has expired. Please sign out and sign back in.`);
+        }
+        logger.error(`[EVE] Workspaces load failed with HTTP ${status}`);
+        throw new Error(`API Error (${status}): Failed to load workspaces.`);
+      }
     }
   };
 
@@ -439,6 +447,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         // Background sync & workspace/profile hydration (non-blocking for returning users)
+        let wakingTimer: ReturnType<typeof setTimeout> | undefined;
+        if (!storedWorkspaceId) {
+          // Trigger non-blocking waking indicator after ~11 seconds (10-12s range)
+          wakingTimer = setTimeout(() => {
+            if (mounted) setIsWakingUp(true);
+          }, 11000);
+        }
+
         try {
           // Fire-and-forget sync so it never blocks dashboard rendering
           apiFetch(`${API_BASE_URL}/api/auth/sync`, {
@@ -453,10 +469,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           if (mounted && !storedWorkspaceId) {
             const msg: string = err?.message ?? "";
             let userMessage: string;
-            if (msg.includes("timed out")) {
-              userMessage = "Connection timed out. Please check your network and try again.";
-            } else if (msg.includes("401") || msg.includes("403")) {
+            if (msg.includes("timed out") || msg.includes("Timeout")) {
+              userMessage = "Connection timed out after 90 seconds. Please check your network and retry.";
+            } else if (msg.includes("Authentication error") || msg.includes("401") || msg.includes("403")) {
               userMessage = "Your session has expired. Please sign out and sign back in.";
+            } else if (msg.includes("API Error")) {
+              userMessage = msg;
             } else if (
               msg.includes("Failed to fetch") ||
               msg.includes("NetworkError") ||
@@ -464,11 +482,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             ) {
               userMessage = "Cannot reach the server. Please check your internet connection.";
             } else {
-              userMessage = "Workspace initialization failed. Please retry or contact support.";
+              userMessage = msg || "Workspace initialization failed. Please retry or contact support.";
             }
             setInitError(userMessage);
           }
         } finally {
+          if (wakingTimer) clearTimeout(wakingTimer);
+          if (mounted) setIsWakingUp(false);
           const tFinish = performance.now();
           devLog(`[TELEMETRY][PERF] Workspace/Profile Hydration Complete: ${(tFinish - tHydrate).toFixed(2)}ms`);
           devLog(`[TELEMETRY][PERF] Total Dashboard Ready: ${(tFinish - tStart).toFixed(2)}ms`);
@@ -646,6 +666,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
             </div>
           </div>
+
+          {isWakingUp && (
+            <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl text-xs text-violet-300 text-center animate-fade-in flex items-center justify-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-violet-400 animate-ping" />
+              <span>EVE is waking up. This can take up to a minute on the free tier…</span>
+            </div>
+          )}
         </div>
       </div>
     );
